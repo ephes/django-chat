@@ -1,0 +1,29 @@
+[project]
+name = "django-chat"
+version = "0.1.0"
+description = "Self-hosted Django Chat site built with Django, Wagtail, and django-cast."
+readme = "README.md"
+requires-python = ">=3.14.4,<3.15"
+dependencies = [
+    "Django>=6.0,<7.0",
+    "cast-bootstrap5>=0.0.71,<0.1",
+    "django-cast>=0.2.53,<0.3",
+    "django-environ>=0.13,<0.14",
+    "wagtail>=7.3,<8.0",
+    "whitenoise>=6.11,<7.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0,<10.0",
+    "pytest-django>=4.11,<5.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+testpaths = ["django_chat"]
+addopts = ["-ra"]
