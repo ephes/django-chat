@@ -9,14 +9,18 @@ dependencies = [
     "cast-bootstrap5>=0.0.71,<0.1",
     "django-cast>=0.2.53,<0.3",
     "django-environ>=0.13,<0.14",
+    "django-tasks>=0.11,<0.12",
     "wagtail>=7.3,<8.0",
     "whitenoise>=6.11,<7.0",
 ]
 
 [dependency-groups]
 dev = [
+    "prek>=0.3,<0.4",
     "pytest>=9.0,<10.0",
     "pytest-django>=4.11,<5.0",
+    "ruff>=0.15,<0.16",
+    "ty>=0.0.31,<0.1",
 ]
 
 [tool.uv]
@@ -27,3 +31,18 @@ DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = ["test_*.py", "*_test.py", "tests.py"]
 testpaths = ["django_chat"]
 addopts = ["-ra"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+src = ["config", "django_chat"]
+extend-exclude = ["**/migrations/*.py"]
+
+[tool.ruff.lint]
+select = ["B", "DJ", "E", "F", "I", "SIM", "UP"]
+
+[tool.ty.environment]
+python-version = "3.14"
+
+[tool.ty.src]
+include = ["config", "django_chat", "manage.py"]

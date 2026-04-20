@@ -1,10 +1,12 @@
 """Base settings for the Django Chat project."""
 
+import os
 from pathlib import Path
+from types import ModuleType
 
-import environ
 import cast
 import cast_bootstrap5
+import environ
 from cast.apps import CAST_APPS, CAST_MIDDLEWARE
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parents[2]
@@ -12,7 +14,11 @@ APPS_DIR = ROOT_DIR / "django_chat"
 
 env = environ.Env()
 
-if env.bool("DJANGO_READ_DOT_ENV_FILE", default=True):
+READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=True)
+if os.environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.test":
+    READ_DOT_ENV_FILE = False
+
+if READ_DOT_ENV_FILE:
     env.read_env(str(ROOT_DIR / ".env"))
 
 DJANGO_APPS = [
@@ -54,13 +60,26 @@ ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
+DEBUG = env.bool("DJANGO_DEBUG", default=False)
+
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
         default=f"sqlite:///{ROOT_DIR / 'db.sqlite3'}",
-    )
+    ),
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
+
+TASKS = {
+    "default": {
+        "BACKEND": "django_tasks.backends.immediate.ImmediateBackend",
+        "ENQUEUE_ON_COMMIT": False,
+    },
+    "cast_transcripts": {
+        "BACKEND": "django_tasks.backends.immediate.ImmediateBackend",
+        "ENQUEUE_ON_COMMIT": False,
+    },
+}
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -86,7 +105,7 @@ TEMPLATES = [
                 "cast.context_processors.site_template_base_dir",
             ],
         },
-    }
+    },
 ]
 
 STATIC_URL = "/static/"
@@ -105,7 +124,11 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = ROOT_DIR / "media"
 
 ADMIN_URL = "django-admin/"
-WAGTAILADMIN_BASE_URL = "cms/"
+DJANGO_CHAT_WAGTAIL_ADMIN_PATH = "cms/"
+WAGTAILADMIN_BASE_URL = env(
+    "DJANGO_CHAT_WAGTAIL_ADMIN_BASE_URL",
+    default=f"http://localhost:8000/{DJANGO_CHAT_WAGTAIL_ADMIN_PATH}",
+)
 WAGTAIL_SITE_NAME = "Django Chat"
 WAGTAILIMAGES_MAX_UPLOAD_SIZE = 30 * 1024 * 1024
 
@@ -118,8 +141,20 @@ CAST_CUSTOM_THEMES = [
 ]
 
 
-def _package_manifest_path(package, *path_parts: str) -> Path:
-    return Path(package.__file__).resolve().parent.joinpath("static", *path_parts, "manifest.json")
+def _package_manifest_path(package: ModuleType, *path_parts: str) -> Path:
+    package_file = package.__file__
+    if package_file is None:
+        msg = f"Package {package.__name__} does not expose a filesystem path."
+        raise RuntimeError(msg)
+    return (
+        Path(package_file)
+        .resolve()
+        .parent.joinpath(
+            "static",
+            *path_parts,
+            "manifest.json",
+        )
+    )
 
 
 DJANGO_VITE = {
@@ -129,7 +164,11 @@ DJANGO_VITE = {
     },
     "cast-bootstrap5": {
         "static_url_prefix": "cast_bootstrap5/vite/",
-        "manifest_path": _package_manifest_path(cast_bootstrap5, "cast_bootstrap5", "vite"),
+        "manifest_path": _package_manifest_path(
+            cast_bootstrap5,
+            "cast_bootstrap5",
+            "vite",
+        ),
     },
 }
 

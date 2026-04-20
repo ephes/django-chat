@@ -1,0 +1,19 @@
+# Configuration file for `prek`, a Git hook runner compatible with pre-commit hooks.
+#:schema https://www.schemastore.org/prek.json
+
+[[repos]]
+repo = "builtin"
+hooks = [
+    { id = "trailing-whitespace" },
+    { id = "end-of-file-fixer" },
+    { id = "check-yaml" },
+    { id = "check-added-large-files" },
+]
+
+[[repos]]
+repo = "local"
+hooks = [
+    { id = "ruff-check", name = "ruff check", entry = "uv run ruff check --fix", language = "system", types = ["python"] },
+    { id = "ruff-format", name = "ruff format", entry = "uv run ruff format", language = "system", types = ["python"] },
+    { id = "ty-check", name = "ty check", entry = "uv run ty check config django_chat manage.py", language = "system", pass_filenames = false },
+]

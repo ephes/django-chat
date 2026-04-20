@@ -16,7 +16,7 @@ handler500 = cast_default_views.server_error
 
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
-    path(settings.WAGTAILADMIN_BASE_URL, include(wagtailadmin_urls)),
+    path(settings.DJANGO_CHAT_WAGTAIL_ADMIN_PATH, include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("", include("cast.urls", namespace="cast")),
     path("", include(wagtail_urls)),

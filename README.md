@@ -4,14 +4,16 @@ This repository contains the self-hosted Django Chat site scaffold. The site is
 built with Django, Wagtail, and django-cast, using Python Podcast only as a
 structural reference for local development ergonomics.
 
-Current status: initial runnable scaffold for a staging proof of concept. The
-planning source of truth is
+Current status: runnable local scaffold with development tooling for a staging
+proof of concept. The planning source of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development
 
 This project targets Python 3.14.4. `uv` reads the `.python-version` file and
-can download the matching interpreter when needed.
+can download the matching interpreter when needed. See
+[`docs/local-development.md`](docs/local-development.md) for the full local
+workflow, environment file expectations, tooling commands, and hook setup.
 
 Install dependencies:
 
@@ -37,6 +39,12 @@ Run tests:
 just test
 ```
 
+Run all local quality checks:
+
+```sh
+just check
+```
+
 Run the local development server:
 
 ```sh
@@ -50,8 +58,9 @@ run without PostgreSQL or other services.
 ## Scope
 
 This slice intentionally does not include import commands, S3 media copy,
-transcript worker settings, deployment commands, host review docs, or staging
-URLs. Those are later implementation slices from the research PRD.
+transcript conversion, a transcript worker service, deployment commands, host
+review docs, or staging URLs. Those are later implementation slices from the
+research PRD.
 
 Private deployment configuration and secrets are intentionally not stored in
 this repo. Do not commit real Django secret keys, database passwords, S3
