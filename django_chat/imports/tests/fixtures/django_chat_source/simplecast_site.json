@@ -1,0 +1,78 @@
+{
+  "cname_url": "djangochat.com",
+  "color": "#0D0D0D",
+  "created_at": "2019-03-01T14:00:43",
+  "external_website": "https://djangochat.com",
+  "favicon_url": "https://image.simplecastcdn.com/images/2d0f031f-f2b1-4d6d-8255-db480dda9954/adf60d46-3922-4a01-ae01-1ed22564fdda/podcast_icon.jpg",
+  "href": "https://api.simplecast.com/sites/e7b8d39c-d81e-4eeb-820a-9a2105bad193",
+  "id": "e7b8d39c-d81e-4eeb-820a-9a2105bad193",
+  "legacy_hosts": null,
+  "menu_links": {
+    "collection": [
+      {
+        "href": "https://api.simplecast.com/links/7177a958-4411-46c4-ba21-8b20832fe019",
+        "id": "7177a958-4411-46c4-ba21-8b20832fe019",
+        "is_visible": true,
+        "location": "menu",
+        "name": "YouTube",
+        "new_window": true,
+        "order": 100,
+        "url": "https://www.youtube.com/@djangochat"
+      },
+      {
+        "href": "https://api.simplecast.com/links/cde30025-fede-4612-90db-01f9db91ea69",
+        "id": "cde30025-fede-4612-90db-01f9db91ea69",
+        "is_visible": true,
+        "location": "menu",
+        "name": "Sponsor Us",
+        "new_window": false,
+        "order": 200,
+        "url": "https://docs.google.com/document/d/1o685nBm2z5S2cwPvK2kMeT2vPIL3UbD94tR4v26Wt-I/edit?usp=sharing"
+      },
+      {
+        "href": "https://api.simplecast.com/links/a973a081-5e00-4341-9efc-e0f01ee00be1",
+        "id": "a973a081-5e00-4341-9efc-e0f01ee00be1",
+        "is_visible": true,
+        "location": "menu",
+        "name": "Fosstodon",
+        "new_window": false,
+        "order": 300,
+        "url": "https://fosstodon.org/@djangochat"
+      }
+    ],
+    "href": "https://api.simplecast.com/sites/e7b8d39c-d81e-4eeb-820a-9a2105bad193/links?location=menu"
+  },
+  "podcast": {
+    "created_at": "2019-03-01T14:00:43",
+    "episodes": {
+      "count": 203
+    },
+    "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91",
+    "id": "19d48b52-7d9d-4294-8dbf-7f2739ba2e91",
+    "image_url": "https://image.simplecastcdn.com/images/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/259ee18c-8fe2-4e10-8ef7-b95987f5fb24/1549072581-artwork.jpg",
+    "status": "published",
+    "title": "Django Chat"
+  },
+  "privacy_policy_link": null,
+  "privacy_policy_text": null,
+  "site_enabled": true,
+  "site_links": {
+    "collection": [
+      {
+        "href": "https://api.simplecast.com/links/15723c3a-031d-4b19-9d8e-0535f7f8d201",
+        "id": "15723c3a-031d-4b19-9d8e-0535f7f8d201",
+        "is_visible": true,
+        "location": "social",
+        "name": "Fosstodon",
+        "new_window": true,
+        "order": null,
+        "url": "https://fosstodon.org/@djangochat"
+      }
+    ],
+    "href": "https://api.simplecast.com/sites/e7b8d39c-d81e-4eeb-820a-9a2105bad193/links?location=social"
+  },
+  "subdomain": "django-chat",
+  "theme": "light",
+  "updated_at": "2025-02-26T14:49:35",
+  "url": "https://django-chat.simplecast.com"
+}

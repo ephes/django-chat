@@ -1,0 +1,28 @@
+{
+  "audio_file_size": 711639,
+  "audio_file_url": "https://cdn.simplecast.com/audio/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/4f9f2269-7780-430e-b2bc-bd91cde19b58/deaba14a_tc.mp3",
+  "audio_status": "transcoded",
+  "description": "Coming soon! Subscribe and stay tuned.",
+  "duration": 40,
+  "enclosure_url": "https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/audio/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/4f9f2269-7780-430e-b2bc-bd91cde19b58/deaba14a_tc.mp3",
+  "episode_url": "https://djangochat.com",
+  "guid": "697f5867-15e8-414f-b837-4faee703b5cc",
+  "href": "https://api.simplecast.com/episodes/4f9f2269-7780-430e-b2bc-bd91cde19b58",
+  "id": "4f9f2269-7780-430e-b2bc-bd91cde19b58",
+  "image_url": "https://image.simplecastcdn.com/images/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/4f9f2269-7780-430e-b2bc-bd91cde19b58/1549072831-artwork.jpg",
+  "is_explicit": false,
+  "is_hidden": false,
+  "long_description": "Coming soon! Subscribe and stay tuned.",
+  "number": 0,
+  "published_at": "2019-02-01T20:56:00-05:00",
+  "season": {
+    "href": "https://api.simplecast.com/seasons/c2e15458-0b2b-418e-8a7e-e28318a0afb3",
+    "number": 1
+  },
+  "slug": "preview",
+  "status": "published",
+  "title": "Preview",
+  "transcription": "**Carlton**: Hi. Welcome to Django Chat, a podcast about Django. I'm Carlton Gibson, Django Fellow, and I'm joined by Will Vincent, author of [Django for Beginners](https://djangoforbeginners.com) and Rest API with Django (renamed to [Django for APIs](https://djangoforapis.com)). \n\n**William**: In this podcast we're gonna do deep dives into Django on various topics, everything from getting started to testing deployment and beyond. We're also going to do interviews with key members of the Django community and companies using Django at scale in the wild. \n\n**Carlton**: We hope you enjoy it. Go to [DjangoChat.com](https://djangochat.com) or follow [ChatDjango on Twitter](https://twitter.com/chatdjango) to subscribe. See you soon.",
+  "type": "full",
+  "updated_at": "2019-09-05T23:02:32-04:00"
+}

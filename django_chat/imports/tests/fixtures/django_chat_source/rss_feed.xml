@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" version="2.0">
+  <channel>
+    <atom:link href="https://feeds.simplecast.com/WpQaX_cs" rel="self" title="MP3 Audio" type="application/atom+xml" />
+    <atom:link href="https://simplecast.superfeedr.com" rel="hub" />
+    <generator>https://simplecast.com</generator>
+    <title>Django Chat</title>
+    <description>A biweekly podcast on the Django Web Framework by Will Vincent and Carlton Gibson.</description>
+    <copyright>© Django Chat</copyright>
+    <language>en-us</language>
+    <pubDate>Wed, 15 Apr 2026 08:00:00 +0000</pubDate>
+    <lastBuildDate>Wed, 15 Apr 2026 08:00:13 +0000</lastBuildDate>
+    <image>
+      <link>https://djangochat.com</link>
+      <title>Django Chat</title>
+      <url>https://image.simplecastcdn.com/images/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/259ee18c-8fe2-4e10-8ef7-b95987f5fb24/3000x3000/1549072581-artwork.jpg?aid=rss_feed</url>
+    </image>
+    <link>https://djangochat.com</link>
+    <itunes:type>episodic</itunes:type>
+    <itunes:summary>A biweekly podcast on the Django Web Framework by Will Vincent and Carlton Gibson.</itunes:summary>
+    <itunes:author>William Vincent and Carlton Gibson</itunes:author>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:image href="https://image.simplecastcdn.com/images/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/259ee18c-8fe2-4e10-8ef7-b95987f5fb24/3000x3000/1549072581-artwork.jpg?aid=rss_feed" />
+    <itunes:new-feed-url>https://feeds.simplecast.com/WpQaX_cs</itunes:new-feed-url>
+    <itunes:keywords>django, django web framework, web, python, programming, software developer</itunes:keywords>
+    <itunes:owner>
+      <itunes:name>Will Vincent</itunes:name>
+      <itunes:email>will@wsvincent.com</itunes:email>
+    </itunes:owner>
+    <itunes:category text="Technology" />
+    <itunes:category text="Education" />
+    <item>
+      <guid isPermaLink="false">2c78bb02-8162-44f0-b22d-a188f5bbdb9e</guid>
+      <title>Django Tasks - Jake Howard</title>
+      <description>&lt;p&gt;🔗 Links&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://github.com/RealOrangeOne/django-tasks" rel="noopener noreferrer"&gt;django-tasks&lt;/a&gt; and &lt;a href="https://github.com/realorangeone" rel="noopener noreferrer"&gt;Jake's GitHub&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://theorangeone.net/" rel="noopener noreferrer"&gt;Jake's personal website&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.djangoproject.com/weblog/2025/aug/03/dsf-member-of-the-month-jake-howard/" rel="noopener noreferrer"&gt;DSF Member of the Month - Jake Howard&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://youtu.be/RxcRBNqxjeY?si=oO4KiUmBL-Y0oymC" rel="noopener noreferrer"&gt;DjangoCon Europe 2024: Empowering Django with Background Workers&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://forum.djangoproject.com/t/steering-council-vote-on-background-tasks-dep-14/31131" rel="noopener noreferrer"&gt;Django Forum - Steering Council Vote on Background Tasks&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://theorangeone.net/talks/forcefully-stopping-python/" rel="noopener noreferrer"&gt;PyCon UK 2025 Talk: Halt and Catch Fire: Forcefully Stopping Python&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://wagtail.org/blog/new-security-announcements-channel/" rel="noopener noreferrer"&gt;Wagtail new security announcements channel&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/django/new-features" rel="noopener noreferrer"&gt;Django new features repo&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=qKkyBhXIJJU&amp;t=10591s" rel="noopener noreferrer"&gt;Carlton’s Talk at PyTV on Mantle&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📦 Projects&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://karpathy.github.io/2026/02/12/microgpt/" rel="noopener noreferrer"&gt;microgpt&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://noumenal.es/mantle/" rel="noopener noreferrer"&gt;Django-Mantle&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://noumenal.es/mantle-drf/" rel="noopener noreferrer"&gt;Django-Mantle-DRF&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📚 Books&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/The_Passage_(Cronin_novel)" rel="noopener noreferrer"&gt;The Passage by Justin Cronin&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.worldscientific.com/worldscibooks/10.1142/q0219" rel="noopener noreferrer"&gt;Solar Power Finance Without the Jargon by Jenny Chase&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/" rel="noopener noreferrer"&gt;Designing Data Intensive Applications by Martin Kleppmann&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🎥 YouTube&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/@djangochat" rel="noopener noreferrer"&gt;YouTube&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🤝 Sponsor&lt;/p&gt;
+&lt;p&gt;This episode was brought to you by &lt;a href="https://buttondown.com/django" rel="noopener noreferrer"&gt;Buttondown&lt;/a&gt;, the easiest way to start, send, and grow your email newsletter. New customers can save 50% off their first &lt;i&gt;year&lt;/i&gt; with &lt;a href="https://buttondown.com/django" rel="noopener noreferrer"&gt;Buttondown&lt;/a&gt; using the coupon code &lt;strong&gt;DJANGO&lt;/strong&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Wed, 15 Apr 2026 08:00:00 +0000</pubDate>
+      <author>will@wsvincent.com (Will Vincent)</author>
+      <link>https://djangochat.com</link>
+      <content:encoded>&lt;p&gt;🔗 Links&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://github.com/RealOrangeOne/django-tasks" rel="noopener noreferrer"&gt;django-tasks&lt;/a&gt; and &lt;a href="https://github.com/realorangeone" rel="noopener noreferrer"&gt;Jake's GitHub&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://theorangeone.net/" rel="noopener noreferrer"&gt;Jake's personal website&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.djangoproject.com/weblog/2025/aug/03/dsf-member-of-the-month-jake-howard/" rel="noopener noreferrer"&gt;DSF Member of the Month - Jake Howard&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://youtu.be/RxcRBNqxjeY?si=oO4KiUmBL-Y0oymC" rel="noopener noreferrer"&gt;DjangoCon Europe 2024: Empowering Django with Background Workers&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://forum.djangoproject.com/t/steering-council-vote-on-background-tasks-dep-14/31131" rel="noopener noreferrer"&gt;Django Forum - Steering Council Vote on Background Tasks&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://theorangeone.net/talks/forcefully-stopping-python/" rel="noopener noreferrer"&gt;PyCon UK 2025 Talk: Halt and Catch Fire: Forcefully Stopping Python&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://wagtail.org/blog/new-security-announcements-channel/" rel="noopener noreferrer"&gt;Wagtail new security announcements channel&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/django/new-features" rel="noopener noreferrer"&gt;Django new features repo&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=qKkyBhXIJJU&amp;t=10591s" rel="noopener noreferrer"&gt;Carlton’s Talk at PyTV on Mantle&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📦 Projects&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://karpathy.github.io/2026/02/12/microgpt/" rel="noopener noreferrer"&gt;microgpt&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://noumenal.es/mantle/" rel="noopener noreferrer"&gt;Django-Mantle&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://noumenal.es/mantle-drf/" rel="noopener noreferrer"&gt;Django-Mantle-DRF&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📚 Books&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/The_Passage_(Cronin_novel)" rel="noopener noreferrer"&gt;The Passage by Justin Cronin&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.worldscientific.com/worldscibooks/10.1142/q0219" rel="noopener noreferrer"&gt;Solar Power Finance Without the Jargon by Jenny Chase&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/" rel="noopener noreferrer"&gt;Designing Data Intensive Applications by Martin Kleppmann&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🎥 YouTube&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/@djangochat" rel="noopener noreferrer"&gt;YouTube&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🤝 Sponsor&lt;/p&gt;
+&lt;p&gt;This episode was brought to you by &lt;a href="https://buttondown.com/django" rel="noopener noreferrer"&gt;Buttondown&lt;/a&gt;, the easiest way to start, send, and grow your email newsletter. New customers can save 50% off their first &lt;i&gt;year&lt;/i&gt; with &lt;a href="https://buttondown.com/django" rel="noopener noreferrer"&gt;Buttondown&lt;/a&gt; using the coupon code &lt;strong&gt;DJANGO&lt;/strong&gt;.&lt;/p&gt;
+</content:encoded>
+      <enclosure length="74615234" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/media/audio/transcoded/937cb2fe-19cd-4321-8a98-4984bb907f33/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes/audio/group/e0cdd3b6-41b8-49bb-a12d-2fa169a532ee/group-item/cc51346d-8c43-40f3-8fee-c666c43b9547/128_default_tc.mp3?aid=rss_feed&amp;feed=WpQaX_cs" />
+      <itunes:title>Django Tasks - Jake Howard</itunes:title>
+      <itunes:author>Will Vincent</itunes:author>
+      <itunes:duration>01:17:43</itunes:duration>
+      <itunes:summary>Jake is a Senior Systems Engineer at Torchbox and the author of DEP 14, django.tasks, the highlight feature in Django 6.0. We discuss his work on the Django security team, work with Wagtail, AI dabblings, and more.</itunes:summary>
+      <itunes:subtitle>Jake is a Senior Systems Engineer at Torchbox and the author of DEP 14, django.tasks, the highlight feature in Django 6.0. We discuss his work on the Django security team, work with Wagtail, AI dabblings, and more.</itunes:subtitle>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>200</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">f77fd01c-ed30-4e2c-88ac-523b4d3003d3</guid>
+      <title>Boost Your GitHub DX - Adam Johnson</title>
+      <description>&lt;p&gt;🔗 Links&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://adamj.eu/books/" rel="noopener noreferrer"&gt;Adam's Books&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://adamj.eu/tech/2026/01/14/python-introducing-tprof/" rel="noopener noreferrer"&gt;Introducing tprof&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://adamj.eu/tech/2026/02/09/python-introducing-icu4py/" rel="noopener noreferrer"&gt;Introducing icu4py&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://2026.djangocon.eu/speakers/JHNLPQ/" rel="noopener noreferrer"&gt;Carlton's keynote at DjangoCon Europe&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.djangoproject.com/weblog/2026/feb/04/recent-trends-security-team/" rel="noopener noreferrer"&gt;Recent trends in the work of the Django Security Team&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📦 Projects&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://github.com/yassi/dj-urls-panel" rel="noopener noreferrer"&gt;dj-urls-panel&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://hornbeam.dev/" rel="noopener noreferrer"&gt;Hornbeam&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://docs.python.org/dev/whatsnew/3.15.html#whatsnew315-sampling-profiler" rel="noopener noreferrer"&gt;Tachyon&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📚 Books&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.penguinrandomhouse.com/books/722674/the-coming-wave-by-mustafa-suleyman-with-michael-bhaskar/" rel="noopener noreferrer"&gt;The Coming Wave by Mustafa Suleyman&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://blog.stenmans.org/theBeamBook/" rel="noopener noreferrer"&gt;The BEAM Book: Understanding the Erlang Runtime — Erik Stenman&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.hachettebookgroup.com/titles/virginia-postrel/the-fabric-of-civilization/9781541617629/?lens=basic-books" rel="noopener noreferrer"&gt;The Fabric of Civilization by Virginia Postrel&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🎥 YouTube&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/@djangochat" rel="noopener noreferrer"&gt;YouTube Channel: @djangochat&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Sponsor&lt;/h3&gt;
+&lt;p&gt;This episode is brought to you by &lt;a href="https://sixfeetup.com/" rel="noopener noreferrer"&gt;Six Feet Up&lt;/a&gt;, the Python, Django, and AI experts who solve hard software problems. Whether it’s scaling an application, deriving insights from data, or getting results from AI, Six Feet Up helps you move forward faster.&lt;/p&gt;
+&lt;p&gt;See what’s possible at &lt;a href="https://sixfeetup.com/" rel="noopener noreferrer"&gt;https://sixfeetup.com/&lt;/a&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Wed, 1 Apr 2026 09:00:00 +0000</pubDate>
+      <author>will@wsvincent.com (Will Vincent)</author>
+      <link>https://djangochat.com</link>
+      <content:encoded>&lt;p&gt;🔗 Links&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://adamj.eu/books/" rel="noopener noreferrer"&gt;Adam's Books&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://adamj.eu/tech/2026/01/14/python-introducing-tprof/" rel="noopener noreferrer"&gt;Introducing tprof&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://adamj.eu/tech/2026/02/09/python-introducing-icu4py/" rel="noopener noreferrer"&gt;Introducing icu4py&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://2026.djangocon.eu/speakers/JHNLPQ/" rel="noopener noreferrer"&gt;Carlton's keynote at DjangoCon Europe&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.djangoproject.com/weblog/2026/feb/04/recent-trends-security-team/" rel="noopener noreferrer"&gt;Recent trends in the work of the Django Security Team&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📦 Projects&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://github.com/yassi/dj-urls-panel" rel="noopener noreferrer"&gt;dj-urls-panel&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://hornbeam.dev/" rel="noopener noreferrer"&gt;Hornbeam&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://docs.python.org/dev/whatsnew/3.15.html#whatsnew315-sampling-profiler" rel="noopener noreferrer"&gt;Tachyon&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📚 Books&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.penguinrandomhouse.com/books/722674/the-coming-wave-by-mustafa-suleyman-with-michael-bhaskar/" rel="noopener noreferrer"&gt;The Coming Wave by Mustafa Suleyman&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://blog.stenmans.org/theBeamBook/" rel="noopener noreferrer"&gt;The BEAM Book: Understanding the Erlang Runtime — Erik Stenman&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.hachettebookgroup.com/titles/virginia-postrel/the-fabric-of-civilization/9781541617629/?lens=basic-books" rel="noopener noreferrer"&gt;The Fabric of Civilization by Virginia Postrel&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🎥 YouTube&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/@djangochat" rel="noopener noreferrer"&gt;YouTube Channel: @djangochat&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Sponsor&lt;/h3&gt;
+&lt;p&gt;This episode is brought to you by &lt;a href="https://sixfeetup.com/" rel="noopener noreferrer"&gt;Six Feet Up&lt;/a&gt;, the Python, Django, and AI experts who solve hard software problems. Whether it’s scaling an application, deriving insights from data, or getting results from AI, Six Feet Up helps you move forward faster.&lt;/p&gt;
+&lt;p&gt;See what’s possible at &lt;a href="https://sixfeetup.com/" rel="noopener noreferrer"&gt;https://sixfeetup.com/&lt;/a&gt;.&lt;/p&gt;
+</content:encoded>
+      <enclosure length="52597562" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/media/audio/transcoded/937cb2fe-19cd-4321-8a98-4984bb907f33/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes/audio/group/7c1f98af-908d-4703-981c-bc27175b8b5a/group-item/408468e4-4c10-459e-ba48-55157be40639/128_default_tc.mp3?aid=rss_feed&amp;feed=WpQaX_cs" />
+      <itunes:title>Boost Your GitHub DX - Adam Johnson</itunes:title>
+      <itunes:author>Will Vincent</itunes:author>
+      <itunes:duration>00:54:47</itunes:duration>
+      <itunes:summary>Adam is a prolific Django contributor and author of a new book, Boost Your GitHub DX. We discuss how to get the most out of GitHub (or any Git-based platform), as well as current work on bringing Python bindings to the ICU (International Components for Unicode) library, and more.</itunes:summary>
+      <itunes:subtitle>Adam is a prolific Django contributor and author of a new book, Boost Your GitHub DX. We discuss how to get the most out of GitHub (or any Git-based platform), as well as current work on bringing Python bindings to the ICU (International Components for Unicode) library, and more.</itunes:subtitle>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>199</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">815e4e25-8330-426f-98c9-7fa5845f890c</guid>
+      <title>PyCon US 2026 - Elaine Wong &amp; Jon Banafato</title>
+      <description>&lt;p&gt;🔗 Links&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://us.pycon.org/2026/" rel="noopener noreferrer"&gt;PyCon US website&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://mail.python.org/mailman3/lists/pycon-volunteers.python.org/" rel="noopener noreferrer"&gt;Volunteer mailing list&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;Elaine on &lt;a href="https://www.linkedin.com/in/eswong/" rel="noopener noreferrer"&gt;LinkedIn&lt;/a&gt; and &lt;a href="https://www.jonafato.com/" rel="noopener noreferrer"&gt;Jon's personal site&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🎥 YouTube&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/@djangochat" rel="noopener noreferrer"&gt;YouTube Channel: @djangochat&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Sponsor&lt;/h3&gt;
+&lt;p&gt;This episode is brought to you by Six Feet Up, the Python, Django, and AI experts who solve hard software problems. Whether it’s scaling an application, deriving insights from data, or getting results from AI, Six Feet Up helps you move forward faster.&lt;/p&gt;
+&lt;p&gt;See what’s possible at &lt;a href="https://sixfeetup.com/" rel="noopener noreferrer"&gt;sixfeetup.com&lt;/a&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Wed, 18 Mar 2026 17:00:00 +0000</pubDate>
+      <author>will@wsvincent.com (Will Vincent)</author>
+      <link>https://djangochat.com</link>
+      <content:encoded>&lt;p&gt;🔗 Links&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://us.pycon.org/2026/" rel="noopener noreferrer"&gt;PyCon US website&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://mail.python.org/mailman3/lists/pycon-volunteers.python.org/" rel="noopener noreferrer"&gt;Volunteer mailing list&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;Elaine on &lt;a href="https://www.linkedin.com/in/eswong/" rel="noopener noreferrer"&gt;LinkedIn&lt;/a&gt; and &lt;a href="https://www.jonafato.com/" rel="noopener noreferrer"&gt;Jon's personal site&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🎥 YouTube&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/@djangochat" rel="noopener noreferrer"&gt;YouTube Channel: @djangochat&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Sponsor&lt;/h3&gt;
+&lt;p&gt;This episode is brought to you by Six Feet Up, the Python, Django, and AI experts who solve hard software problems. Whether it’s scaling an application, deriving insights from data, or getting results from AI, Six Feet Up helps you move forward faster.&lt;/p&gt;
+&lt;p&gt;See what’s possible at &lt;a href="https://sixfeetup.com/" rel="noopener noreferrer"&gt;sixfeetup.com&lt;/a&gt;.&lt;/p&gt;
+</content:encoded>
+      <enclosure length="55094032" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/media/audio/transcoded/937cb2fe-19cd-4321-8a98-4984bb907f33/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes/audio/group/ad0b782a-f4a5-4272-848a-a23a9017be19/group-item/b00b0d68-cf37-4849-8a41-aa618b49a810/128_default_tc.mp3?aid=rss_feed&amp;feed=WpQaX_cs" />
+      <itunes:title>PyCon US 2026 - Elaine Wong &amp; Jon Banafato</itunes:title>
+      <itunes:author>Will Vincent</itunes:author>
+      <itunes:duration>00:57:23</itunes:duration>
+      <itunes:summary>Elaine and Jon are the chair/co-chair respectively of PyCon US, the largest Python conference in North America, happening this May in Long Beach, CA. We discuss what to expect at the conference, new additions from last year, tips on where to stay, and generally how to maximize your PyCon experience.
+</itunes:summary>
+      <itunes:subtitle>Elaine and Jon are the chair/co-chair respectively of PyCon US, the largest Python conference in North America, happening this May in Long Beach, CA. We discuss what to expect at the conference, new additions from last year, tips on where to stay, and generally how to maximize your PyCon experience.
+</itunes:subtitle>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>198</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">2bd47417-b6b0-49d5-874b-1a7fc24efed7</guid>
+      <title>From Kenya to London with Django - Velda Kiara</title>
+      <description>&lt;p&gt;🔗 Links&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.revsys.com/about/bio/velda-kiara" rel="noopener noreferrer"&gt;Velda at RevSys&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://veldakiara.substack.com/" rel="noopener noreferrer"&gt;Velda’s Substack: The Storyteller's Byte Tales&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/VeldaKiara" rel="noopener noreferrer"&gt;Velda on GitHub&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://youtu.be/dvxzJDk6x9Q?si=Qa7rKnDFFvOBHDrq" rel="noopener noreferrer"&gt;Optimal Performance Over Basic as a Perfectionist with Deadlines&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://veldakiara.notion.site/Velda-Kiara-46aec24028fd4e8dbdba003097c18b5b" rel="noopener noreferrer"&gt;More about me&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/carltongibson/neapolitan" rel="noopener noreferrer"&gt;Neapolitan&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📦 Projects&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://github.com/DjangoAdminHackers/django-linkcheck" rel="noopener noreferrer"&gt;django-linkcheck&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/adamghill/django-lsp" rel="noopener noreferrer"&gt;adamghill/django-lsp&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/django-commons/django-debug-toolbar" rel="noopener noreferrer"&gt;django-debug-toolbar&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📚 Books&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.penguinrandomhouse.com/books/317975/a-history-of-the-bible-by-john-barton/" rel="noopener noreferrer"&gt;A History of the Bible by John Barton&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/dabeaz-course/python-mastery" rel="noopener noreferrer"&gt;Python Mastery, a course from David Beazley&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/The_Kite_Runner" rel="noopener noreferrer"&gt;Kite Runner by Khaled Hosseini&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🎥 YouTube&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/@djangochat" rel="noopener noreferrer"&gt;YouTube&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Sponsor&lt;/h3&gt;
+&lt;p&gt;This episode was brought to you by &lt;a href="https://buttondown.com/django" rel="noopener noreferrer"&gt;Buttondown&lt;/a&gt;, the easiest way to start, send, and grow your email newsletter. New customers can save 50% off their first &lt;i&gt;year&lt;/i&gt; with &lt;a href="https://buttondown.com/django" rel="noopener noreferrer"&gt;Buttondown&lt;/a&gt; using the coupon code &lt;strong&gt;DJANGO&lt;/strong&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Wed, 11 Mar 2026 11:00:00 +0000</pubDate>
+      <author>will@wsvincent.com (Will Vincent)</author>
+      <link>https://djangochat.com</link>
+      <content:encoded>&lt;p&gt;🔗 Links&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.revsys.com/about/bio/velda-kiara" rel="noopener noreferrer"&gt;Velda at RevSys&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://veldakiara.substack.com/" rel="noopener noreferrer"&gt;Velda’s Substack: The Storyteller's Byte Tales&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/VeldaKiara" rel="noopener noreferrer"&gt;Velda on GitHub&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://youtu.be/dvxzJDk6x9Q?si=Qa7rKnDFFvOBHDrq" rel="noopener noreferrer"&gt;Optimal Performance Over Basic as a Perfectionist with Deadlines&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://veldakiara.notion.site/Velda-Kiara-46aec24028fd4e8dbdba003097c18b5b" rel="noopener noreferrer"&gt;More about me&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/carltongibson/neapolitan" rel="noopener noreferrer"&gt;Neapolitan&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📦 Projects&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://github.com/DjangoAdminHackers/django-linkcheck" rel="noopener noreferrer"&gt;django-linkcheck&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/adamghill/django-lsp" rel="noopener noreferrer"&gt;adamghill/django-lsp&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/django-commons/django-debug-toolbar" rel="noopener noreferrer"&gt;django-debug-toolbar&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📚 Books&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.penguinrandomhouse.com/books/317975/a-history-of-the-bible-by-john-barton/" rel="noopener noreferrer"&gt;A History of the Bible by John Barton&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/dabeaz-course/python-mastery" rel="noopener noreferrer"&gt;Python Mastery, a course from David Beazley&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/The_Kite_Runner" rel="noopener noreferrer"&gt;Kite Runner by Khaled Hosseini&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🎥 YouTube&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/@djangochat" rel="noopener noreferrer"&gt;YouTube&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Sponsor&lt;/h3&gt;
+&lt;p&gt;This episode was brought to you by &lt;a href="https://buttondown.com/django" rel="noopener noreferrer"&gt;Buttondown&lt;/a&gt;, the easiest way to start, send, and grow your email newsletter. New customers can save 50% off their first &lt;i&gt;year&lt;/i&gt; with &lt;a href="https://buttondown.com/django" rel="noopener noreferrer"&gt;Buttondown&lt;/a&gt; using the coupon code &lt;strong&gt;DJANGO&lt;/strong&gt;.&lt;/p&gt;
+</content:encoded>
+      <enclosure length="74662463" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/media/audio/transcoded/937cb2fe-19cd-4321-8a98-4984bb907f33/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes/audio/group/bed25007-e397-46db-9bd7-596a0e56ca6a/group-item/8da7fa40-e232-4742-89dd-2b82a8201763/128_default_tc.mp3?aid=rss_feed&amp;feed=WpQaX_cs" />
+      <itunes:title>From Kenya to London with Django - Velda Kiara</itunes:title>
+      <itunes:author>Will Vincent</itunes:author>
+      <itunes:duration>01:17:46</itunes:duration>
+      <itunes:summary>Velda is a software engineer at RevSys based in London and an extremely active member of the Python and Django communities. She is a PSF Fellow, former Djangonaut, co-maintainer of `django-debug-toolbar`, regular conference speaker, and Microsoft MVP. </itunes:summary>
+      <itunes:subtitle>Velda is a software engineer at RevSys based in London and an extremely active member of the Python and Django communities. She is a PSF Fellow, former Djangonaut, co-maintainer of `django-debug-toolbar`, regular conference speaker, and Microsoft MVP. </itunes:subtitle>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>197</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">36f9cba9-f20e-4c1e-a23e-f13c1b803d8c</guid>
+      <title>Freelancing &amp; Community - Andrew Miller</title>
+      <description>&lt;p&gt;🔗 Links&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.akmiller.co.uk/" rel="noopener noreferrer"&gt;Personal website&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/nanorepublica" rel="noopener noreferrer"&gt;GitHub&lt;/a&gt;, &lt;a href="https://indiehackers.social/deck/@nanorepublica" rel="noopener noreferrer"&gt;Mastodon&lt;/a&gt;, and &lt;a href="https://www.linkedin.com/in/akmiller89/" rel="noopener noreferrer"&gt;LinkedIn&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.akmiller.co.uk/in-progress" rel="noopener noreferrer"&gt;In Progress podcast&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.hamiltonrock.com/" rel="noopener noreferrer"&gt;Hamilton Rock&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=Eq0XJy_AlDc" rel="noopener noreferrer"&gt;Comprehension Debt&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://buildermethods.com" rel="noopener noreferrer"&gt;Builder Methods&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📦 Projects&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://github.com/nanorepublica/django-prodserver" rel="noopener noreferrer"&gt;django-prodserver&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://codingjoe.dev/django-health-check/" rel="noopener noreferrer"&gt;django-health-check&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/django/online-community-working-group" rel="noopener noreferrer"&gt;Online Community Working Group&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📚 Books&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.manning.com/books/build-a-large-language-model-from-scratch" rel="noopener noreferrer"&gt;How to Build a LLM From Scratch&lt;/a&gt; by Sebastian Raschka&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://worldofastrom.com" rel="noopener noreferrer"&gt;World of Astrom&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://robwalling.com/books" rel="noopener noreferrer"&gt;Rob Walling books&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://jonathanstark.com" rel="noopener noreferrer"&gt;Jonathan Stark books&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://kadavy.net" rel="noopener noreferrer"&gt;David Kadavy books&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.winwithoutpitching.com/book/the-win-without-pitching-manifesto/" rel="noopener noreferrer"&gt;Manifesto of winning without pitching&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🎥 YouTube&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/@djangochat" rel="noopener noreferrer"&gt;YouTube Channel: @djangochat&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Sponsor&lt;/h3&gt;
+&lt;p&gt;This episode is brought to you by Six Feet Up, the Python, Django, and AI experts who solve hard software problems. Whether it’s scaling an application, deriving insights from data, or getting results from AI, Six Feet Up helps you move forward faster.&lt;/p&gt;
+&lt;p&gt;See what’s possible at &lt;a href="https://sixfeetup.com/" rel="noopener noreferrer"&gt;sixfeetup.com&lt;/a&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Wed, 25 Feb 2026 12:00:00 +0000</pubDate>
+      <author>will@wsvincent.com (Will Vincent)</author>
+      <link>https://djangochat.com</link>
+      <content:encoded>&lt;p&gt;🔗 Links&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.akmiller.co.uk/" rel="noopener noreferrer"&gt;Personal website&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/nanorepublica" rel="noopener noreferrer"&gt;GitHub&lt;/a&gt;, &lt;a href="https://indiehackers.social/deck/@nanorepublica" rel="noopener noreferrer"&gt;Mastodon&lt;/a&gt;, and &lt;a href="https://www.linkedin.com/in/akmiller89/" rel="noopener noreferrer"&gt;LinkedIn&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.akmiller.co.uk/in-progress" rel="noopener noreferrer"&gt;In Progress podcast&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.hamiltonrock.com/" rel="noopener noreferrer"&gt;Hamilton Rock&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=Eq0XJy_AlDc" rel="noopener noreferrer"&gt;Comprehension Debt&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://buildermethods.com" rel="noopener noreferrer"&gt;Builder Methods&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📦 Projects&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://github.com/nanorepublica/django-prodserver" rel="noopener noreferrer"&gt;django-prodserver&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://codingjoe.dev/django-health-check/" rel="noopener noreferrer"&gt;django-health-check&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://github.com/django/online-community-working-group" rel="noopener noreferrer"&gt;Online Community Working Group&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;📚 Books&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.manning.com/books/build-a-large-language-model-from-scratch" rel="noopener noreferrer"&gt;How to Build a LLM From Scratch&lt;/a&gt; by Sebastian Raschka&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://worldofastrom.com" rel="noopener noreferrer"&gt;World of Astrom&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://robwalling.com/books" rel="noopener noreferrer"&gt;Rob Walling books&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://jonathanstark.com" rel="noopener noreferrer"&gt;Jonathan Stark books&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://kadavy.net" rel="noopener noreferrer"&gt;David Kadavy books&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://www.winwithoutpitching.com/book/the-win-without-pitching-manifesto/" rel="noopener noreferrer"&gt;Manifesto of winning without pitching&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;🎥 YouTube&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.youtube.com/@djangochat" rel="noopener noreferrer"&gt;YouTube Channel: @djangochat&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Sponsor&lt;/h3&gt;
+&lt;p&gt;This episode is brought to you by Six Feet Up, the Python, Django, and AI experts who solve hard software problems. Whether it’s scaling an application, deriving insights from data, or getting results from AI, Six Feet Up helps you move forward faster.&lt;/p&gt;
+&lt;p&gt;See what’s possible at &lt;a href="https://sixfeetup.com/" rel="noopener noreferrer"&gt;sixfeetup.com&lt;/a&gt;.&lt;/p&gt;
+</content:encoded>
+      <enclosure length="57756850" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/media/audio/transcoded/937cb2fe-19cd-4321-8a98-4984bb907f33/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes/audio/group/b73b01d7-decf-45bd-86db-c2ef61b97b66/group-item/bb5b853a-eb6d-4cf8-be43-0a12bdccd382/128_default_tc.mp3?aid=rss_feed&amp;feed=WpQaX_cs" />
+      <itunes:title>Freelancing &amp; Community - Andrew Miller</itunes:title>
+      <itunes:author>Will Vincent</itunes:author>
+      <itunes:duration>01:00:09</itunes:duration>
+      <itunes:summary>Andrew is a prolific software developer based out of Cambridge, UK. He runs the solo agency Software Crafts, writes regularly, is a former Djangonaut, and co-founder of the AI banking startup Hamilton Rock.</itunes:summary>
+      <itunes:subtitle>Andrew is a prolific software developer based out of Cambridge, UK. He runs the solo agency Software Crafts, writes regularly, is a former Djangonaut, and co-founder of the AI banking startup Hamilton Rock.</itunes:subtitle>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>196</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">83bb58af-2bdc-49e3-9b3a-94efb3f5b55f</guid>
+      <title>How to Learn Django</title>
+      <description>&lt;ul&gt;&lt;li&gt;&lt;a href="https://jeffknupp.com/blog/2012/12/11/learning-python-via-django-considered-harmful/"&gt;Learning Python via Django Considered Harmful&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://tutorial.djangogirls.org/en/"&gt;Django Girls Tutorial&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://djangoforbeginners.com/"&gt;Django for Beginners&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="http://wsvincent.com/install-python/"&gt;Install Python3 on Mac/Windows/Linux/Chromebook&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://github.com/wsvincent/awesome-django"&gt;awesome-django repo&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://github.com/tomchristie/django-vanilla-views"&gt;django-vanilla-views&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://ccbv.co.uk/"&gt;Classy Class-Based Views site&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://docs.djangoproject.com/en/dev/howto/deployment/checklist/"&gt;Django Deployment Checklist&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;h4&gt;Groups&lt;/h4&gt;&lt;ul&gt;&lt;li&gt;&lt;a href="https://groups.google.com/forum/#!forum/django-users"&gt;Django Users Google Group&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/tagged/django"&gt;Stack Overflow&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://community.simpleisbetterthancomplex.com/"&gt;Simple is Better than Complex Community Board&lt;/a&gt;&lt;/li&gt;&lt;li&gt;Subreddits: &lt;a href="https://www.reddit.com/r/djangolearning/"&gt;LearningDjango&lt;/a&gt; and &lt;a href="https://www.reddit.com/r/django/"&gt;Django&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://djangogirls.org/"&gt;Django Girls&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://www.meetup.com/topics/django/all/"&gt;Django Meetups&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;h4&gt;SHAMELESS PLUGS&lt;/h4&gt;&lt;ul&gt;&lt;li&gt;William's &lt;a href="https://wsvincent.com/books/"&gt;books on Django&lt;/a&gt;&lt;/li&gt;&lt;li&gt;Carlton's website &lt;a href="https://noumenal.es/"&gt;Noumenal&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+</description>
+      <pubDate>Wed, 13 Mar 2019 17:00:11 +0000</pubDate>
+      <author>will@wsvincent.com (William Vincent and Carlton Gibson)</author>
+      <link>https://djangochat.com</link>
+      <content:encoded>&lt;ul&gt;&lt;li&gt;&lt;a href="https://jeffknupp.com/blog/2012/12/11/learning-python-via-django-considered-harmful/"&gt;Learning Python via Django Considered Harmful&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://tutorial.djangogirls.org/en/"&gt;Django Girls Tutorial&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://djangoforbeginners.com/"&gt;Django for Beginners&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="http://wsvincent.com/install-python/"&gt;Install Python3 on Mac/Windows/Linux/Chromebook&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://github.com/wsvincent/awesome-django"&gt;awesome-django repo&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://github.com/tomchristie/django-vanilla-views"&gt;django-vanilla-views&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://ccbv.co.uk/"&gt;Classy Class-Based Views site&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://docs.djangoproject.com/en/dev/howto/deployment/checklist/"&gt;Django Deployment Checklist&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;h4&gt;Groups&lt;/h4&gt;&lt;ul&gt;&lt;li&gt;&lt;a href="https://groups.google.com/forum/#!forum/django-users"&gt;Django Users Google Group&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/tagged/django"&gt;Stack Overflow&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://community.simpleisbetterthancomplex.com/"&gt;Simple is Better than Complex Community Board&lt;/a&gt;&lt;/li&gt;&lt;li&gt;Subreddits: &lt;a href="https://www.reddit.com/r/djangolearning/"&gt;LearningDjango&lt;/a&gt; and &lt;a href="https://www.reddit.com/r/django/"&gt;Django&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://djangogirls.org/"&gt;Django Girls&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="https://www.meetup.com/topics/django/all/"&gt;Django Meetups&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;h4&gt;SHAMELESS PLUGS&lt;/h4&gt;&lt;ul&gt;&lt;li&gt;William's &lt;a href="https://wsvincent.com/books/"&gt;books on Django&lt;/a&gt;&lt;/li&gt;&lt;li&gt;Carlton's website &lt;a href="https://noumenal.es/"&gt;Noumenal&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+</content:encoded>
+      <enclosure length="66415095" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/audio/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/85357cab-bd4c-449a-9530-c262a458728d/how_to_learn_django_tc.mp3?aid=rss_feed&amp;feed=WpQaX_cs" />
+      <itunes:title>How to Learn Django</itunes:title>
+      <itunes:author>William Vincent and Carlton Gibson</itunes:author>
+      <itunes:duration>00:46:07</itunes:duration>
+      <itunes:summary>Carlton and William discuss how to learn Django whether you are a total beginner or experienced web developer.</itunes:summary>
+      <itunes:subtitle>Carlton and William discuss how to learn Django whether you are a total beginner or experienced web developer.</itunes:subtitle>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>2</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">608e4ca7-a6b0-4e07-b138-97ad41ef17b1</guid>
+      <title>What is Django?</title>
+      <description>&lt;ul&gt;&lt;li&gt;&lt;a href="https://youtu.be/7kwnjoAJ2HQ"&gt;Let's Build a Web Framework!&lt;/a&gt; - PyCon 2017 talk by Jacob Kaplan-Moss&lt;/li&gt;&lt;li&gt;&lt;a href="https://djangopackages.org/"&gt;Django Packages&lt;/a&gt; - Complete listing of all Django packages&lt;/li&gt;&lt;li&gt;&lt;a href="https://github.com/wsvincent/awesome-django#third-party-packages"&gt;awesome-django&lt;/a&gt; - Curated list of Django packages&lt;/li&gt;&lt;/ul&gt;&lt;h4&gt;SHAMELESS PLUGS&lt;/h4&gt;&lt;ul&gt;&lt;li&gt;&lt;a href="https://learndjango.com"&gt;LearnDjango&lt;/a&gt; - Free tutorials and premium books&lt;/li&gt;&lt;li&gt;Carlton's website &lt;a href="https://noumenal.es/"&gt;Noumenal&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+</description>
+      <pubDate>Thu, 7 Mar 2019 00:34:23 +0000</pubDate>
+      <author>will@wsvincent.com (William Vincent and Carlton Gibson)</author>
+      <link>https://djangochat.com</link>
+      <content:encoded>&lt;ul&gt;&lt;li&gt;&lt;a href="https://youtu.be/7kwnjoAJ2HQ"&gt;Let's Build a Web Framework!&lt;/a&gt; - PyCon 2017 talk by Jacob Kaplan-Moss&lt;/li&gt;&lt;li&gt;&lt;a href="https://djangopackages.org/"&gt;Django Packages&lt;/a&gt; - Complete listing of all Django packages&lt;/li&gt;&lt;li&gt;&lt;a href="https://github.com/wsvincent/awesome-django#third-party-packages"&gt;awesome-django&lt;/a&gt; - Curated list of Django packages&lt;/li&gt;&lt;/ul&gt;&lt;h4&gt;SHAMELESS PLUGS&lt;/h4&gt;&lt;ul&gt;&lt;li&gt;&lt;a href="https://learndjango.com"&gt;LearnDjango&lt;/a&gt; - Free tutorials and premium books&lt;/li&gt;&lt;li&gt;Carlton's website &lt;a href="https://noumenal.es/"&gt;Noumenal&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+</content:encoded>
+      <enclosure length="41805867" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/audio/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/2ee6175b-05b4-41de-8fb9-f84bf96eaacb/001_what_is_django_tc.mp3?aid=rss_feed&amp;feed=WpQaX_cs" />
+      <itunes:title>What is Django?</itunes:title>
+      <itunes:author>William Vincent and Carlton Gibson</itunes:author>
+      <itunes:duration>00:29:02</itunes:duration>
+      <itunes:summary>Django is a web framework but what does that actually mean? We discuss why web frameworks exist and what makes Django special.</itunes:summary>
+      <itunes:subtitle>Django is a web framework but what does that actually mean? We discuss why web frameworks exist and what makes Django special.</itunes:subtitle>
+      <itunes:keywords>technology, web, programming, python, django</itunes:keywords>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>1</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">697f5867-15e8-414f-b837-4faee703b5cc</guid>
+      <title>Preview</title>
+      <description>&lt;p&gt;Coming soon! Subscribe and stay tuned.&lt;/p&gt;
+</description>
+      <pubDate>Sat, 2 Feb 2019 01:56:00 +0000</pubDate>
+      <author>will@wsvincent.com (William Vincent and Carlton Gibson)</author>
+      <link>https://djangochat.com</link>
+      <content:encoded>&lt;p&gt;Coming soon! Subscribe and stay tuned.&lt;/p&gt;
+</content:encoded>
+      <enclosure length="711639" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/audio/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/4f9f2269-7780-430e-b2bc-bd91cde19b58/deaba14a_tc.mp3?aid=rss_feed&amp;feed=WpQaX_cs" />
+      <itunes:title>Preview</itunes:title>
+      <itunes:author>William Vincent and Carlton Gibson</itunes:author>
+      <itunes:image href="https://image.simplecastcdn.com/images/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/4f9f2269-7780-430e-b2bc-bd91cde19b58/3000x3000/1549072831-artwork.jpg?aid=rss_feed" />
+      <itunes:duration>00:00:40</itunes:duration>
+      <itunes:summary>Coming soon! Subscribe and stay tuned.</itunes:summary>
+      <itunes:subtitle>Coming soon! Subscribe and stay tuned.</itunes:subtitle>
+      <itunes:keywords>django web framework, web, programming, python, django</itunes:keywords>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>0</itunes:episode>
+    </item>
+  </channel>
+</rss>

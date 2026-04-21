@@ -1,0 +1,16 @@
+{
+  "captured_at": "2026-04-21T05:34:01.480444+00:00",
+  "files": {
+    "rss_feed.xml": "https://feeds.simplecast.com/WpQaX_cs",
+    "simplecast_distribution_channels.json": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/distribution_channels",
+    "simplecast_episode_detail_0_preview.json": "https://api.simplecast.com/episodes/4f9f2269-7780-430e-b2bc-bd91cde19b58",
+    "simplecast_episode_detail_1_what-is-django.json": "https://api.simplecast.com/episodes/2ee6175b-05b4-41de-8fb9-f84bf96eaacb",
+    "simplecast_episode_detail_200_django-tasks-jake-howard.json": "https://api.simplecast.com/episodes/af752038-3231-412e-801d-c8cc3cdd90cb",
+    "simplecast_episode_detail_2_how-to-learn-django.json": "https://api.simplecast.com/episodes/85357cab-bd4c-449a-9530-c262a458728d",
+    "simplecast_episode_list_latest.json": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes?limit=5",
+    "simplecast_episode_list_oldest.json": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes?limit=3&offset=198&private=false&sort=latest&status=published",
+    "simplecast_podcast.json": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91",
+    "simplecast_site.json": "https://api.simplecast.com/sites/e7b8d39c-d81e-4eeb-820a-9a2105bad193"
+  },
+  "note": "Public Django Chat source fixtures. Tests parse these local files and do not require network access."
+}

@@ -1,0 +1,126 @@
+{
+  "average_duration": 3143.38,
+  "collection": [
+    {
+      "audio_status": "transcoded",
+      "description": "Jake is a Senior Systems Engineer at Torchbox and the author of DEP 14, django.tasks, the highlight feature in Django 6.0. We discuss his work on the Django security team, work with Wagtail, AI dabblings, and more.",
+      "duration": 4663,
+      "enclosure_url": "https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/media/audio/transcoded/937cb2fe-19cd-4321-8a98-4984bb907f33/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes/audio/group/e0cdd3b6-41b8-49bb-a12d-2fa169a532ee/group-item/cc51346d-8c43-40f3-8fee-c666c43b9547/128_default_tc.mp3",
+      "guid": "2c78bb02-8162-44f0-b22d-a188f5bbdb9e",
+      "href": "https://api.simplecast.com/episodes/af752038-3231-412e-801d-c8cc3cdd90cb",
+      "id": "af752038-3231-412e-801d-c8cc3cdd90cb",
+      "image_url": null,
+      "is_hidden": false,
+      "number": 200,
+      "published_at": "2026-04-15T04:00:00-04:00",
+      "season": {
+        "href": "https://api.simplecast.com/seasons/c2e15458-0b2b-418e-8a7e-e28318a0afb3",
+        "number": 1
+      },
+      "slug": "django-tasks-jake-howard",
+      "status": "published",
+      "title": "Django Tasks - Jake Howard",
+      "type": "full",
+      "updated_at": "2026-04-15T04:00:02-04:00"
+    },
+    {
+      "audio_status": "transcoded",
+      "description": "Adam is a prolific Django contributor and author of a new book, Boost Your GitHub DX. We discuss how to get the most out of GitHub (or any Git-based platform), as well as current work on bringing Python bindings to the ICU (International Components for Unicode) library, and more.",
+      "duration": 3287,
+      "enclosure_url": "https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/media/audio/transcoded/937cb2fe-19cd-4321-8a98-4984bb907f33/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes/audio/group/7c1f98af-908d-4703-981c-bc27175b8b5a/group-item/408468e4-4c10-459e-ba48-55157be40639/128_default_tc.mp3",
+      "guid": "f77fd01c-ed30-4e2c-88ac-523b4d3003d3",
+      "href": "https://api.simplecast.com/episodes/cc49730d-48bc-4913-9580-4bb4a17b09d2",
+      "id": "cc49730d-48bc-4913-9580-4bb4a17b09d2",
+      "image_url": null,
+      "is_hidden": false,
+      "number": 199,
+      "published_at": "2026-04-01T05:00:00-04:00",
+      "season": {
+        "href": "https://api.simplecast.com/seasons/c2e15458-0b2b-418e-8a7e-e28318a0afb3",
+        "number": 1
+      },
+      "slug": "boost-your-github-dx-adam-johnson",
+      "status": "published",
+      "title": "Boost Your GitHub DX - Adam Johnson",
+      "type": "full",
+      "updated_at": "2026-04-01T05:00:05-04:00"
+    },
+    {
+      "audio_status": "transcoded",
+      "description": "Elaine and Jon are the chair/co-chair respectively of PyCon US, the largest Python conference in North America, happening this May in Long Beach, CA. We discuss what to expect at the conference, new additions from last year, tips on where to stay, and generally how to maximize your PyCon experience.\n",
+      "duration": 3443,
+      "enclosure_url": "https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/media/audio/transcoded/937cb2fe-19cd-4321-8a98-4984bb907f33/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes/audio/group/ad0b782a-f4a5-4272-848a-a23a9017be19/group-item/b00b0d68-cf37-4849-8a41-aa618b49a810/128_default_tc.mp3",
+      "guid": "815e4e25-8330-426f-98c9-7fa5845f890c",
+      "href": "https://api.simplecast.com/episodes/68c0bf52-05b9-4544-a659-7d90d9763bd2",
+      "id": "68c0bf52-05b9-4544-a659-7d90d9763bd2",
+      "image_url": null,
+      "is_hidden": false,
+      "number": 198,
+      "published_at": "2026-03-18T13:00:00-04:00",
+      "season": {
+        "href": "https://api.simplecast.com/seasons/c2e15458-0b2b-418e-8a7e-e28318a0afb3",
+        "number": 1
+      },
+      "slug": "pycon-us-2026-elaine-wong-jon-banafato",
+      "status": "published",
+      "title": "PyCon US 2026 - Elaine Wong & Jon Banafato",
+      "type": "full",
+      "updated_at": "2026-03-18T13:00:01-04:00"
+    },
+    {
+      "audio_status": "transcoded",
+      "description": "Velda is a software engineer at RevSys based in London and an extremely active member of the Python and Django communities. She is a PSF Fellow, former Djangonaut, co-maintainer of `django-debug-toolbar`, regular conference speaker, and Microsoft MVP. ",
+      "duration": 4666,
+      "enclosure_url": "https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/media/audio/transcoded/937cb2fe-19cd-4321-8a98-4984bb907f33/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes/audio/group/bed25007-e397-46db-9bd7-596a0e56ca6a/group-item/8da7fa40-e232-4742-89dd-2b82a8201763/128_default_tc.mp3",
+      "guid": "2bd47417-b6b0-49d5-874b-1a7fc24efed7",
+      "href": "https://api.simplecast.com/episodes/722fb062-95b3-4c90-b5d6-9d42be3f9987",
+      "id": "722fb062-95b3-4c90-b5d6-9d42be3f9987",
+      "image_url": null,
+      "is_hidden": false,
+      "number": 197,
+      "published_at": "2026-03-11T07:00:00-04:00",
+      "season": {
+        "href": "https://api.simplecast.com/seasons/c2e15458-0b2b-418e-8a7e-e28318a0afb3",
+        "number": 1
+      },
+      "slug": "from-kenya-to-london-with-django-velda-kiara",
+      "status": "published",
+      "title": "From Kenya to London with Django - Velda Kiara",
+      "type": "full",
+      "updated_at": "2026-03-11T07:00:01-04:00"
+    },
+    {
+      "audio_status": "transcoded",
+      "description": "Andrew is a prolific software developer based out of Cambridge, UK. He runs the solo agency Software Crafts, writes regularly, is a former Djangonaut, and co-founder of the AI banking startup Hamilton Rock.",
+      "duration": 3609,
+      "enclosure_url": "https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/media/audio/transcoded/937cb2fe-19cd-4321-8a98-4984bb907f33/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes/audio/group/b73b01d7-decf-45bd-86db-c2ef61b97b66/group-item/bb5b853a-eb6d-4cf8-be43-0a12bdccd382/128_default_tc.mp3",
+      "guid": "36f9cba9-f20e-4c1e-a23e-f13c1b803d8c",
+      "href": "https://api.simplecast.com/episodes/15af4e86-2aec-47a1-9a12-c50230502352",
+      "id": "15af4e86-2aec-47a1-9a12-c50230502352",
+      "image_url": null,
+      "is_hidden": false,
+      "number": 196,
+      "published_at": "2026-02-25T07:00:00-05:00",
+      "season": {
+        "href": "https://api.simplecast.com/seasons/c2e15458-0b2b-418e-8a7e-e28318a0afb3",
+        "number": 1
+      },
+      "slug": "freelancing-community-andrew-miller-seDEJ66s",
+      "status": "published",
+      "title": "Freelancing & Community - Andrew Miller",
+      "type": "full",
+      "updated_at": "2026-02-25T07:00:01-05:00"
+    }
+  ],
+  "count": 201,
+  "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes?limit=5",
+  "pages": {
+    "current": 1,
+    "limit": 5,
+    "next": {
+      "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes?limit=5&offset=5&private=false&sort=latest&status=published"
+    },
+    "previous": null,
+    "total": 41
+  }
+}

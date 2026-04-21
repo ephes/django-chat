@@ -98,6 +98,29 @@ and the same scoped `ty` typecheck used by `just typecheck`.
 Ruff skips Django migration files. Once app migrations exist, they should stay
 reviewable but should not drive lint or format churn from generated code.
 
+## Source Data Fixtures
+
+Slice 3 includes a read-only parser foundation for public Django Chat source
+data. Tests parse committed fixtures from
+`django_chat/imports/tests/fixtures/django_chat_source/` and do not require
+network access.
+
+The fixture set contains a latest/oldest sample from the canonical RSS feed,
+minimized Simplecast podcast metadata, latest and oldest episode-list pages,
+representative episode detail responses with transcript HTML where Simplecast
+exposes it, site menu/social links, and distribution links.
+
+Refresh the fixtures only when intentionally updating the source-data baseline:
+
+```sh
+just manage capture_django_chat_source_fixtures --force
+```
+
+The capture command fetches public unauthenticated URLs and writes fixture
+files only; it does not create database rows, Wagtail pages, django-cast
+objects, media files, S3 objects, or transcript conversions. Review refreshed
+fixtures before committing them and keep only public, non-secret source data.
+
 ## Environment Files
 
 Local settings support a private `.env` file in the repository root. Start from
@@ -137,6 +160,7 @@ development. Staging and production must set
 ## Boundaries
 
 Private deployment configuration and secrets stay outside this shareable app
-repo. This slice does not include import commands, S3 media copy, transcript
-conversion, a transcript worker service, deployment commands, host review docs,
-or staging URLs; those are later implementation slices from the research PRD.
+repo. This slice does not include database import commands, S3 media copy,
+transcript conversion, a transcript worker service, deployment commands, host
+review docs, or staging URLs; those are later implementation slices from the
+research PRD.

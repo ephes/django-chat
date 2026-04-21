@@ -1,0 +1,75 @@
+{
+  "collection": [
+    {
+      "distribution_channel": {
+        "href": "https://api.simplecast.com/distribution_channels/960dcb10-8203-4acc-8462-1868c84b0554",
+        "id": "960dcb10-8203-4acc-8462-1868c84b0554",
+        "name": "Apple Podcasts"
+      },
+      "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/distribution_channels/be4c5fcf-c01f-43c9-b984-4779322429af",
+      "id": "be4c5fcf-c01f-43c9-b984-4779322429af",
+      "url": "https://itunes.apple.com/us/podcast/django-chat/id1451536459 "
+    },
+    {
+      "distribution_channel": {
+        "href": "https://api.simplecast.com/distribution_channels/87a971bb-a9b1-49e1-b7ba-2c62caec5125",
+        "id": "87a971bb-a9b1-49e1-b7ba-2c62caec5125",
+        "name": "Overcast"
+      },
+      "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/distribution_channels/a68ae231-659a-47eb-b87b-e79ba470493c",
+      "id": "a68ae231-659a-47eb-b87b-e79ba470493c",
+      "url": "https://overcast.fm/itunes1451536459/django-chat"
+    },
+    {
+      "distribution_channel": {
+        "href": "https://api.simplecast.com/distribution_channels/00512816-1bf2-4828-9f69-5f6fcb3f68f6",
+        "id": "00512816-1bf2-4828-9f69-5f6fcb3f68f6",
+        "name": "Google Podcasts"
+      },
+      "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/distribution_channels/37a6428f-29a1-4aa8-86d1-dd6751dcc613",
+      "id": "37a6428f-29a1-4aa8-86d1-dd6751dcc613",
+      "url": "https://www.google.com/podcasts?feed=aHR0cHM6Ly9mZWVkcy5zaW1wbGVjYXN0LmNvbS9XcFFhWF9jcw%3D%3D"
+    },
+    {
+      "distribution_channel": {
+        "href": "https://api.simplecast.com/distribution_channels/0e925c96-9d01-442d-9dba-2d8632b46d80",
+        "id": "0e925c96-9d01-442d-9dba-2d8632b46d80",
+        "name": "Pocketcast"
+      },
+      "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/distribution_channels/55a9bec5-c388-4d4b-b9af-2bf94dc61b0f",
+      "id": "55a9bec5-c388-4d4b-b9af-2bf94dc61b0f",
+      "url": "https://pca.st/j8y8"
+    },
+    {
+      "distribution_channel": {
+        "href": "https://api.simplecast.com/distribution_channels/fe88c4d8-1857-40f6-a739-21471659321c",
+        "id": "fe88c4d8-1857-40f6-a739-21471659321c",
+        "name": "YouTube"
+      },
+      "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/distribution_channels/ebd1285a-a225-449a-85a5-f4b1451dd818",
+      "id": "ebd1285a-a225-449a-85a5-f4b1451dd818",
+      "url": "https://www.youtube.com/@djangochat"
+    },
+    {
+      "distribution_channel": {
+        "href": "https://api.simplecast.com/distribution_channels/0fbc33ec-e22c-11ea-b155-026319d1360c",
+        "id": "0fbc33ec-e22c-11ea-b155-026319d1360c",
+        "name": "Amazon Music and Audible"
+      },
+      "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/distribution_channels/57e3f86b-8e69-4813-9956-c94e77bc6c75",
+      "id": "57e3f86b-8e69-4813-9956-c94e77bc6c75",
+      "url": "https://music.amazon.com/podcasts/6084b165-726b-4a28-9928-5cc01a9ebb35/django-chat"
+    },
+    {
+      "distribution_channel": {
+        "href": "https://api.simplecast.com/distribution_channels/bb916df4-9575-4c49-972e-b4a0966c078f",
+        "id": "bb916df4-9575-4c49-972e-b4a0966c078f",
+        "name": "Spotify"
+      },
+      "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/distribution_channels/a0b821f8-5ce8-4f51-a1d7-7dad3abc4693",
+      "id": "a0b821f8-5ce8-4f51-a1d7-7dad3abc4693",
+      "url": "https://open.spotify.com/show/4JTUPoJhFKOjbzNbGmIq5l?si=16457669e4134436"
+    }
+  ],
+  "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/distribution_channels"
+}

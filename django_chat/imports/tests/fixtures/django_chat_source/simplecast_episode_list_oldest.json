@@ -1,0 +1,82 @@
+{
+  "average_duration": 3143.38,
+  "collection": [
+    {
+      "audio_status": "transcoded",
+      "description": "Carlton and William discuss how to learn Django whether you are a total beginner or experienced web developer.",
+      "duration": 2767,
+      "enclosure_url": "https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/audio/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/85357cab-bd4c-449a-9530-c262a458728d/how_to_learn_django_tc.mp3",
+      "guid": "83bb58af-2bdc-49e3-9b3a-94efb3f5b55f",
+      "href": "https://api.simplecast.com/episodes/85357cab-bd4c-449a-9530-c262a458728d",
+      "id": "85357cab-bd4c-449a-9530-c262a458728d",
+      "image_url": null,
+      "is_hidden": false,
+      "number": 2,
+      "published_at": "2019-03-13T13:00:11-04:00",
+      "season": {
+        "href": "https://api.simplecast.com/seasons/c2e15458-0b2b-418e-8a7e-e28318a0afb3",
+        "number": 1
+      },
+      "slug": "how-to-learn-django",
+      "status": "published",
+      "title": "How to Learn Django",
+      "type": "full",
+      "updated_at": "2022-06-08T12:03:27-04:00"
+    },
+    {
+      "audio_status": "transcoded",
+      "description": "Django is a web framework but what does that actually mean? We discuss why web frameworks exist and what makes Django special.",
+      "duration": 1742,
+      "enclosure_url": "https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/audio/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/2ee6175b-05b4-41de-8fb9-f84bf96eaacb/001_what_is_django_tc.mp3",
+      "guid": "608e4ca7-a6b0-4e07-b138-97ad41ef17b1",
+      "href": "https://api.simplecast.com/episodes/2ee6175b-05b4-41de-8fb9-f84bf96eaacb",
+      "id": "2ee6175b-05b4-41de-8fb9-f84bf96eaacb",
+      "image_url": null,
+      "is_hidden": false,
+      "number": 1,
+      "published_at": "2019-03-06T19:34:23-05:00",
+      "season": {
+        "href": "https://api.simplecast.com/seasons/c2e15458-0b2b-418e-8a7e-e28318a0afb3",
+        "number": 1
+      },
+      "slug": "what-is-django",
+      "status": "published",
+      "title": "What is Django?",
+      "type": "full",
+      "updated_at": "2020-06-24T14:02:37-04:00"
+    },
+    {
+      "audio_status": "transcoded",
+      "description": "Coming soon! Subscribe and stay tuned.",
+      "duration": 40,
+      "enclosure_url": "https://dts.podtrac.com/redirect.mp3/cdn.simplecast.com/audio/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/4f9f2269-7780-430e-b2bc-bd91cde19b58/deaba14a_tc.mp3",
+      "guid": "697f5867-15e8-414f-b837-4faee703b5cc",
+      "href": "https://api.simplecast.com/episodes/4f9f2269-7780-430e-b2bc-bd91cde19b58",
+      "id": "4f9f2269-7780-430e-b2bc-bd91cde19b58",
+      "image_url": "https://image.simplecastcdn.com/images/19d48b/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/4f9f2269-7780-430e-b2bc-bd91cde19b58/1549072831-artwork.jpg",
+      "is_hidden": false,
+      "number": 0,
+      "published_at": "2019-02-01T20:56:00-05:00",
+      "season": {
+        "href": "https://api.simplecast.com/seasons/c2e15458-0b2b-418e-8a7e-e28318a0afb3",
+        "number": 1
+      },
+      "slug": "preview",
+      "status": "published",
+      "title": "Preview",
+      "type": "full",
+      "updated_at": "2019-09-05T23:02:32-04:00"
+    }
+  ],
+  "count": 201,
+  "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes?limit=3&offset=198&sort=latest&status=published",
+  "pages": {
+    "current": 67,
+    "limit": 3,
+    "next": null,
+    "previous": {
+      "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes?limit=3&offset=195&private=false&sort=latest&status=published"
+    },
+    "total": 67
+  }
+}

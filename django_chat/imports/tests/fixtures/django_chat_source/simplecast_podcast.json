@@ -1,0 +1,46 @@
+{
+  "authors": {
+    "collection": [
+      {
+        "hide": false,
+        "href": "https://api.simplecast.com/authors/df6f46be-47ab-4bd9-912b-00f2b4999290",
+        "id": "df6f46be-47ab-4bd9-912b-00f2b4999290",
+        "name": "William Vincent and Carlton Gibson"
+      }
+    ],
+    "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/authors"
+  },
+  "copyright": "© Django Chat",
+  "created_at": "2019-03-01T14:00:43",
+  "description": "A biweekly podcast on the Django Web Framework by Will Vincent and Carlton Gibson.",
+  "distribution_channels": {
+    "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/distribution_channels"
+  },
+  "enable_feed": true,
+  "episodes": {
+    "count": 203,
+    "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/episodes?preview=true"
+  },
+  "feed_url": "https://feeds.simplecast.com/WpQaX_cs",
+  "href": "https://api.simplecast.com/podcasts/19d48b52-7d9d-4294-8dbf-7f2739ba2e91",
+  "id": "19d48b52-7d9d-4294-8dbf-7f2739ba2e91",
+  "image_url": "https://image.simplecastcdn.com/images/19d48b52-7d9d-4294-8dbf-7f2739ba2e91/259ee18c-8fe2-4e10-8ef7-b95987f5fb24/1549072581-artwork.jpg",
+  "is_explicit": false,
+  "language": "en-us",
+  "published_at": "2019-02-01T20:56:21-05:00",
+  "site": {
+    "cname_url": "djangochat.com",
+    "external_website": "https://djangochat.com",
+    "href": "https://api.simplecast.com/sites/e7b8d39c-d81e-4eeb-820a-9a2105bad193",
+    "id": "e7b8d39c-d81e-4eeb-820a-9a2105bad193",
+    "site_enabled": true,
+    "subdomain": "django-chat",
+    "url": "https://django-chat.simplecast.com"
+  },
+  "status": "published",
+  "subtitle": null,
+  "time_zone": "US/Eastern",
+  "title": "Django Chat",
+  "type": "episodic",
+  "updated_at": "2026-04-15T08:00:16"
+}
