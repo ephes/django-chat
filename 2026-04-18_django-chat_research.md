@@ -195,7 +195,11 @@ Recommendation:
 
 - Use a separate staging bucket now.
 - Use a separate production bucket later if the migration proceeds.
-- Keep credentials outside this shareable app repo. If a private `ops-control` checkout remains the deploy backend, credentials can stay in its SOPS files. If deployment becomes self-contained or externalized, use a separate encrypted secrets file or environment-specific secret store that is not available to ordinary repo readers.
+- Keep decrypted credentials and age private keys outside this shareable app repo.
+  If deployment is self-contained, store only SOPS/age-encrypted environment
+  secret files in this repo. If a private `ops-control` checkout is used as a
+  one-off fallback, credentials can stay in its SOPS files for that fallback
+  run.
 
 ## Deployment Work
 
@@ -207,9 +211,25 @@ The app repo should expose the same style of operator commands as `python-podcas
 - `just deploy-staging`
 - `just deploy-production`
 
-Those commands do not require third parties to receive access to private deployment repositories. They can be thin wrappers around a local/private backend.
+Those commands should not require third parties to receive access to private
+deployment repositories. The preferred target is a self-contained Django
+Chat-specific deployment under `deploy/`, with `ops-control` retained only as a
+possible one-off bootstrap fallback for the first operator-run staging deploy.
+The self-contained deployment must also converge a clean Ubuntu/Debian VPS,
+similar to the old `marina` bootstrap flow, not only redeploy onto an already
+prepared staging machine.
 
-If the Django Chat deploy commands mirror the current Python Podcast command shape, `deploy-staging` and `deploy-production` should depend on a `deploy-bootstrap` recipe or equivalent setup step. In the reference pattern, bootstrapping installs Ansible collections and builds/installs the local `ops-library` collection before running the playbook. The reference deployment also runs Ansible via `uvx --from ansible-core ansible-playbook`, so `uv` is part of the operator toolchain unless a different backend is chosen.
+`deploy-staging` and `deploy-production` should depend on a `deploy-bootstrap`
+recipe or equivalent setup step. Bootstrapping should install Ansible
+collections from `deploy/requirements.yml` via `ansible-galaxy`. The reusable
+`ops-library` collection should be installed from Git by pinned commit SHA until
+proper Git tags exist; once `ops-library` tags are pushed, switch the pin to a
+tag. Include third-party collections explicitly, including
+`community.postgresql`, `community.general`, `community.sops`, and
+`ansible.posix`, so bootstrap does not depend on hidden out-of-band installs.
+Run Ansible via `uvx --from ansible-core ansible-playbook` or a documented
+equivalent, so `uv` is part of the operator toolchain unless a different backend
+is chosen.
 
 Deployment backend options:
 
@@ -218,7 +238,8 @@ Deployment backend options:
    - Those recipes check for a local `OPS_CONTROL` path and call the private playbook when present.
    - Hosts can see the command interface, but not private inventories, hostnames beyond what is documented, SOPS secrets, or unrelated services.
    - Effort: about 0.5 to 1.5 days if the playbook is modeled privately on the Python Podcast deployment pattern.
-   - Best when you are the only deployment operator for staging.
+   - Useful only as a one-off bootstrap fallback for the first operator-run
+     staging deploy; not the recommended ongoing path.
 
 2. External deployment repo for Django Chat.
    - Create a separate deploy repo that contains only Django Chat deployment code, inventory templates, and encrypted secrets policy.
@@ -230,29 +251,99 @@ Deployment backend options:
 3. Self-contained deployment in this app repo.
    - Put deploy playbooks/scripts under `deploy/`.
    - Keep only templates and non-secret defaults in Git.
-   - Secrets live in ignored encrypted files, external SOPS files, environment variables, or CI/host secret storage.
+   - Store SOPS/age-encrypted secret files under `deploy/secrets/`; keep
+     decrypted files and age private keys outside the repo.
+   - Add `.sops.yaml` with age public recipients so re-encryption and future
+     handoff are explicit.
+   - Install reusable Ansible dependencies through `deploy/requirements.yml`
+     rather than requiring operators or hosts to check out `ops-library`.
    - Effort: about 2 to 4 days for a staging-quality deploy path; more for production-grade backup/restore, secret rotation, and multi-environment hardening.
    - Best if the repo is intended to be a complete handoff artifact, but it increases the chance that deployment details leak into a repo shared with third parties.
 
 Recommended initial path:
 
 - Keep the app repo command surface stable: `just deploy-staging` and `just deploy-production`.
-- Implement those commands as wrappers around a private backend for now.
+- Make self-contained deployment in this app repo the primary implementation
+  path.
+- Implement `deploy/` with a narrow Django Chat playbook, minimal inventory,
+  host vars, SOPS/age-encrypted secrets, `.sops.yaml`, and
+  `deploy/requirements.yml`.
+- Include an empty-VPS bootstrap path for Hetzner/Strato-style instances:
+  baseline host tasks first, then `uv`, Traefik base install, PostgreSQL, app
+  Python, application user, systemd services, and HTTPS. The strict role order
+  is listed below.
 - Do not give Django Chat hosts access to `ops-control`.
-- Document the environment variables needed by deployment operators, such as `OPS_CONTROL`, `PROJECTS_ROOT`, `SOPS_AGE_KEY_FILE`, and optionally `DEPLOY_BACKEND`, in operator-only notes or a private deployment document rather than the public/shareable README.
-- If the project progresses toward handoff, split a Django Chat-specific deployment repo rather than exposing the broader `ops-control` repo.
+- Do not require Django Chat hosts to check out `ops-library`; install it via
+  `ansible-galaxy` from a pinned Git commit SHA until tags exist.
+- Do not copy `ops-control` private helpers such as
+  `playbooks/common/load_service_secrets.yml` or `services-metadata.yml`.
+  The Django Chat playbook should load its own SOPS file directly with the
+  `community.sops.sops` lookup.
+- Treat the old `python-podcast/deploy/` and `marina/deploy/` directories as
+  historical reference only. They use Ansible Vault conventions and should not
+  be used as templates for Django Chat.
+- Document operator workstation prerequisites in `docs/operations-boundary.md`:
+  `uv`, `just`, `sops`, `age`, Ansible execution through `uvx`, and the age
+  private key path via `SOPS_AGE_KEY_FILE`.
+- If the project later needs a stricter ownership boundary than encrypted
+  secrets in the app repo can provide, split a narrow Django Chat deployment
+  repo rather than exposing the broader `ops-control` repo.
 
-If using the existing private backend, expected service settings are still:
+If using the self-contained backend, expected service settings are:
 
 The following details are operator-facing planning context. They are useful for
 implementation, but they should not be copied into host-facing documentation or
 public setup instructions.
 
 - Service name: likely `django-chat`.
-- Source path: `{{ PROJECTS_ROOT }}/django-chat`.
+- Source path: an absolute path to the local Django Chat checkout on the
+  operator workstation, for example `/Users/<operator>/projects/django-chat`.
+  For rsync deploys this is the repository root, not `/`.
 - Deployment method: `rsync` for staging.
 - App port: choose an unused port, for example `10015`.
-- Inventory shape: the current private pattern can use one production inventory with staging selected by host/group limit, rather than a completely separate staging inventory. Follow that convention unless an external deploy repo has a reason to define its own layout.
+- Host baseline: target a fresh Ubuntu 24.04 LTS VPS first. Ubuntu 22.04 LTS
+  and Debian 12 are acceptable secondary targets. Current `wagtail_deploy`
+  defaults derive the PostgreSQL repository codename from
+  `ansible_distribution_release`, so host-var overrides should only be needed
+  for distro-specific exceptions or nonstandard provider images. The instance
+  needs root or sudo SSH access, public DNS already pointing at the server, and
+  inbound ports 22, 80, and 443 reachable. The deploy should install required
+  OS packages itself rather than assuming the server was prepared by
+  `ops-control`.
+- Role order for a clean VPS: run baseline host tasks first, then
+  `local.ops_library.uv_install`, then `local.ops_library.traefik_deploy`, then
+  `local.ops_library.wagtail_deploy`. `wagtail_deploy` can also invoke
+  `uv_install` during app Python setup, but the clean-VPS bootstrap should make
+  the uv prerequisite explicit. Baseline host tasks should include `apt` cache
+  refresh, the minimal packages Ansible and deploy need on the target, hostname
+  setup if desired, swap when the provider image does not include it, and an
+  SSH-preserving firewall rule before any firewall tightening.
+- Reverse proxy: run `local.ops_library.traefik_deploy` or an equivalent
+  self-contained Traefik bootstrap before `wagtail_deploy`, because
+  `wagtail_deploy` writes service dynamic config but does not install the base
+  Traefik service.
+- Traefik settings: provide `traefik_letsencrypt_email` in host vars or SOPS
+  secrets before running the clean-VPS bootstrap. If using the role's firewall
+  support, preserve SSH explicitly before enabling or tightening any firewall.
+  The Traefik role opens HTTP/HTTPS when UFW is installed, but the Django Chat
+  bootstrap must not risk locking out port 22.
+- Python/runtime: use the `wagtail_deploy` uv path for app Python. It can
+  install the requested Python version with uv, so the old `marina` source-built
+  Python task should not be copied.
+- Database: rely on `local.ops_library.postgres_install` through
+  `wagtail_deploy` for local PostgreSQL provisioning on the VPS.
+- Memory sizing: a 4 GB VPS should be enough for Django/Wagtail/django-cast,
+  local PostgreSQL, Traefik, 2 to 3 Gunicorn workers, and an optional transcript
+  database worker when media is S3-backed. Avoid local media storage and heavy
+  transcript/ML work on the VPS. Heavy transcription/ML inference runs on the
+  operator's Mac Studio, not on the VPS; the VPS carries at most a lightweight
+  `cast_transcripts` database worker for publishing or conversion of
+  transcripts produced elsewhere. Add swap if the provider image does not
+  include it.
+- Inventory shape: use one combined inventory with staging and production
+  hosts/groups, plus environment-specific host vars. The inventory can commit
+  staging/production FQDNs and app ports; operational secrecy comes from SOPS,
+  not from hiding hostnames.
 - Transcript worker, if enabled:
   - `wagtail_db_worker_enabled: true`
   - `wagtail_db_worker_backend: "cast_transcripts"`
@@ -261,17 +352,32 @@ public setup instructions.
   - `django_chat_wagtail_fqdn: django-chat.staging.django-cast.com`
   - `django_chat_traefik_host_rule: Host(\`django-chat.staging.django-cast.com\`)`
   - `django_chat_django_allowed_hosts: django-chat.staging.django-cast.com,localhost`
+  - `traefik_letsencrypt_email`
+  - `wagtail_admin_url`, if Django Chat should override the role default
+    `hidden_admin/`
+  - explicit `wagtail_staticfiles_required_paths` matching the installed
+    django-cast/cast-bootstrap5 assets, rather than inheriting an app-specific
+    list by accident
 - Secrets:
   - `django_secret_key`
   - `postgres_password`
   - `django_aws_access_key_id`
   - `django_aws_secret_access_key`
   - `django_aws_storage_bucket_name`
-  - `cloudfront_domain`
+  - `cloudfront_domain`, treated as the required public media host for the
+    deployed site. For staging, use a real CloudFront distribution if available;
+    otherwise use the S3/object-storage public host only if Django settings
+    support that host as the media custom domain. Do not use an empty value or
+    placeholder without first changing `wagtail_deploy`, because the role
+    requires a non-empty non-`CHANGEME` value.
   - `django_sentry_dsn`
   - `django_mailgun_api_key`
   - `mailgun_sender_domain`
   - `django_server_email`
+
+Consider separate age recipients for staging and production from the start.
+That keeps later production handoff possible without replacing the original
+operator's staging key.
 
 Enable the `wagtail_deploy` database worker for Django Chat when transcript import/conversion uses the django-cast transcript task path. If transcripts are deferred or stored only as plain episode/page content, keep the worker disabled for that environment. In either case, keep `TASKS["default"]` immediate/synchronous and reserve the database backend for `cast_transcripts`.
 
@@ -313,10 +419,14 @@ Recommendation:
 
 Giving hosts access to this repo is safe if:
 
-- The repo does not contain secrets.
-- Deployment secrets remain outside the app repo.
-- S3 credentials, database passwords, Sentry DSNs, Mailgun keys, and admin passwords are never committed.
-- The repo contains documentation explaining the split between app code and deployment secrets.
+- The repo does not contain decrypted secrets.
+- Deployment secrets committed to the repo are SOPS/age-encrypted and scoped to
+  Django Chat only.
+- Age private keys remain outside the app repo.
+- S3 credentials, database passwords, Sentry DSNs, Mailgun keys, and admin
+  passwords are never committed in plaintext.
+- The repo contains documentation explaining the split between app code,
+  encrypted deployment material, and off-repo private keys.
 
 Recommended access:
 
@@ -327,9 +437,12 @@ Recommended access:
 
 Deployment access can be separate from code access:
 
-- Reviewers can read the Django Chat app repo and use staging without seeing deployment internals.
-- Operators can keep private deploy credentials and infrastructure inventory elsewhere.
-- If hosts later need deployment ownership, create a narrow Django Chat deployment repo rather than sharing the broader private operations repository.
+- Reviewers can read the Django Chat app repo and use staging without seeing
+  decrypted secrets or unrelated infrastructure.
+- Operators keep age private keys and any private operator notes elsewhere.
+- If hosts later need a stricter deployment ownership boundary than encrypted
+  secrets in this app repo provide, create a narrow Django Chat deployment repo
+  rather than sharing the broader private operations repository.
 
 ## Documentation Plan
 
@@ -381,11 +494,28 @@ Recommended contents:
   - `just manage ...`
   - `just test`
   - Environment file expectations.
-  - Explicit note that private deployment/secrets are out of scope.
+  - Explicit note that deployment is handled separately from local development.
 - `docs/operations-boundary.md`
-  - App repo vs private deployment backend.
-  - Why hosts can see this repo but not `ops-control`.
-  - Where secrets live.
+  - Self-contained app-repo deployment model.
+  - Why hosts can deploy Django Chat without seeing `ops-control`.
+  - What lives in this repo: `deploy/`, encrypted SOPS files, inventory,
+    host vars, playbooks, and non-secret defaults.
+  - What stays off-repo: decrypted secrets, age private keys, private operator
+    notes, and unrelated infrastructure inventory.
+  - Operator workstation prerequisites: `uv`, `just`, `sops`, `age`, Ansible
+    via `uvx`, and `SOPS_AGE_KEY_FILE`.
+  - Workstation bootstrap runbook: generate or choose an age key, back up the
+    private key outside the app repo, add the public recipient to `.sops.yaml`,
+    create/edit SOPS files, run `just deploy-bootstrap`, then run the target
+    deploy command.
+  - Target VPS prerequisites: supported Ubuntu/Debian image, root or sudo SSH
+    access, DNS for the staging/production FQDN, ports 80/443 open for Let's
+    Encrypt, and S3/object-storage credentials prepared.
+  - Clean-VPS bootstrap tasks: `apt` cache refresh, minimal target packages,
+    optional hostname setup, swap if absent, SSH-preserving firewall rule, then
+    `uv_install`, `traefik_deploy`, and `wagtail_deploy`.
+  - `ops-library` dependency policy: install through `ansible-galaxy` from a
+    pinned Git commit SHA until tags exist, then move to a tag.
   - What `just deploy-staging` means once deployment commands exist.
 - `docs/production-migration-notes.md`
   - Feed redirect risks.
@@ -448,7 +578,10 @@ Podcast feed continuity checklist:
 - Endpoint-assisted import should degrade gracefully to RSS-only import if the unauthenticated Simplecast endpoints become unavailable.
 - Downloading/copying 11 GB of MP3s is manageable but still needs repeatable import and retry logic.
 - The reference deployment pattern assumes S3/CloudFront-style media settings; local development and staging secrets need care.
-- Enabling the transcript database worker adds another systemd service and a small operational surface; monitor it separately from the web app if transcript jobs are part of staging.
+- Enabling the transcript database worker adds another systemd service and a small operational surface; monitor it separately from the web app if transcript publishing/conversion jobs are part of staging. Heavy transcription/ML inference should run on the operator's Mac Studio, not on the VPS.
+- SOPS/age private keys must be backed up outside the app repo, for example in
+  a password manager or hardware-backed secret store. Losing the only age
+  private key makes committed SOPS secret files unrecoverable.
 - Podcast production migration can break subscribers if feed GUIDs, redirects, or enclosure URLs are mishandled.
 - Giving hosts app repo access is fine, but giving access to deployment repositories or ops secrets is a separate security decision.
 
@@ -460,13 +593,22 @@ The Django Chat repo can keep the useful `python-podcast` shape while improving 
 - Prefer `ruff` for linting and import sorting instead of separate `flake8` plus `isort`. Keep `black` only if there is a strong preference for Black formatting; otherwise evaluate `ruff format` for one-tool consistency.
 - Include a Django template formatter such as `djhtml` if the project carries custom templates.
 - Pick one environment loading approach early, for example `django-environ` or `python-dotenv`, and document it in the settings and local setup docs.
-- Keep deployment commands in `just`, but make deployment backend selection explicit with variables such as `DEPLOY_BACKEND`, `OPS_CONTROL`, or `DJANGO_CHAT_DEPLOY_REPO`.
+- Keep deployment commands in `just`, backed by the self-contained `deploy/`
+  directory. A private `ops-control` backend can remain as an explicit one-off
+  fallback, but should not be required for normal Django Chat operators.
+- Make `deploy/` converge a clean VPS as well as update an existing staging
+  machine. Bootstrap base packages, Traefik, PostgreSQL, uv/Python, the app
+  user, systemd units, and HTTPS in the same documented workflow.
 - Avoid a general background-worker architecture. Add the django-cast transcript database worker when transcript import/conversion needs it, and keep other app behavior immediate/synchronous by default.
-- Keep local development secrets in `.env` and production/staging secrets outside the repo.
+- Keep local development secrets in `.env`. Keep production/staging secrets
+  SOPS/age-encrypted under `deploy/secrets/`, with decrypted values and age
+  private keys outside the repo.
 - Add a small import test fixture from RSS and captured Simplecast endpoint responses so import behavior is tested without network access.
 - Make import commands idempotent from the start by recording source GUID/API IDs.
 - Add a feed parity check command, for example `just compare-feed`, before any production migration. Staging can start with a smoke-level feed check; exhaustive GUID, duration, enclosure, and namespace comparison belongs in production hardening.
-- Document the repo/deployment split early so third-party collaborators understand why deploy commands may require private local paths.
+- Document the operations boundary early so third-party collaborators
+  understand that deploy commands require only this repo plus documented local
+  tools and age keys, not `ops-control`.
 - Keep Python Podcast-only routes out of the initial Django Chat app. Add static/legal/account/comment/Fediverse/API pages only when there is a Django Chat-specific requirement.
 
 ## Estimate
@@ -479,7 +621,8 @@ Rough effort for staging proof of concept:
 - Media copy to S3 and idempotent audio import: 1 to 2 days.
 - Transcript task backend and worker wiring: 0.5 day if transcript processing is included in staging.
 - Basic templates/branding, menu links, and current URL compatibility: 1 to 2 days.
-- Deployment wrapper, deploy bootstrap, and private staging backend: 0.5 to 1.5 days.
+- Self-contained deployment wrapper, clean-VPS bootstrap, SOPS/age wiring, and
+  staging playbook: 2 to 4 days.
 - Staging deploy and smoke test: 0.5 to 1 day.
 - Host accounts and review docs: 0.5 day.
 
@@ -490,7 +633,9 @@ Production migration hardening:
 - Feed parity tests and validation: 1 to 2 days.
 - Transcript conversion/publishing polish: 1 to 3 days.
 - Backup/restore and media backup workflow: 1 to 2 days.
-- Narrow external deployment repo, if needed for handoff: 1 to 6 days depending on whether it wraps or replaces private ops patterns.
+- Narrow external deployment repo, if encrypted deployment material in the app
+  repo later proves too broad for handoff: 1 to 6 days depending on whether it
+  wraps or replaces private ops patterns.
 - URL redirect strategy and DNS/feed switch coordination: 1 to 3 days.
 - Host review iterations/design polish: variable.
 
@@ -503,20 +648,32 @@ Production migration hardening:
 5. Add S3 media storage and copy audio for the sample import.
 6. Add basic Django Chat branding, templates, menu links, and current public URL compatibility.
 7. Add smoke-level feed checks against the Simplecast RSS feed, deferring exhaustive parity validation to production hardening.
-8. Add `just deploy-staging` and `just deploy-production` with private backend/bootstrap support, including the `cast_transcripts` database worker when transcript jobs are enabled, and document the boundary in `docs/operations-boundary.md`.
+8. Add self-contained `deploy/`, clean-VPS bootstrap, `just deploy-staging`,
+   and `just deploy-production` with SOPS/age secret loading,
+   `ansible-galaxy` bootstrap, a pinned `ops-library` dependency, explicit
+   static asset checks, and the role sequence `uv_install`,
+   `traefik_deploy`, then `wagtail_deploy`. Include the `cast_transcripts`
+   database worker only when transcript publishing/conversion jobs are enabled;
+   heavy transcription runs on the Mac Studio. Document the boundary in
+   `docs/operations-boundary.md` before the first deploy run.
 9. Deploy staging, create host admin accounts, and document the review workflow in `docs/host-review-guide.md` and `docs/staging-differences.md`.
 10. Decide whether production migration needs a separate follow-up PRD after host review.
 
 ## Recommended Next Steps
 
 1. Build the staging proof of concept in this repo using the `python-podcast` repository shape as a reference.
-2. Create a Django Chat-specific S3 bucket and staging secrets outside this app repo.
+2. Create a Django Chat-specific S3 bucket and SOPS/age-encrypted staging
+   secrets, keeping decrypted values and age private keys outside this app repo.
 3. Implement an idempotent import command using RSS plus the unauthenticated Simplecast endpoints.
 4. Import a small sample first: latest 5 episodes, one 2019 episode, and one transcript-heavy episode.
 5. Validate django-cast episode pages, current public URL patterns, audio playback, transcript handling, generated feed, and admin editing.
 6. Import the full catalog and media once the sample is clean.
-7. Add `just deploy-staging` and `just deploy-production` commands in this repo.
-8. Implement those deploy commands against a private backend first, including the transcript worker service when transcript processing is enabled, without granting hosts access to the private operations repo.
+7. Add `deploy/`, clean-VPS bootstrap, `just deploy-staging`, and
+   `just deploy-production` commands in this repo using the self-contained
+   SOPS/age deployment model.
+8. Implement those deploy commands without requiring `ops-control` or a manual
+   `ops-library` checkout, including the transcript worker service when
+   transcript processing is enabled.
 9. Give hosts staging admin access and app repo access.
 10. Gather feedback on design fidelity and production migration appetite.
 

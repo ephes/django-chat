@@ -63,7 +63,8 @@ creation, S3 media copy, transcript conversion, a transcript worker service,
 deployment commands, host review docs, or staging URLs. Those are later
 implementation slices from the research PRD.
 
-Private deployment configuration and secrets are intentionally not stored in
-this repo. Do not commit real Django secret keys, database passwords, S3
-credentials, Sentry DSNs, Mailgun keys, admin passwords, or decrypted secret
-files.
+Deployment configuration is not implemented yet. The current plan is to keep
+Django Chat-specific deployment code in this repo and store only
+SOPS/age-encrypted environment secret files here. Do not commit decrypted
+Django secret keys, database passwords, S3 credentials, Sentry DSNs, Mailgun
+keys, admin passwords, or age private keys.
