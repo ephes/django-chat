@@ -1,0 +1,13 @@
+---
+collections:
+  - name: https://github.com/ephes/ops-library.git
+    type: git
+    version: 39aaa0e3de8a99e07f4ac6642cae01518e8a043e
+  - name: community.postgresql
+    version: 4.2.0
+  - name: community.general
+    version: 12.6.0
+  - name: community.sops
+    version: 2.3.0
+  - name: ansible.posix
+    version: 2.1.0

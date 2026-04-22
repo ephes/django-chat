@@ -1,1 +1,1 @@
-"""Django Chat management command package."""
+"""Django Chat management commands."""

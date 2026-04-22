@@ -1,0 +1,4 @@
+# Add real age recipients before creating deploy/secrets/*.sops.yml.
+# The repository ships examples only; encrypted environment secrets are
+# operator-created and must never be committed decrypted.
+creation_rules: []

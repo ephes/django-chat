@@ -278,13 +278,14 @@ not leak into `pytest` runs.
 
 `config.settings.local` includes a committed development-only fallback
 `DJANGO_SECRET_KEY` so the scaffold runs without private setup. Use
-`DJANGO_SECRET_KEY` in `.env` for local overrides. Non-local deployment settings
-and secrets are intentionally deferred to the deployment slice.
+`DJANGO_SECRET_KEY` in `.env` for local overrides. Deployment settings use
+`config.settings.production` and SOPS/age-encrypted environment files under
+`deploy/secrets/`; see `docs/deployment.md` and `docs/operations-boundary.md`.
 
 `config.wsgi` and `config.asgi` currently default to `config.settings.local`
-only for local scaffold ergonomics. Deployment settings and process-level
-`DJANGO_SETTINGS_MODULE` are intentionally deferred until deployment commands
-and environment-specific settings are added.
+only for local scaffold ergonomics. The deployment role sets
+`DJANGO_SETTINGS_MODULE=config.settings.production` in the rendered server
+environment.
 
 `WAGTAILADMIN_BASE_URL` defaults to `http://localhost:8000/cms/` for local
 development. Staging and production must set
@@ -318,16 +319,40 @@ DJANGO_CHAT_S3_STORAGE_BUCKET_NAME=...
 ```
 
 Do not reuse Python Podcast media buckets or credentials for Django Chat.
-Deployment-specific bucket creation, SOPS/age secret files, and operations docs
-are intentionally deferred to the deployment slice.
+Deployment-specific bucket creation and real SOPS/age secret files remain
+operator-owned and must not be committed decrypted.
+
+## Deployment Commands
+
+Deployment is separate from local development, but the command surface is
+available from this repo:
+
+```sh
+just deploy-bootstrap
+just deploy-bootstrap-target staging
+just deploy-static-check
+just deploy-check
+just deploy-staging
+just deploy-production
+```
+
+`just deploy-bootstrap` installs Ansible dependencies under `deploy/.ansible/`.
+`just deploy-bootstrap-target <group>` runs only the baseline host tasks against
+one inventory group, such as `staging` or `production`, and does not deploy the
+app. Valid target groups are `staging`, `production`, and `django_chat`.
+`just deploy-static-check` verifies the package-bundled static manifests needed
+by deployment. `just deploy-check` runs those checks plus Ansible syntax checks
+without contacting deployment hosts. The staging and production deploy commands
+require real inventory values, encrypted SOPS secrets, an age private key, and
+SSH/DNS readiness.
 
 ## Boundaries
 
-Private deployment configuration and secrets stay outside this shareable app
-repo. This slice includes only a local fixture-backed sample import, explicit
-sample audio copy, basic local templates, fixture-derived link rendering, and
-current local URL compatibility, plus a smoke-level local feed comparison for
-the imported sample. It does not include full catalog import, transcript
-conversion, a transcript worker service, exhaustive production feed parity,
-deployment commands, host review docs, or staging URLs. Those are later
-implementation slices from the research PRD.
+This repo contains Django Chat deployment scaffolding, placeholder inventory,
+public deployment vars, and SOPS secret examples. Decrypted secrets, age private
+keys, real host credentials, and private operator notes stay outside the repo.
+
+This slice does not include full catalog import, transcript conversion, an
+enabled transcript worker service, exhaustive production feed parity, host
+review docs, DNS changes, feed redirects, production migration, or real staging
+URLs. Those are later implementation slices from the research PRD.

@@ -1,0 +1,69 @@
+---
+django_chat_service_name: django-chat
+django_chat_repo_root: "{{ (inventory_dir ~ '/../..') | realpath }}"
+django_chat_source_path: "{{ lookup('env', 'DJANGO_CHAT_SOURCE_PATH') | default(django_chat_repo_root, true) }}"
+django_chat_secret_file: "{{ playbook_dir }}/secrets/{{ django_chat_environment }}.sops.yml"
+
+django_chat_bootstrap_apt_packages:
+  - acl
+  - ca-certificates
+  - curl
+  - git
+  - rsync
+  - sudo
+  - tar
+  - unzip
+django_chat_bootstrap_configure_ufw: false
+django_chat_bootstrap_swap_enabled: false
+django_chat_bootstrap_swap_file: /swapfile
+django_chat_bootstrap_swap_size_mb: 2048
+
+uv_version: "0.11.7"
+
+traefik_letsencrypt_email: "{{ (service_secrets | default({})).traefik_letsencrypt_email | default('') }}"
+traefik_dashboard_enabled: false
+traefik_dashboard_firewall_open: false
+
+wagtail_service_name: "{{ django_chat_service_name }}"
+wagtail_project_slug: "{{ django_chat_service_name }}"
+wagtail_deploy_method: rsync
+wagtail_source_path: "{{ django_chat_source_path }}"
+wagtail_python_version: "3.14.4"
+wagtail_django_settings_module: "config.settings.production"
+wagtail_django_allowed_hosts: "{{ django_chat_django_allowed_hosts }}"
+wagtail_admin_url: "django-admin/"
+wagtail_gunicorn_workers: 3
+wagtail_gunicorn_timeout: 120
+wagtail_db_worker_enabled: false
+wagtail_db_worker_backend: "cast_transcripts"
+wagtail_rsync_excludes_extra:
+  - ".env"
+  - ".env.*"
+  - "deploy/.ansible"
+  - "deploy/secrets"
+wagtail_staticfiles_required_paths:
+  - "staticfiles/staticfiles.json"
+  - "staticfiles/cast_bootstrap5/vite/manifest.json"
+  - "staticfiles/cast_bootstrap5/vite/manifest.json.gz"
+  - "staticfiles/cast/vite/manifest.json"
+  - "staticfiles/cast/vite/manifest.json.gz"
+wagtail_django_secret_key: "{{ service_secrets.django_secret_key }}"
+wagtail_postgres_password: "{{ service_secrets.postgres_password }}"
+wagtail_django_aws_access_key_id: "{{ service_secrets.django_aws_access_key_id }}"
+wagtail_django_aws_secret_access_key: "{{ service_secrets.django_aws_secret_access_key }}"
+wagtail_django_aws_storage_bucket_name: "{{ service_secrets.django_aws_storage_bucket_name }}"
+wagtail_cloudfront_domain: "{{ service_secrets.cloudfront_domain }}"
+wagtail_django_sentry_dsn: "{{ service_secrets.django_sentry_dsn }}"
+wagtail_django_mailgun_api_key: "{{ service_secrets.django_mailgun_api_key }}"
+wagtail_mailgun_sender_domain: "{{ service_secrets.mailgun_sender_domain }}"
+wagtail_django_server_email: "{{ service_secrets.django_server_email }}"
+wagtail_env_extra:
+  DJANGO_READ_DOT_ENV_FILE: "False"
+  DJANGO_DEBUG: "False"
+  DJANGO_CHAT_MEDIA_STORAGE_BACKEND: "s3"
+  DJANGO_CHAT_S3_ACCESS_KEY_ID: "{{ service_secrets.django_aws_access_key_id }}"
+  DJANGO_CHAT_S3_SECRET_ACCESS_KEY: "{{ service_secrets.django_aws_secret_access_key }}"
+  DJANGO_CHAT_S3_STORAGE_BUCKET_NAME: "{{ service_secrets.django_aws_storage_bucket_name }}"
+  DJANGO_CHAT_S3_CUSTOM_DOMAIN: "{{ service_secrets.cloudfront_domain }}"
+  DJANGO_CHAT_MEDIA_URL: "https://{{ service_secrets.cloudfront_domain }}/"
+  DJANGO_CHAT_WAGTAIL_ADMIN_BASE_URL: "https://{{ django_chat_wagtail_fqdn }}/cms/"

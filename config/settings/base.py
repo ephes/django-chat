@@ -22,6 +22,22 @@ if os.environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.test":
 if READ_DOT_ENV_FILE:
     env.read_env(str(ROOT_DIR / ".env"))
 
+
+def _env_first(*names: str, default: str | None = None) -> str | None:
+    for name in names:
+        value = os.environ.get(name)
+        if value:
+            return env(name)
+    return default
+
+
+def _env_required(*names: str) -> str:
+    value = _env_first(*names)
+    if value is not None:
+        return value
+    return env(names[0])
+
+
 DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -130,8 +146,15 @@ MEDIA_STORAGE_BACKEND = env(
     default="filesystem",
 )
 if MEDIA_STORAGE_BACKEND == "s3":
-    DJANGO_CHAT_S3_BUCKET_NAME = env("DJANGO_CHAT_S3_STORAGE_BUCKET_NAME")
-    DJANGO_CHAT_S3_CUSTOM_DOMAIN = env("DJANGO_CHAT_S3_CUSTOM_DOMAIN", default="")
+    DJANGO_CHAT_S3_BUCKET_NAME = _env_required(
+        "DJANGO_CHAT_S3_STORAGE_BUCKET_NAME",
+        "DJANGO_AWS_STORAGE_BUCKET_NAME",
+    )
+    DJANGO_CHAT_S3_CUSTOM_DOMAIN = _env_first(
+        "DJANGO_CHAT_S3_CUSTOM_DOMAIN",
+        "CLOUDFRONT_DOMAIN",
+        default="",
+    )
     DJANGO_CHAT_S3_MEDIA_DOMAIN = (
         DJANGO_CHAT_S3_CUSTOM_DOMAIN
         if DJANGO_CHAT_S3_CUSTOM_DOMAIN
@@ -140,13 +163,19 @@ if MEDIA_STORAGE_BACKEND == "s3":
     STORAGES["default"] = {
         "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
-            "access_key": env("DJANGO_CHAT_S3_ACCESS_KEY_ID"),
-            "secret_key": env("DJANGO_CHAT_S3_SECRET_ACCESS_KEY"),
+            "access_key": _env_required(
+                "DJANGO_CHAT_S3_ACCESS_KEY_ID",
+                "DJANGO_AWS_ACCESS_KEY_ID",
+            ),
+            "secret_key": _env_required(
+                "DJANGO_CHAT_S3_SECRET_ACCESS_KEY",
+                "DJANGO_AWS_SECRET_ACCESS_KEY",
+            ),
             "bucket_name": DJANGO_CHAT_S3_BUCKET_NAME,
-            "endpoint_url": env("DJANGO_CHAT_S3_ENDPOINT_URL", default=None),
-            "region_name": env("DJANGO_CHAT_S3_REGION_NAME", default=None),
+            "endpoint_url": _env_first("DJANGO_CHAT_S3_ENDPOINT_URL"),
+            "region_name": _env_first("DJANGO_CHAT_S3_REGION_NAME"),
             "custom_domain": DJANGO_CHAT_S3_CUSTOM_DOMAIN or None,
-            "addressing_style": env("DJANGO_CHAT_S3_ADDRESSING_STYLE", default=None),
+            "addressing_style": _env_first("DJANGO_CHAT_S3_ADDRESSING_STYLE"),
             "signature_version": env("DJANGO_CHAT_S3_SIGNATURE_VERSION", default="s3v4"),
             "querystring_auth": env.bool(
                 "DJANGO_CHAT_S3_QUERYSTRING_AUTH",

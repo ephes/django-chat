@@ -8,7 +8,9 @@ Current status: runnable local scaffold with development tooling, a
 fixture-backed source parser, an idempotent local sample import, explicit
 sample audio-copy support for configured media storage, and a basic Django
 Chat-branded local browsing experience for the imported sample, plus a
-smoke-level feed comparison for the fixture-backed sample. The planning source
+smoke-level feed comparison for the fixture-backed sample. The repo also now
+contains self-contained deployment scaffolding under `deploy/`; no real staging
+or production deployment has been performed by this slice. The planning source
 of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
@@ -83,21 +85,60 @@ The default Django settings module for `manage.py` is
 `config.settings.local`. Local and test settings use SQLite so the scaffold can
 run without PostgreSQL or other services.
 
+## Deployment Scaffolding
+
+Deployment is documented in
+[`docs/deployment.md`](docs/deployment.md), with the security and ownership
+boundary in
+[`docs/operations-boundary.md`](docs/operations-boundary.md).
+
+Bootstrap repo-local Ansible dependencies:
+
+```sh
+just deploy-bootstrap
+```
+
+Run offline deployment checks:
+
+```sh
+just deploy-check
+```
+
+Run the clean-VPS baseline tasks for one inventory group without deploying the
+app:
+
+```sh
+just deploy-bootstrap-target staging
+```
+
+Run the staging or production deployment playbooks when real inventory and
+SOPS/age secrets exist:
+
+```sh
+just deploy-staging
+just deploy-production
+```
+
+The deploy commands do not require `ops-control`. They install a pinned
+`ops-library` collection through Ansible Galaxy and load environment secrets
+from `deploy/secrets/staging.sops.yml` or
+`deploy/secrets/production.sops.yml`. Those encrypted secret paths are ignored,
+and decrypted secret files must stay out of the repository.
+
 ## Scope
 
-This slice intentionally includes only a small fixture-backed database/page
-import, opt-in audio copy, basic Django Chat django-cast templates,
-fixture-derived menu/social/distribution link rendering, local URL
-compatibility for `/`, `/episodes/`, and `/episodes/<slug>/`, and a local
-smoke-level feed comparison for the imported sample.
+This slice includes a small fixture-backed database/page import, opt-in audio
+copy, basic Django Chat django-cast templates, fixture-derived
+menu/social/distribution link rendering, local URL compatibility for `/`,
+`/episodes/`, and `/episodes/<slug>/`, a local smoke-level feed comparison for
+the imported sample, and deployment scaffolding.
 
-It does not include full catalog import, transcript conversion, a transcript
-worker service, exhaustive production feed parity, deployment commands, host
-review docs, or staging URLs. Those are later implementation slices from the
+It does not include full catalog import, transcript conversion, an enabled
+transcript worker service, exhaustive production feed parity, host review docs,
+real staging deployment, real production deployment, DNS changes, feed
+redirects, or staging URLs. Those are later implementation slices from the
 research PRD.
 
-Deployment configuration is not implemented yet. The current plan is to keep
-Django Chat-specific deployment code in this repo and store only
-SOPS/age-encrypted environment secret files here. Do not commit decrypted
-Django secret keys, database passwords, S3 credentials, Sentry DSNs, Mailgun
-keys, admin passwords, or age private keys.
+Do not commit decrypted Django secret keys, database passwords, S3 credentials,
+Sentry DSNs, Mailgun keys, admin passwords, age private keys, real MP3s, large
+fixtures, or Python Podcast-specific deployment details.

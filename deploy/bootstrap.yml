@@ -1,0 +1,8 @@
+---
+- name: Bootstrap Django Chat VPS baseline
+  hosts: django_chat
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Run clean-VPS baseline tasks
+      ansible.builtin.import_tasks: tasks/bootstrap-host.yml

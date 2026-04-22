@@ -33,7 +33,16 @@ dist/
 *.pem
 *.key
 *.crt
-secrets/
+
+# Deployment-local generated files and decrypted secrets
+deploy/.ansible/
+deploy/secrets/*.sops.yml
+deploy/secrets/*.sops.yaml
+deploy/secrets/*.decrypted.yml
+deploy/secrets/*.decrypted.yaml
+deploy/secrets/*.plain.yml
+deploy/secrets/*.plain.yaml
+!deploy/secrets/*.example.yml
 
 # Editors and OS files
 .DS_Store

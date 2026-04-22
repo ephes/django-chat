@@ -1,0 +1,9 @@
+---
+django_chat_environment: production
+django_chat_wagtail_fqdn: django-chat-production.example.invalid
+django_chat_traefik_host_rule: "Host(`{{ django_chat_wagtail_fqdn }}`)"
+django_chat_django_allowed_hosts: "{{ django_chat_wagtail_fqdn }},localhost"
+
+wagtail_fqdn: "{{ django_chat_wagtail_fqdn }}"
+wagtail_traefik_host_rule: "{{ django_chat_traefik_host_rule }}"
+wagtail_app_port: 10016

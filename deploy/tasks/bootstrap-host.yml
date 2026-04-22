@@ -1,0 +1,89 @@
+---
+- name: Bootstrap host | Assert Debian-family target
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.os_family == "Debian"
+    fail_msg: "Django Chat deployment currently supports Debian-family VPS images."
+
+- name: Bootstrap host | Refresh apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Bootstrap host | Install baseline packages
+  ansible.builtin.apt:
+    name: "{{ django_chat_bootstrap_apt_packages }}"
+    state: present
+
+- name: Bootstrap host | Check whether UFW is installed
+  ansible.builtin.command: which ufw
+  register: django_chat_bootstrap_ufw_check
+  changed_when: false
+  failed_when: false
+
+- name: Bootstrap host | Preserve SSH in UFW when firewall management is enabled
+  community.general.ufw:
+    rule: allow
+    name: OpenSSH
+  when:
+    - django_chat_bootstrap_configure_ufw | bool
+    - django_chat_bootstrap_ufw_check.rc == 0
+
+- name: Bootstrap host | Enable UFW when requested
+  community.general.ufw:
+    state: enabled
+  when:
+    - django_chat_bootstrap_configure_ufw | bool
+    - django_chat_bootstrap_ufw_check.rc == 0
+
+- name: Bootstrap host | Check swap file
+  ansible.builtin.stat:
+    path: "{{ django_chat_bootstrap_swap_file }}"
+  register: django_chat_bootstrap_swap_file_stat
+  when: django_chat_bootstrap_swap_enabled | bool
+
+- name: Bootstrap host | Create swap file
+  ansible.builtin.command:
+    cmd: "fallocate -l {{ django_chat_bootstrap_swap_size_mb }}M {{ django_chat_bootstrap_swap_file }}"
+    creates: "{{ django_chat_bootstrap_swap_file }}"
+  when:
+    - django_chat_bootstrap_swap_enabled | bool
+    - not django_chat_bootstrap_swap_file_stat.stat.exists
+
+- name: Bootstrap host | Set swap file permissions
+  ansible.builtin.file:
+    path: "{{ django_chat_bootstrap_swap_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  when: django_chat_bootstrap_swap_enabled | bool
+
+- name: Bootstrap host | Format swap file
+  ansible.builtin.command:
+    cmd: "mkswap {{ django_chat_bootstrap_swap_file }}"
+  when:
+    - django_chat_bootstrap_swap_enabled | bool
+    - not django_chat_bootstrap_swap_file_stat.stat.exists
+
+- name: Bootstrap host | List active swap devices
+  ansible.builtin.command:
+    cmd: swapon --show=NAME --noheadings --raw
+  register: django_chat_bootstrap_active_swap
+  changed_when: false
+  when: django_chat_bootstrap_swap_enabled | bool
+
+- name: Bootstrap host | Enable swap file
+  ansible.builtin.command:
+    cmd: "swapon {{ django_chat_bootstrap_swap_file }}"
+  when:
+    - django_chat_bootstrap_swap_enabled | bool
+    - django_chat_bootstrap_swap_file not in django_chat_bootstrap_active_swap.stdout_lines
+
+- name: Bootstrap host | Persist swap file
+  ansible.posix.mount:
+    name: none
+    src: "{{ django_chat_bootstrap_swap_file }}"
+    fstype: swap
+    opts: sw
+    state: present
+  when: django_chat_bootstrap_swap_enabled | bool

@@ -1,0 +1,51 @@
+---
+- name: Deploy Django Chat
+  hosts: django_chat
+  become: true
+  gather_facts: false
+  pre_tasks:
+    - name: Deploy | Check Django Chat source path on controller
+      ansible.builtin.stat:
+        path: "{{ django_chat_source_path }}"
+      delegate_to: localhost
+      become: false
+      register: django_chat_source_path_stat
+
+    - name: Deploy | Assert Django Chat source path is usable
+      ansible.builtin.assert:
+        that:
+          - django_chat_source_path | length > 0
+          - django_chat_source_path != "/"
+          - django_chat_source_path_stat.stat.exists
+          - django_chat_source_path_stat.stat.isdir
+        fail_msg: "Set DJANGO_CHAT_SOURCE_PATH to the local Django Chat checkout before deploying."
+
+    - name: Deploy | Check encrypted secret file on controller
+      ansible.builtin.stat:
+        path: "{{ django_chat_secret_file }}"
+      delegate_to: localhost
+      become: false
+      register: django_chat_secret_file_stat
+
+    - name: Deploy | Assert encrypted secret file exists
+      ansible.builtin.assert:
+        that:
+          - django_chat_secret_file_stat.stat.exists
+          - django_chat_secret_file_stat.stat.isreg
+        fail_msg: "Missing {{ django_chat_secret_file }}. Create it with sops and an age recipient before deploying."
+
+    - name: Deploy | Load SOPS-encrypted service secrets
+      ansible.builtin.set_fact:
+        service_secrets: "{{ lookup('community.sops.sops', django_chat_secret_file) | from_yaml }}"
+      no_log: true
+
+    - name: Deploy | Gather remote facts after local validation
+      ansible.builtin.setup:
+
+    - name: Deploy | Run clean-VPS baseline tasks
+      ansible.builtin.import_tasks: tasks/bootstrap-host.yml
+
+  roles:
+    - role: local.ops_library.uv_install
+    - role: local.ops_library.traefik_deploy
+    - role: local.ops_library.wagtail_deploy
