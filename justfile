@@ -28,6 +28,9 @@ check:
 manage *ARGS:
     uv run python manage.py {{ARGS}}
 
+compare-feed *ARGS:
+    uv run python manage.py compare_django_chat_sample_feed {{ARGS}}
+
 test *ARGS:
     uv run pytest {{ARGS}}
 

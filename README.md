@@ -7,8 +7,9 @@ structural reference for local development ergonomics.
 Current status: runnable local scaffold with development tooling, a
 fixture-backed source parser, an idempotent local sample import, explicit
 sample audio-copy support for configured media storage, and a basic Django
-Chat-branded local browsing experience for the imported sample. The planning
-source of truth is
+Chat-branded local browsing experience for the imported sample, plus a
+smoke-level feed comparison for the fixture-backed sample. The planning source
+of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development
@@ -54,6 +55,13 @@ Copy audio for that same small sample into the configured media storage:
 just manage import_django_chat_sample --copy-audio
 ```
 
+Compare the generated local django-cast podcast feed for the imported sample
+against the committed Simplecast RSS fixture:
+
+```sh
+just compare-feed
+```
+
 Run all local quality checks:
 
 ```sh
@@ -79,12 +87,14 @@ run without PostgreSQL or other services.
 
 This slice intentionally includes only a small fixture-backed database/page
 import, opt-in audio copy, basic Django Chat django-cast templates,
-fixture-derived menu/social/distribution link rendering, and local URL
-compatibility for `/`, `/episodes/`, and `/episodes/<slug>/`.
+fixture-derived menu/social/distribution link rendering, local URL
+compatibility for `/`, `/episodes/`, and `/episodes/<slug>/`, and a local
+smoke-level feed comparison for the imported sample.
 
 It does not include full catalog import, transcript conversion, a transcript
-worker service, feed parity checks, deployment commands, host review docs, or
-staging URLs. Those are later implementation slices from the research PRD.
+worker service, exhaustive production feed parity, deployment commands, host
+review docs, or staging URLs. Those are later implementation slices from the
+research PRD.
 
 Deployment configuration is not implemented yet. The current plan is to keep
 Django Chat-specific deployment code in this repo and store only

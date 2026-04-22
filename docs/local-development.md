@@ -201,6 +201,59 @@ The sample audio command downloads real MP3s when run without a fake downloader,
 so use it deliberately. Tests use in-memory fake audio and never require live
 network access or real S3.
 
+## Feed Smoke Check
+
+Slice 7 adds a deterministic local feed smoke check for the fixture-backed
+sample. After running migrations and importing the sample with copied audio,
+run:
+
+```sh
+just compare-feed
+```
+
+This invokes `compare_django_chat_sample_feed`, fetches the local
+django-cast podcast feed route `/episodes/feed/podcast/mp3/rss.xml` through
+Django, and compares it to the committed Simplecast RSS fixture at
+`django_chat/imports/tests/fixtures/django_chat_source/rss_feed.xml`. The
+command does not use live network access.
+
+The strict smoke checks cover:
+
+- show/feed title
+- sample episode count
+- item GUID order and GUID values
+- item titles
+- item publication dates
+- item durations when both feeds expose them
+- enclosure presence and media type
+- generated enclosure length against the copied byte size recorded in
+  `EpisodeAudioImportMetadata.copied_byte_size`
+
+Metadata-only imports are expected to fail this check with an actionable
+message. django-cast excludes episodes without `podcast_audio` from podcast
+feeds, so run:
+
+```sh
+just manage import_django_chat_sample --copy-audio
+just compare-feed
+```
+
+The enclosure length policy is explicit: strict checking uses the bytes of the
+file copied into configured media storage, not the source-reported Simplecast
+byte size. `EpisodeAudioImportMetadata.source_byte_size` remains the source RSS
+or Simplecast byte count, while `copied_byte_size` records the actual stored
+file size. When tests use fake in-memory audio, copied sizes intentionally
+differ from Simplecast source sizes; the feed smoke check reports that as a
+warning, not a failure, as long as the generated feed length matches copied
+bytes.
+
+Generated enclosure URLs are also warning-only when they differ from the
+Simplecast fixture, because local filesystem media or a Django Chat S3 bucket
+will naturally produce different URLs from Simplecast/Podtrac. Production
+migration hardening still needs exhaustive feed parity, artwork and namespace
+validation, full-catalog checks, feed redirect or new-feed-url decisions, and
+podcast-client testing before any cutover.
+
 ## Environment Files
 
 Local settings support a private `.env` file in the repository root. Start from
@@ -273,7 +326,8 @@ are intentionally deferred to the deployment slice.
 Private deployment configuration and secrets stay outside this shareable app
 repo. This slice includes only a local fixture-backed sample import, explicit
 sample audio copy, basic local templates, fixture-derived link rendering, and
-current local URL compatibility. It does not include full catalog import,
-transcript conversion, a transcript worker service, feed parity checks,
+current local URL compatibility, plus a smoke-level local feed comparison for
+the imported sample. It does not include full catalog import, transcript
+conversion, a transcript worker service, exhaustive production feed parity,
 deployment commands, host review docs, or staging URLs. Those are later
 implementation slices from the research PRD.

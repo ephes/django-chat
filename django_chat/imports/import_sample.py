@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, cast
 from urllib.parse import unquote, urlparse
 from urllib.request import Request, urlopen
+from uuid import UUID
 
 from cast.models import Audio, Episode, Podcast
 from django.contrib.auth import get_user_model
@@ -421,6 +422,8 @@ def _update_episode_page_fields(episode: Episode, episode_source: EpisodeSourceD
     page.title = episode_source.title
     page.draft_title = episode_source.title
     page.slug = _episode_slug(episode_source)
+    if source_uuid := _episode_uuid(episode_source):
+        page.uuid = source_uuid
     if page.owner_id is None:
         page.owner = _get_import_user()
     page.visible_date = episode_source.published_at or timezone.now()
@@ -758,6 +761,15 @@ def _episode_metadata_fields(
         "source_published_at": episode_source.published_at,
         "source_updated_at": simplecast.updated_at if simplecast else None,
     }
+
+
+def _episode_uuid(episode_source: EpisodeSourceData) -> UUID | None:
+    if not episode_source.rss_guid:
+        return None
+    try:
+        return UUID(episode_source.rss_guid)
+    except ValueError:
+        return None
 
 
 def _episode_body(episode_source: EpisodeSourceData) -> list[tuple[str, list[tuple[str, str]]]]:
