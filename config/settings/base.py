@@ -40,6 +40,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "django_chat.core.apps.CoreConfig",
+    "django_chat.imports.apps.ImportsConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
