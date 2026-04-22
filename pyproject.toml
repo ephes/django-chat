@@ -9,6 +9,7 @@ dependencies = [
     "cast-bootstrap5>=0.0.71,<0.1",
     "django-cast>=0.2.53,<0.3",
     "django-environ>=0.13,<0.14",
+    "django-storages[s3]>=1.14,<2.0",
     "django-tasks>=0.11,<0.12",
     "wagtail>=7.3,<8.0",
     "whitenoise>=6.11,<7.0",

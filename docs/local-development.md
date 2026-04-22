@@ -149,9 +149,34 @@ in local source metadata rows so repeated runs do not duplicate pages or
 metadata.
 
 The sample import intentionally does not download, stream, copy, or attach MP3
-files. Original RSS and Simplecast enclosure/audio URLs are stored in metadata
-only, and Simplecast transcript HTML is preserved in metadata only for later
-conversion or publishing work.
+files unless audio copying is requested explicitly. Original RSS and Simplecast
+enclosure/audio URLs are stored in metadata, and Simplecast transcript HTML is
+preserved in metadata only for later conversion or publishing work.
+
+Copy audio for the same eight fixture-backed sample episodes:
+
+```sh
+just manage import_django_chat_sample --copy-audio
+```
+
+The audio-copy path reuses the source metadata rows from the normal sample
+import. For each episode, it chooses the Simplecast direct audio URL when
+available, otherwise the Simplecast enclosure URL, otherwise the RSS enclosure
+URL. It stores the downloaded file through Django's configured default media
+storage, creates or updates a `cast.Audio` row, and attaches that row to
+`cast.Episode.podcast_audio`.
+
+Repeated `--copy-audio` runs are idempotent for the sample: existing audio-copy
+metadata rows are reused, files are not downloaded again when the source URL and
+stored file name still match and the stored file exists, and no duplicate
+episode pages, source metadata, audio rows, or transcript rows are created. The
+command creates a local `django-chat-importer` user with an unusable password
+when no existing import user is available because django-cast requires
+`Audio.user`.
+
+The sample audio command downloads real MP3s when run without a fake downloader,
+so use it deliberately. Tests use in-memory fake audio and never require live
+network access or real S3.
 
 ## Environment Files
 
@@ -189,10 +214,41 @@ and environment-specific settings are added.
 development. Staging and production must set
 `DJANGO_CHAT_WAGTAIL_ADMIN_BASE_URL` when those environments are introduced.
 
+## Media Storage
+
+Local and test settings use filesystem media storage by default. S3-compatible
+media storage is opt-in through environment variables and does not require or
+ship any credentials in the repository.
+
+Set `DJANGO_CHAT_MEDIA_STORAGE_BACKEND=s3` only when you have a
+Django Chat-specific bucket and access keys:
+
+```sh
+DJANGO_CHAT_MEDIA_STORAGE_BACKEND=s3
+DJANGO_CHAT_S3_ACCESS_KEY_ID=...
+DJANGO_CHAT_S3_SECRET_ACCESS_KEY=...
+DJANGO_CHAT_S3_STORAGE_BUCKET_NAME=...
+# Optional, depending on provider and serving setup:
+# DJANGO_CHAT_S3_ENDPOINT_URL=https://s3.example.com
+# DJANGO_CHAT_S3_REGION_NAME=eu-central-1
+# DJANGO_CHAT_S3_CUSTOM_DOMAIN=media.djangochat.example.com
+# DJANGO_CHAT_MEDIA_URL=https://media.djangochat.example.com/
+# DJANGO_CHAT_S3_ADDRESSING_STYLE=virtual
+# DJANGO_CHAT_S3_SIGNATURE_VERSION=s3v4
+# DJANGO_CHAT_S3_QUERYSTRING_AUTH=False
+# DJANGO_CHAT_S3_FILE_OVERWRITE=False
+# DJANGO_CHAT_S3_DEFAULT_ACL=
+# DJANGO_CHAT_S3_CACHE_CONTROL=max-age=604800, s-maxage=604800, must-revalidate
+```
+
+Do not reuse Python Podcast media buckets or credentials for Django Chat.
+Deployment-specific bucket creation, SOPS/age secret files, and operations docs
+are intentionally deferred to the deployment slice.
+
 ## Boundaries
 
 Private deployment configuration and secrets stay outside this shareable app
-repo. This slice includes only a local fixture-backed sample import; it does not
-include full catalog import, S3 media copy, transcript conversion, a transcript
-worker service, deployment commands, host review docs, or staging URLs. Those
-are later implementation slices from the research PRD.
+repo. This slice includes only a local fixture-backed sample import and explicit
+sample audio copy; it does not include full catalog import, transcript
+conversion, a transcript worker service, deployment commands, host review docs,
+or staging URLs. Those are later implementation slices from the research PRD.

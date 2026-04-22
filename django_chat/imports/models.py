@@ -1,4 +1,4 @@
-from typing import ClassVar
+from typing import Any, ClassVar, cast
 
 from django.db import models
 from django.db.models import Q
@@ -91,3 +91,34 @@ class EpisodeSourceMetadata(models.Model):
 
     def __str__(self) -> str:
         return f"{self.source_title} ({self.matching_key})"
+
+
+class EpisodeAudioImportMetadata(models.Model):
+    objects: ClassVar[models.Manager[EpisodeAudioImportMetadata]]
+
+    episode_metadata = models.OneToOneField(
+        EpisodeSourceMetadata,
+        on_delete=models.CASCADE,
+        related_name="audio_import_metadata",
+    )
+    audio = models.OneToOneField(
+        "cast.Audio",
+        on_delete=models.CASCADE,
+        related_name="django_chat_import_metadata",
+    )
+    source_url = models.URLField(max_length=1000)
+    source_url_kind = models.CharField(max_length=64)
+    source_content_type = models.CharField(max_length=255, blank=True)
+    source_byte_size = models.PositiveBigIntegerField(null=True, blank=True)
+    copied_byte_size = models.PositiveBigIntegerField(null=True, blank=True)
+    storage_name = models.CharField(max_length=1000)
+    copied_at = models.DateTimeField()
+    first_imported_at = models.DateTimeField(auto_now_add=True)
+    last_imported_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["episode_metadata__source_title"]
+
+    def __str__(self) -> str:
+        episode_metadata = cast(Any, self).episode_metadata
+        return f"{episode_metadata.source_title} audio ({self.source_url_kind})"

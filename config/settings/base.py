@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 import cast
 import cast_bootstrap5
@@ -112,7 +113,7 @@ TEMPLATES = [
 STATIC_URL = "/static/"
 STATIC_ROOT = ROOT_DIR / "staticfiles"
 STATICFILES_DIRS = [APPS_DIR / "static"]
-STORAGES = {
+STORAGES: dict[str, dict[str, Any]] = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
@@ -123,6 +124,53 @@ STORAGES = {
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = ROOT_DIR / "media"
+MEDIA_STORAGE_BACKEND = env(
+    "DJANGO_CHAT_MEDIA_STORAGE_BACKEND",
+    default="filesystem",
+)
+if MEDIA_STORAGE_BACKEND == "s3":
+    DJANGO_CHAT_S3_BUCKET_NAME = env("DJANGO_CHAT_S3_STORAGE_BUCKET_NAME")
+    DJANGO_CHAT_S3_CUSTOM_DOMAIN = env("DJANGO_CHAT_S3_CUSTOM_DOMAIN", default="")
+    DJANGO_CHAT_S3_MEDIA_DOMAIN = (
+        DJANGO_CHAT_S3_CUSTOM_DOMAIN
+        if DJANGO_CHAT_S3_CUSTOM_DOMAIN
+        else f"{DJANGO_CHAT_S3_BUCKET_NAME}.s3.amazonaws.com"
+    )
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key": env("DJANGO_CHAT_S3_ACCESS_KEY_ID"),
+            "secret_key": env("DJANGO_CHAT_S3_SECRET_ACCESS_KEY"),
+            "bucket_name": DJANGO_CHAT_S3_BUCKET_NAME,
+            "endpoint_url": env("DJANGO_CHAT_S3_ENDPOINT_URL", default=None),
+            "region_name": env("DJANGO_CHAT_S3_REGION_NAME", default=None),
+            "custom_domain": DJANGO_CHAT_S3_CUSTOM_DOMAIN or None,
+            "addressing_style": env("DJANGO_CHAT_S3_ADDRESSING_STYLE", default=None),
+            "signature_version": env("DJANGO_CHAT_S3_SIGNATURE_VERSION", default="s3v4"),
+            "querystring_auth": env.bool(
+                "DJANGO_CHAT_S3_QUERYSTRING_AUTH",
+                default=False,
+            ),
+            "file_overwrite": env.bool("DJANGO_CHAT_S3_FILE_OVERWRITE", default=False),
+            "default_acl": env("DJANGO_CHAT_S3_DEFAULT_ACL", default=None),
+            "object_parameters": {
+                "CacheControl": env(
+                    "DJANGO_CHAT_S3_CACHE_CONTROL",
+                    default="max-age=604800, s-maxage=604800, must-revalidate",
+                ),
+            },
+        },
+    }
+    MEDIA_URL = env(
+        "DJANGO_CHAT_MEDIA_URL",
+        default=f"https://{DJANGO_CHAT_S3_MEDIA_DOMAIN}/",
+    )
+elif MEDIA_STORAGE_BACKEND != "filesystem":
+    msg = (
+        "DJANGO_CHAT_MEDIA_STORAGE_BACKEND must be either 'filesystem' or 's3', "
+        f"not {MEDIA_STORAGE_BACKEND!r}."
+    )
+    raise ValueError(msg)
 
 ADMIN_URL = "django-admin/"
 DJANGO_CHAT_WAGTAIL_ADMIN_PATH = "cms/"

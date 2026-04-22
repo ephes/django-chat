@@ -16,9 +16,14 @@ DATABASES = {
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
+STORAGES["default"] = {  # noqa: F405
+    "BACKEND": "django.core.files.storage.FileSystemStorage",
+}
 STORAGES["staticfiles"] = {  # noqa: F405
     "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
 }
+MEDIA_URL = "/media/"
+MEDIA_ROOT = ROOT_DIR / "test-media"  # noqa: F405
 WHITENOISE_AUTOREFRESH = True
 
 CACHES = {

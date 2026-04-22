@@ -1,11 +1,19 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import mimetypes
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, cast
+from urllib.parse import unquote, urlparse
+from urllib.request import Request, urlopen
 
-from cast.models import Episode, Podcast
+from cast.models import Audio, Episode, Podcast
+from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -13,7 +21,11 @@ from django.utils.html import strip_tags
 from django.utils.text import slugify
 from wagtail.models import Page, Site
 
-from django_chat.imports.models import EpisodeSourceMetadata, PodcastSourceMetadata
+from django_chat.imports.models import (
+    EpisodeAudioImportMetadata,
+    EpisodeSourceMetadata,
+    PodcastSourceMetadata,
+)
 from django_chat.imports.source_data import (
     EpisodeSourceData,
     RssPodcast,
@@ -37,6 +49,9 @@ DETAIL_FIXTURE_FILENAMES = (
     "simplecast_episode_detail_2_how-to-learn-django.json",
     "simplecast_episode_detail_200_django-tasks-jake-howard.json",
 )
+IMPORT_AUDIO_USERNAME = "django-chat-importer"
+
+AudioDownloader = Callable[[str], "DownloadedAudio"]
 
 
 @dataclass(frozen=True)
@@ -53,8 +68,33 @@ class SampleImportResult:
     podcast_metadata: PodcastSourceMetadata
     episodes: tuple[Episode, ...]
     episode_metadata: tuple[EpisodeSourceMetadata, ...]
+    audio_metadata: tuple[EpisodeAudioImportMetadata, ...]
     podcast_created: bool
     episodes_created: int
+    audio_created: int
+    audio_copied: int
+
+
+@dataclass(frozen=True)
+class DownloadedAudio:
+    content: bytes
+    content_type: str | None = None
+    content_length: int | None = None
+    filename: str | None = None
+
+
+@dataclass(frozen=True)
+class AudioSourceSelection:
+    url: str
+    kind: str
+
+
+@dataclass(frozen=True)
+class AudioCopyResult:
+    audio_metadata: EpisodeAudioImportMetadata
+    audio: Audio
+    audio_created: bool
+    file_copied: bool
 
 
 def load_sample_source_data(
@@ -84,43 +124,85 @@ def load_sample_source_data(
     )
 
 
-@transaction.atomic
 def import_django_chat_sample(
     fixture_dir: Path | str = DEFAULT_SOURCE_FIXTURE_DIR,
+    *,
+    copy_audio: bool = False,
+    audio_downloader: AudioDownloader | None = None,
 ) -> SampleImportResult:
     source_data = load_sample_source_data(fixture_dir)
-    parent_page = _get_podcast_parent_page()
-    podcast, podcast_created = _get_or_create_podcast_page(
-        parent_page,
-        source_data.rss_podcast,
-        source_data.simplecast_podcast,
-    )
-    _update_podcast_page(podcast, source_data.rss_podcast, source_data.simplecast_podcast)
-    podcast_metadata = _update_podcast_metadata(
-        podcast,
-        source_data.rss_podcast,
-        source_data.simplecast_podcast,
-        source_data.simplecast_site,
-    )
+    with transaction.atomic():
+        parent_page = _get_podcast_parent_page()
+        podcast, podcast_created = _get_or_create_podcast_page(
+            parent_page,
+            source_data.rss_podcast,
+            source_data.simplecast_podcast,
+        )
+        _update_podcast_page(podcast, source_data.rss_podcast, source_data.simplecast_podcast)
+        podcast_metadata = _update_podcast_metadata(
+            podcast,
+            source_data.rss_podcast,
+            source_data.simplecast_podcast,
+            source_data.simplecast_site,
+        )
 
-    episodes: list[Episode] = []
-    episode_metadata: list[EpisodeSourceMetadata] = []
-    episodes_created = 0
-    for episode_source in source_data.episodes:
-        episode, episode_created = _get_or_create_episode_page(podcast, episode_source)
-        _update_episode_page(episode, episode_source)
-        episodes.append(episode)
-        episode_metadata.append(_update_episode_metadata(episode, episode_source))
-        if episode_created:
-            episodes_created += 1
+        episodes: list[Episode] = []
+        episode_metadata: list[EpisodeSourceMetadata] = []
+        episodes_created = 0
+        for episode_source in source_data.episodes:
+            episode, episode_created = _get_or_create_episode_page(podcast, episode_source)
+            _update_episode_page(episode, episode_source)
+            episodes.append(episode)
+            episode_metadata.append(_update_episode_metadata(episode, episode_source))
+            if episode_created:
+                episodes_created += 1
+
+    audio_results = (
+        copy_django_chat_sample_audio(tuple(episode_metadata), audio_downloader=audio_downloader)
+        if copy_audio
+        else ()
+    )
 
     return SampleImportResult(
         podcast=podcast,
         podcast_metadata=podcast_metadata,
         episodes=tuple(episodes),
         episode_metadata=tuple(episode_metadata),
+        audio_metadata=tuple(result.audio_metadata for result in audio_results),
         podcast_created=podcast_created,
         episodes_created=episodes_created,
+        audio_created=sum(1 for result in audio_results if result.audio_created),
+        audio_copied=sum(1 for result in audio_results if result.file_copied),
+    )
+
+
+def copy_django_chat_sample_audio(
+    episode_metadata: tuple[EpisodeSourceMetadata, ...],
+    *,
+    audio_downloader: AudioDownloader | None = None,
+) -> tuple[AudioCopyResult, ...]:
+    """Copy fixture-sample audio for source metadata rows that expose source URLs."""
+
+    downloader = audio_downloader or default_download_audio
+    results: list[AudioCopyResult] = []
+    for metadata in episode_metadata:
+        results.append(_copy_episode_audio(metadata, downloader))
+    return tuple(results)
+
+
+def default_download_audio(source_url: str) -> DownloadedAudio:
+    request = Request(source_url, headers={"User-Agent": "django-chat-sample-import/1.0"})
+    with urlopen(request, timeout=60) as response:
+        content = response.read()
+        headers = response.headers
+        content_type = headers.get_content_type() if hasattr(headers, "get_content_type") else None
+        content_length = _optional_positive_int(headers.get("Content-Length"))
+
+    return DownloadedAudio(
+        content=content,
+        content_type=content_type,
+        content_length=content_length,
+        filename=_source_url_filename(source_url),
     )
 
 
@@ -253,7 +335,12 @@ def _get_or_create_episode_page(
     slug = _episode_slug(episode_source)
     existing = Episode.objects.child_of(podcast).filter(slug=slug).first()
     if existing is not None:
-        return existing, False
+        msg = (
+            "Episode slug collision without matching Django Chat source metadata: "
+            f"slug={slug!r}, existing_title={existing.title!r}, "
+            f"source_title={episode_source.title!r}. Refusing to adopt an ambiguous page."
+        )
+        raise RuntimeError(msg)
 
     episode = Episode(title=episode_source.title, slug=slug)
     _update_episode_page_fields(episode, episode_source)
@@ -305,6 +392,262 @@ def _update_episode_metadata(
         setattr(existing, field_name, value)
     existing.save()
     return existing
+
+
+def _copy_episode_audio(
+    metadata: EpisodeSourceMetadata,
+    audio_downloader: AudioDownloader,
+) -> AudioCopyResult:
+    source = _select_audio_source(metadata)
+    existing = _existing_audio_metadata(metadata)
+    if existing is not None and _existing_audio_matches_source(existing, source):
+        existing_audio = cast(Audio, existing.audio)
+        _update_audio_record(existing_audio, metadata, source)
+        _attach_episode_audio(metadata, existing_audio)
+        return AudioCopyResult(
+            audio_metadata=existing,
+            audio=existing_audio,
+            audio_created=False,
+            file_copied=False,
+        )
+
+    downloaded = audio_downloader(source.url)
+    if not downloaded.content:
+        msg = f"Audio source returned no content: {source.url}"
+        raise ValueError(msg)
+
+    with transaction.atomic():
+        metadata = (
+            EpisodeSourceMetadata.objects.select_related("episode")
+            .select_for_update()
+            .get(pk=metadata.pk)
+        )
+        existing = _existing_audio_metadata(metadata)
+        audio = (
+            cast(Audio, existing.audio) if existing is not None else Audio(user=_get_import_user())
+        )
+        audio_created = audio.pk is None
+        _update_audio_record(audio, metadata, source, downloaded=downloaded)
+        source_byte_size = _metadata_audio_file_size(metadata)
+        if source_byte_size is None:
+            source_byte_size = downloaded.content_length
+        audio_import_metadata, _ = EpisodeAudioImportMetadata.objects.update_or_create(
+            episode_metadata=metadata,
+            defaults={
+                "audio": audio,
+                "source_url": source.url,
+                "source_url_kind": source.kind,
+                "source_content_type": _audio_content_type(downloaded),
+                "source_byte_size": source_byte_size,
+                "copied_byte_size": len(downloaded.content),
+                "storage_name": cast(Any, audio).mp3.name,
+                "copied_at": timezone.now(),
+            },
+        )
+        _attach_episode_audio(metadata, audio)
+
+    return AudioCopyResult(
+        audio_metadata=audio_import_metadata,
+        audio=audio,
+        audio_created=audio_created,
+        file_copied=True,
+    )
+
+
+def _existing_audio_metadata(
+    metadata: EpisodeSourceMetadata,
+) -> EpisodeAudioImportMetadata | None:
+    return (
+        EpisodeAudioImportMetadata.objects.select_related("audio", "episode_metadata__episode")
+        .filter(episode_metadata=metadata)
+        .first()
+    )
+
+
+def _existing_audio_matches_source(
+    audio_metadata: EpisodeAudioImportMetadata,
+    source: AudioSourceSelection,
+) -> bool:
+    audio_file = cast(Any, audio_metadata.audio).mp3
+    storage_name = cast(str, audio_metadata.storage_name)
+    return (
+        audio_metadata.source_url == source.url
+        and bool(storage_name)
+        and audio_file.name == storage_name
+        and audio_file.storage.exists(audio_file.name)
+    )
+
+
+def _select_audio_source(metadata: EpisodeSourceMetadata) -> AudioSourceSelection:
+    if metadata.simplecast_audio_file_url:
+        return AudioSourceSelection(
+            url=cast(str, metadata.simplecast_audio_file_url),
+            kind="simplecast_audio_file_url",
+        )
+    if metadata.simplecast_enclosure_url:
+        return AudioSourceSelection(
+            url=cast(str, metadata.simplecast_enclosure_url),
+            kind="simplecast_enclosure_url",
+        )
+    if metadata.original_rss_enclosure_url:
+        return AudioSourceSelection(
+            url=cast(str, metadata.original_rss_enclosure_url),
+            kind="rss_enclosure_url",
+        )
+    msg = f"Episode metadata has no audio source URL: {metadata.matching_key}"
+    raise ValueError(msg)
+
+
+def _update_audio_record(
+    audio: Audio,
+    metadata: EpisodeSourceMetadata,
+    source: AudioSourceSelection,
+    *,
+    downloaded: DownloadedAudio | None = None,
+) -> None:
+    audio_fields = cast(Any, audio)
+    desired_user = audio_fields.user if audio_fields.user_id else _get_import_user()
+    desired_title = cast(str, metadata.source_title)
+    desired_subtitle = _audio_subtitle(metadata)
+    desired_duration = None
+    duration_seconds = _metadata_duration_seconds(metadata)
+    if duration_seconds is not None:
+        desired_duration = timedelta(seconds=duration_seconds)
+    desired_data = _audio_data(audio, metadata, source, downloaded=downloaded)
+
+    needs_save = False
+    if audio_fields.user_id != desired_user.pk:
+        audio_fields.user = desired_user
+        needs_save = True
+    if audio_fields.title != desired_title:
+        audio_fields.title = desired_title
+        needs_save = True
+    if audio_fields.subtitle != desired_subtitle:
+        audio_fields.subtitle = desired_subtitle
+        needs_save = True
+    if audio_fields.duration != desired_duration:
+        audio_fields.duration = desired_duration
+        needs_save = True
+    if audio_fields.data != desired_data:
+        audio_fields.data = desired_data
+        needs_save = True
+    if downloaded is not None:
+        audio_fields.mp3.save(
+            _destination_audio_filename(metadata, downloaded),
+            ContentFile(downloaded.content),
+            save=False,
+        )
+        needs_save = True
+    if needs_save:
+        audio.save(duration=False, cache_file_sizes=False)
+
+
+def _attach_episode_audio(metadata: EpisodeSourceMetadata, audio: Audio) -> None:
+    episode = cast(Episode, metadata.episode)
+    episode_fields = cast(Any, episode)
+    if episode_fields.podcast_audio_id == audio.pk:
+        return
+    Episode.objects.filter(pk=episode.pk).update(podcast_audio=audio)
+    episode_fields.podcast_audio = audio
+
+
+def _audio_data(
+    audio: Audio,
+    metadata: EpisodeSourceMetadata,
+    source: AudioSourceSelection,
+    *,
+    downloaded: DownloadedAudio | None,
+) -> dict[str, Any]:
+    data = dict(cast(Any, audio).data or {})
+    data["django_chat_source"] = {
+        "matching_key": metadata.matching_key,
+        "source_url": source.url,
+        "source_url_kind": source.kind,
+    }
+    byte_size = len(downloaded.content) if downloaded is not None else None
+    if byte_size is not None:
+        sizes = dict(data.get("size") or {})
+        sizes["mp3"] = byte_size
+        data["size"] = sizes
+    return data
+
+
+def _audio_subtitle(metadata: EpisodeSourceMetadata) -> str:
+    episode_number = cast(int | None, metadata.episode_number)
+    if episode_number is None:
+        return ""
+    return f"Episode {episode_number}"
+
+
+def _destination_audio_filename(
+    metadata: EpisodeSourceMetadata,
+    downloaded: DownloadedAudio,
+) -> str:
+    slug = (
+        cast(str, metadata.simplecast_slug)
+        or slugify(cast(str, metadata.source_title))
+        or "episode"
+    )
+    slug = slug[:48].strip("-") or "episode"
+    identifier = (
+        cast(str, metadata.simplecast_episode_id)
+        or cast(str, metadata.rss_guid)
+        or cast(str, metadata.matching_key)
+        or cast(str, metadata.source_title)
+    )
+    digest = hashlib.sha256(identifier.encode()).hexdigest()[:12]
+    extension = _audio_extension(downloaded)
+    return f"django-chat-sample/{slug}-{digest}{extension}"
+
+
+def _metadata_audio_file_size(metadata: EpisodeSourceMetadata) -> int | None:
+    return cast(int | None, metadata.audio_file_size)
+
+
+def _metadata_duration_seconds(metadata: EpisodeSourceMetadata) -> int | None:
+    return cast(int | None, metadata.duration_seconds)
+
+
+def _audio_extension(downloaded: DownloadedAudio) -> str:
+    source_filename = downloaded.filename or ""
+    suffix = Path(source_filename).suffix.lower()
+    if suffix in {".mp3", ".m4a", ".oga", ".opus"}:
+        return suffix
+    guessed = mimetypes.guess_extension(downloaded.content_type or "")
+    return guessed if guessed in {".mp3", ".m4a", ".oga", ".opus"} else ".mp3"
+
+
+def _audio_content_type(downloaded: DownloadedAudio) -> str:
+    if downloaded.content_type:
+        return downloaded.content_type[:255]
+    guessed_type, _ = mimetypes.guess_type(downloaded.filename or "")
+    return (guessed_type or "audio/mpeg")[:255]
+
+
+def _source_url_filename(source_url: str) -> str:
+    return Path(unquote(urlparse(source_url).path)).name
+
+
+def _optional_positive_int(value: str | None) -> int | None:
+    if value is None:
+        return None
+    try:
+        parsed = int(value)
+    except ValueError:
+        return None
+    return parsed if parsed >= 0 else None
+
+
+def _get_import_user() -> Any:
+    user_model = get_user_model()
+    existing = user_model._default_manager.filter(username=IMPORT_AUDIO_USERNAME).first()
+    if existing is not None:
+        return existing
+
+    user = user_model(username=IMPORT_AUDIO_USERNAME, email="")
+    user.set_unusable_password()
+    user.save()
+    return user
 
 
 def _episode_metadata_fields(

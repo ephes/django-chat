@@ -5,9 +5,9 @@ built with Django, Wagtail, and django-cast, using Python Podcast only as a
 structural reference for local development ergonomics.
 
 Current status: runnable local scaffold with development tooling, a
-fixture-backed source parser, and an idempotent local sample import that creates
-django-cast podcast and episode pages without copying media. The planning
-source of truth is
+fixture-backed source parser, an idempotent local sample import, and explicit
+sample audio-copy support for configured media storage. The planning source of
+truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development
@@ -47,6 +47,12 @@ Import the local fixture-backed podcast/episode sample:
 just manage import_django_chat_sample
 ```
 
+Copy audio for that same small sample into the configured media storage:
+
+```sh
+just manage import_django_chat_sample --copy-audio
+```
+
 Run all local quality checks:
 
 ```sh
@@ -66,10 +72,11 @@ run without PostgreSQL or other services.
 ## Scope
 
 This slice intentionally includes only a small fixture-backed database/page
-import for local proof of idempotency. It does not include full catalog import,
-S3 media copy, transcript conversion, a transcript worker service, templates,
-route compatibility, deployment commands, host review docs, or staging URLs.
-Those are later implementation slices from the research PRD.
+import plus opt-in audio copy for local proof of idempotency and media storage.
+It does not include full catalog import, transcript conversion, a transcript
+worker service, templates, route compatibility, deployment commands, host review
+docs, or staging URLs. Those are later implementation slices from the research
+PRD.
 
 Deployment configuration is not implemented yet. The current plan is to keep
 Django Chat-specific deployment code in this repo and store only
