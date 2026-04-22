@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, ClassVar, cast
 
 from django.db import models
@@ -32,6 +34,64 @@ class PodcastSourceMetadata(models.Model):
 
     def __str__(self) -> str:
         return f"{self.source_title} ({self.simplecast_podcast_id})"
+
+    @property
+    def visible_menu_links(self) -> models.QuerySet[PodcastSourceLink]:
+        return self.visible_links_for("menu")
+
+    @property
+    def visible_social_links(self) -> models.QuerySet[PodcastSourceLink]:
+        return self.visible_links_for("social")
+
+    @property
+    def visible_distribution_links(self) -> models.QuerySet[PodcastSourceLink]:
+        return self.visible_links_for("distribution")
+
+    def visible_links_for(self, location: str) -> models.QuerySet[PodcastSourceLink]:
+        return (
+            cast(Any, self)
+            .source_links.filter(location=location, is_visible=True)
+            .order_by(
+                "display_order",
+                "name",
+            )
+        )
+
+
+class PodcastSourceLink(models.Model):
+    objects: ClassVar[models.Manager[PodcastSourceLink]]
+
+    podcast_metadata = models.ForeignKey(
+        PodcastSourceMetadata,
+        on_delete=models.CASCADE,
+        related_name="source_links",
+    )
+    source_key = models.CharField(max_length=255)
+    source = models.CharField(max_length=64)
+    location = models.CharField(max_length=32)
+    source_id = models.CharField(max_length=128, blank=True)
+    source_url = models.URLField(max_length=1000, blank=True)
+    name = models.CharField(max_length=255)
+    url = models.URLField(max_length=1000)
+    display_order = models.PositiveIntegerField(default=0)
+    new_window = models.BooleanField(null=True, blank=True)
+    is_visible = models.BooleanField(default=True)
+    channel_id = models.CharField(max_length=128, blank=True)
+    channel_name = models.CharField(max_length=255, blank=True)
+    first_imported_at = models.DateTimeField(auto_now_add=True)
+    last_imported_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["podcast_metadata", "location", "display_order", "name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["podcast_metadata", "source_key"],
+                name="imports_unique_podcast_source_link",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.location})"
 
 
 class EpisodeSourceMetadata(models.Model):

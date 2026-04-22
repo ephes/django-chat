@@ -1,0 +1,61 @@
+{% extends "./base.html" %}
+{% load wagtailcore_tags %}
+
+{% block title %}{{ page.title }}{% endblock title %}
+
+{% block content %}
+  {% firstof podcast blog as show %}
+  <main>
+    <section class="show-hero">
+      <div class="show-copy">
+        <p class="eyebrow">Django Web Framework Podcast</p>
+        <h1>{{ page.title }}</h1>
+        {% if page.description %}
+          <div class="show-description">{{ page.description|richtext }}</div>
+        {% endif %}
+        <div class="show-actions" aria-label="Feeds">
+          <a class="button-primary" href="{% url "cast:podcast_feed_rss" slug=podcast.slug audio_format="mp3" %}">Podcast RSS</a>
+          <a class="button-secondary" href="{% url "cast:latest_entries_feed" slug=blog.slug %}">Latest RSS</a>
+        </div>
+      </div>
+      {% if source_metadata.image_url %}
+        <img class="show-artwork" src="{{ source_metadata.image_url }}" alt="Django Chat artwork">
+      {% endif %}
+    </section>
+
+    {% if source_metadata %}
+      <section class="link-band" aria-label="Listen on">
+        {% for link in source_metadata.visible_distribution_links %}
+          <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.name }}</a>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    <section class="episode-list" aria-label="Episodes">
+      {% for post in posts %}
+        <article class="episode-card">
+          <div class="episode-meta">
+            <time datetime="{{ post.visible_date|date:"c" }}">{{ post.visible_date|date:"F j, Y" }}</time>
+          </div>
+          <h2><a href="{{ post.page_url }}">{{ post.title }}</a></h2>
+          {% for block in post.body %}
+            {% if block.block_type != "detail" %}
+              <div class="episode-summary">
+                {% for child_block in block.value %}
+                  {% if child_block.block_type == "paragraph" %}
+                    {% include_block child_block %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+          <a class="text-link" href="{{ post.page_url }}">Episode page</a>
+        </article>
+      {% endfor %}
+    </section>
+
+    {% if is_paginated %}
+      {% include "./pagination.html" %}
+    {% endif %}
+  </main>
+{% endblock content %}

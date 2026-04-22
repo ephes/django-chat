@@ -1,0 +1,12 @@
+{% load wagtailcore_tags %}
+
+<article class="episode-card">
+  <h2><a href="{{ page.page_url }}">{{ page.title }}</a></h2>
+  {% for block in page.body %}
+    {% if block.block_type != "detail" or render_detail %}
+      {% for child_block in block.value %}
+        {% include_block child_block %}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+</article>

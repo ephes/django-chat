@@ -105,6 +105,7 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "cast.context_processors.site_template_base_dir",
+                "django_chat.core.context_processors.django_chat_source_metadata",
             ],
         },
     },
@@ -186,6 +187,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 CAST_COMMENTS_ENABLED = False
 CAST_CUSTOM_THEMES = [
+    ("django_chat", "Django Chat"),
     ("bootstrap5", "Bootstrap 5"),
 ]
 

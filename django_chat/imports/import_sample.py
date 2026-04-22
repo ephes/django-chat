@@ -24,6 +24,7 @@ from wagtail.models import Page, Site
 from django_chat.imports.models import (
     EpisodeAudioImportMetadata,
     EpisodeSourceMetadata,
+    PodcastSourceLink,
     PodcastSourceMetadata,
 )
 from django_chat.imports.source_data import (
@@ -32,8 +33,10 @@ from django_chat.imports.source_data import (
     SimplecastEpisode,
     SimplecastPodcast,
     SimplecastSite,
+    SourceLink,
     merge_episode_sources,
     parse_rss_feed,
+    parse_simplecast_distribution_links,
     parse_simplecast_episode_detail,
     parse_simplecast_episode_page,
     parse_simplecast_podcast,
@@ -59,6 +62,7 @@ class SampleSourceData:
     rss_podcast: RssPodcast
     simplecast_podcast: SimplecastPodcast
     simplecast_site: SimplecastSite
+    source_links: tuple[SourceLink, ...]
     episodes: tuple[EpisodeSourceData, ...]
 
 
@@ -66,6 +70,7 @@ class SampleSourceData:
 class SampleImportResult:
     podcast: Podcast
     podcast_metadata: PodcastSourceMetadata
+    source_links: tuple[PodcastSourceLink, ...]
     episodes: tuple[Episode, ...]
     episode_metadata: tuple[EpisodeSourceMetadata, ...]
     audio_metadata: tuple[EpisodeAudioImportMetadata, ...]
@@ -106,6 +111,9 @@ def load_sample_source_data(
         _read_json(fixture_path, "simplecast_podcast.json")
     )
     simplecast_site = parse_simplecast_site(_read_json(fixture_path, "simplecast_site.json"))
+    distribution_links = parse_simplecast_distribution_links(
+        _read_json(fixture_path, "simplecast_distribution_channels.json")
+    )
     simplecast_episodes = (
         *_load_simplecast_detail_episodes(fixture_path),
         *parse_simplecast_episode_page(
@@ -120,6 +128,11 @@ def load_sample_source_data(
         rss_podcast=rss_podcast,
         simplecast_podcast=simplecast_podcast,
         simplecast_site=simplecast_site,
+        source_links=(
+            *simplecast_site.menu_links,
+            *simplecast_site.social_links,
+            *distribution_links,
+        ),
         episodes=merge_episode_sources(rss_podcast.episodes, simplecast_episodes),
     )
 
@@ -145,6 +158,7 @@ def import_django_chat_sample(
             source_data.simplecast_podcast,
             source_data.simplecast_site,
         )
+        source_links = _update_podcast_source_links(podcast_metadata, source_data.source_links)
 
         episodes: list[Episode] = []
         episode_metadata: list[EpisodeSourceMetadata] = []
@@ -166,6 +180,7 @@ def import_django_chat_sample(
     return SampleImportResult(
         podcast=podcast,
         podcast_metadata=podcast_metadata,
+        source_links=source_links,
         episodes=tuple(episodes),
         episode_metadata=tuple(episode_metadata),
         audio_metadata=tuple(result.audio_metadata for result in audio_results),
@@ -268,12 +283,15 @@ def _update_podcast_page_fields(
     page.title = title
     page.draft_title = title
     page.slug = PODCAST_PAGE_SLUG
+    if page.owner_id is None:
+        page.owner = _get_import_user()
     page.author = _join_text(simplecast_podcast.author_names) or rss_podcast.author
     page.email = rss_podcast.owner_email
     page.subtitle = _truncate(strip_tags(description), 255)
     page.description = description
     page.search_description = strip_tags(description)
     page.comments_enabled = False
+    page.template_base_dir = "django_chat"
     page.itunes_categories = json.dumps(
         {category: [] for category in rss_podcast.categories},
         sort_keys=True,
@@ -312,6 +330,50 @@ def _update_podcast_metadata(
         },
     )
     return metadata
+
+
+def _update_podcast_source_links(
+    podcast_metadata: PodcastSourceMetadata,
+    source_links: tuple[SourceLink, ...],
+) -> tuple[PodcastSourceLink, ...]:
+    imported_links: list[PodcastSourceLink] = []
+    source_keys: list[str] = []
+    for index, source_link in enumerate(source_links):
+        source_key = _source_link_key(source_link)
+        source_keys.append(source_key)
+        link, _ = PodcastSourceLink.objects.update_or_create(
+            podcast_metadata=podcast_metadata,
+            source_key=source_key,
+            defaults={
+                "source": source_link.source,
+                "location": source_link.location,
+                "source_id": source_link.source_id or "",
+                "source_url": source_link.source_url or "",
+                "name": source_link.name,
+                "url": source_link.url,
+                "display_order": (
+                    source_link.order if source_link.order is not None else index * 100
+                ),
+                "new_window": source_link.new_window,
+                "is_visible": source_link.is_visible is not False,
+                "channel_id": source_link.channel_id or "",
+                "channel_name": source_link.channel_name or "",
+            },
+        )
+        imported_links.append(link)
+
+    cast(Any, podcast_metadata).source_links.exclude(source_key__in=source_keys).delete()
+    return tuple(imported_links)
+
+
+def _source_link_key(source_link: SourceLink) -> str:
+    if source_link.source_id:
+        identifier = source_link.source_id
+    elif source_link.channel_id:
+        identifier = source_link.channel_id
+    else:
+        identifier = hashlib.sha256(f"{source_link.name}\0{source_link.url}".encode()).hexdigest()
+    return f"{source_link.source}:{source_link.location}:{identifier}"
 
 
 def _get_or_create_episode_page(
@@ -359,6 +421,8 @@ def _update_episode_page_fields(episode: Episode, episode_source: EpisodeSourceD
     page.title = episode_source.title
     page.draft_title = episode_source.title
     page.slug = _episode_slug(episode_source)
+    if page.owner_id is None:
+        page.owner = _get_import_user()
     page.visible_date = episode_source.published_at or timezone.now()
     page.body = _episode_body(episode_source)
     page.search_description = strip_tags(description)

@@ -5,6 +5,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
+from django_chat.core.views import podcast_episode_index
 from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
@@ -15,9 +17,11 @@ handler404 = cast_default_views.page_not_found
 handler500 = cast_default_views.server_error
 
 urlpatterns = [
+    path("", RedirectView.as_view(url="/episodes/", permanent=False), name="home"),
     path(settings.ADMIN_URL, admin.site.urls),
     path(settings.DJANGO_CHAT_WAGTAIL_ADMIN_PATH, include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
+    path("episodes/", podcast_episode_index, name="django_chat_episode_index"),
     path("", include("cast.urls", namespace="cast")),
     path("", include(wagtail_urls)),
 ]

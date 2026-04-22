@@ -5,9 +5,10 @@ built with Django, Wagtail, and django-cast, using Python Podcast only as a
 structural reference for local development ergonomics.
 
 Current status: runnable local scaffold with development tooling, a
-fixture-backed source parser, an idempotent local sample import, and explicit
-sample audio-copy support for configured media storage. The planning source of
-truth is
+fixture-backed source parser, an idempotent local sample import, explicit
+sample audio-copy support for configured media storage, and a basic Django
+Chat-branded local browsing experience for the imported sample. The planning
+source of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development
@@ -65,6 +66,11 @@ Run the local development server:
 just runserver
 ```
 
+After importing the sample, open `http://localhost:8000/episodes/` to browse
+the sample episode index. `http://localhost:8000/` redirects to `/episodes/`,
+and imported episode detail pages keep the current public shape
+`/episodes/<slug>/`.
+
 The default Django settings module for `manage.py` is
 `config.settings.local`. Local and test settings use SQLite so the scaffold can
 run without PostgreSQL or other services.
@@ -72,11 +78,13 @@ run without PostgreSQL or other services.
 ## Scope
 
 This slice intentionally includes only a small fixture-backed database/page
-import plus opt-in audio copy for local proof of idempotency and media storage.
+import, opt-in audio copy, basic Django Chat django-cast templates,
+fixture-derived menu/social/distribution link rendering, and local URL
+compatibility for `/`, `/episodes/`, and `/episodes/<slug>/`.
+
 It does not include full catalog import, transcript conversion, a transcript
-worker service, templates, route compatibility, deployment commands, host review
-docs, or staging URLs. Those are later implementation slices from the research
-PRD.
+worker service, feed parity checks, deployment commands, host review docs, or
+staging URLs. Those are later implementation slices from the research PRD.
 
 Deployment configuration is not implemented yet. The current plan is to keep
 Django Chat-specific deployment code in this repo and store only

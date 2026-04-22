@@ -123,7 +123,8 @@ fixtures before committing them and keep only public, non-secret source data.
 
 ## Sample Import
 
-Slice 4 adds a write-side local import for the committed source fixture sample.
+The sample import adds a write-side local import for the committed source
+fixture sample.
 Run migrations first so the local SQLite database has the source metadata
 tables:
 
@@ -146,7 +147,31 @@ updates one `cast.Podcast` page and eight `cast.Episode` pages. It stores RSS
 GUIDs, Simplecast IDs and slugs, episode numbers, source URLs, original
 enclosure URLs, duration, descriptions, long descriptions, and transcript HTML
 in local source metadata rows so repeated runs do not duplicate pages or
-metadata.
+metadata. It also stores fixture-derived Simplecast menu, social, and
+distribution links in local metadata rows for template rendering.
+
+The command creates a local `django-chat-importer` user with an unusable
+password when no existing import user is available. Imported sample pages use
+that user as their owner, and the audio-copy path reuses it for `Audio.user`.
+
+Imported pages use the Django Chat django-cast theme (`cast/django_chat/...`).
+The imported podcast index is available at `/episodes/`, imported episode
+detail pages keep `/episodes/<slug>/`, and `/` redirects to `/episodes/`.
+The `/episodes/` index is served by a small project view so metadata-only
+sample imports remain browseable before audio has been copied; episode detail
+pages and feed URLs still use django-cast/Wagtail routes.
+Run the development server after importing the sample:
+
+```sh
+just runserver
+```
+
+Then browse:
+
+- `http://localhost:8000/` redirects to the sample episode index.
+- `http://localhost:8000/episodes/` renders the Django Chat-branded index.
+- `http://localhost:8000/episodes/django-tasks-jake-howard/` renders an
+  imported episode detail page.
 
 The sample import intentionally does not download, stream, copy, or attach MP3
 files unless audio copying is requested explicitly. Original RSS and Simplecast
@@ -169,10 +194,8 @@ storage, creates or updates a `cast.Audio` row, and attaches that row to
 Repeated `--copy-audio` runs are idempotent for the sample: existing audio-copy
 metadata rows are reused, files are not downloaded again when the source URL and
 stored file name still match and the stored file exists, and no duplicate
-episode pages, source metadata, audio rows, or transcript rows are created. The
-command creates a local `django-chat-importer` user with an unusable password
-when no existing import user is available because django-cast requires
-`Audio.user`.
+episode pages, source metadata, link metadata, audio rows, or transcript rows
+are created.
 
 The sample audio command downloads real MP3s when run without a fake downloader,
 so use it deliberately. Tests use in-memory fake audio and never require live
@@ -248,7 +271,9 @@ are intentionally deferred to the deployment slice.
 ## Boundaries
 
 Private deployment configuration and secrets stay outside this shareable app
-repo. This slice includes only a local fixture-backed sample import and explicit
-sample audio copy; it does not include full catalog import, transcript
-conversion, a transcript worker service, deployment commands, host review docs,
-or staging URLs. Those are later implementation slices from the research PRD.
+repo. This slice includes only a local fixture-backed sample import, explicit
+sample audio copy, basic local templates, fixture-derived link rendering, and
+current local URL compatibility. It does not include full catalog import,
+transcript conversion, a transcript worker service, feed parity checks,
+deployment commands, host review docs, or staging URLs. Those are later
+implementation slices from the research PRD.

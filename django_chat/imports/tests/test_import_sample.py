@@ -18,6 +18,7 @@ from django_chat.imports.import_sample import (
 from django_chat.imports.models import (
     EpisodeAudioImportMetadata,
     EpisodeSourceMetadata,
+    PodcastSourceLink,
     PodcastSourceMetadata,
 )
 from django_chat.imports.source_data import (
@@ -50,6 +51,7 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
     assert Podcast.objects.count() == 1
     assert Episode.objects.count() == 8
     assert PodcastSourceMetadata.objects.count() == 1
+    assert PodcastSourceLink.objects.count() == 11
     assert EpisodeSourceMetadata.objects.count() == 8
     assert EpisodeAudioImportMetadata.objects.count() == 0
 
@@ -59,6 +61,7 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
     assert podcast.author == "William Vincent and Carlton Gibson"
     assert podcast.email == "will@wsvincent.com"
     assert podcast.comments_enabled is False
+    assert podcast.template_base_dir == "django_chat"
 
     podcast_metadata = PodcastSourceMetadata.objects.get()
     assert podcast_metadata.podcast == podcast
@@ -67,6 +70,13 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
     assert podcast_metadata.simplecast_source_url == SIMPLECAST_PODCAST_URL
     assert podcast_metadata.website_url == "https://djangochat.com"
     assert podcast_metadata.source_is_explicit is False
+    assert [link.name for link in podcast_metadata.visible_menu_links] == [
+        "YouTube",
+        "Sponsor Us",
+        "Fosstodon",
+    ]
+    assert [link.name for link in podcast_metadata.visible_social_links] == ["Fosstodon"]
+    assert "Apple Podcasts" in {link.name for link in podcast_metadata.visible_distribution_links}
 
     latest_metadata = EpisodeSourceMetadata.objects.get(episode_number=200)
     assert latest_metadata.episode.title == "Django Tasks - Jake Howard"
@@ -91,6 +101,7 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
     assert "Jake Howard" in latest_metadata.simplecast_transcript_html
     assert latest_metadata.episode.podcast_audio is None
     assert latest_metadata.episode.comments_enabled is False
+    assert latest_metadata.episode.owner.username == "django-chat-importer"
     assert Audio.objects.count() == 0
     assert _transcript_count() == 0
     assert result.audio_created == 0
@@ -105,6 +116,7 @@ def test_sample_import_is_idempotent_on_second_run() -> None:
     episode_ids = set(Episode.objects.values_list("id", flat=True))
     podcast_metadata_ids = set(PodcastSourceMetadata.objects.values_list("id", flat=True))
     episode_metadata_ids = set(EpisodeSourceMetadata.objects.values_list("id", flat=True))
+    source_link_ids = set(PodcastSourceLink.objects.values_list("id", flat=True))
 
     second_result = import_django_chat_sample()
 
@@ -116,9 +128,11 @@ def test_sample_import_is_idempotent_on_second_run() -> None:
     assert set(Episode.objects.values_list("id", flat=True)) == episode_ids
     assert set(PodcastSourceMetadata.objects.values_list("id", flat=True)) == podcast_metadata_ids
     assert set(EpisodeSourceMetadata.objects.values_list("id", flat=True)) == episode_metadata_ids
+    assert set(PodcastSourceLink.objects.values_list("id", flat=True)) == source_link_ids
     assert Podcast.objects.count() == 1
     assert Episode.objects.count() == 8
     assert PodcastSourceMetadata.objects.count() == 1
+    assert PodcastSourceLink.objects.count() == 11
     assert EpisodeSourceMetadata.objects.count() == 8
     assert EpisodeAudioImportMetadata.objects.count() == 0
     assert Audio.objects.count() == 0

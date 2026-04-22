@@ -1,0 +1,9 @@
+<nav class="pagination-nav" aria-label="Episode pages">
+  {% if has_previous %}
+    <a href="?page={{ previous_page_number }}{{ parameters }}">Newer</a>
+  {% endif %}
+  <span>Page {{ page_number }}</span>
+  {% if has_next %}
+    <a href="?page={{ next_page_number }}{{ parameters }}">Older</a>
+  {% endif %}
+</nav>

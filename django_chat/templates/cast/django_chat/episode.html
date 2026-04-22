@@ -1,0 +1,34 @@
+{% extends "./base.html" %}
+{% load wagtailcore_tags %}
+
+{% block title %}{{ page.title }}{% endblock title %}
+
+{% block content %}
+  <main>
+    <article class="episode-detail">
+      <a class="text-link" href="{{ blog_url }}">All episodes</a>
+      <header class="episode-header">
+        <time datetime="{{ page.visible_date|date:"c" }}">{{ page.visible_date|date:"F j, Y" }}</time>
+        <h1>{{ page.title }}</h1>
+      </header>
+
+      <section class="audio-panel" aria-label="Episode audio">
+        {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+          <audio controls preload="metadata" src="{{ episode.podcast_audio.mp3.url }}"></audio>
+        {% else %}
+          <p>Audio copy pending.</p>
+        {% endif %}
+      </section>
+
+      <div class="show-notes">
+        {% for block in page.body %}
+          <section class="block-{{ block.block_type }}">
+            {% for child_block in block.value %}
+              {% include_block child_block %}
+            {% endfor %}
+          </section>
+        {% endfor %}
+      </div>
+    </article>
+  </main>
+{% endblock content %}
