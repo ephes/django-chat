@@ -27,6 +27,8 @@ def test_deploy_scaffold_files_exist() -> None:
         ".sops.yaml",
         "docs/operations-boundary.md",
         "docs/deployment.md",
+        "docs/host-review-guide.md",
+        "docs/staging-differences.md",
     ]
 
     for relative_path in required_paths:
@@ -89,6 +91,18 @@ def test_deployment_secret_policy_is_gitignored() -> None:
 
     for secret_example in (ROOT_DIR / "deploy/secrets").glob("*.example.yml"):
         assert "CHANGEME" in secret_example.read_text()
+
+
+def test_host_review_docs_preserve_staging_boundary() -> None:
+    host_review = (ROOT_DIR / "docs/host-review-guide.md").read_text()
+    staging_differences = (ROOT_DIR / "docs/staging-differences.md").read_text()
+
+    assert "No live staging deployment has been attempted" in host_review
+    assert "https://<staging-fqdn>/cms/" in host_review
+    assert "Do not commit, document, or print admin passwords" in host_review
+    assert "The staging feed is not canonical" in staging_differences
+    assert "Staging does not mean production migration is complete" in staging_differences
+    assert "`cast_transcripts` database worker remains disabled" in staging_differences
 
 
 def test_static_asset_check_passes_for_bundled_source_manifests() -> None:

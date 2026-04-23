@@ -9,9 +9,11 @@ fixture-backed source parser, an idempotent local sample import, explicit
 sample audio-copy support for configured media storage, and a basic Django
 Chat-branded local browsing experience for the imported sample, plus a
 smoke-level feed comparison for the fixture-backed sample. The repo also now
-contains self-contained deployment scaffolding under `deploy/`; no real staging
-or production deployment has been performed by this slice. The planning source
-of truth is
+contains self-contained deployment scaffolding under `deploy/` and host review
+docs for the first staging path. No real staging or production deployment has
+been performed because no real staging host, DNS, SOPS/age recipient, encrypted
+secrets, media bucket, or host account list has been provided. The planning
+source of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development
@@ -125,6 +127,18 @@ from `deploy/secrets/staging.sops.yml` or
 `deploy/secrets/production.sops.yml`. Those encrypted secret paths are ignored,
 and decrypted secret files must stay out of the repository.
 
+## Host Review
+
+The host review workflow is documented in
+[`docs/host-review-guide.md`](docs/host-review-guide.md), and known differences
+between staging, Simplecast, and a future production migration are documented in
+[`docs/staging-differences.md`](docs/staging-differences.md).
+
+Those docs currently record staging as pending. Replace placeholders and run
+the staging deployment path only after the real Django Chat staging FQDN, SSH
+target, SOPS/age recipient and private key access, encrypted staging secrets,
+media bucket, and host admin account list are available.
+
 ## Scope
 
 This slice includes a small fixture-backed database/page import, opt-in audio
@@ -134,10 +148,10 @@ menu/social/distribution link rendering, local URL compatibility for `/`,
 the imported sample, and deployment scaffolding.
 
 It does not include full catalog import, transcript conversion, an enabled
-transcript worker service, exhaustive production feed parity, host review docs,
-real staging deployment, real production deployment, DNS changes, feed
-redirects, or staging URLs. Those are later implementation slices from the
-research PRD.
+transcript worker service, exhaustive production feed parity, real staging
+deployment, real production deployment, DNS changes, feed redirects, or staging
+URLs. Host review docs exist, but the live staging review is blocked on real
+operator-provided infrastructure and secrets.
 
 Do not commit decrypted Django secret keys, database passwords, S3 credentials,
 Sentry DSNs, Mailgun keys, admin passwords, age private keys, real MP3s, large

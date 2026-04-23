@@ -148,10 +148,18 @@ collect static files, or touch Traefik/Wagtail roles. Valid target groups are
 `just deploy-check` runs the local static asset check, bootstraps Ansible
 dependencies, and performs Ansible syntax checks only. It does not deploy.
 
+The full deploy playbook reuses the same clean-VPS baseline task file that
+`deploy/bootstrap.yml` exposes for standalone baseline runs.
+
 `just deploy-staging` and `just deploy-production` run the full deployment
 playbook for their inventory group. They require real host inventory values,
 SOPS secrets, age private key access, and DNS/SSH readiness.
 
-This slice does not perform a real staging deployment, create host admin
-accounts, write host-review docs, change DNS, configure Simplecast redirects,
-cut over podcast feeds, or migrate production.
+Host review docs now exist in this repository, but live staging has not been
+deployed from placeholders. A real staging deployment, host admin account
+creation, sample import on the VPS, and HTTPS/media verification require the
+operator-provided staging FQDN, SSH target, SOPS/age access, encrypted secrets,
+media bucket, and host account list.
+
+This repository still does not change DNS, configure Simplecast redirects, cut
+over podcast feeds, deploy production, or migrate production.

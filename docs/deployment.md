@@ -44,6 +44,12 @@ inventory group. `deploy-staging` and `deploy-production` run
 `deploy-static-check` first, then `deploy-bootstrap`, then `ansible-playbook`.
 They do not require `ops-control`.
 
+The first live staging deployment is intentionally pending until real
+Django Chat-specific staging inventory, DNS, SOPS/age recipient and private key
+access, encrypted staging secrets, media bucket, and host admin account details
+exist. Do not run the staging deployment against `.example.invalid`
+placeholders.
+
 ## Ansible Dependencies
 
 `deploy/requirements.yml` installs:
@@ -147,12 +153,11 @@ enables it.
 
 ## Out Of Scope
 
-This deployment slice does not include:
+The deployment scaffold and host review docs are in this repository, but live
+staging is still blocked until operator-provided infrastructure and secrets are
+available. This deployment path does not include:
 
-- a real staging deploy
 - a real production deploy
-- host admin account creation
-- host review docs
 - DNS changes
 - feed redirects
 - podcast directory updates

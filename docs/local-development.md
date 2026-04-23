@@ -352,7 +352,9 @@ This repo contains Django Chat deployment scaffolding, placeholder inventory,
 public deployment vars, and SOPS secret examples. Decrypted secrets, age private
 keys, real host credentials, and private operator notes stay outside the repo.
 
-This slice does not include full catalog import, transcript conversion, an
-enabled transcript worker service, exhaustive production feed parity, host
-review docs, DNS changes, feed redirects, production migration, or real staging
-URLs. Those are later implementation slices from the research PRD.
+This repo now includes host review docs for the first staging path, but it does
+not include full catalog import, transcript conversion, an enabled transcript
+worker service, exhaustive production feed parity, DNS changes, feed redirects,
+production migration, or real staging URLs. Live staging review is blocked
+until real operator-provided infrastructure, SOPS/age access, encrypted
+secrets, media storage, and host account details exist.
