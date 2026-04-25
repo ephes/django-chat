@@ -19,7 +19,9 @@ Django Chat deploy path.
 The committed inventory and group vars contain only placeholders and non-secret
 Django Chat defaults. The staging and production hosts use `.example.invalid`
 addresses until an operator replaces them with real Django Chat-specific
-values.
+values. The planned shared staging FQDN is
+`djangochat.staging.django-cast.com`, but deployment remains blocked until the
+real staging host, DNS, secrets, and operator access are in place.
 
 ## What Stays Off Repo
 
@@ -42,7 +44,9 @@ deploy/secrets/production.sops.yml
 ```
 
 Those paths are ignored by Git. The repository only commits example files with
-`CHANGEME` values.
+`CHANGEME` values. Keep real ciphertext out of Git history in this shareable
+repo so environment-specific secret blobs and old encrypted revisions do not
+accumulate for every collaborator.
 
 ## Operator Workstation
 
@@ -79,7 +83,10 @@ the encrypted deployment secrets unrecoverable.
 Before creating real encrypted files, replace the empty `.sops.yaml` recipient
 configuration with the intended age public recipient or recipients. The file is
 committed with `creation_rules: []` because this slice does not know the real
-recipient and must not invent one.
+recipient and must not invent one. For the shared staging environment, use only
+the age recipients for operators who manage that staging deployment. Host
+reviewers do not need SOPS decrypt access just to review the site or log into
+Wagtail admin.
 
 Create secrets from the examples:
 
@@ -96,7 +103,8 @@ Edit encrypted secrets with:
 sops deploy/secrets/staging.sops.yml
 ```
 
-Never commit decrypted temporary files.
+Never commit decrypted temporary files. Prefer a dedicated Django Chat staging
+age key that can be rotated or retired independently of unrelated environments.
 
 ## Target VPS
 
@@ -108,6 +116,19 @@ first expected target. The target needs:
 - inbound SSH, HTTP, and HTTPS reachable
 - a Django Chat-specific S3-compatible media bucket and credentials
 - a real public media host, such as CloudFront or an object-storage public host
+
+The staging secret file carries the media credentials and host values used by
+deployment:
+
+- `django_aws_access_key_id`
+- `django_aws_secret_access_key`
+- `django_aws_storage_bucket_name`
+- `cloudfront_domain`
+
+The current deploy vars wire those values into the production environment. If
+you choose a non-AWS S3-compatible provider that also needs an explicit
+endpoint URL or region override, extend the deploy vars before the first live
+deploy.
 
 The deploy playbook validates the local source checkout and encrypted secret
 file before gathering remote facts or changing the target host.

@@ -50,6 +50,10 @@ access, encrypted staging secrets, media bucket, and host admin account details
 exist. Do not run the staging deployment against `.example.invalid`
 placeholders.
 
+The planned shared staging FQDN is `djangochat.staging.django-cast.com`, but it
+is not live until DNS, SSH target details, encrypted secrets, and operator
+access are in place.
+
 ## Ansible Dependencies
 
 `deploy/requirements.yml` installs:
@@ -75,6 +79,10 @@ Before a real deploy, replace the placeholder `ansible_host`,
 Django Chat-specific staging or production values. Do not copy Python
 Podcast hostnames, buckets, credentials, routes, or other service details.
 
+`deploy/group_vars/staging.yml` now carries the planned shared staging FQDN
+`djangochat.staging.django-cast.com`. The inventory host itself remains a
+placeholder until the real VPS or SSH target is known.
+
 Public deployment defaults live in:
 
 - `deploy/group_vars/django_chat.yml`
@@ -88,6 +96,10 @@ Secrets are loaded from:
 
 Only encrypted SOPS files belong at those paths, and those paths are ignored by
 Git. Example shapes are committed as `deploy/secrets/*.example.yml`.
+
+For the shared staging environment, only operators managing that staging deploy
+should be SOPS recipients. Host reviewers do not need SOPS decrypt access just
+to use the repo or Wagtail admin.
 
 ## Static Assets
 
@@ -126,6 +138,20 @@ with:
 
 The production settings module keeps local/test behavior unchanged and requires
 real secret values from the deployment environment.
+
+The current staging secret shape includes:
+
+- `django_aws_access_key_id`
+- `django_aws_secret_access_key`
+- `django_aws_storage_bucket_name`
+- `cloudfront_domain`
+
+Those values back Django Chat media storage during deployment. For the current
+deploy path, a Django Chat-specific S3-compatible bucket is required if staging
+should self-host copied audio and other media. Metadata-only browsing can work
+without copied audio, but that is not a complete playback proof. If you choose
+a non-AWS S3-compatible provider that needs an explicit endpoint or region
+setting, extend the deploy vars before the first live deploy.
 
 Security defaults are conservative for an early staging-capable deploy path:
 `DJANGO_SECURE_HSTS_SECONDS` defaults to `60` seconds. Before production

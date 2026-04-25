@@ -96,13 +96,17 @@ def test_deployment_secret_policy_is_gitignored() -> None:
 def test_host_review_docs_preserve_staging_boundary() -> None:
     host_review = (ROOT_DIR / "docs/host-review-guide.md").read_text()
     staging_differences = (ROOT_DIR / "docs/staging-differences.md").read_text()
+    operations_boundary = (ROOT_DIR / "docs/operations-boundary.md").read_text()
+    staging_group_vars = (ROOT_DIR / "deploy/group_vars/staging.yml").read_text()
 
     assert "No live staging deployment has been attempted" in host_review
-    assert "https://<staging-fqdn>/cms/" in host_review
+    assert "https://djangochat.staging.django-cast.com/cms/" in host_review
     assert "Do not commit, document, or print admin passwords" in host_review
     assert "The staging feed is not canonical" in staging_differences
     assert "Staging does not mean production migration is complete" in staging_differences
     assert "`cast_transcripts` database worker remains disabled" in staging_differences
+    assert "reviewers do not need SOPS decrypt access" in operations_boundary
+    assert "djangochat.staging.django-cast.com" in staging_group_vars
 
 
 def test_static_asset_check_passes_for_bundled_source_manifests() -> None:

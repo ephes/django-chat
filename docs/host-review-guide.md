@@ -5,10 +5,12 @@ This guide defines the Django Chat staging review workflow for hosts.
 ## Current Staging Status
 
 No live staging deployment has been attempted from this repository yet. As of
-2026-04-22, the repo still contains placeholder staging inventory and no real
-SOPS/age recipient or encrypted staging secret file. The live deployment,
-sample import on the VPS, and host admin account creation are blocked until an
-operator provides real Django Chat-specific staging details.
+2026-04-24, the planned shared staging FQDN is
+`djangochat.staging.django-cast.com`, but the repo still lacks the real
+staging host, DNS cut-in, SOPS/age recipient setup, encrypted staging secret
+file, and host admin account list. The live deployment, sample import on the
+VPS, and host admin account creation remain blocked until those operator inputs
+exist.
 
 Do not replace the placeholders below with guessed values. Use only the real
 staging FQDN, media host, secret material, and account list approved for Django
@@ -19,10 +21,10 @@ Chat.
 These URLs become active only after `just deploy-bootstrap-target staging` and
 `just deploy-staging` have completed successfully against the real staging VPS.
 
-- Site: `https://<staging-fqdn>/`
-- Episode index: `https://<staging-fqdn>/episodes/`
-- Episode detail: `https://<staging-fqdn>/episodes/<slug>/`
-- Wagtail admin: `https://<staging-fqdn>/cms/`
+- Site: `https://djangochat.staging.django-cast.com/`
+- Episode index: `https://djangochat.staging.django-cast.com/episodes/`
+- Episode detail: `https://djangochat.staging.django-cast.com/episodes/<slug>/`
+- Wagtail admin: `https://djangochat.staging.django-cast.com/cms/`
 
 The repository uses `/cms/` for Wagtail admin. Django's built-in admin remains
 separate at `/django-admin/` and is not the normal host review surface.
@@ -38,6 +40,9 @@ Before sending the staging URL to hosts, confirm:
 - `SOPS_AGE_KEY_FILE` points to the matching private key outside this repo.
 - `deploy/secrets/staging.sops.yml` exists, decrypts through SOPS/age, and
   contains only Django Chat staging secrets.
+- Only operators managing the shared staging environment are SOPS recipients.
+  Host reviewers do not need decrypt access just to use the repo or Wagtail
+  admin.
 - The staging media bucket and public media host are Django Chat-specific.
 - Ansible dependencies have been installed locally with `just deploy-bootstrap`.
 - `just deploy-bootstrap-target staging` has completed successfully.

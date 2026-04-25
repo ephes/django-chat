@@ -11,9 +11,10 @@ Chat-branded local browsing experience for the imported sample, plus a
 smoke-level feed comparison for the fixture-backed sample. The repo also now
 contains self-contained deployment scaffolding under `deploy/` and host review
 docs for the first staging path. No real staging or production deployment has
-been performed because no real staging host, DNS, SOPS/age recipient, encrypted
-secrets, media bucket, or host account list has been provided. The planning
-source of truth is
+been performed because the planned staging FQDN
+`djangochat.staging.django-cast.com` still lacks the real staging host, DNS
+cut-in, SOPS/age recipient setup, encrypted secrets, media bucket, and host
+account list needed for a live deploy. The planning source of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development

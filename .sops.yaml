@@ -1,4 +1,6 @@
 # Add real age recipients before creating deploy/secrets/*.sops.yml.
 # The repository ships examples only; encrypted environment secrets are
 # operator-created and must never be committed decrypted.
-creation_rules: []
+creation_rules:
+  - path_regex: ^deploy/secrets/.*\.sops\.ya?ml$
+    age: age1yh63kzzarphlz6fdfm8gq8ggcar4hrwlr2jj7flnh3ganvz5jgyqf42ls2

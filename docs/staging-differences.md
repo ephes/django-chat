@@ -6,9 +6,10 @@ Simplecast-hosted public experience and from a future production migration.
 ## Current Staging Status
 
 No live staging deployment has been attempted from this repository yet. The
-committed deployment configuration still uses `.example.invalid` placeholders,
-and the repo does not contain a real age recipient, age private key, encrypted
-staging secret file, staging media bucket, or host admin account list.
+planned shared staging FQDN is `djangochat.staging.django-cast.com`, but the
+repo does not yet contain the real staging host details, age recipient setup,
+encrypted staging secret file, staging media bucket, or host admin account
+list.
 
 Until real Django Chat staging values are provided, the differences below
 describe the intended first review deployment rather than a live site.
@@ -91,7 +92,7 @@ Current sample limitations:
 Staging host review uses Wagtail admin at:
 
 ```text
-https://<staging-fqdn>/cms/
+https://djangochat.staging.django-cast.com/cms/
 ```
 
 Wagtail admin accounts are created after deployment using approved host account
