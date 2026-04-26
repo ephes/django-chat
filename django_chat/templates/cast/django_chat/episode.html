@@ -1,20 +1,47 @@
 {% extends "./base.html" %}
 {% load wagtailcore_tags %}
+{% load django_vite %}
+{% load dc_filters %}
 
 {% block title %}{{ page.title }}{% endblock title %}
+
+{% block meta %}
+  {% include "./_meta.html" with og_type="article" %}
+{% endblock meta %}
 
 {% block content %}
   <main>
     <article class="episode-detail">
-      <a class="text-link" href="{{ blog_url }}">All episodes</a>
-      <header class="episode-header">
-        <time datetime="{{ page.visible_date|date:"c" }}">{{ page.visible_date|date:"F j, Y" }}</time>
-        <h1>{{ page.title }}</h1>
+      <a class="back-link" href="{% url 'django_chat_episode_index' %}">← Back to Episodes</a>
+
+      <header class="episode-hero">
+        {% if source_metadata.image_url %}
+          <img class="show-artwork" src="{{ source_metadata.image_url }}" alt="">
+        {% endif %}
+        <div>
+          <p class="eyebrow">
+            <time datetime="{{ page.visible_date|date:'c' }}">{{ page.visible_date|date:'F j, Y' }}</time>
+            {% with episode_number=page.django_chat_source_metadata.episode_number duration=page.django_chat_source_metadata.duration_seconds %}
+              {% if episode_number %} · E{{ episode_number }}{% endif %}
+              {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
+            {% endwith %}
+          </p>
+          <h1>{{ page.title }}</h1>
+          <div class="episode-actions">
+            {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+              <a href="{{ episode.podcast_audio.mp3.url }}" download>Download MP3</a>
+            {% endif %}
+            {% if episode_transcript_url %}
+              <a href="{{ episode_transcript_url }}">Transcript</a>
+            {% endif %}
+            <a href="https://twitter.com/intent/tweet?url={{ resolved_canonical_url|urlencode }}&text={{ page.title|urlencode }}" target="_blank" rel="noopener noreferrer">Twitter</a>
+          </div>
+        </div>
       </header>
 
       <section class="audio-panel" aria-label="Episode audio">
         {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
-          <audio controls preload="metadata" src="{{ episode.podcast_audio.mp3.url }}"></audio>
+          {% include "cast/audio/audio.html" with value=episode.podcast_audio page=episode podlove_load_mode="facade" %}
         {% else %}
           <p>Audio copy pending.</p>
         {% endif %}
@@ -32,3 +59,10 @@
     </article>
   </main>
 {% endblock content %}
+
+{% block javascript %}
+  {{ block.super }}
+  {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+    {% vite_asset 'src/audio/podlove-player.ts' app="cast" %}
+  {% endif %}
+{% endblock javascript %}
