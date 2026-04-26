@@ -13,11 +13,10 @@ self-contained deployment scaffolding under `deploy/` and host review docs for
 the first staging path. Staging is live at
 `https://djangochat.staging.django-cast.com` with the fixture-backed sample
 imported and Wagtail admin mounted at
-`https://djangochat.staging.django-cast.com/cms/`. Sample audio playback is not
-available yet because the staging media copy is blocked by the configured app
-IAM user lacking S3 object permissions; diagnostics show `s3:PutObject` is not
-allowed, and S3 `HeadObject` also returns `403 Forbidden`. No production
-deployment has been performed. The planning source of truth is
+`https://djangochat.staging.django-cast.com/cms/`. Sample audio is copied to
+the configured S3 bucket and served through the public media host, so episode
+detail pages render a working `<audio>` element. No production deployment has
+been performed. The planning source of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development
@@ -157,10 +156,9 @@ the imported sample, and deployment scaffolding.
 
 It does not include full catalog import, transcript conversion, an enabled
 transcript worker service, exhaustive production feed parity, real production
-deployment, production DNS changes, feed redirects, or copied staging audio.
-Host review can inspect the live staging site and CMS, but playback/media
-verification remains blocked until the staging media credentials or bucket
-policy allow the app to put, read, list, and delete MP3 objects.
+deployment, production DNS changes, or feed redirects. Sample audio has been
+copied into staging and is reachable through the public media host, so host
+review can inspect both the site/CMS and end-to-end playback.
 
 Do not commit decrypted Django secret keys, database passwords, S3 credentials,
 Sentry DSNs, Mailgun keys, admin passwords, age private keys, real MP3s, large

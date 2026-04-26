@@ -15,7 +15,9 @@ Current live state:
 - Wagtail admin is available at
   `https://djangochat.staging.django-cast.com/cms/`.
 - A staging-only `host-review-admin` superuser exists for bootstrap access.
-- Sample audio has not been copied, so playback/media verification is pending.
+- Sample audio has been copied to the configured S3 bucket and is served
+  through the public media host. All eight episodes have `podcast_audio` set
+  and episode detail pages render a working `<audio>` element.
 
 ## Site And Visual Theme
 
@@ -42,18 +44,15 @@ Staging is intended to prove Django Chat-specific media hosting. Media must use
 a Django Chat-specific S3-compatible bucket and public media host. Do not reuse
 Python Podcast media buckets, credentials, hostnames, or deployment details.
 
-The current staging site shows metadata and episode pages, but it is not a
-complete playback proof. The deployed `import_django_chat_sample --copy-audio`
-command was attempted and currently fails before saving the first MP3 because
-the configured app IAM user lacks S3 object permissions. Diagnostics show
-`s3:PutObject` is not allowed, and S3 `HeadObject` also returns
-`403 Forbidden`. After the media credential or bucket policy is corrected,
-re-run the deployed command with `--copy-audio` and verify playback through the
-public media host.
+The deployed `import_django_chat_sample --copy-audio` command has been run
+against production settings on the staging host. Sample MP3s are stored in
+the Django Chat staging bucket and reachable through the public media host
+with HTTP 200 and `Content-Type: audio/mpeg`, providing an end-to-end
+playback proof.
 
 Expected differences from Simplecast:
 
-- Audio URLs will come from the Django Chat media host once copied.
+- Audio URLs come from the Django Chat media host, not Simplecast.
 - Simplecast player JavaScript is not used.
 - Simplecast analytics, dynamic ad insertion, and Simplecast download tracking
   are not reproduced.
@@ -65,18 +64,16 @@ Expected differences from Simplecast:
 The staging feed is not canonical and must not be submitted to podcast
 directories or redirected from Simplecast.
 
-The feed check is a smoke-level comparison for the fixture-backed sample after
-audio has been copied:
+The feed check is a smoke-level comparison for the fixture-backed sample with
+copied audio in place:
 
 ```sh
 just compare-feed
 ```
 
-That check validates important sample fields, but it currently cannot be used
-as a staging playback proof because copied sample audio is blocked. Production
-hardening still needs full-catalog validation, GUID and enclosure decisions,
-artwork and namespace checks, client testing, and host approval before any live
-feed change.
+That check validates important sample fields. Production hardening still needs
+full-catalog validation, GUID and enclosure decisions, artwork and namespace
+checks, client testing, and host approval before any live feed change.
 
 ## Content Import Scope
 
@@ -89,7 +86,6 @@ Current sample limitations:
 
 - It imports a representative fixture-backed subset, not the full public
   catalog.
-- It currently has no copied MP3 files attached to the episode pages.
 - It records source URLs, GUIDs, Simplecast IDs, slugs, source audio URLs, and
   transcript HTML metadata for idempotent re-runs.
 - It does not publish converted transcripts by default.

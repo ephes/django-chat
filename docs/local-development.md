@@ -358,7 +358,6 @@ This repo now includes host review docs for the live staging path at
 `https://djangochat.staging.django-cast.com`, but it does not include full
 catalog import, transcript conversion, an enabled transcript worker service,
 exhaustive production feed parity, production DNS changes, feed redirects, or
-production migration. Live staging review can inspect the sample content and
-CMS; playback/media verification is pending until the staging media credentials
-or bucket policy allow the app to put, read, list, and delete copied MP3
-objects.
+production migration. Live staging review can inspect the sample content, the
+CMS, and end-to-end audio playback: sample MP3s are copied to the configured
+S3 bucket and served through the public media host.

@@ -179,9 +179,8 @@ SOPS secrets, age private key access, and DNS/SSH readiness.
 Host review docs now exist in this repository, and live staging is deployed at
 `https://djangochat.staging.django-cast.com`. Host admin account creation and
 sample import happen on the deployed staging app with production settings.
-HTTPS, static assets, sample content, and Wagtail admin access have been
-verified. Media playback is still pending because the deployed audio copy is
-blocked by missing S3 object permissions for the configured app IAM user.
+HTTPS, static assets, sample content, Wagtail admin access, and copied sample
+audio served through the public media host have all been verified end-to-end.
 
 This repository still does not change DNS, configure Simplecast redirects, cut
 over podcast feeds, deploy production, or migrate production.

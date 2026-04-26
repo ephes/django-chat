@@ -108,13 +108,46 @@ def test_host_review_docs_preserve_staging_boundary() -> None:
     assert "Staging is live" in host_review
     assert "https://djangochat.staging.django-cast.com/cms/" in host_review
     assert "Do not commit, document, or print admin passwords" in host_review
-    assert "Sample audio playback is not available yet" in host_review
+    assert "Sample audio is copied to the staging media bucket" in host_review
     assert "The staging feed is not canonical" in staging_differences
     assert "Staging does not mean production migration is complete" in staging_differences
     assert "`cast_transcripts` database worker remains disabled" in staging_differences
     assert "reviewers do not need SOPS decrypt access" in operations_boundary
-    assert "Media playback" in operations_boundary
+    assert (
+        "served through the public media host have all been verified end-to-end"
+        in operations_boundary
+    )
     assert "djangochat.staging.django-cast.com" in staging_group_vars
+
+
+def test_staging_docs_do_not_carry_obsolete_media_blocker_phrases() -> None:
+    relevant_docs = [
+        ROOT_DIR / "README.md",
+        ROOT_DIR / "docs/host-review-guide.md",
+        ROOT_DIR / "docs/staging-differences.md",
+        ROOT_DIR / "docs/operations-boundary.md",
+        ROOT_DIR / "docs/deployment.md",
+        ROOT_DIR / "docs/local-development.md",
+    ]
+    obsolete_phrases = [
+        "audio copy is blocked",
+        "media copy is blocked",
+        "media copy blocker",
+        "verification remains blocked",
+        "playback/media verification is pending",
+        "playback is currently unavailable",
+        "sample audio playback is not available yet",
+        "audio remains metadata-only",
+        "treat audio playback as pending",
+        "s3:putobject is not allowed",
+        "or copied staging audio",
+    ]
+    for doc_path in relevant_docs:
+        normalized = " ".join(doc_path.read_text().replace("`", "").split()).lower()
+        for phrase in obsolete_phrases:
+            assert phrase not in normalized, (
+                f"{doc_path.name} still contains obsolete phrase: {phrase!r}"
+            )
 
 
 def test_static_asset_check_passes_for_bundled_source_manifests() -> None:

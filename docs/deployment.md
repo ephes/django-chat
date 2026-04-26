@@ -160,13 +160,12 @@ without copied audio, but that is not a complete playback proof. If you choose
 a non-AWS S3-compatible provider that needs an explicit endpoint or region
 setting, extend the deploy vars before the first live deploy.
 
-Current staging media status: sample audio copy is blocked. Running
-`import_django_chat_sample --copy-audio` on the deployed staging app fails on
-S3 object access before the first MP3 is saved. Diagnostics confirmed the app
-IAM user is not allowed to perform `s3:PutObject` on the staging media bucket,
-and `HeadBucket` / `HeadObject` also return `403 Forbidden`. Fix the staging
-media credential or bucket policy, then re-run the deployed command and verify
-a copied media URL through the public media host.
+Current staging media status: sample audio copy succeeds.
+`import_django_chat_sample --copy-audio` on the deployed staging app uploads
+all eight sample MP3s; copied media URLs return HTTP 200 with
+`Content-Type: audio/mpeg` through the configured public media host
+(CloudFront), and episode detail pages render an `<audio>` element backed by
+those URLs.
 
 The app media principal needs, at minimum:
 
@@ -177,7 +176,10 @@ The app media principal needs, at minimum:
 `s3:GetObject` and `s3:ListBucket` are needed for django-storages existence
 checks and idempotent import verification, not only for browser delivery.
 Public media delivery through CloudFront or another media host may require
-separate bucket policy or origin-access configuration.
+separate bucket policy or origin-access configuration. Make sure the bucket
+ARN in the policy matches the value of `django_aws_storage_bucket_name`
+exactly; an ARN that names a different bucket will silently deny every
+request from the app principal.
 
 Security defaults are conservative for an early staging-capable deploy path:
 `DJANGO_SECURE_HSTS_SECONDS` defaults to `60` seconds. Before production

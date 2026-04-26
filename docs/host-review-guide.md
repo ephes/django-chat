@@ -19,13 +19,10 @@ Verified live behavior:
 - The deployed database contains one podcast and eight sample episodes.
 - A staging-only `host-review-admin` superuser exists for review bootstrap.
 
-Sample audio playback is not available yet. Running the deployed
-`import_django_chat_sample --copy-audio` command against production settings
-currently fails before the first MP3 is saved because the configured app IAM
-user lacks S3 object permissions. Diagnostics show `s3:PutObject` is not
-allowed, and S3 `HeadObject` also returns `403 Forbidden`. The staging site
-remains metadata-only until the media credential or bucket policy is corrected
-and the audio copy is re-run.
+Sample audio is copied to the staging media bucket and served through the
+public media host. Episode detail pages render a working `<audio>` element
+and the MP3 URL responds with HTTP 200 and `audio/mpeg`. Sample audio playback
+is therefore available end-to-end on staging.
 
 ## Review URLs
 
@@ -60,13 +57,14 @@ Before sending or refreshing the staging URL for hosts, confirm:
 - The fixture-backed sample has been imported against the deployed site, using
   the deployed environment and production settings for the
   `import_django_chat_sample` management command.
-- Audio remains metadata-only until the S3 object-permission blocker is
-  resolved. After fixing the media policy or credentials, run the same deployed
-  management command with `--copy-audio` and verify playback.
+- Sample audio has been copied via `import_django_chat_sample --copy-audio`
+  against the deployed environment with production settings.
 - `https://<staging-fqdn>/`, `/episodes/`, at least one episode detail page,
   and `/cms/` return expected HTTPS responses.
 - Static assets load.
-- Media playback is verified only after sample audio has been copied.
+- An episode detail page renders an `<audio>` element and the referenced MP3
+  URL returns HTTP 200 with `Content-Type: audio/mpeg` through the public
+  media host.
 
 ## Admin Access
 
@@ -94,8 +92,8 @@ Hosts should start with:
    recognizable for Django Chat.
 3. Open at least one episode detail page and review the show notes, metadata,
    audio area, and current URL shape.
-4. Treat audio playback as pending until the media copy blocker is fixed and
-   sample audio is copied.
+4. Press play on the rendered `<audio>` element and confirm the MP3 streams
+   from the public media host.
 5. Log into `/cms/`, inspect the podcast and sample episode pages, and try a
    harmless draft edit without publishing over reviewed content.
 
@@ -123,8 +121,6 @@ repository comments.
 
 - The first staging import is expected to use the fixture-backed sample unless
   hosts explicitly ask for a larger catalog sample.
-- Sample audio playback is currently unavailable because media copy is blocked
-  by missing S3 object permissions for the configured app IAM user.
 - The staging feed is for validation only and is not the canonical Django Chat
   podcast feed.
 - No production DNS, feed redirect, Simplecast migration, or podcast directory
