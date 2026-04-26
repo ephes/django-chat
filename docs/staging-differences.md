@@ -19,6 +19,9 @@ Current live state:
   through the public media host. All eight episodes have `podcast_audio` set
   and episode detail pages render the django-cast **Podlove web player**
   (`<podlove-player>` element).
+- The repo now has a repeatable live full-catalog import command, but the
+  deployed staging database should be checked before host handoff to confirm
+  whether the sample or the full catalog is currently loaded.
 
 ## Site And Visual Theme
 
@@ -36,7 +39,7 @@ Expected differences:
 - Menu, social, and distribution links come from the imported fixture-backed
   Simplecast metadata in the current sample path.
 
-Visual parity with Simplecast is a host review decision, not a production
+Visual parity with Simplecast is a full host-review decision, not a production
 migration requirement already settled by this slice.
 
 ## Player And Media Behavior
@@ -84,24 +87,38 @@ checks, client testing, and host approval before any live feed change.
 
 ## Content Import Scope
 
-The first review deployment should contain at least the fixture-backed sample
-import. A larger catalog sample or full catalog import requires an explicit
-operator and host decision because it increases media transfer, storage, and
-review scope.
+The current staging deployment contains the fixture-backed sample import for
+internal smoke review unless an operator has run the live catalog command on
+the host. The representative host-review deployment should use:
 
-Current sample limitations:
+```sh
+DJANGO_SETTINGS_MODULE=config.settings.production \
+  .venv/bin/python manage.py import_django_chat_catalog --copy-cover-image
+```
 
-- It imports a representative fixture-backed subset, not the full public
-  catalog.
+and, when the media transfer is intentionally approved:
+
+```sh
+DJANGO_SETTINGS_MODULE=config.settings.production \
+  .venv/bin/python manage.py import_django_chat_catalog --copy-cover-image --copy-audio
+```
+
+Current import boundaries:
+
+- The sample command imports a representative fixture-backed subset.
+- The catalog command imports the live public RSS catalog and Simplecast
+  enrichment data when the public endpoints expose it.
 - It records source URLs, GUIDs, Simplecast IDs, slugs, source audio URLs, and
   transcript HTML metadata for idempotent re-runs.
+- Catalog audio copy is optional, streams through a temporary file, and should
+  not be run casually because the full transfer was observed at about 11 GB.
 - It does not publish converted transcripts by default.
 - It does not add large live RSS fixtures, real MP3 fixtures, or live network
   tests to the repository.
 
 ## Wagtail Admin
 
-Staging host review uses Wagtail admin at:
+When the host-review gate opens, staging review uses Wagtail admin at:
 
 ```text
 https://djangochat.staging.django-cast.com/cms/

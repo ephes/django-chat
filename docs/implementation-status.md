@@ -40,6 +40,10 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       `e219283`, follow-ups `d0da9f3`, `8588dd0`, `3eda73f`, `413af91`. Staging
       live at `https://djangochat.staging.django-cast.com` with copied sample
       audio served end-to-end through CloudFront.
+- [x] **9a. Full-catalog import path and catalog measurement tooling** —
+      live RSS + Simplecast source loader, `import_django_chat_catalog`
+      with `--max-episodes`, `--dry-run`, `--copy-cover-image`, and opt-in
+      streaming `--copy-audio`, plus `measure_django_chat_catalog`.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -65,10 +69,11 @@ PRD section "Acceptance Criteria For The Research Spike".
 - [ ] Transcript handling demonstrated for at least one representative
       episode (simple page content or `cast_transcripts` worker path). **Not
       implemented.**
-- [ ] Full catalog import path documented and repeatable. **Partial: the
-      `import_django_chat_sample` command is fixture-backed; no full-catalog
-      run against the live ~201-episode feed has been done or documented as a
-      repeatable workflow.**
+- [x] Full catalog import path documented and repeatable. `import_django_chat_catalog`
+      fetches the live RSS feed, follows Simplecast pagination/details for
+      enrichment, supports limited and dry-run operator exercises, and can
+      stream-copy audio without whole-MP3 reads. A real full 11 GB audio copy
+      still requires explicit operator approval.
 - [x] Media storage isolated from Python Podcast (separate bucket, separate
       IAM credentials, separate CloudFront distribution).
 - [x] Generated podcast feed validates for imported episodes (smoke level via
@@ -81,8 +86,8 @@ PRD section "Acceptance Criteria For The Research Spike".
 ## Where We Are
 
 Slice 6 visual polish + the post-deploy fixes that surfaced during
-staging review are landed on `main` as 21 commits
-(`32f1725`..`4d880f3`) on `2026-04-26`. `just check` clean (89 tests).
+staging review are landed on `main` in the series ending at `f132b76`
+on `2026-04-26`. The full-catalog importer slice is in the current worktree.
 Staging at `https://djangochat.staging.django-cast.com` is deployed and
 serving the polished site:
 
@@ -94,68 +99,86 @@ serving the polished site:
 - Show artwork attached to `Podcast.cover_image` so the player's cover
   slot is populated.
 - Wagtail `Site` row pinned to `djangochat.staging.django-cast.com:443`
-  with `TemplateBaseDirectory=django_chat`, both via the new
-  `ensure_default_site` post-deploy task so fresh installs match.
+  with `TemplateBaseDirectory=django_chat`, via the new
+  `ensure_default_site` post-deploy task.
 - `import_django_chat_sample --copy-audio --copy-cover-image` is the
   documented operator command for a fresh staging build.
 
 Branch is unpushed at the time of writing.
 
-Immediate next move: hand the deployed staging URL to hosts for review.
-Once feedback has settled, start the subscribe/RSS-discovery page slice
-below.
+**Not yet ready for full host review, despite the polish and catalog importer:**
+
+The deployed staging site remains useful for internal smoke review of
+deployment, CMS access, sample playback, the visual direction, and now safe
+catalog-import rehearsal. It is not ready to hand to hosts as the
+representative show review because:
+
+- The repo has a repeatable full-catalog command, but staging should be
+  checked after each deploy to confirm whether it currently holds the
+  fixture sample, a limited catalog exercise, or the full live catalog.
+- Full-catalog audio copy remains an explicit operator action because the
+  transfer is about 11 GB.
+- Lighthouse / Web Vitals scores against the 8-episode sample are
+  near-meaningless. Use `measure_django_chat_catalog` after a full import for
+  feed/item count and episode-list query/timing data, then run manual
+  Lighthouse/Web Vitals checks on deployed staging.
+- RSS feed URL isn't surfaced on any page yet — acceptance criterion
+  still open.
 
 ## Open Work (Highest Signal First)
 
-1. **Subscribe / RSS-discovery page** — customise django-cast's
+1. **Run/import the full catalog on staging when ready for the next internal
+   smoke pass.** Use `import_django_chat_catalog --copy-cover-image` for
+   metadata/artwork, and add `--copy-audio` only when the ~11 GB media transfer
+   is intentionally approved. Then run `measure_django_chat_catalog
+   --host=djangochat.staging.django-cast.com` and record feed/list metrics.
+2. **Subscribe / RSS-discovery page** — customise django-cast's
    `feed_detail.html` (rendered at `cast:feed_detail` → `/episodes/feed/`)
    to expose the RSS feed URL prominently and embed the Podlove Subscribe
    Button. Re-target the `Listen & Subscribe` button on the show hero to
    `{% url 'cast:feed_detail' slug=podcast.slug %}` instead of
-   `source_metadata.website_url` — that resolves both the RSS-promotion gap
-   the slice-6 polish opened and the post-cutover self-loop risk in one
-   change. Concrete sub-tasks:
+   `source_metadata.website_url` — resolves both the RSS-promotion gap
+   from slice 6 and the post-cutover self-loop risk in one change.
+   Concrete sub-tasks:
    - Add `django_chat/templates/cast/django_chat/feed_detail.html`
-     extending the relevant cast base; without it the route falls through
-     to `cast/plain/feed_detail.html` and breaks the branded shell.
+     extending the relevant cast base; without it the route falls
+     through to `cast/plain/feed_detail.html` and breaks the branded
+     shell.
    - Decide source-of-truth for platform links: django-cast's feed view
      reads `CAST_FOLLOW_LINKS` from settings, but real distribution links
      live in `PodcastSourceMetadata.visible_distribution_links`. Pick one
-     (recommended: read source_metadata in the template, ignore
+     (recommended: read `source_metadata` in the template, ignore
      `CAST_FOLLOW_LINKS`).
    - Bring the Podlove Subscribe Button asset into the repo
-     (`django_chat/static/subscribe_button/`) — the JS/CSS/icon bundle is
-     not yet present. Reference layout in
+     (`django_chat/static/subscribe_button/`). Reference layout in
      `python-podcast/python_podcast/static/subscribe_button/`. Decide
      whether to vendor it or pull it as a Python dep.
-   - Keep canonical/OG metadata correct on this page (re-use `_meta.html`
-     with an appropriate `og_type`).
-2. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
-   least one representative episode. PRD permits either simple page content
-   or the `cast_transcripts` worker path; simple page content is the
-   lower-cost route. Defer until item 1 (and host review) has landed.
-3. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
+   - Keep canonical/OG metadata correct (re-use `_meta.html` with an
+     appropriate `og_type`).
+3. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
+   least one representative episode. PRD permits either simple page
+   content or the `cast_transcripts` worker path; simple page content is
+   the lower-cost route. Closes the "transcript handling demonstrated"
+   acceptance criterion.
+4. **Host review of staging.** With full catalog + RSS-discovery +
+   transcript demo in place, the staging site finally looks like the
+   show. Send hosts the URL + `host-review-admin` credential.
+5. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
    preservation, canonical domain, Simplecast directory coordination,
    analytics/CDN/ad-insertion questions. Content scope is in PRD lines
-   520–525 and "Production Migration Considerations" section.
-4. **Full-catalog import path** — extend the import command (or document a
-   parallel command) for the live ~201-episode catalog, including audio
-   transfer at ~11 GB, retry/resume behavior, and the operator runbook. PRD
-   "Import Strategy" section is the contract.
-5. **Production VPS, DNS cutover, feed redirects, podcast directory
-   updates** — last, per user. Out of scope until the items above are
-   settled and hosts have reviewed staging.
+   520–525 and "Production Migration Considerations" section. Required
+   before any DNS or feed cutover.
+6. **Production VPS, DNS cutover, feed redirects, podcast directory
+   updates** — last, per user. Out of scope until 1–5 are settled.
 
 ## Next Action
 
-Hand staging to hosts for review. Sequence:
+Implement the **subscribe / RSS-discovery page** slice, then the transcript
+demo. Before host handoff, run the full catalog import on staging, record
+`measure_django_chat_catalog` output against the deployed catalog, and decide
+whether any measured feed/list performance issue needs a focused fix before
+hosts review the site.
 
-1. Push the unpushed `main` to origin (operator decision; no automation
-   trigger required).
-2. Send the staging URL + `host-review-admin` credential to hosts.
-3. Iterate small if hosts flag anything.
-4. Then item 1 (subscribe/RSS-discovery page), then 2 (transcript demo),
-   then 3–5 in order.
-
-Production migration (DNS, feed cutover, real production VPS) is explicitly
-deferred until staging looks good to the hosts.
+Production migration (DNS, feed cutover, real production VPS) is
+explicitly deferred until host review (item 4) has happened and any
+perf fixes from the catalog measurement have landed.

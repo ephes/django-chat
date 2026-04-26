@@ -1,6 +1,8 @@
 # Host Review Guide
 
-This guide defines the Django Chat staging review workflow for hosts.
+This guide defines the Django Chat staging review workflow for hosts. It is a
+workflow reference; `docs/implementation-status.md` is the current source of
+truth for whether staging is ready to send to hosts.
 
 ## Current Staging Status
 
@@ -26,6 +28,11 @@ public media host. Episode detail pages render the **Podlove web player**
 ~138 KB) loads on viewport intersection, keeping it out of the critical
 render path. The MP3 URL responds with HTTP 200 and `audio/mpeg`. Sample
 audio playback is therefore available end-to-end on staging.
+
+Current staging is suitable for internal smoke review. Full host review is
+deferred until the live catalog has been imported on staging and the
+RSS-discovery and transcript-demo gaps listed in
+`docs/implementation-status.md` are closed.
 
 ## Review URLs
 
@@ -57,15 +64,26 @@ Before sending or refreshing the staging URL for hosts, confirm:
 - `just deploy-staging` has completed successfully after any repo-side
   deployment change.
 - Migrations have run on staging.
-- The fixture-backed sample has been imported against the deployed site, using
-  the deployed environment and production settings for the
-  `import_django_chat_sample` management command.
-- Sample audio has been copied via `import_django_chat_sample --copy-audio`
-  against the deployed environment with production settings.
+- The intended review catalog has been imported against the deployed site,
+  using the deployed environment and production settings for the relevant import
+  management command.
+- For sample-only internal smoke review, use
+  `import_django_chat_sample --copy-audio --copy-cover-image`.
+- For representative host review, use `import_django_chat_catalog` for metadata
+  and `import_django_chat_catalog --copy-cover-image` for show artwork. Add
+  `--max-episodes 3` only for a limited operator exercise, not for the final
+  review catalog.
+- Review audio has been copied against the deployed environment with production
+  settings when a playback/media review is in scope. Full-catalog audio copy
+  uses `import_django_chat_catalog --copy-cover-image --copy-audio` and can
+  transfer about 11 GB, so run it only when intentionally approved.
 - The show artwork has been attached as the podcast `cover_image` via
-  `import_django_chat_sample --copy-cover-image` (idempotent — combine
-  with `--copy-audio` on the first run). Without this, the Podlove
-  player on episode detail pages renders an empty cover slot.
+  `import_django_chat_sample --copy-cover-image` or
+  `import_django_chat_catalog --copy-cover-image` (idempotent). Without this,
+  the Podlove player on episode detail pages renders an empty cover slot.
+- `measure_django_chat_catalog --host=djangochat.staging.django-cast.com` has
+  been run after the intended catalog import, and feed/item count plus
+  episode-list query/timing results have been recorded for the review handoff.
 - `https://<staging-fqdn>/`, `/episodes/`, at least one episode detail page,
   and `/cms/` return expected HTTPS responses.
 - Static assets load.
@@ -96,7 +114,7 @@ human Wagtail passwords to `deploy/secrets/*.sops.yml`.
 
 ## First Review Pass
 
-Hosts should start with:
+Once the full host-review gate opens, hosts should start with:
 
 1. Open the site root and confirm it reaches the episode experience.
 2. Browse `/episodes/` and confirm episode titles, dates, descriptions, show
@@ -131,8 +149,9 @@ repository comments.
 
 ## Known Limitations
 
-- The first staging import is expected to use the fixture-backed sample unless
-  hosts explicitly ask for a larger catalog sample.
+- Current staging uses the fixture-backed sample for internal smoke review.
+  Full host review is deferred until the representative catalog is imported on
+  staging and the remaining RSS-discovery and transcript-demo gaps are closed.
 - The staging feed is for validation only and is not the canonical Django Chat
   podcast feed.
 - No production DNS, feed redirect, Simplecast migration, or podcast directory

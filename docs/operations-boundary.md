@@ -180,7 +180,22 @@ Host review docs now exist in this repository, and live staging is deployed at
 `https://djangochat.staging.django-cast.com`. Host admin account creation and
 sample import happen on the deployed staging app with production settings.
 HTTPS, static assets, sample content, Wagtail admin access, and copied sample
-audio served through the public media host have all been verified end-to-end.
+audio served through the public media host have all been verified end-to-end
+for internal smoke review. The live full-catalog import command is part of the
+app repo and should be run from the deployed environment when staging is being
+prepared for representative review:
+
+```sh
+DJANGO_SETTINGS_MODULE=config.settings.production \
+  .venv/bin/python manage.py import_django_chat_catalog --copy-cover-image
+```
+
+Optional full-catalog audio copy uses the same deployed environment with
+`--copy-audio`; it can transfer about 11 GB and should be treated as an
+operator-approved media operation, not a casual smoke command. Full host review
+is deferred until the catalog has been imported on staging and the
+RSS-discovery and transcript-demo gaps listed in `docs/implementation-status.md`
+are closed.
 
 This repository still does not change DNS, configure Simplecast redirects, cut
 over podcast feeds, deploy production, or migrate production.

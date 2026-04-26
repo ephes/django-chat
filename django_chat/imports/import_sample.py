@@ -4,6 +4,7 @@ import hashlib
 import io
 import json
 import mimetypes
+import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -15,6 +16,7 @@ from uuid import UUID
 
 from cast.models import Audio, Episode, Podcast
 from django.contrib.auth import get_user_model
+from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
 from django.db import transaction
@@ -57,18 +59,24 @@ DETAIL_FIXTURE_FILENAMES = (
     "simplecast_episode_detail_200_django-tasks-jake-howard.json",
 )
 IMPORT_AUDIO_USERNAME = "django-chat-importer"
+SAMPLE_AUDIO_STORAGE_PREFIX = "django-chat-sample"
+CATALOG_AUDIO_STORAGE_PREFIX = "django-chat-catalog"
 
 AudioDownloader = Callable[[str], "DownloadedAudio"]
+StreamingAudioDownloader = Callable[[str, Path], "DownloadedAudioFile"]
 ImageDownloader = Callable[[str], bytes]
 
 
 @dataclass(frozen=True)
-class SampleSourceData:
+class ImportSourceData:
     rss_podcast: RssPodcast
     simplecast_podcast: SimplecastPodcast
     simplecast_site: SimplecastSite
     source_links: tuple[SourceLink, ...]
     episodes: tuple[EpisodeSourceData, ...]
+
+
+SampleSourceData = ImportSourceData
 
 
 @dataclass(frozen=True)
@@ -83,11 +91,21 @@ class SampleImportResult:
     episodes_created: int
     audio_created: int
     audio_copied: int
+    audio_skipped: int
 
 
 @dataclass(frozen=True)
 class DownloadedAudio:
     content: bytes
+    content_type: str | None = None
+    content_length: int | None = None
+    filename: str | None = None
+
+
+@dataclass(frozen=True)
+class DownloadedAudioFile:
+    path: Path
+    byte_size: int
     content_type: str | None = None
     content_length: int | None = None
     filename: str | None = None
@@ -105,6 +123,15 @@ class AudioCopyResult:
     audio: Audio
     audio_created: bool
     file_copied: bool
+
+
+@dataclass(frozen=True)
+class ImportPlan:
+    rss_episode_count: int
+    simplecast_episode_count: int
+    merged_episode_count: int
+    source_link_count: int
+    source_audio_byte_size: int | None
 
 
 def load_sample_source_data(
@@ -150,6 +177,21 @@ def import_django_chat_sample(
     cover_image_downloader: ImageDownloader | None = None,
 ) -> SampleImportResult:
     source_data = load_sample_source_data(fixture_dir)
+    return import_django_chat_source_data(
+        source_data,
+        copy_audio=copy_audio,
+        audio_downloader=audio_downloader,
+        cover_image_downloader=cover_image_downloader,
+    )
+
+
+def import_django_chat_source_data(
+    source_data: ImportSourceData,
+    *,
+    copy_audio: bool = False,
+    audio_downloader: AudioDownloader | None = None,
+    cover_image_downloader: ImageDownloader | None = None,
+) -> SampleImportResult:
     with transaction.atomic():
         parent_page = _get_podcast_parent_page()
         podcast, podcast_created = _get_or_create_podcast_page(
@@ -189,6 +231,7 @@ def import_django_chat_sample(
         else ()
     )
 
+    audio_skipped = len(audio_results) - sum(1 for result in audio_results if result.file_copied)
     return SampleImportResult(
         podcast=podcast,
         podcast_metadata=podcast_metadata,
@@ -200,6 +243,7 @@ def import_django_chat_sample(
         episodes_created=episodes_created,
         audio_created=sum(1 for result in audio_results if result.audio_created),
         audio_copied=sum(1 for result in audio_results if result.file_copied),
+        audio_skipped=audio_skipped,
     )
 
 
@@ -217,6 +261,20 @@ def copy_django_chat_sample_audio(
     return tuple(results)
 
 
+def copy_django_chat_catalog_audio(
+    episode_metadata: tuple[EpisodeSourceMetadata, ...],
+    *,
+    audio_downloader: StreamingAudioDownloader | None = None,
+) -> tuple[AudioCopyResult, ...]:
+    """Stream-copy catalog audio without materializing full files in memory."""
+
+    downloader = audio_downloader or default_stream_download_audio
+    results: list[AudioCopyResult] = []
+    for metadata in episode_metadata:
+        results.append(_copy_episode_audio_streaming(metadata, downloader))
+    return tuple(results)
+
+
 def default_download_audio(source_url: str) -> DownloadedAudio:
     request = Request(source_url, headers={"User-Agent": "django-chat-sample-import/1.0"})
     with urlopen(request, timeout=60) as response:
@@ -227,6 +285,32 @@ def default_download_audio(source_url: str) -> DownloadedAudio:
 
     return DownloadedAudio(
         content=content,
+        content_type=content_type,
+        content_length=content_length,
+        filename=_source_url_filename(source_url),
+    )
+
+
+def default_stream_download_audio(
+    source_url: str,
+    destination: Path,
+    *,
+    timeout: float = 60.0,
+    chunk_size: int = 1024 * 1024,
+) -> DownloadedAudioFile:
+    request = Request(source_url, headers={"User-Agent": "django-chat-catalog-import/1.0"})
+    byte_size = 0
+    with urlopen(request, timeout=timeout) as response, destination.open("wb") as output:
+        while chunk := response.read(chunk_size):
+            output.write(chunk)
+            byte_size += len(chunk)
+        headers = response.headers
+        content_type = headers.get_content_type() if hasattr(headers, "get_content_type") else None
+        content_length = _optional_positive_int(headers.get("Content-Length"))
+
+    return DownloadedAudioFile(
+        path=destination,
+        byte_size=byte_size,
         content_type=content_type,
         content_length=content_length,
         filename=_source_url_filename(source_url),
@@ -530,6 +614,54 @@ def _copy_episode_audio(
         msg = f"Audio source returned no content: {source.url}"
         raise ValueError(msg)
 
+    return _save_downloaded_episode_audio(
+        metadata,
+        source,
+        downloaded=downloaded,
+        storage_prefix=SAMPLE_AUDIO_STORAGE_PREFIX,
+    )
+
+
+def _copy_episode_audio_streaming(
+    metadata: EpisodeSourceMetadata,
+    audio_downloader: StreamingAudioDownloader,
+) -> AudioCopyResult:
+    source = _select_audio_source(metadata)
+    existing = _existing_audio_metadata(metadata)
+    if existing is not None and _existing_audio_matches_source(existing, source):
+        existing_audio = cast(Audio, existing.audio)
+        _update_audio_record(existing_audio, metadata, source)
+        _attach_episode_audio(metadata, existing_audio)
+        return AudioCopyResult(
+            audio_metadata=existing,
+            audio=existing_audio,
+            audio_created=False,
+            file_copied=False,
+        )
+
+    with tempfile.TemporaryDirectory(prefix="django-chat-audio-") as temp_dir:
+        temp_path = Path(temp_dir) / "source-audio"
+        downloaded = audio_downloader(source.url, temp_path)
+        if downloaded.byte_size <= 0:
+            msg = f"Audio source returned no content: {source.url}"
+            raise ValueError(msg)
+
+        return _save_downloaded_episode_audio(
+            metadata,
+            source,
+            downloaded_file=downloaded,
+            storage_prefix=CATALOG_AUDIO_STORAGE_PREFIX,
+        )
+
+
+def _save_downloaded_episode_audio(
+    metadata: EpisodeSourceMetadata,
+    source: AudioSourceSelection,
+    *,
+    downloaded: DownloadedAudio | None = None,
+    downloaded_file: DownloadedAudioFile | None = None,
+    storage_prefix: str,
+) -> AudioCopyResult:
     with transaction.atomic():
         metadata = (
             EpisodeSourceMetadata.objects.select_related("episode")
@@ -541,19 +673,33 @@ def _copy_episode_audio(
             cast(Audio, existing.audio) if existing is not None else Audio(user=_get_import_user())
         )
         audio_created = audio.pk is None
-        _update_audio_record(audio, metadata, source, downloaded=downloaded)
-        source_byte_size = _metadata_audio_file_size(metadata)
-        if source_byte_size is None:
-            source_byte_size = downloaded.content_length
+        _update_audio_record(
+            audio,
+            metadata,
+            source,
+            downloaded=downloaded,
+            downloaded_file=downloaded_file,
+            storage_prefix=storage_prefix,
+        )
         audio_import_metadata, _ = EpisodeAudioImportMetadata.objects.update_or_create(
             episode_metadata=metadata,
             defaults={
                 "audio": audio,
                 "source_url": source.url,
                 "source_url_kind": source.kind,
-                "source_content_type": _audio_content_type(downloaded),
-                "source_byte_size": source_byte_size,
-                "copied_byte_size": len(downloaded.content),
+                "source_content_type": _downloaded_audio_content_type(
+                    downloaded=downloaded,
+                    downloaded_file=downloaded_file,
+                ),
+                "source_byte_size": _downloaded_source_byte_size(
+                    metadata,
+                    downloaded=downloaded,
+                    downloaded_file=downloaded_file,
+                ),
+                "copied_byte_size": _downloaded_copied_byte_size(
+                    downloaded=downloaded,
+                    downloaded_file=downloaded_file,
+                ),
                 "storage_name": cast(Any, audio).mp3.name,
                 "copied_at": timezone.now(),
             },
@@ -618,6 +764,8 @@ def _update_audio_record(
     source: AudioSourceSelection,
     *,
     downloaded: DownloadedAudio | None = None,
+    downloaded_file: DownloadedAudioFile | None = None,
+    storage_prefix: str = SAMPLE_AUDIO_STORAGE_PREFIX,
 ) -> None:
     audio_fields = cast(Any, audio)
     desired_user = audio_fields.user if audio_fields.user_id else _get_import_user()
@@ -627,7 +775,13 @@ def _update_audio_record(
     duration_seconds = _metadata_duration_seconds(metadata)
     if duration_seconds is not None:
         desired_duration = timedelta(seconds=duration_seconds)
-    desired_data = _audio_data(audio, metadata, source, downloaded=downloaded)
+    desired_data = _audio_data(
+        audio,
+        metadata,
+        source,
+        downloaded=downloaded,
+        downloaded_file=downloaded_file,
+    )
 
     needs_save = False
     if audio_fields.user_id != desired_user.pk:
@@ -647,10 +801,22 @@ def _update_audio_record(
         needs_save = True
     if downloaded is not None:
         audio_fields.mp3.save(
-            _destination_audio_filename(metadata, downloaded),
+            _destination_audio_filename(metadata, downloaded, storage_prefix=storage_prefix),
             ContentFile(downloaded.content),
             save=False,
         )
+        needs_save = True
+    if downloaded_file is not None:
+        with downloaded_file.path.open("rb") as audio_file:
+            audio_fields.mp3.save(
+                _destination_audio_filename(
+                    metadata,
+                    downloaded_file,
+                    storage_prefix=storage_prefix,
+                ),
+                File(audio_file),
+                save=False,
+            )
         needs_save = True
     if needs_save:
         audio.save(duration=False, cache_file_sizes=False)
@@ -671,6 +837,7 @@ def _audio_data(
     source: AudioSourceSelection,
     *,
     downloaded: DownloadedAudio | None,
+    downloaded_file: DownloadedAudioFile | None = None,
 ) -> dict[str, Any]:
     data = dict(cast(Any, audio).data or {})
     data["django_chat_source"] = {
@@ -678,7 +845,11 @@ def _audio_data(
         "source_url": source.url,
         "source_url_kind": source.kind,
     }
-    byte_size = len(downloaded.content) if downloaded is not None else None
+    byte_size = None
+    if downloaded is not None:
+        byte_size = len(downloaded.content)
+    elif downloaded_file is not None:
+        byte_size = downloaded_file.byte_size
     if byte_size is not None:
         sizes = dict(data.get("size") or {})
         sizes["mp3"] = byte_size
@@ -693,9 +864,53 @@ def _audio_subtitle(metadata: EpisodeSourceMetadata) -> str:
     return f"Episode {episode_number}"
 
 
+def _downloaded_source_byte_size(
+    metadata: EpisodeSourceMetadata,
+    *,
+    downloaded: DownloadedAudio | None,
+    downloaded_file: DownloadedAudioFile | None,
+) -> int | None:
+    source_byte_size = _metadata_audio_file_size(metadata)
+    if source_byte_size is not None:
+        return source_byte_size
+    if downloaded is not None:
+        return downloaded.content_length
+    if downloaded_file is not None:
+        return downloaded_file.content_length
+    return None
+
+
+def _downloaded_copied_byte_size(
+    *,
+    downloaded: DownloadedAudio | None,
+    downloaded_file: DownloadedAudioFile | None,
+) -> int:
+    if downloaded is not None:
+        return len(downloaded.content)
+    if downloaded_file is not None:
+        return downloaded_file.byte_size
+    msg = "Audio metadata cannot be written without a downloaded audio payload."
+    raise ValueError(msg)
+
+
+def _downloaded_audio_content_type(
+    *,
+    downloaded: DownloadedAudio | None,
+    downloaded_file: DownloadedAudioFile | None,
+) -> str:
+    if downloaded is not None:
+        return _audio_content_type(downloaded)
+    if downloaded_file is not None:
+        return _audio_file_content_type(downloaded_file)
+    msg = "Audio metadata cannot be written without a downloaded audio payload."
+    raise ValueError(msg)
+
+
 def _destination_audio_filename(
     metadata: EpisodeSourceMetadata,
-    downloaded: DownloadedAudio,
+    downloaded: DownloadedAudio | DownloadedAudioFile,
+    *,
+    storage_prefix: str = SAMPLE_AUDIO_STORAGE_PREFIX,
 ) -> str:
     slug = (
         cast(str, metadata.simplecast_slug)
@@ -711,7 +926,7 @@ def _destination_audio_filename(
     )
     digest = hashlib.sha256(identifier.encode()).hexdigest()[:12]
     extension = _audio_extension(downloaded)
-    return f"django-chat-sample/{slug}-{digest}{extension}"
+    return f"{storage_prefix}/{slug}-{digest}{extension}"
 
 
 def _metadata_audio_file_size(metadata: EpisodeSourceMetadata) -> int | None:
@@ -722,13 +937,20 @@ def _metadata_duration_seconds(metadata: EpisodeSourceMetadata) -> int | None:
     return cast(int | None, metadata.duration_seconds)
 
 
-def _audio_extension(downloaded: DownloadedAudio) -> str:
+def _audio_extension(downloaded: DownloadedAudio | DownloadedAudioFile) -> str:
     source_filename = downloaded.filename or ""
     suffix = Path(source_filename).suffix.lower()
     if suffix in {".mp3", ".m4a", ".oga", ".opus"}:
         return suffix
     guessed = mimetypes.guess_extension(downloaded.content_type or "")
     return guessed if guessed in {".mp3", ".m4a", ".oga", ".opus"} else ".mp3"
+
+
+def _audio_file_content_type(downloaded: DownloadedAudioFile) -> str:
+    if downloaded.content_type:
+        return downloaded.content_type[:255]
+    guessed_type, _ = mimetypes.guess_type(downloaded.filename or "")
+    return (guessed_type or "audio/mpeg")[:255]
 
 
 def _audio_content_type(downloaded: DownloadedAudio) -> str:

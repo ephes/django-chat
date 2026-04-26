@@ -210,6 +210,70 @@ Both `--copy-audio` and `--copy-cover-image` download real bytes when run
 without fake downloaders, so use them deliberately. Tests use in-memory
 fakes and never require live network access or real S3.
 
+## Full Catalog Import
+
+The live catalog importer reads the canonical RSS feed and enriches it from
+the public Simplecast podcast/site/distribution/episode endpoints when those
+responses expose data. It does not use committed fixtures and does not require
+Simplecast credentials.
+
+Run a limited metadata import for local exercise:
+
+```sh
+just manage import_django_chat_catalog --max-episodes 3
+```
+
+Plan the same limited import and roll back database writes:
+
+```sh
+just manage import_django_chat_catalog --dry-run --max-episodes 3
+```
+
+Import metadata for the current full public catalog:
+
+```sh
+just manage import_django_chat_catalog
+```
+
+Attach the show artwork while importing metadata:
+
+```sh
+just manage import_django_chat_catalog --copy-cover-image
+```
+
+Copy audio only when you intend to transfer the catalog media. The full public
+catalog was observed at about 11 GB in the research PRD, so do not run this
+casually on local or staging:
+
+```sh
+just manage import_django_chat_catalog --copy-cover-image --copy-audio
+```
+
+Safe rerun behavior:
+
+- Podcast, episode, source metadata, source link, and audio metadata rows are
+  updated in place using RSS GUIDs, Simplecast IDs/slugs, and source-link keys.
+- Audio copy uses streaming file transfer into Django storage, not whole-MP3
+  in-memory reads.
+- Existing copied audio is skipped when the stored file still exists and the
+  recorded source URL still matches.
+- Re-running the command re-fetches RSS and Simplecast metadata; it does not
+  assume previous endpoint responses are still current.
+- `--copy-cover-image` skips the download once `Podcast.cover_image` is set.
+
+Operator controls:
+
+- `--max-episodes N` limits RSS/list/detail import to the latest N episodes.
+- `--timeout SECONDS` controls per-request source and media timeouts.
+- `--simplecast-page-size N` controls the initial episode-list page size;
+  later pages follow Simplecast's returned `next` URL.
+- `--simplecast-max-pages N` stops Simplecast pagination after N pages.
+- `--dry-run` fetches source data and rolls back database writes; it cannot be
+  combined with `--copy-audio` or `--copy-cover-image`.
+
+Tests use fake fetchers and fake streaming downloaders. Automated tests never
+hit the live feed, Simplecast, real S3, or real MP3 files.
+
 ## Feed Smoke Check
 
 Slice 7 adds a deterministic local feed smoke check for the fixture-backed
@@ -262,6 +326,25 @@ will naturally produce different URLs from Simplecast/Podtrac. Production
 migration hardening still needs exhaustive feed parity, artwork and namespace
 validation, full-catalog checks, feed redirect or new-feed-url decisions, and
 podcast-client testing before any cutover.
+
+## Catalog Performance Measurement
+
+After importing sample or catalog data, measure the generated RSS feed and the
+episode index through Django's test client:
+
+```sh
+just manage measure_django_chat_catalog
+```
+
+The command reports:
+
+- generated podcast RSS route status, timing, item count, and query count
+- `/episodes/` response status, timing, and query count
+
+Run it after a full catalog import for meaningful scale data. The limited
+three-episode exercise is useful for command validation only. Lighthouse and
+Web Vitals checks remain manual browser checks against deployed staging once
+the full catalog is present.
 
 ## Environment Files
 
@@ -364,9 +447,12 @@ bootstrap password handoff files, and private operator notes stay outside the
 repo.
 
 This repo now includes host review docs for the live staging path at
-`https://djangochat.staging.django-cast.com`, but it does not include full
-catalog import, transcript conversion, an enabled transcript worker service,
-exhaustive production feed parity, production DNS changes, feed redirects, or
-production migration. Live staging review can inspect the sample content, the
-CMS, and end-to-end audio playback: sample MP3s are copied to the configured
-S3 bucket and served through the public media host.
+`https://djangochat.staging.django-cast.com`, but it does not include
+RSS-discovery page work, transcript conversion, an enabled transcript worker
+service, exhaustive production feed parity, production DNS changes, feed
+redirects, or production migration. Live staging can be used for internal
+smoke review of the sample content, CMS, and end-to-end audio playback: sample
+MP3s are copied to the configured S3 bucket and served through the public
+media host. Full host review is deferred until the live catalog command has
+been run on staging and the RSS-discovery and transcript-demo gaps listed in
+`docs/implementation-status.md` are closed.

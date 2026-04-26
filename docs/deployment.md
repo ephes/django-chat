@@ -169,6 +169,37 @@ the django-cast Podlove player backed by those URLs with the show artwork
 populating the per-episode cover slot. Run both flags together on a fresh
 staging install; either flag is idempotent on subsequent runs.
 
+The full-catalog operator path is now:
+
+```sh
+cd /home/django-chat/site
+DJANGO_SETTINGS_MODULE=config.settings.production \
+  .venv/bin/python manage.py import_django_chat_catalog
+DJANGO_SETTINGS_MODULE=config.settings.production \
+  .venv/bin/python manage.py import_django_chat_catalog --copy-cover-image
+DJANGO_SETTINGS_MODULE=config.settings.production \
+  .venv/bin/python manage.py measure_django_chat_catalog --host=djangochat.staging.django-cast.com
+```
+
+For a safe staging exercise before the full run, add `--max-episodes 3`.
+For a rollback-only plan, use `--dry-run --max-episodes 3`. The command
+re-fetches RSS and Simplecast metadata on every run, updates existing rows in
+place, and skips existing copied audio when the recorded source URL still
+matches a stored file.
+
+Full-catalog audio copy is deliberately separate:
+
+```sh
+cd /home/django-chat/site
+DJANGO_SETTINGS_MODULE=config.settings.production \
+  .venv/bin/python manage.py import_django_chat_catalog --copy-cover-image --copy-audio
+```
+
+The research PRD observed about 11 GB of RSS-reported audio. Do not run
+`--copy-audio` casually; it performs real network transfer and writes media to
+the configured bucket. The catalog path streams audio through a temporary file
+and Django storage, so it does not read full MP3s into process memory.
+
 The app media principal needs, at minimum:
 
 - bucket-level `s3:ListBucket` and `s3:GetBucketLocation` on the media bucket
@@ -232,7 +263,10 @@ Wagtail admin or replace the account when host review access is settled.
 ## Out Of Scope
 
 The deployment scaffold and host review docs are in this repository, and live
-staging is available for host review. This deployment path does not include:
+staging is available for internal smoke review. Full host review is deferred
+until the live catalog has been imported on staging and the RSS-discovery and
+transcript-demo gaps listed in `docs/implementation-status.md` are closed.
+This deployment path does not include:
 
 - a real production deploy
 - DNS changes
