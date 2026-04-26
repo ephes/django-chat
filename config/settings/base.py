@@ -253,4 +253,6 @@ DJANGO_VITE = {
     },
 }
 
+CAST_FILTERSET_FACETS = ["search", "date", "date_facets", "o"]
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
