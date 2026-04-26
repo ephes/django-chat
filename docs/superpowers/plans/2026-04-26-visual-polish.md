@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-04-26-visual-polish-design.md`. Read it before starting any task.
 
+**Commit policy:** This repo's `AGENTS.md` requires explicit user approval for each `git commit`. Each task ends with a "Stage" step that runs `git add` and `git status --short`, plus a "Suggested commit message (commit only when the user explicitly approves)" line. Do not run `git commit` until the user says so. Do not run `git push` at any point during this plan.
+
 ---
 
 ## File Structure
@@ -22,8 +24,12 @@
 - `django_chat/static/django_chat/favicon.ico`
 - `django_chat/static/django_chat/favicon.svg`
 - `django_chat/static/django_chat/apple-touch-icon.png`
+- `django_chat/static/django_chat/og-image.png`
 - `django_chat/templates/cast/django_chat/_filter_form.html`
 - `django_chat/templates/cast/django_chat/_meta.html` (OG/Twitter defaults)
+- `django_chat/core/templatetags/__init__.py`
+- `django_chat/core/templatetags/dc_filters.py`
+- `django_chat/core/tests/test_dc_filters.py`
 - `django_chat/core/tests/test_episode_index_filter.py`
 - `django_chat/core/tests/test_episode_pagination.py`
 - `django_chat/core/tests/test_template_meta.py`
@@ -268,7 +274,7 @@ main {
 
 .filter-form {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)) auto;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) auto;
   gap: 12px;
   margin: 0 0 28px;
   padding: 14px;
@@ -285,6 +291,31 @@ main {
   border-radius: var(--dc-radius);
   background: var(--dc-paper);
   font: inherit;
+}
+
+.filter-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.filter-date input,
+.filter-date input[type="date"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .filter-form button {
@@ -519,11 +550,12 @@ main {
 Run: `wc -l django_chat/static/django_chat/css/site.css`
 Expected: roughly 350 lines.
 
-- [ ] **Step 3: Commit**
-
+- [ ] **Step 3: Stage and request commit approval**
 ```bash
 git add django_chat/static/django_chat/css/site.css
-git commit -m "Replace site.css with djangochat.com-aligned tokens"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Replace site.css with djangochat.com-aligned tokens"
 ```
 
 ---
@@ -596,11 +628,12 @@ Insert these blocks at the very top of `django_chat/static/django_chat/css/site.
 Run: `just runserver` in one terminal, then in another: `curl -sI http://127.0.0.1:8000/static/fonts/Roboto-Variable.woff2 | head -1`. Stop the dev server.
 Expected: `HTTP/1.1 200 OK`.
 
-- [ ] **Step 5: Commit**
-
+- [ ] **Step 5: Stage and request commit approval**
 ```bash
 git add django_chat/static/fonts django_chat/static/django_chat/css/site.css
-git commit -m "Self-host Roboto, Roboto Flex, Roboto Mono variable fonts"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Self-host Roboto, Roboto Flex, Roboto Mono variable fonts"
 ```
 
 ---
@@ -682,14 +715,15 @@ Write the file at `django_chat/static/django_chat/favicon.svg` with this content
 </svg>
 ```
 
-- [ ] **Step 4: Commit**
-
+- [ ] **Step 4: Stage and request commit approval**
 ```bash
 git add django_chat/static/django_chat/favicon.ico \
         django_chat/static/django_chat/favicon.svg \
         django_chat/static/django_chat/apple-touch-icon.png \
         django_chat/static/django_chat/og-image.png
-git commit -m "Add Django Chat favicon and OG image assets"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Add Django Chat favicon and OG image assets"
 ```
 
 ---
@@ -715,7 +749,7 @@ Write `django_chat/templates/cast/django_chat/_meta.html`:
 <meta property="og:description" content="{{ resolved_description|striptags }}">
 {% if resolved_image %}<meta property="og:image" content="{{ resolved_image }}">{% else %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'django_chat/og-image.png' %}">{% endif %}
 {% if resolved_canonical_url %}<meta property="og:url" content="{{ resolved_canonical_url }}">{% endif %}
-<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta property="og:type" content="{{ og_type|default:'website' }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ resolved_title }}">
 <meta name="twitter:description" content="{{ resolved_description|striptags }}">
@@ -747,6 +781,7 @@ Replace `django_chat/templates/cast/django_chat/base.html` with:
     {% block meta %}
       {% include "./_meta.html" %}
     {% endblock meta %}
+    {# episode.html overrides the meta block above to pass og_type="article" #}
   </head>
   <body>
     <header class="site-header">
@@ -802,12 +837,13 @@ Replace `django_chat/templates/cast/django_chat/base.html` with:
 Run: `just test django_chat/imports/tests/test_sample_site_routes.py::test_imported_sample_index_renders_django_chat_theme_and_source_links -x`
 Expected: PASS (the test only checks for content strings — those still appear in the new layout). If it fails because the test asserts a string we removed (e.g. the eyebrow `Django Web Framework Podcast`), defer the failure to Task 11; the bulk of the assertions should still pass.
 
-- [ ] **Step 4: Commit**
-
+- [ ] **Step 4: Stage and request commit approval**
 ```bash
 git add django_chat/templates/cast/django_chat/base.html \
         django_chat/templates/cast/django_chat/_meta.html
-git commit -m "Brand site shell with show artwork mark, OG metadata, favicon"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Brand site shell with show artwork mark, OG metadata, favicon"
 ```
 
 ---
@@ -830,11 +866,12 @@ CAST_FILTERSET_FACETS = ["search", "date", "date_facets", "o"]
 Run: `just manage shell -c "from cast import appsettings; print(appsettings.CAST_FILTERSET_FACETS)"`
 Expected: `['search', 'date', 'date_facets', 'o']`.
 
-- [ ] **Step 3: Commit**
-
+- [ ] **Step 3: Stage and request commit approval**
 ```bash
 git add config/settings/base.py
-git commit -m "Restrict CAST_FILTERSET_FACETS to search, date, and ordering"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Restrict CAST_FILTERSET_FACETS to search, date, and ordering"
 ```
 
 ---
@@ -890,6 +927,8 @@ def test_episode_index_exposes_filterset_form_fields(client: Client) -> None:
 
     body = response.content.decode()
     assert 'name="search"' in body
+    assert 'name="date_after"' in body
+    assert 'name="date_before"' in body
     assert 'name="date_facets"' in body
     assert 'name="o"' in body
 
@@ -1022,36 +1061,49 @@ Create `django_chat/templates/cast/django_chat/_filter_form.html`:
 
 ```django
 <form method="get" class="filter-form" aria-label="Filter episodes">
-  <input type="text" name="search" placeholder="Search episodes" value="{{ form.search.value|default_if_none:'' }}">
-  <select name="date_facets">
+  <label class="visually-hidden" for="id_search">Search</label>
+  <input id="id_search" type="text" name="search" placeholder="Search episodes" value="{{ form.search.value|default_if_none:'' }}">
+
+  <div class="filter-date">
+    <label class="visually-hidden">Date range</label>
+    {# DateFromToRangeFilter renders two <input type="date"> with names date_after and date_before #}
+    {{ form.date }}
+  </div>
+
+  <select name="date_facets" aria-label="Date facets">
     <option value="">All dates</option>
     {% for value, label in form.date_facets.field.choices %}
       <option value="{{ value }}"{% if form.date_facets.value == value %} selected{% endif %}>{{ label }}</option>
     {% endfor %}
   </select>
-  <select name="o">
+
+  <select name="o" aria-label="Sort order">
     <option value="">Newest first</option>
     {% for value, label in form.o.field.choices %}
       {% if value %}<option value="{{ value }}"{% if form.o.value == value %} selected{% endif %}>{{ label }}</option>{% endif %}
     {% endfor %}
   </select>
+
   <button type="submit">Filter</button>
 </form>
 ```
+
+The visually-hidden label class can be added to `site.css` if needed; if Django renders `{{ form.date }}` with surrounding markup that conflicts with the grid, fall back to two explicit `<input type="date" name="date_after">` / `<input type="date" name="date_before">` elements (matching what `DateFromToRangeFilter` accepts).
 
 - [ ] **Step 7: Re-run the filter tests**
 
 Run: `just test django_chat/core/tests/test_episode_index_filter.py -x`
 Expected: all four tests PASS.
 
-- [ ] **Step 8: Commit**
-
+- [ ] **Step 8: Stage and request commit approval**
 ```bash
 git add django_chat/core/views.py \
         django_chat/core/tests/test_episode_index_filter.py \
         django_chat/templates/cast/django_chat/blog_list_of_posts.html \
         django_chat/templates/cast/django_chat/_filter_form.html
-git commit -m "Wire PostFilterset and pagination in podcast_episode_index"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Wire PostFilterset and pagination in podcast_episode_index"
 ```
 
 ---
@@ -1118,12 +1170,95 @@ def test_pagination_parameters_context_value_strips_page_only(client: Client) ->
 Run: `just test django_chat/core/tests/test_episode_pagination.py -x`
 Expected: PASS (the view already wires `is_paginated`, `parameters`, etc.). If the third test fails, double-check the view's `parameters_suffix` computation in Task 6; it must omit `page=` and prepend `&` only when there is content.
 
-- [ ] **Step 3: Commit**
-
+- [ ] **Step 3: Stage and request commit approval**
 ```bash
 git add django_chat/core/tests/test_episode_pagination.py
-git commit -m "Cover pagination contract with forced-small-page-size tests"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Cover pagination contract with forced-small-page-size tests"
 ```
+
+---
+
+## Task 7b: Add `duration_minutes` template filter
+
+**Files:**
+- Create: `django_chat/core/templatetags/__init__.py`
+- Create: `django_chat/core/templatetags/dc_filters.py`
+- Create: `django_chat/core/tests/test_dc_filters.py`
+
+- [ ] **Step 1: Create the templatetags package**
+
+Run: `mkdir -p django_chat/core/templatetags && touch django_chat/core/templatetags/__init__.py`
+
+- [ ] **Step 2: Write the failing tests first**
+
+Create `django_chat/core/tests/test_dc_filters.py`:
+
+```python
+from __future__ import annotations
+
+import pytest
+
+from django_chat.core.templatetags.dc_filters import duration_minutes
+
+
+@pytest.mark.parametrize(
+    "seconds,expected",
+    [
+        (4663, "78 MIN"),
+        (60, "1 MIN"),
+        (29, "0 MIN"),
+        (None, ""),
+        (0, ""),
+    ],
+)
+def test_duration_minutes_formats_or_returns_empty(seconds, expected):
+    assert duration_minutes(seconds) == expected
+```
+
+- [ ] **Step 3: Run the tests; expect ImportError**
+
+Run: `just test django_chat/core/tests/test_dc_filters.py -x`
+Expected: FAIL — module not yet defined.
+
+- [ ] **Step 4: Implement the filter**
+
+Create `django_chat/core/templatetags/dc_filters.py`:
+
+```python
+from __future__ import annotations
+
+from django import template
+
+register = template.Library()
+
+
+@register.filter
+def duration_minutes(seconds: int | None) -> str:
+    """Render a duration in seconds as a `'N MIN'` label, or empty string."""
+    if not seconds:
+        return ""
+    minutes = round(int(seconds) / 60)
+    return f"{minutes} MIN"
+```
+
+- [ ] **Step 5: Re-run the tests**
+
+Run: `just test django_chat/core/tests/test_dc_filters.py -x`
+Expected: all parametrised cases PASS.
+
+- [ ] **Step 6: Stage**
+
+```bash
+git add django_chat/core/templatetags/__init__.py \
+        django_chat/core/templatetags/dc_filters.py \
+        django_chat/core/tests/test_dc_filters.py
+git status --short
+```
+
+Suggested commit message (commit only if explicitly approved):
+`Add duration_minutes template filter`
 
 ---
 
@@ -1139,6 +1274,7 @@ Replace `django_chat/templates/cast/django_chat/blog_list_of_posts.html` with:
 ```django
 {% extends "./base.html" %}
 {% load wagtailcore_tags %}
+{% load dc_filters %}
 
 {% block title %}{{ page.title }}{% endblock title %}
 
@@ -1153,14 +1289,16 @@ Replace `django_chat/templates/cast/django_chat/blog_list_of_posts.html` with:
           <div class="show-tagline">{{ page.description|richtext }}</div>
         {% endif %}
         <div class="show-actions" aria-label="Subscribe">
-          {% with apple=None spotify=None %}
-            {% for link in source_metadata.visible_distribution_links %}
-              {% if link.name == "Apple Podcasts" %}
-                <a class="button-secondary" href="{{ link.url }}" target="_blank" rel="noopener noreferrer">Apple Podcasts</a>
-              {% endif %}
-            {% endfor %}
-          {% endwith %}
-          <a class="button-primary" href="{% url 'cast:podcast_feed_rss' slug=podcast.slug audio_format='mp3' %}">Listen &amp; Subscribe</a>
+          {% for link in source_metadata.visible_distribution_links %}
+            {% if link.name == "Apple Podcasts" %}
+              <a class="button-secondary" href="{{ link.url }}" target="_blank" rel="noopener noreferrer">Apple Podcasts</a>
+            {% endif %}
+          {% endfor %}
+          {% if source_metadata.website_url %}
+            <a class="button-primary" href="{{ source_metadata.website_url }}" target="_blank" rel="noopener noreferrer">Listen &amp; Subscribe</a>
+          {% else %}
+            <a class="button-primary" href="{% url 'cast:podcast_feed_rss' slug=podcast.slug audio_format='mp3' %}">Listen &amp; Subscribe</a>
+          {% endif %}
         </div>
       </div>
       {% if source_metadata.image_url %}
@@ -1194,7 +1332,7 @@ Replace `django_chat/templates/cast/django_chat/blog_list_of_posts.html` with:
                 <time datetime="{{ post.visible_date|date:'c' }}">{{ post.visible_date|date:'M j, Y' }}</time>
                 {% with episode_number=post.django_chat_source_metadata.episode_number duration=post.django_chat_source_metadata.duration_seconds %}
                   {% if episode_number %} · E{{ episode_number }}{% endif %}
-                  {% if duration %} · {{ duration|stringformat:'d'|slice:':-2' }} MIN{% endif %}
+                  {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
                 {% endwith %}
               </p>
               <h2>{{ post.title }}</h2>
@@ -1225,11 +1363,12 @@ Replace `django_chat/templates/cast/django_chat/blog_list_of_posts.html` with:
 Run: `just test django_chat/core/tests/ django_chat/imports/tests/test_sample_site_routes.py -x`
 Expected: any failures point at strings the old template emitted that are no longer there. Capture them — we'll address them in Task 11. Filtering and pagination tests must still pass.
 
-- [ ] **Step 3: Commit**
-
+- [ ] **Step 3: Stage and request commit approval**
 ```bash
 git add django_chat/templates/cast/django_chat/blog_list_of_posts.html
-git commit -m "Restyle episode list with single-column rows and filter form"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Restyle episode list with single-column rows and filter form"
 ```
 
 ---
@@ -1260,11 +1399,12 @@ The interface stays the same; only the markup wrapper picks up the `pagination-n
 Run: `just test django_chat/core/tests/test_episode_pagination.py -x`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
-
+- [ ] **Step 3: Stage and request commit approval**
 ```bash
 git add django_chat/templates/cast/django_chat/pagination.html
-git commit -m "Refresh pagination markup wrapper"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Refresh pagination markup wrapper"
 ```
 
 ---
@@ -1280,10 +1420,13 @@ git commit -m "Refresh pagination markup wrapper"
 {% extends "./base.html" %}
 {% load wagtailcore_tags %}
 {% load django_vite %}
+{% load dc_filters %}
 
 {% block title %}{{ page.title }}{% endblock title %}
 
-{% block og_type %}article{% endblock og_type %}
+{% block meta %}
+  {% include "./_meta.html" with og_type="article" %}
+{% endblock meta %}
 
 {% block content %}
   <main>
@@ -1299,7 +1442,7 @@ git commit -m "Refresh pagination markup wrapper"
             <time datetime="{{ page.visible_date|date:'c' }}">{{ page.visible_date|date:'F j, Y' }}</time>
             {% with episode_number=page.django_chat_source_metadata.episode_number duration=page.django_chat_source_metadata.duration_seconds %}
               {% if episode_number %} · E{{ episode_number }}{% endif %}
-              {% if duration %} · {{ duration|stringformat:'d'|slice:':-2' }} MIN{% endif %}
+              {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
             {% endwith %}
           </p>
           <h1>{{ page.title }}</h1>
@@ -1349,11 +1492,12 @@ git commit -m "Refresh pagination markup wrapper"
 Run: `just manage runserver` in one terminal; then `curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/episodes/django-tasks-jake-howard/`
 Expected: `200`. Stop the dev server.
 
-- [ ] **Step 3: Commit**
-
+- [ ] **Step 3: Stage and request commit approval**
 ```bash
 git add django_chat/templates/cast/django_chat/episode.html
-git commit -m "Restyle episode detail with Podlove facade and django-vite asset"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Restyle episode detail with Podlove facade and django-vite asset"
 ```
 
 ---
@@ -1407,11 +1551,12 @@ assert "/cast/api/audio/" in content  # cast:api:audio_podlove_detail prefix
 Run: `just test django_chat/imports/tests/test_sample_site_routes.py -x`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
-
+- [ ] **Step 4: Stage and request commit approval**
 ```bash
 git add django_chat/imports/tests/test_sample_site_routes.py
-git commit -m "Update route assertions for new layout and Podlove markup"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Update route assertions for new layout and Podlove markup"
 ```
 
 ---
@@ -1489,11 +1634,12 @@ def test_episode_index_loads_self_hosted_fonts_css(client: Client) -> None:
 Run: `just test django_chat/core/tests/test_template_meta.py -x`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
-
+- [ ] **Step 3: Stage and request commit approval**
 ```bash
 git add django_chat/core/tests/test_template_meta.py
-git commit -m "Cover favicon and Open Graph metadata in template tests"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Cover favicon and Open Graph metadata in template tests"
 ```
 
 ---
@@ -1594,15 +1740,16 @@ Each file gets the same skeleton. For `400.html`:
 Run: `just runserver` (one terminal); `curl -s -o /tmp/404.html -w '%{http_code}\n' http://127.0.0.1:8000/episodes/this-does-not-exist/ && grep -c 'Episode not found' /tmp/404.html`. Stop the dev server.
 Expected: `404` and `1`.
 
-- [ ] **Step 3: Commit**
-
+- [ ] **Step 3: Stage and request commit approval**
 ```bash
 git add django_chat/templates/cast/django_chat/400.html \
         django_chat/templates/cast/django_chat/403.html \
         django_chat/templates/cast/django_chat/403_csrf.html \
         django_chat/templates/cast/django_chat/404.html \
         django_chat/templates/cast/django_chat/500.html
-git commit -m "Brand error pages with Django Chat shell"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Brand error pages with Django Chat shell"
 ```
 
 ---
@@ -1632,13 +1779,15 @@ Expected: all tests pass.
 Run: `uv run prek run -a` (the configured hook runner per `prek.toml`).
 Expected: no failures.
 
-- [ ] **Step 5: Commit any auto-fixes (if any)**
+- [ ] **Step 5: Stage auto-fixes and request commit approval**
 
 ```bash
 git status --short
 # if anything is modified by formatters/hooks:
 git add -p
-git commit -m "Apply formatter and hook fixes"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Apply formatter and hook fixes"
 ```
 
 ---
@@ -1704,11 +1853,12 @@ In `docs/implementation-status.md`:
 
 The file should still be a thin pointer; no PRD content moves into it.
 
-- [ ] **Step 2: Commit**
-
+- [ ] **Step 2: Stage and request commit approval**
 ```bash
 git add docs/implementation-status.md
-git commit -m "Close visual polish pass in implementation status"
+git status --short
+# Suggested commit message (commit only when the user explicitly approves):
+#   "Close visual polish pass in implementation status"
 ```
 
 ---
@@ -1718,5 +1868,5 @@ git commit -m "Close visual polish pass in implementation status"
 - [ ] `just check` passes (lint + format-check + typecheck + test)
 - [ ] `uv run prek run -a` is clean
 - [ ] Local screenshots at `/tmp/local-list.png` and `/tmp/local-detail.png` look like the show
-- [ ] No new entries in `git status --short` other than committed work
+- [ ] No unexpected entries in `git status --short`; all intended changes are staged or committed with approval
 - [ ] `docs/implementation-status.md` reflects the close-out
