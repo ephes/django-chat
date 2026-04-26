@@ -62,6 +62,10 @@ Before sending or refreshing the staging URL for hosts, confirm:
   `import_django_chat_sample` management command.
 - Sample audio has been copied via `import_django_chat_sample --copy-audio`
   against the deployed environment with production settings.
+- The show artwork has been attached as the podcast `cover_image` via
+  `import_django_chat_sample --copy-cover-image` (idempotent — combine
+  with `--copy-audio` on the first run). Without this, the Podlove
+  player on episode detail pages renders an empty cover slot.
 - `https://<staging-fqdn>/`, `/episodes/`, at least one episode detail page,
   and `/cms/` return expected HTTPS responses.
 - Static assets load.

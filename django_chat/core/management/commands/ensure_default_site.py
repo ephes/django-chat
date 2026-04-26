@@ -83,7 +83,7 @@ class Command(BaseCommand):
                 "No default Wagtail Site exists. Create one before running this command."
             )
 
-        site_changed = False
+        any_change = False
         if site.hostname != hostname or site.port != port:
             previous = f"{site.hostname}:{site.port}"
             site.hostname = hostname
@@ -96,7 +96,7 @@ class Command(BaseCommand):
                     "cleared root-paths cache."
                 )
             )
-            site_changed = True
+            any_change = True
         else:
             self.stdout.write(f"Default Site already matches {hostname}:{port}; no change.")
 
@@ -110,10 +110,11 @@ class Command(BaseCommand):
                     f"Updated TemplateBaseDirectory {previous_theme} -> {template_base_dir}."
                 )
             )
+            any_change = True
         else:
             self.stdout.write(
                 f"TemplateBaseDirectory already set to {template_base_dir}; no change."
             )
 
-        if not site_changed:
+        if not any_change:
             self.stdout.write("ensure_default_site: nothing to do.")

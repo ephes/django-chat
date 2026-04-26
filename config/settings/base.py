@@ -216,6 +216,11 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap4", "bootstrap5"]
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 CAST_COMMENTS_ENABLED = False
+# Registered themes in the Wagtail TemplateBaseDirectory choice list.
+# `django_chat` is the project theme (see CAST_PODLOVE_PLAYER_THEMES below
+# and ensure_default_site for how this gets pinned per-site at deploy
+# time). `bootstrap5` ships with cast_bootstrap5 and is kept available so
+# the styleguide / theme selector continues to work.
 CAST_CUSTOM_THEMES = [
     ("django_chat", "Django Chat"),
     ("bootstrap5", "Bootstrap 5"),
@@ -255,28 +260,24 @@ DJANGO_VITE = {
 
 CAST_FILTERSET_FACETS = ["search", "date", "date_facets", "o"]
 
-# Register the project's theme so it appears in Wagtail's
-# TemplateBaseDirectory choices and resolves via the standard theme
-# lookup (see cast/models/theme.py). Required for the
-# CAST_PODLOVE_PLAYER_THEMES override below to apply when the player
-# config endpoint resolves the active theme via the Wagtail Site
-# setting fallback.
-CAST_CUSTOM_THEMES = [("django_chat", "Django Chat")]
-
 # Podlove player theme override. Keyed by the show's template_base_dir
 # (set on the Podcast model during import; see
 # django_chat/imports/import_sample.py). Tokens map to Podlove's theme
 # token API; see cast/podlove.py DEFAULT_PODLOVE_THEME for the full set.
-# Brand is the Django green from the show artwork; brandDark/brandDarkest
-# are darker greens for hover and emphasis; brandLightest is a pale tint
-# for player chrome backgrounds.
+# Active when the player config endpoint resolves the theme to
+# `django_chat` — pinned per-site at deploy time by ensure_default_site.
+# Colour decisions:
+#   brand           — same green family as the show artwork (#44b78b),
+#                     darker so white text on brand-coloured chrome
+#                     reaches ~4.7:1 contrast (WCAG AA-large).
+#   brandDark       — hover / emphasis variant.
+#   brandDarkest    — pinned to the project ink token (used for muted
+#                     text in the player, not as a "darker green").
+#   brandLightest   — pale-green tint used for player chrome
+#                     backgrounds.
 CAST_PODLOVE_PLAYER_THEMES = {
     "django_chat": {
         "tokens": {
-            # Same green family as the show artwork (#44b78b) but pulled
-            # darker so white text on `brand` reaches ~5.5:1 contrast (WCAG
-            # AA). The bright Django green looked aggressive on player
-            # chrome and didn't carry enough contrast for the play icon.
             "brand": "#2d8260",
             "brandDark": "#1f6647",
             "brandDarkest": "#0d0d0d",

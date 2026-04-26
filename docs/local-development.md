@@ -178,10 +178,12 @@ files unless audio copying is requested explicitly. Original RSS and Simplecast
 enclosure/audio URLs are stored in metadata, and Simplecast transcript HTML is
 preserved in metadata only for later conversion or publishing work.
 
-Copy audio for the same eight fixture-backed sample episodes:
+Copy audio for the same eight fixture-backed sample episodes, and download
+the show artwork as the Podcast page's `cover_image` so the Podlove player
+chrome has an episode poster to display:
 
 ```sh
-just manage import_django_chat_sample --copy-audio
+just manage import_django_chat_sample --copy-audio --copy-cover-image
 ```
 
 The audio-copy path reuses the source metadata rows from the normal sample
@@ -191,15 +193,22 @@ URL. It stores the downloaded file through Django's configured default media
 storage, creates or updates a `cast.Audio` row, and attaches that row to
 `cast.Episode.podcast_audio`.
 
+`--copy-cover-image` downloads the show artwork URL recorded in
+`PodcastSourceMetadata.image_url`, creates a `wagtail.images.Image`, and
+attaches it to `Podcast.cover_image`. The Podlove player surfaces this as the
+per-episode cover (Simplecast does not expose per-episode artwork, so the
+show artwork is reused on every episode — same as djangochat.com). The flag
+is idempotent: subsequent runs do nothing when `cover_image` is already set.
+
 Repeated `--copy-audio` runs are idempotent for the sample: existing audio-copy
 metadata rows are reused, files are not downloaded again when the source URL and
 stored file name still match and the stored file exists, and no duplicate
 episode pages, source metadata, link metadata, audio rows, or transcript rows
 are created.
 
-The sample audio command downloads real MP3s when run without a fake downloader,
-so use it deliberately. Tests use in-memory fake audio and never require live
-network access or real S3.
+Both `--copy-audio` and `--copy-cover-image` download real bytes when run
+without fake downloaders, so use them deliberately. Tests use in-memory
+fakes and never require live network access or real S3.
 
 ## Feed Smoke Check
 
@@ -234,7 +243,7 @@ message. django-cast excludes episodes without `podcast_audio` from podcast
 feeds, so run:
 
 ```sh
-just manage import_django_chat_sample --copy-audio
+just manage import_django_chat_sample --copy-audio --copy-cover-image
 just compare-feed
 ```
 

@@ -161,11 +161,13 @@ a non-AWS S3-compatible provider that needs an explicit endpoint or region
 setting, extend the deploy vars before the first live deploy.
 
 Current staging media status: sample audio copy succeeds.
-`import_django_chat_sample --copy-audio` on the deployed staging app uploads
-all eight sample MP3s; copied media URLs return HTTP 200 with
-`Content-Type: audio/mpeg` through the configured public media host
-(CloudFront), and episode detail pages render an `<audio>` element backed by
-those URLs.
+`import_django_chat_sample --copy-audio --copy-cover-image` on the deployed
+staging app uploads all eight sample MP3s plus the show artwork; copied
+media URLs return HTTP 200 with `Content-Type: audio/mpeg` through the
+configured public media host (CloudFront), and episode detail pages render
+the django-cast Podlove player backed by those URLs with the show artwork
+populating the per-episode cover slot. Run both flags together on a fresh
+staging install; either flag is idempotent on subsequent runs.
 
 The app media principal needs, at minimum:
 
