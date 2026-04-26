@@ -348,10 +348,22 @@ Unit / template tests live under `django_chat/imports/tests/`
 (import-adjacent assertions) and `django_chat/core/tests/` (project
 view / template assertions). Extend `django_chat/core/tests/`:
 
-- Render the episode list page; assert presence of: hero title,
-  distribution link band, filter form fields (`search`, `date_after`,
-  `date_before`, `date_facets`, `o`, submit), at least one episode row
-  with eyebrow meta and title, pagination markup.
+- Render the episode list page against the 8-episode sample
+  fixture; assert presence of: hero title, distribution link band,
+  filter form fields (`search`, `date_after`, `date_before`,
+  `date_facets`, `o`, submit), at least one episode row with
+  eyebrow meta and title. **Assert pagination markup is absent**
+  here — `is_paginated = page_obj.has_other_pages()` evaluates
+  `False` for 8 episodes at any reasonable page size.
+- Pagination is exercised by a separate test that either creates
+  more episodes than the page-size or temporarily reduces the
+  page-size (e.g. by parametrising the page-size as a setting or
+  view kwarg). That test asserts the `pagination.html` partial
+  renders with the six expected context keys (`has_previous`,
+  `previous_page_number`, `page_number`, `has_next`,
+  `next_page_number`, `parameters`) and that `parameters`
+  preserves a sample filter query (`?search=django` survives the
+  page link).
 - Render the episode detail page; assert: page title H1, eyebrow meta,
   Podlove markup container with `data-url` pointing at the
   `cast:api:audio_podlove_detail` URL, no raw `<audio>` element, the
