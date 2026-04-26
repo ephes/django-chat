@@ -1,1 +1,11 @@
-{% extends "./403.html" %}
+{% extends "./base.html" %}
+{% block title %}CSRF verification failed{% endblock title %}
+{% block content %}
+  <main>
+    <section class="status-page">
+      <h1>CSRF verification failed</h1>
+      <p>Refresh the page and try the action again.</p>
+      <p><a href="{% url 'django_chat_episode_index' %}">← Back to Episodes</a></p>
+    </section>
+  </main>
+{% endblock content %}

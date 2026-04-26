@@ -1,9 +1,11 @@
 {% extends "./base.html" %}
-
 {% block title %}Forbidden{% endblock title %}
-
 {% block content %}
-  <main class="status-page">
-    <h1>Forbidden</h1>
+  <main>
+    <section class="status-page">
+      <h1>Forbidden</h1>
+      <p>You don't have permission to view this page.</p>
+      <p><a href="{% url 'django_chat_episode_index' %}">← Back to Episodes</a></p>
+    </section>
   </main>
 {% endblock content %}
