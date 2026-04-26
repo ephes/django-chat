@@ -80,27 +80,34 @@ PRD section "Acceptance Criteria For The Research Spike".
 
 ## Where We Are
 
-Slice 6 visual polish landed on `main` as 16 commits (`32f1725`..`5a9fe8e`)
-on `2026-04-26`, plus a follow-up review-fix round (uncommitted at the
-time of writing) that adds Facebook share, four behaviour tests
-(asc/desc ordering, date-range filtering), Vite-asset assertion on the
-copied-audio detail test, and updates host-review/staging-differences
-docs for the new player. `just check` clean (79 tests). The branch has
-not been deployed to staging yet and hosts have not reviewed.
+Slice 6 visual polish + the post-deploy fixes that surfaced during
+staging review are landed on `main` as 21 commits
+(`32f1725`..`4d880f3`) on `2026-04-26`. `just check` clean (89 tests).
+Staging at `https://djangochat.staging.django-cast.com` is deployed and
+serving the polished site:
 
-Immediate next move: deploy to staging, verify the Wagtail Site record's
-`hostname` resolves correctly for canonical/OG/Twitter URLs, hand to hosts
-for review.
+- Black header with show artwork mark, single-column episode rows,
+  Roboto type stack self-hosted, filterset search/date facets/ordering,
+  branded error pages, favicon trio, OG/Twitter metadata.
+- Podlove player on episode detail (no facade), themed with the
+  Django-green brand tokens via `CAST_PODLOVE_PLAYER_THEMES`.
+- Show artwork attached to `Podcast.cover_image` so the player's cover
+  slot is populated.
+- Wagtail `Site` row pinned to `djangochat.staging.django-cast.com:443`
+  with `TemplateBaseDirectory=django_chat`, both via the new
+  `ensure_default_site` post-deploy task so fresh installs match.
+- `import_django_chat_sample --copy-audio --copy-cover-image` is the
+  documented operator command for a fresh staging build.
+
+Branch is unpushed at the time of writing.
+
+Immediate next move: hand the deployed staging URL to hosts for review.
+Once feedback has settled, start the subscribe/RSS-discovery page slice
+below.
 
 ## Open Work (Highest Signal First)
 
-1. **Deploy slice-6 polish to staging and verify Wagtail Site hostname.**
-   `just deploy-staging`, then check `Site.objects.get(is_default_site=True)
-   .hostname` is `djangochat.staging.django-cast.com` (not `localhost`,
-   `127.0.0.1`, or `example.com`). The new `_meta.html` partial uses
-   `request.scheme`/`request.get_host` and the canonical-URL helpers, so
-   this matters for OG image absolute URLs and social-share previews.
-2. **Subscribe / RSS-discovery page** — customise django-cast's
+1. **Subscribe / RSS-discovery page** — customise django-cast's
    `feed_detail.html` (rendered at `cast:feed_detail` → `/episodes/feed/`)
    to expose the RSS feed URL prominently and embed the Podlove Subscribe
    Button. Re-target the `Listen & Subscribe` button on the show hero to
@@ -123,35 +130,32 @@ for review.
      whether to vendor it or pull it as a Python dep.
    - Keep canonical/OG metadata correct on this page (re-use `_meta.html`
      with an appropriate `og_type`).
-3. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
+2. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
    least one representative episode. PRD permits either simple page content
    or the `cast_transcripts` worker path; simple page content is the
-   lower-cost route. Defer until items 1 and 2 (and host review) have
-   landed, so we don't stack work on unvalidated polish.
-4. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
+   lower-cost route. Defer until item 1 (and host review) has landed.
+3. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
    preservation, canonical domain, Simplecast directory coordination,
    analytics/CDN/ad-insertion questions. Content scope is in PRD lines
    520–525 and "Production Migration Considerations" section.
-5. **Full-catalog import path** — extend the import command (or document a
+4. **Full-catalog import path** — extend the import command (or document a
    parallel command) for the live ~201-episode catalog, including audio
    transfer at ~11 GB, retry/resume behavior, and the operator runbook. PRD
    "Import Strategy" section is the contract.
-6. **Production VPS, DNS cutover, feed redirects, podcast directory
+5. **Production VPS, DNS cutover, feed redirects, podcast directory
    updates** — last, per user. Out of scope until the items above are
    settled and hosts have reviewed staging.
 
 ## Next Action
 
-Deploy the slice-6 polish chain to staging, verify the Site hostname, hand
-to hosts. Sequence:
+Hand staging to hosts for review. Sequence:
 
-1. `just deploy-staging` from `main` at `5a9fe8e`.
-2. Confirm canonical/OG/Twitter URLs in the rendered HTML resolve to
-   `https://djangochat.staging.django-cast.com/...`, not localhost.
-3. Hosts review staging.
-4. Iterate small if hosts flag anything.
-5. Then item 2 (subscribe/RSS-discovery page), then item 3 (transcript
-   demo), then 4–6 in order.
+1. Push the unpushed `main` to origin (operator decision; no automation
+   trigger required).
+2. Send the staging URL + `host-review-admin` credential to hosts.
+3. Iterate small if hosts flag anything.
+4. Then item 1 (subscribe/RSS-discovery page), then 2 (transcript demo),
+   then 3–5 in order.
 
 Production migration (DNS, feed cutover, real production VPS) is explicitly
 deferred until staging looks good to the hosts.
