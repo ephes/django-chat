@@ -49,3 +49,6 @@ deploy/secrets/*.plain.yaml
 .idea/
 .vscode/
 *.swp
+
+# Superpowers brainstorm scratch directory
+.superpowers/
