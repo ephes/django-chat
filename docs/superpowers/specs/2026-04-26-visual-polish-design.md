@@ -192,8 +192,21 @@ Composition top-to-bottom:
         suffix that preserves active filter query params minus
         `page=`). The view must compute and pass all of them, or
         the partial must be reworked to accept a single `page_obj`
-        — pick at plan time. Set `is_paginated=True`.
-     4. Add `filterset` to the render context.
+        — pick at plan time.
+     4. Set `is_paginated = page_obj.has_other_pages()`. With the
+        current 8-episode sample fixture and any reasonable
+        page-size, this evaluates `False` and the pagination
+        markup is hidden — adjust the existing
+        `imports/tests/test_sample_site_routes.py` expectations
+        if they assume otherwise.
+     5. Re-attach `post.page_url` on the paginated items the same
+        way the current view does (`views.py:15-16`). The list
+        template reads `{{ post.page_url }}` at
+        `blog_list_of_posts.html:40,52`; without this the row
+        anchors render with empty `href` attributes. Iterate over
+        `page_obj.object_list` (or whatever queryset is rendered)
+        and attach `get_url(request=request)` to each.
+     6. Add `filterset` to the render context.
    - Guard the partial with `{% if filterset %}` so unrelated Page
      types render nothing.
    - Style: light surface (`--dc-paper`), `--dc-line` borders on inputs,
@@ -273,9 +286,12 @@ Composition top-to-bottom:
      embed off the initial page.
    - Add `{% load django_vite %}` and
      `{% vite_asset 'src/audio/podlove-player.ts' app="cast" %}` in
-     `{% block javascript %}`. The asset tag emits a hashed
-     `<script type="module">` resolved from django-cast's prebuilt
-     manifest.
+     `{% block javascript %}`. **Preserve `{{ block.super }}`** so
+     the Bootstrap bundle declared in `base.html:49-51` still
+     loads — django-cast's own templates emit `{{ block.super }}`
+     before their Vite assets for the same reason. The asset tag
+     emits a hashed `<script type="module">` resolved from
+     django-cast's prebuilt manifest.
    - **Stretch**: theme the Podlove player by overriding tokens via
      `cast.podlove.build_podlove_player_config` (brand → `--dc-ink`,
      fonts → Roboto). Default theme is acceptable if theming proves
