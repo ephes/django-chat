@@ -265,7 +265,7 @@ Composition top-to-bottom:
      ```django
      <section class="audio-panel" aria-label="Episode audio">
        {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
-         {% include "cast/audio/audio.html" with value=episode.podcast_audio page=episode podlove_load_mode="facade" %}
+         {% include "cast/audio/audio.html" with value=episode.podcast_audio page=episode %}
        {% else %}
          <p>Audio copy pending.</p>
        {% endif %}

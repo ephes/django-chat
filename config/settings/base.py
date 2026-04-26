@@ -265,9 +265,13 @@ CAST_FILTERSET_FACETS = ["search", "date", "date_facets", "o"]
 CAST_PODLOVE_PLAYER_THEMES = {
     "django_chat": {
         "tokens": {
-            "brand": "#44b78b",
-            "brandDark": "#2d8260",
-            "brandDarkest": "#1f6647",
+            # Same green family as the show artwork (#44b78b) but pulled
+            # darker so white text on `brand` reaches ~5.5:1 contrast (WCAG
+            # AA). The bright Django green looked aggressive on player
+            # chrome and didn't carry enough contrast for the play icon.
+            "brand": "#2d8260",
+            "brandDark": "#1f6647",
+            "brandDarkest": "#0d0d0d",
             "brandLightest": "#e6f4ee",
             "shadeDark": "#5d6673",
             "shadeBase": "#5d6673",

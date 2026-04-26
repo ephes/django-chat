@@ -52,9 +52,17 @@
 
   post_tasks:
     - name: Deploy | Ensure default Wagtail Site matches deploy hostname
-      ansible.builtin.command:
-        cmd: "{{ wagtail_python }} manage.py ensure_default_site"
+      ansible.builtin.shell: |
+        set -a
+        . "{{ wagtail_env_path }}"
+        set +a
+        "{{ wagtail_python }}" "{{ wagtail_manage_py }}" ensure_default_site
+      args:
         chdir: "{{ wagtail_site_path }}"
+        executable: /bin/bash
+      environment:
+        DJANGO_SETTINGS_MODULE: "{{ wagtail_django_settings_module }}"
+      become: true
       become_user: "{{ wagtail_user }}"
       register: ensure_default_site_result
       changed_when: "'Updated default Site' in ensure_default_site_result.stdout"

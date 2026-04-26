@@ -66,8 +66,10 @@ def test_podlove_player_config_uses_django_chat_brand_colors(client: Client) -> 
     assert response.status_code == 200
     config = response.json()
     tokens = config["theme"]["tokens"]
-    # Brand colour matches the Django green show artwork mark.
-    assert tokens["brand"] == "#44b78b"
+    # Brand colour is in the Django green family (darker than the show
+    # artwork mark itself, so white text reaches WCAG AA contrast on
+    # brand-coloured player chrome).
+    assert tokens["brand"] == "#2d8260"
     # The Podlove default orange must NOT bleed through:
     assert tokens["brand"] != "#E64415"
     # Contrast pinned to the project ink token.

@@ -25,7 +25,8 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       URL compatibility** — `d24968b`. Polished `2026-04-26`
       (`32f1725`..`87edd97`): spirit-parity layout with djangochat.com,
       Roboto type stack self-hosted, Podlove player on episode detail via
-      `django-vite` (facade load mode), filterset-driven search/date
+      `django-vite` (init module loads `embed.5.js` on viewport
+      intersection), filterset-driven search/date
       facets/ordering, favicon trio, OG/Twitter metadata, branded error
       pages. See `docs/superpowers/specs/2026-04-26-visual-polish-design.md`
       and `docs/superpowers/plans/2026-04-26-visual-polish.md`.
