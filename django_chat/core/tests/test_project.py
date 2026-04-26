@@ -14,6 +14,7 @@ def test_project_uses_django_chat_settings() -> None:
     assert settings.ROOT_URLCONF == "config.urls"
     assert settings.DJANGO_CHAT_WAGTAIL_ADMIN_PATH == "cms/"
     assert settings.WAGTAILADMIN_BASE_URL == "http://localhost:8000/cms/"
+    assert "django.contrib.postgres" in settings.INSTALLED_APPS
     assert settings.STORAGES["staticfiles"] == {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     }

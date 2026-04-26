@@ -348,13 +348,17 @@ SSH/DNS readiness.
 
 ## Boundaries
 
-This repo contains Django Chat deployment scaffolding, placeholder inventory,
-public deployment vars, and SOPS secret examples. Decrypted secrets, age private
-keys, real host credentials, and private operator notes stay outside the repo.
+This repo contains Django Chat deployment scaffolding, live staging inventory,
+production placeholder inventory, public deployment vars, and SOPS secret
+examples. Decrypted secrets, age private keys, real host credentials, staging
+bootstrap password handoff files, and private operator notes stay outside the
+repo.
 
-This repo now includes host review docs for the first staging path, but it does
-not include full catalog import, transcript conversion, an enabled transcript
-worker service, exhaustive production feed parity, DNS changes, feed redirects,
-production migration, or real staging URLs. Live staging review is blocked
-until real operator-provided infrastructure, SOPS/age access, encrypted
-secrets, media storage, and host account details exist.
+This repo now includes host review docs for the live staging path at
+`https://djangochat.staging.django-cast.com`, but it does not include full
+catalog import, transcript conversion, an enabled transcript worker service,
+exhaustive production feed parity, production DNS changes, feed redirects, or
+production migration. Live staging review can inspect the sample content and
+CMS; playback/media verification is pending until the staging media credentials
+or bucket policy allow the app to put, read, list, and delete copied MP3
+objects.

@@ -42,17 +42,15 @@ just deploy-production
 `deploy-bootstrap-target` runs only `deploy/bootstrap.yml` for the requested
 inventory group. `deploy-staging` and `deploy-production` run
 `deploy-static-check` first, then `deploy-bootstrap`, then `ansible-playbook`.
-They do not require `ops-control`.
+They do not require `ops-control`. The full deploy playbook explicitly restarts
+the Django Chat app service after every `wagtail_deploy` run. This makes
+deploy re-runs include a brief app restart, but it ensures updated
+dependencies, Gunicorn, and collected static assets are picked up by the live
+process.
 
-The first live staging deployment is intentionally pending until real
-Django Chat-specific staging inventory, DNS, SOPS/age recipient and private key
-access, encrypted staging secrets, media bucket, and host admin account details
-exist. Do not run the staging deployment against `.example.invalid`
-placeholders.
-
-The planned shared staging FQDN is `djangochat.staging.django-cast.com`, but it
-is not live until DNS, SSH target details, encrypted secrets, and operator
-access are in place.
+Staging is live at `https://djangochat.staging.django-cast.com`. Re-run
+`just deploy-staging` after repo-side deployment changes that need to reach the
+host. Do not run production deployment from this slice.
 
 ## Ansible Dependencies
 
@@ -69,19 +67,23 @@ Dependencies are installed under `deploy/.ansible/`, which is ignored by Git.
 
 ## Inventory And Vars
 
-Committed inventory uses `.example.invalid` placeholders:
+Committed inventory uses the live staging host and a production placeholder:
 
-- `django-chat-staging`
-- `django-chat-production`
+- `django-chat-staging`: `djangochat.staging.django-cast.com`
+- `django-chat-production`: `.example.invalid`
 
-Before a real deploy, replace the placeholder `ansible_host`,
-`django_chat_wagtail_fqdn`, host rule, and allowed-host values with
-Django Chat-specific staging or production values. Do not copy Python
-Podcast hostnames, buckets, credentials, routes, or other service details.
+Before any production deploy, replace the production placeholder
+`ansible_host`, `django_chat_wagtail_fqdn`, host rule, and allowed-host values
+with Django Chat-specific production values. Do not copy Python Podcast
+hostnames, buckets, credentials, routes, or other service details.
 
-`deploy/group_vars/staging.yml` now carries the planned shared staging FQDN
-`djangochat.staging.django-cast.com`. The inventory host itself remains a
-placeholder until the real VPS or SSH target is known.
+`deploy/group_vars/staging.yml` carries the live shared staging FQDN
+`djangochat.staging.django-cast.com`.
+
+`ansible_python_interpreter` is pinned to `/usr/bin/python3` for deployed
+hosts so Ansible's PostgreSQL modules use the system Python with distro
+PostgreSQL bindings. Confirm that path exists on any future production host
+before replacing the production placeholder.
 
 Public deployment defaults live in:
 
@@ -124,6 +126,11 @@ collected files are missing:
 No frontend build is configured in this slice because the required Vite
 manifests are bundled with installed Python packages.
 
+The deployed application also needs `gunicorn` available in the app virtualenv,
+because the generated systemd unit starts `{{ wagtail_venv_bin }}/gunicorn`,
+and `psycopg[binary]` so production settings can connect to the PostgreSQL
+database from the app virtualenv.
+
 ## Production Settings
 
 Deployment uses `config.settings.production`. The role renders a `.env` file
@@ -153,6 +160,25 @@ without copied audio, but that is not a complete playback proof. If you choose
 a non-AWS S3-compatible provider that needs an explicit endpoint or region
 setting, extend the deploy vars before the first live deploy.
 
+Current staging media status: sample audio copy is blocked. Running
+`import_django_chat_sample --copy-audio` on the deployed staging app fails on
+S3 object access before the first MP3 is saved. Diagnostics confirmed the app
+IAM user is not allowed to perform `s3:PutObject` on the staging media bucket,
+and `HeadBucket` / `HeadObject` also return `403 Forbidden`. Fix the staging
+media credential or bucket policy, then re-run the deployed command and verify
+a copied media URL through the public media host.
+
+The app media principal needs, at minimum:
+
+- bucket-level `s3:ListBucket` and `s3:GetBucketLocation` on the media bucket
+- object-level `s3:GetObject`, `s3:PutObject`, and `s3:DeleteObject` on the
+  media bucket contents
+
+`s3:GetObject` and `s3:ListBucket` are needed for django-storages existence
+checks and idempotent import verification, not only for browser delivery.
+Public media delivery through CloudFront or another media host may require
+separate bucket policy or origin-access configuration.
+
 Security defaults are conservative for an early staging-capable deploy path:
 `DJANGO_SECURE_HSTS_SECONDS` defaults to `60` seconds. Before production
 cutover, raise HSTS to a production value only after DNS, HTTPS, canonical host,
@@ -170,6 +196,10 @@ a small VPS:
 The transcript database worker remains disabled by default, so this sizing is
 for the web app, local PostgreSQL, and Traefik only.
 
+The shared deploy vars also set `wagtail_traefik_cert_resolver: "letsencrypt"`
+so the generated Traefik route requests a real ACME certificate instead of
+falling back to Traefik's default self-signed certificate.
+
 ## Transcript Worker
 
 `wagtail_db_worker_enabled` defaults to `false`. The deploy vars keep
@@ -177,11 +207,28 @@ for the web app, local PostgreSQL, and Traefik only.
 unit is installed unless transcript publishing or conversion work explicitly
 enables it.
 
+## Staging Admin Bootstrap
+
+Create or refresh Wagtail host-review accounts on the deployed staging app,
+not in local development databases. Use production settings explicitly when
+running management commands on the host:
+
+```sh
+cd /home/django-chat/site
+DJANGO_SETTINGS_MODULE=config.settings.production .venv/bin/python manage.py ...
+```
+
+Do not store human Wagtail admin passwords in this repository or in
+repo-managed SOPS files. For the first staging review, the
+`host-review-admin` superuser was created with a generated temporary password
+stored only in a mode-600 bootstrap handoff file on the staging host. Retrieve
+and share that credential through the agreed secure channel, then rotate it in
+Wagtail admin or replace the account when host review access is settled.
+
 ## Out Of Scope
 
-The deployment scaffold and host review docs are in this repository, but live
-staging is still blocked until operator-provided infrastructure and secrets are
-available. This deployment path does not include:
+The deployment scaffold and host review docs are in this repository, and live
+staging is available for host review. This deployment path does not include:
 
 - a real production deploy
 - DNS changes

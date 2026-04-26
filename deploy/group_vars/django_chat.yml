@@ -32,6 +32,7 @@ wagtail_python_version: "3.14.4"
 wagtail_django_settings_module: "config.settings.production"
 wagtail_django_allowed_hosts: "{{ django_chat_django_allowed_hosts }}"
 wagtail_admin_url: "django-admin/"
+wagtail_traefik_cert_resolver: "letsencrypt"
 wagtail_gunicorn_workers: 3
 wagtail_gunicorn_timeout: 120
 wagtail_db_worker_enabled: false

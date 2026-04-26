@@ -16,12 +16,11 @@ Django Chat deploy path.
 - `deploy/secrets/*.example.yml`
 - `.sops.yaml`
 
-The committed inventory and group vars contain only placeholders and non-secret
-Django Chat defaults. The staging and production hosts use `.example.invalid`
+The committed inventory and group vars contain the live staging host plus
+non-secret Django Chat defaults. Production still uses `.example.invalid`
 addresses until an operator replaces them with real Django Chat-specific
-values. The planned shared staging FQDN is
-`djangochat.staging.django-cast.com`, but deployment remains blocked until the
-real staging host, DNS, secrets, and operator access are in place.
+values. The shared staging FQDN is
+`djangochat.staging.django-cast.com`.
 
 ## What Stays Off Repo
 
@@ -33,6 +32,7 @@ real staging host, DNS, secrets, and operator access are in place.
 - Sentry DSNs
 - Mailgun keys
 - admin passwords
+- staging bootstrap password handoff files
 - unrelated infrastructure inventory
 - private operator notes
 
@@ -176,11 +176,12 @@ The full deploy playbook reuses the same clean-VPS baseline task file that
 playbook for their inventory group. They require real host inventory values,
 SOPS secrets, age private key access, and DNS/SSH readiness.
 
-Host review docs now exist in this repository, but live staging has not been
-deployed from placeholders. A real staging deployment, host admin account
-creation, sample import on the VPS, and HTTPS/media verification require the
-operator-provided staging FQDN, SSH target, SOPS/age access, encrypted secrets,
-media bucket, and host account list.
+Host review docs now exist in this repository, and live staging is deployed at
+`https://djangochat.staging.django-cast.com`. Host admin account creation and
+sample import happen on the deployed staging app with production settings.
+HTTPS, static assets, sample content, and Wagtail admin access have been
+verified. Media playback is still pending because the deployed audio copy is
+blocked by missing S3 object permissions for the configured app IAM user.
 
 This repository still does not change DNS, configure Simplecast redirects, cut
 over podcast feeds, deploy production, or migrate production.

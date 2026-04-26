@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -70,12 +71,17 @@ def test_deploy_playbook_role_sequence_is_explicit() -> None:
     uv_index = playbook.index("local.ops_library.uv_install")
     traefik_index = playbook.index("local.ops_library.traefik_deploy")
     wagtail_index = playbook.index("local.ops_library.wagtail_deploy")
+    post_tasks_index = playbook.index("post_tasks:")
+    restart_index = playbook.index("Deploy | Restart Django Chat application service")
 
-    assert uv_index < traefik_index < wagtail_index
+    assert uv_index < traefik_index < wagtail_index < post_tasks_index < restart_index
+    assert re.search(r"name:\s*['\"]?\{\{\s*wagtail_systemd_unit_name\s*\}\}['\"]?", playbook)
+    assert "state: restarted" in playbook
     group_vars = (ROOT_DIR / "deploy/group_vars/django_chat.yml").read_text()
     assert "wagtail_db_worker_enabled: false" in group_vars
     assert 'uv_version: "0.11.7"' in group_vars
     assert "wagtail_gunicorn_workers: 3" in group_vars
+    assert 'wagtail_traefik_cert_resolver: "letsencrypt"' in group_vars
 
 
 def test_deployment_secret_policy_is_gitignored() -> None:
@@ -99,13 +105,15 @@ def test_host_review_docs_preserve_staging_boundary() -> None:
     operations_boundary = (ROOT_DIR / "docs/operations-boundary.md").read_text()
     staging_group_vars = (ROOT_DIR / "deploy/group_vars/staging.yml").read_text()
 
-    assert "No live staging deployment has been attempted" in host_review
+    assert "Staging is live" in host_review
     assert "https://djangochat.staging.django-cast.com/cms/" in host_review
     assert "Do not commit, document, or print admin passwords" in host_review
+    assert "Sample audio playback is not available yet" in host_review
     assert "The staging feed is not canonical" in staging_differences
     assert "Staging does not mean production migration is complete" in staging_differences
     assert "`cast_transcripts` database worker remains disabled" in staging_differences
     assert "reviewers do not need SOPS decrypt access" in operations_boundary
+    assert "Media playback" in operations_boundary
     assert "djangochat.staging.django-cast.com" in staging_group_vars
 
 

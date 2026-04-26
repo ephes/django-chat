@@ -5,14 +5,17 @@ Simplecast-hosted public experience and from a future production migration.
 
 ## Current Staging Status
 
-No live staging deployment has been attempted from this repository yet. The
-planned shared staging FQDN is `djangochat.staging.django-cast.com`, but the
-repo does not yet contain the real staging host details, age recipient setup,
-encrypted staging secret file, staging media bucket, or host admin account
-list.
+Staging is live at `https://djangochat.staging.django-cast.com`.
 
-Until real Django Chat staging values are provided, the differences below
-describe the intended first review deployment rather than a live site.
+Current live state:
+
+- `/` redirects to `/episodes/`.
+- The fixture-backed sample has been imported with one podcast and eight
+  episodes.
+- Wagtail admin is available at
+  `https://djangochat.staging.django-cast.com/cms/`.
+- A staging-only `host-review-admin` superuser exists for bootstrap access.
+- Sample audio has not been copied, so playback/media verification is pending.
 
 ## Site And Visual Theme
 
@@ -39,14 +42,18 @@ Staging is intended to prove Django Chat-specific media hosting. Media must use
 a Django Chat-specific S3-compatible bucket and public media host. Do not reuse
 Python Podcast media buckets, credentials, hostnames, or deployment details.
 
-If the sample import runs without `--copy-audio`, staging can still show
-metadata and episode pages, but it is not a complete playback proof. If
-`--copy-audio` is approved and run, the command downloads real MP3 files and
-stores them through the configured media backend.
+The current staging site shows metadata and episode pages, but it is not a
+complete playback proof. The deployed `import_django_chat_sample --copy-audio`
+command was attempted and currently fails before saving the first MP3 because
+the configured app IAM user lacks S3 object permissions. Diagnostics show
+`s3:PutObject` is not allowed, and S3 `HeadObject` also returns
+`403 Forbidden`. After the media credential or bucket policy is corrected,
+re-run the deployed command with `--copy-audio` and verify playback through the
+public media host.
 
 Expected differences from Simplecast:
 
-- Audio URLs should come from the Django Chat media host once copied.
+- Audio URLs will come from the Django Chat media host once copied.
 - Simplecast player JavaScript is not used.
 - Simplecast analytics, dynamic ad insertion, and Simplecast download tracking
   are not reproduced.
@@ -58,17 +65,18 @@ Expected differences from Simplecast:
 The staging feed is not canonical and must not be submitted to podcast
 directories or redirected from Simplecast.
 
-The current feed check is a smoke-level comparison for the fixture-backed
-sample after audio has been copied:
+The feed check is a smoke-level comparison for the fixture-backed sample after
+audio has been copied:
 
 ```sh
 just compare-feed
 ```
 
-That check validates important sample fields, but it is not the exhaustive
-production migration feed parity process. Production hardening still needs
-full-catalog validation, GUID and enclosure decisions, artwork and namespace
-checks, client testing, and host approval before any live feed change.
+That check validates important sample fields, but it currently cannot be used
+as a staging playback proof because copied sample audio is blocked. Production
+hardening still needs full-catalog validation, GUID and enclosure decisions,
+artwork and namespace checks, client testing, and host approval before any live
+feed change.
 
 ## Content Import Scope
 
@@ -81,6 +89,7 @@ Current sample limitations:
 
 - It imports a representative fixture-backed subset, not the full public
   catalog.
+- It currently has no copied MP3 files attached to the episode pages.
 - It records source URLs, GUIDs, Simplecast IDs, slugs, source audio URLs, and
   transcript HTML metadata for idempotent re-runs.
 - It does not publish converted transcripts by default.
@@ -97,6 +106,9 @@ https://djangochat.staging.django-cast.com/cms/
 
 Wagtail admin accounts are created after deployment using approved host account
 details. Passwords and password-reset handoff must happen outside this repo.
+The initial staging bootstrap account is `host-review-admin`; its generated
+temporary credential is stored only on the staging host for secure handoff and
+must be rotated or replaced after review access is settled.
 
 The public account, comment, Fediverse proxy, and API flows from Python Podcast
 are not part of the Django Chat staging scaffold.

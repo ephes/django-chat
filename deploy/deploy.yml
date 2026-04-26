@@ -49,3 +49,10 @@
     - role: local.ops_library.uv_install
     - role: local.ops_library.traefik_deploy
     - role: local.ops_library.wagtail_deploy
+
+  post_tasks:
+    - name: Deploy | Restart Django Chat application service
+      ansible.builtin.systemd:
+        name: "{{ wagtail_systemd_unit_name }}"
+        state: restarted
+        daemon_reload: true

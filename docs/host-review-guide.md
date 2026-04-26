@@ -4,22 +4,30 @@ This guide defines the Django Chat staging review workflow for hosts.
 
 ## Current Staging Status
 
-No live staging deployment has been attempted from this repository yet. As of
-2026-04-24, the planned shared staging FQDN is
-`djangochat.staging.django-cast.com`, but the repo still lacks the real
-staging host, DNS cut-in, SOPS/age recipient setup, encrypted staging secret
-file, and host admin account list. The live deployment, sample import on the
-VPS, and host admin account creation remain blocked until those operator inputs
-exist.
+Staging is live as of 2026-04-25 at:
 
-Do not replace the placeholders below with guessed values. Use only the real
-staging FQDN, media host, secret material, and account list approved for Django
-Chat.
+```text
+https://djangochat.staging.django-cast.com
+```
+
+Verified live behavior:
+
+- `/` redirects to `/episodes/`.
+- `/episodes/` returns the fixture-backed episode index.
+- `/episodes/django-tasks-jake-howard/` returns an episode detail page.
+- `/cms/` redirects anonymous visitors to the Wagtail login.
+- The deployed database contains one podcast and eight sample episodes.
+- A staging-only `host-review-admin` superuser exists for review bootstrap.
+
+Sample audio playback is not available yet. Running the deployed
+`import_django_chat_sample --copy-audio` command against production settings
+currently fails before the first MP3 is saved because the configured app IAM
+user lacks S3 object permissions. Diagnostics show `s3:PutObject` is not
+allowed, and S3 `HeadObject` also returns `403 Forbidden`. The staging site
+remains metadata-only until the media credential or bucket policy is corrected
+and the audio copy is re-run.
 
 ## Review URLs
-
-These URLs become active only after `just deploy-bootstrap-target staging` and
-`just deploy-staging` have completed successfully against the real staging VPS.
 
 - Site: `https://djangochat.staging.django-cast.com/`
 - Episode index: `https://djangochat.staging.django-cast.com/episodes/`
@@ -31,11 +39,11 @@ separate at `/django-admin/` and is not the normal host review surface.
 
 ## Operator Checklist Before Host Review
 
-Before sending the staging URL to hosts, confirm:
+Before sending or refreshing the staging URL for hosts, confirm:
 
 - DNS for the staging FQDN points at the staging VPS.
-- `deploy/inventory/hosts.yml` and `deploy/group_vars/staging.yml` contain the
-  real Django Chat staging host and FQDN, not `.example.invalid` placeholders.
+- `deploy/inventory/hosts.yml` and `deploy/group_vars/staging.yml` still
+  contain the real Django Chat staging host and FQDN.
 - `.sops.yaml` contains the intended age public recipient or recipients.
 - `SOPS_AGE_KEY_FILE` points to the matching private key outside this repo.
 - `deploy/secrets/staging.sops.yml` exists, decrypts through SOPS/age, and
@@ -46,18 +54,19 @@ Before sending the staging URL to hosts, confirm:
 - The staging media bucket and public media host are Django Chat-specific.
 - Ansible dependencies have been installed locally with `just deploy-bootstrap`.
 - `just deploy-bootstrap-target staging` has completed successfully.
-- `just deploy-staging` has completed successfully.
+- `just deploy-staging` has completed successfully after any repo-side
+  deployment change.
 - Migrations have run on staging.
 - The fixture-backed sample has been imported against the deployed site, using
   the deployed environment and production settings for the
   `import_django_chat_sample` management command.
-- Audio has been copied only if the operator intentionally approved running the
-  same deployed management command with `--copy-audio`, because that downloads
-  real MP3 files into configured media storage.
+- Audio remains metadata-only until the S3 object-permission blocker is
+  resolved. After fixing the media policy or credentials, run the same deployed
+  management command with `--copy-audio` and verify playback.
 - `https://<staging-fqdn>/`, `/episodes/`, at least one episode detail page,
   and `/cms/` return expected HTTPS responses.
-- Static assets load, and media playback is verified if sample audio was
-  copied.
+- Static assets load.
+- Media playback is verified only after sample audio has been copied.
 
 ## Admin Access
 
@@ -65,9 +74,15 @@ Host Wagtail accounts should be created only after staging is deployed and the
 host account list is approved. Use Django or Wagtail management commands on the
 deployed site, or create accounts through Wagtail admin.
 
-Do not commit, document, or print admin passwords in this repository. Share
-temporary passwords or password-reset links through the agreed secure channel,
-then ask reviewers to change passwords on first use when practical.
+The initial staging account is `host-review-admin`. It was created on the
+deployed site with a generated temporary password stored only in a mode-600
+bootstrap handoff file on the staging host, outside the app repository and
+outside repo-managed SOPS secrets. Retrieve and share that credential only
+through the agreed secure channel, then rotate it in Wagtail admin or replace
+the account when host review access is settled.
+
+Do not commit, document, or print admin passwords in this repository. Do not add
+human Wagtail passwords to `deploy/secrets/*.sops.yml`.
 
 ## First Review Pass
 
@@ -79,8 +94,8 @@ Hosts should start with:
    recognizable for Django Chat.
 3. Open at least one episode detail page and review the show notes, metadata,
    audio area, and current URL shape.
-4. If sample audio was copied, play an episode and confirm the media URL and
-   browser playback behavior are acceptable for review.
+4. Treat audio playback as pending until the media copy blocker is fixed and
+   sample audio is copied.
 5. Log into `/cms/`, inspect the podcast and sample episode pages, and try a
    harmless draft edit without publishing over reviewed content.
 
@@ -106,10 +121,10 @@ repository comments.
 
 ## Known Limitations
 
-- The staging site is not live until real operator inputs are provided and the
-  deployment commands complete.
 - The first staging import is expected to use the fixture-backed sample unless
   hosts explicitly ask for a larger catalog sample.
+- Sample audio playback is currently unavailable because media copy is blocked
+  by missing S3 object permissions for the configured app IAM user.
 - The staging feed is for validation only and is not the canonical Django Chat
   podcast feed.
 - No production DNS, feed redirect, Simplecast migration, or podcast directory

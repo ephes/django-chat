@@ -5,16 +5,19 @@ built with Django, Wagtail, and django-cast, using Python Podcast only as a
 structural reference for local development ergonomics.
 
 Current status: runnable local scaffold with development tooling, a
-fixture-backed source parser, an idempotent local sample import, explicit
-sample audio-copy support for configured media storage, and a basic Django
-Chat-branded local browsing experience for the imported sample, plus a
-smoke-level feed comparison for the fixture-backed sample. The repo also now
-contains self-contained deployment scaffolding under `deploy/` and host review
-docs for the first staging path. No real staging or production deployment has
-been performed because the planned staging FQDN
-`djangochat.staging.django-cast.com` still lacks the real staging host, DNS
-cut-in, SOPS/age recipient setup, encrypted secrets, media bucket, and host
-account list needed for a live deploy. The planning source of truth is
+fixture-backed source parser, an idempotent sample import, explicit sample
+audio-copy support for configured media storage, and a basic Django
+Chat-branded browsing experience for the imported sample, plus a smoke-level
+feed comparison for the fixture-backed sample. The repo also contains
+self-contained deployment scaffolding under `deploy/` and host review docs for
+the first staging path. Staging is live at
+`https://djangochat.staging.django-cast.com` with the fixture-backed sample
+imported and Wagtail admin mounted at
+`https://djangochat.staging.django-cast.com/cms/`. Sample audio playback is not
+available yet because the staging media copy is blocked by the configured app
+IAM user lacking S3 object permissions; diagnostics show `s3:PutObject` is not
+allowed, and S3 `HeadObject` also returns `403 Forbidden`. No production
+deployment has been performed. The planning source of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development
@@ -114,8 +117,8 @@ app:
 just deploy-bootstrap-target staging
 ```
 
-Run the staging or production deployment playbooks when real inventory and
-SOPS/age secrets exist:
+Run the staging or production deployment playbooks when the target inventory,
+SOPS/age secrets, and operator access are in place:
 
 ```sh
 just deploy-staging
@@ -135,10 +138,14 @@ The host review workflow is documented in
 between staging, Simplecast, and a future production migration are documented in
 [`docs/staging-differences.md`](docs/staging-differences.md).
 
-Those docs currently record staging as pending. Replace placeholders and run
-the staging deployment path only after the real Django Chat staging FQDN, SSH
-target, SOPS/age recipient and private key access, encrypted staging secrets,
-media bucket, and host admin account list are available.
+Staging review uses:
+
+- Site: `https://djangochat.staging.django-cast.com/`
+- Wagtail admin: `https://djangochat.staging.django-cast.com/cms/`
+
+The initial host-review admin credential is a staging-only bootstrap secret
+kept outside the repository and outside repo-managed SOPS files. Share or
+rotate it only through the agreed secure channel.
 
 ## Scope
 
@@ -149,10 +156,11 @@ menu/social/distribution link rendering, local URL compatibility for `/`,
 the imported sample, and deployment scaffolding.
 
 It does not include full catalog import, transcript conversion, an enabled
-transcript worker service, exhaustive production feed parity, real staging
-deployment, real production deployment, DNS changes, feed redirects, or staging
-URLs. Host review docs exist, but the live staging review is blocked on real
-operator-provided infrastructure and secrets.
+transcript worker service, exhaustive production feed parity, real production
+deployment, production DNS changes, feed redirects, or copied staging audio.
+Host review can inspect the live staging site and CMS, but playback/media
+verification remains blocked until the staging media credentials or bucket
+policy allow the app to put, read, list, and delete MP3 objects.
 
 Do not commit decrypted Django secret keys, database passwords, S3 credentials,
 Sentry DSNs, Mailgun keys, admin passwords, age private keys, real MP3s, large
