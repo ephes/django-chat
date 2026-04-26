@@ -79,7 +79,11 @@ def test_imported_sample_episode_detail_renders_copied_audio(
     assert response.status_code == 200
     content = response.content.decode()
     assert "<podlove-player" in content
-    assert 'data-load-mode="facade"' in content
+    # data-load-mode is intentionally NOT set: django-cast does not ship
+    # facade CSS, so the unstyled facade markup conflicts with the loaded
+    # player on the rendered page. We let the Vite-loaded init module
+    # render the player directly.
+    assert "data-load-mode" not in content
     assert "/media/cast_audio/django-chat-sample/django-tasks-jake-howard-" in content
     # The django-vite asset tag must emit the prebuilt Podlove init module on
     # episode pages with copied audio.

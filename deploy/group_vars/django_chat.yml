@@ -68,3 +68,5 @@ wagtail_env_extra:
   DJANGO_CHAT_S3_CUSTOM_DOMAIN: "{{ service_secrets.cloudfront_domain }}"
   DJANGO_CHAT_MEDIA_URL: "https://{{ service_secrets.cloudfront_domain }}/"
   DJANGO_CHAT_WAGTAIL_ADMIN_BASE_URL: "https://{{ django_chat_wagtail_fqdn }}/cms/"
+  DJANGO_CHAT_SITE_HOSTNAME: "{{ django_chat_wagtail_fqdn }}"
+  DJANGO_CHAT_SITE_PORT: "443"

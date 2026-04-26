@@ -276,18 +276,18 @@ Composition top-to-bottom:
      element with `data-url` pointing at
      `cast:api:audio_podlove_detail` and `data-embed` pointing at
      `cast/js/web-player/embed.5.js`).
-   - `podlove_load_mode="facade"` is a template context variable
-     consumed by `cast/templates/cast/audio/audio.html` — *not* a
-     Django setting. With `"facade"`, the partial renders a
-     lightweight static facade. The django-cast init module (loaded
-     by `{% vite_asset %}` below) defers the heavy
-     `cast/js/web-player/embed.5.js` (~138 KB) until the player
-     enters the viewport via `IntersectionObserver` — *not* until
-     click. The perf win is keeping the heavy embed off the
-     critical render path; if the visitor immediately scrolls past
-     the player, it never loads. Verify with browser DevTools
-     network panel before claiming any specific behaviour to hosts
-     or in release notes.
+   - **No `podlove_load_mode`.** django-cast supports a `"facade"`
+     mode that emits a static fake-player markup, but it does not
+     ship CSS for the facade classes. On staging the unstyled
+     facade rendered at full container width and conflicted with
+     the real player once the embed loaded. Without
+     `podlove_load_mode`, the audio partial emits only the
+     `<podlove-player>` element; django-cast's init module (loaded
+     by `{% vite_asset %}` below) renders the player directly. The
+     heavy `cast/js/web-player/embed.5.js` (~138 KB) still loads
+     on viewport intersection, so the critical render path stays
+     light. Verify in browser DevTools network panel before
+     claiming any specific behaviour to hosts or in release notes.
    - Add `{% load django_vite %}` and
      `{% vite_asset 'src/audio/podlove-player.ts' app="cast" %}` in
      `{% block javascript %}`. **Preserve `{{ block.super }}`** so
@@ -399,12 +399,11 @@ Visual verification:
 Lighthouse smoke (one-time, on staging):
 
 - After deploy, run Lighthouse against an episode page; performance
-  score should be > 80. Facade mode keeps the heavy
-  `cast/js/web-player/embed.5.js` (~138 KB) out of the critical
-  render path; the django-cast init module fetches it via
-  `IntersectionObserver` once the player scrolls into view (it does
-  *not* wait for a click). Not a regression gate, just a sanity
-  check — verify the actual deferral behaviour in DevTools.
+  score should be > 80. The django-cast init module fetches the
+  heavy `cast/js/web-player/embed.5.js` (~138 KB) on viewport
+  intersection, keeping it out of the critical render path. Not a
+  regression gate, just a sanity check — verify the actual
+  deferral behaviour in DevTools.
 
 Existing suite stays green:
 
