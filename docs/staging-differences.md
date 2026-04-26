@@ -17,7 +17,8 @@ Current live state:
 - A staging-only `host-review-admin` superuser exists for bootstrap access.
 - Sample audio has been copied to the configured S3 bucket and is served
   through the public media host. All eight episodes have `podcast_audio` set
-  and episode detail pages render a working `<audio>` element.
+  and episode detail pages render the django-cast **Podlove web player**
+  (`<podlove-player>` element with `data-load-mode="facade"`).
 
 ## Site And Visual Theme
 
@@ -53,7 +54,12 @@ playback proof.
 Expected differences from Simplecast:
 
 - Audio URLs come from the Django Chat media host, not Simplecast.
-- Simplecast player JavaScript is not used.
+- Simplecast player JavaScript is not used. Episode detail pages embed the
+  Podlove web player (the same player python-podcast.de uses), loaded via
+  `django-vite` against django-cast's prebuilt manifest.
+- The player renders a static facade until the heavy embed script
+  (`cast/js/web-player/embed.5.js`, ~138 KB) is loaded on viewport
+  intersection, keeping it off the critical render path.
 - Simplecast analytics, dynamic ad insertion, and Simplecast download tracking
   are not reproduced.
 - Browser playback behavior may differ because the player comes from the

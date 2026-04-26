@@ -81,6 +81,10 @@ def test_imported_sample_episode_detail_renders_copied_audio(
     assert "<podlove-player" in content
     assert 'data-load-mode="facade"' in content
     assert "/media/cast_audio/django-chat-sample/django-tasks-jake-howard-" in content
+    # The django-vite asset tag must emit the prebuilt Podlove init module on
+    # episode pages with copied audio.
+    assert "/static/cast/vite/podlovePlayer-" in content
+    assert 'type="module"' in content
     assert "Audio copy pending." not in content
     assert Audio.objects.count() == 8
     assert Episode.objects.filter(podcast_audio__isnull=False).count() == 8

@@ -20,9 +20,12 @@ Verified live behavior:
 - A staging-only `host-review-admin` superuser exists for review bootstrap.
 
 Sample audio is copied to the staging media bucket and served through the
-public media host. Episode detail pages render a working `<audio>` element
-and the MP3 URL responds with HTTP 200 and `audio/mpeg`. Sample audio playback
-is therefore available end-to-end on staging.
+public media host. Episode detail pages render the **Podlove web player**
+(`<podlove-player>`) — a styled player from django-cast loaded via
+`django-vite`, with a server-rendered facade shown until the heavy embed
+script loads on viewport intersection. The MP3 URL responds with HTTP 200
+and `audio/mpeg`. Sample audio playback is therefore available end-to-end
+on staging.
 
 ## Review URLs
 
@@ -62,9 +65,14 @@ Before sending or refreshing the staging URL for hosts, confirm:
 - `https://<staging-fqdn>/`, `/episodes/`, at least one episode detail page,
   and `/cms/` return expected HTTPS responses.
 - Static assets load.
-- An episode detail page renders an `<audio>` element and the referenced MP3
-  URL returns HTTP 200 with `Content-Type: audio/mpeg` through the public
-  media host.
+- An episode detail page renders a `<podlove-player>` element with
+  `data-load-mode="facade"`, the `data-url` attribute points at
+  `/api/audios/podlove/<id>/post/<id>/` and `data-config` at
+  `/api/audios/player_config/`, and the referenced MP3 URL returns
+  HTTP 200 with `Content-Type: audio/mpeg` through the public media host.
+- Browser DevTools network panel shows `cast/js/web-player/embed.5.js`
+  is fetched after initial page paint (on viewport intersection), not as
+  part of the critical render path.
 
 ## Admin Access
 
@@ -92,8 +100,9 @@ Hosts should start with:
    recognizable for Django Chat.
 3. Open at least one episode detail page and review the show notes, metadata,
    audio area, and current URL shape.
-4. Press play on the rendered `<audio>` element and confirm the MP3 streams
-   from the public media host.
+4. Press play on the rendered Podlove player. The facade resolves to the
+   full player when it scrolls into view; pressing play then streams the
+   MP3 from the public media host.
 5. Log into `/cms/`, inspect the podcast and sample episode pages, and try a
    harmless draft edit without publishing over reviewed content.
 

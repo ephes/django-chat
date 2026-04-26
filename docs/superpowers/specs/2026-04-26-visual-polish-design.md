@@ -279,11 +279,15 @@ Composition top-to-bottom:
    - `podlove_load_mode="facade"` is a template context variable
      consumed by `cast/templates/cast/audio/audio.html` — *not* a
      Django setting. With `"facade"`, the partial renders a
-     lightweight static facade and defers the heavy Podlove embed
-     script until the user clicks. The django-cast Vite-bundled init
-     module (loaded by `{% vite_asset %}` below) is small and ships
-     on initial load; the perf win is keeping the heavy Podlove
-     embed off the initial page.
+     lightweight static facade. The django-cast init module (loaded
+     by `{% vite_asset %}` below) defers the heavy
+     `cast/js/web-player/embed.5.js` (~138 KB) until the player
+     enters the viewport via `IntersectionObserver` — *not* until
+     click. The perf win is keeping the heavy embed off the
+     critical render path; if the visitor immediately scrolls past
+     the player, it never loads. Verify with browser DevTools
+     network panel before claiming any specific behaviour to hosts
+     or in release notes.
    - Add `{% load django_vite %}` and
      `{% vite_asset 'src/audio/podlove-player.ts' app="cast" %}` in
      `{% block javascript %}`. **Preserve `{{ block.super }}`** so
@@ -395,10 +399,12 @@ Visual verification:
 Lighthouse smoke (one-time, on staging):
 
 - After deploy, run Lighthouse against an episode page; performance
-  score should be > 80. Facade mode means the heavy Podlove embed
-  script is not loaded on initial page render — only the small
-  django-cast init module ships eagerly. Not a regression gate, just
-  a sanity check.
+  score should be > 80. Facade mode keeps the heavy
+  `cast/js/web-player/embed.5.js` (~138 KB) out of the critical
+  render path; the django-cast init module fetches it via
+  `IntersectionObserver` once the player scrolls into view (it does
+  *not* wait for a click). Not a regression gate, just a sanity
+  check — verify the actual deferral behaviour in DevTools.
 
 Existing suite stays green:
 
