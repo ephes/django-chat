@@ -21,7 +21,9 @@ in one round.
   ordering) on the episode list page — required for navigating ~200
   episodes.
 - Ship favicon, basic Open Graph / Twitter metadata.
-- Keep public URL shape unchanged. No backend route changes.
+- Keep public URL shape unchanged. URL patterns and route names stay
+  put; the existing `podcast_episode_index` view is extended, not
+  replaced (see "What this slice does change in the backend").
 
 ## Non-goals
 
@@ -167,9 +169,21 @@ Composition top-to-bottom:
    - Inputs: text `search`, `date_after`, `date_before`, `date_facets`
      dropdown, `o` ordering dropdown, "Filter" submit button.
    - Single-row layout on desktop, stacks on mobile.
-   - Renders `filterset.form` from the django-cast blog view's context.
-     Guarded with `{% if filterset %}` so non-cast Page types render
-     nothing.
+   - Renders `filterset.form`. **The current `/episodes/` route is a
+     custom view at `django_chat/core/views.py:12`
+     (`podcast_episode_index`) that builds `posts` by hand, ignores
+     `request.GET`, and sets `is_paginated=False`. To make the filter
+     form functional, this view must be extended to:**
+     1. Instantiate `cast.filters.PostFilterset(request.GET,
+        queryset=Episode.objects.live().child_of(podcast)
+        .order_by("-visible_date"), request=request)`.
+     2. Use `filterset.qs` as the base queryset.
+     3. Paginate via `django.core.paginator.Paginator` (page-size
+        TBD at plan time, e.g. 20). Set `is_paginated=True` and pass
+        `page_obj` / `paginator` into context.
+     4. Add `filterset` to the render context.
+   - Guard the partial with `{% if filterset %}` so unrelated Page
+     types render nothing.
    - Style: light surface (`--dc-paper`), `--dc-line` borders on inputs,
      `--dc-ink` filled submit button.
 
@@ -178,9 +192,10 @@ Composition top-to-bottom:
    - Per row: 32px play-circle icon (visual only; whole row is wrapped
      in `<a href="{{ post.page_url }}">`), then a column with eyebrow
      meta, title H3, 2-line clamped description.
-   - Eyebrow format: `{visible_date} · S{season} E{number} · {duration}`
-     — falls back to `{visible_date}` alone if season/episode/duration
-     aren't persisted on the imported model (see Open Question).
+   - Eyebrow format: `{visible_date} · E{episode_number} · {duration}`
+     — degrades gracefully when individual fields are missing on an
+     episode (see "Eyebrow metadata: what's available" below). No
+     season indicator (not persisted; out of scope).
    - Hairline divider between rows. No card backgrounds.
 
 5. **Pagination** (existing `pagination.html`, restyled): Prev / page
@@ -200,23 +215,35 @@ Composition top-to-bottom:
 2. **Two-column hero** (white bg, stacks on mobile):
    - Left: square show artwork (~280px), `border-radius: 4px`, soft
      shadow.
-   - Right: eyebrow meta line (`{visible_date} · S{season} E{number} ·
-     {duration}`), page title H1 (Roboto Flex 800, 36px), small
-     icon-link row — SHARE / FACEBOOK / TWITTER / DOWNLOAD MP3.
-     "Subscribe" is dropped from this row (it lives on the show hero,
-     not per episode).
+   - Right: eyebrow meta line (`{visible_date} · E{episode_number} ·
+     {duration}`, degrades when fields are missing), page title H1
+     (Roboto Flex 800, 36px), small icon-link row — SHARE / FACEBOOK /
+     TWITTER / DOWNLOAD MP3. "Subscribe" is dropped from this row (it
+     lives on the show hero, not per episode).
 
 3. **Podlove player** — replaces the manual `<audio controls>` element
    currently at `episode.html:17`:
    - Drop the explicit `<audio>` tag from `episode.html`.
-   - Render via the `audio` StreamBlock in `page.body`. django-cast's
-     `cast/templates/cast/audio/audio.html` partial emits the full
-     Podlove markup including `data-url` (config endpoint) and
-     `data-embed` (classic embed script) attributes.
-   - Set `CAST_PODLOVE_LOAD_MODE = "facade"` in settings. The page
-     renders a static "fake player" facade until the user clicks; only
-     then does the heavy Podlove JS load. This is the perf path — no
-     bundle on initial page load.
+   - **Important:** the importer at `django_chat/imports/import_sample.py`
+     stores the audio on `Episode.podcast_audio` (a
+     `ForeignKey`-style relation), not as an audio block in
+     `page.body` — `_episode_body()` only emits text blocks. So the
+     template must include django-cast's audio partial directly:
+
+     ```django
+     {% include "cast/audio/audio.html" with value=episode.podcast_audio page=episode podlove_load_mode="facade" %}
+     ```
+
+     This partial emits the full Podlove markup (`<podlove-player>`
+     element with `data-url` pointing at
+     `cast:api:audio_podlove_detail` and `data-embed` pointing at
+     `cast/js/web-player/embed.5.js`).
+   - `podlove_load_mode="facade"` is a template context variable
+     consumed by `cast/templates/cast/audio/audio.html` — *not* a
+     Django setting. With `"facade"`, the partial renders a
+     lightweight static facade and only loads the heavy Podlove JS
+     when the user clicks. This is the perf path — no Podlove bundle
+     on initial page load.
    - Add `{% load django_vite %}` and
      `{% vite_asset 'src/audio/podlove-player.ts' app="cast" %}` in
      `{% block javascript %}`. The asset tag emits a hashed
@@ -234,61 +261,49 @@ Composition top-to-bottom:
    - Content width capped at ~720px for readability.
 
 5. **Transcript link**: when `episode.transcript` exists, render a plain
-   text link in the eyebrow row pointing at
-   `{% url 'cast:episode-transcript' slug=page.slug %}`. No tab UI.
+   text link in the eyebrow row using the
+   `episode_transcript_url` context variable already populated by
+   `cast.models.pages.Episode.get_context()`. If for some reason the
+   variable isn't in context (e.g. a non-`Episode` view path), reverse
+   manually with `{% url 'cast:episode-transcript' blog_slug=blog.slug
+   episode_slug=page.slug %}` — the URL pattern requires both kwargs
+   (see `cast/urls.py:33`). No tab UI.
 
 ## Player infrastructure (django-vite)
 
-Setup (mirrors the python-podcast pattern):
+`django-vite` is **already wired** in this project — the slice does
+not change settings or installed apps. Confirmed via inspection:
 
-- Add `django-vite` to `pyproject.toml` via `uv add django-vite`. No
-  Node toolchain enters the repo.
-- Add `"django_vite"` to `INSTALLED_APPS` after
-  `"django.contrib.staticfiles"`.
-- In `config/settings/base.py`:
+- `django_vite` is included in `INSTALLED_APPS` transitively through
+  `cast.apps.CAST_APPS` (`config/settings/base.py:53`).
+- `DJANGO_VITE` is configured for both the `cast` and `cast-bootstrap5`
+  apps in `config/settings/base.py:241-254`, with `manifest_path`
+  pointing at the prebuilt manifest shipped in the django-cast package.
 
-  ```python
-  import cast
-  from pathlib import Path
+The only change needed is **template usage**: in `episode.html`, add
+`{% load django_vite %}` and emit
+`{% vite_asset 'src/audio/podlove-player.ts' app="cast" %}` in
+`{% block javascript %}`. The tag resolves through the existing
+manifest and emits a hashed `<script type="module">` for
+`cast/static/cast/vite/podlovePlayer-*.js`.
 
-  _CAST_PKG_DIR = Path(cast.__file__).parent
-
-  DJANGO_VITE_DEV_MODE = env.bool("DJANGO_VITE_DEV_MODE", default=False)
-  DJANGO_VITE = {
-      "cast": {
-          "dev_mode": DJANGO_VITE_DEV_MODE,
-          "static_url_prefix": "" if DJANGO_VITE_DEV_MODE else "cast/vite/",
-          "manifest_path": _CAST_PKG_DIR / "static" / "cast" / "vite" / "manifest.json",
-      },
-  }
-  DJANGO_VITE_ASSETS_PATH = "need to be set but doesn't matter"
-  ```
-
-  This points at the prebuilt Vite manifest shipped inside the
-  django-cast Python package. We do not run Vite ourselves.
-
-- `dev_mode` stays `False` everywhere — there is no HMR target to
-  connect to. The setting is parameterised so future work could plug in
-  a local Vite dev server, but that is out of scope.
-
-- `collectstatic` already picks up `cast/static/cast/vite/*.js` because
-  django-cast is an installed app. No additional collection config.
-
-- Deploy: zero changes. CI doesn't gain a Node step; the deploy
-  artefact gains one Python dependency.
+No Python deps to add, no settings to edit, no Node toolchain to
+introduce. Deploy and CI are unchanged.
 
 ## Error pages
 
 `400.html`, `403.html`, `403_csrf.html`, `404.html`, `500.html` each
 extend the new branded `base.html`. Body is a single centred block:
 H1 (page title), one-line description, "Back to episodes" link
-pointing at `{% url 'cast:episode-list' %}` (or the podcast root —
-whichever resolves on the source site). No illustrations, no
-marketing copy. Each file should be ~10 lines.
+pointing at `{% url 'django_chat_episode_index' %}` (the URL name
+registered for `/episodes/` in `config/urls.py:24`). No
+illustrations, no marketing copy. Each file should be ~10 lines.
 
 ## Testing & verification
 
-Unit / template tests (extend `django_chat/tests/`):
+Unit / template tests live under `django_chat/imports/tests/`
+(import-adjacent assertions) and `django_chat/core/tests/` (project
+view / template assertions). Extend `django_chat/core/tests/`:
 
 - Render the episode list page; assert presence of: hero title,
   distribution link band, filter form fields (`search`, `date_after`,
@@ -332,25 +347,42 @@ Existing suite stays green:
 
 - `just test` and `just lint` pass with no new failures.
 
-## Open question (resolved at plan time, not now)
+## Eyebrow metadata: what's available
 
-Are season number, episode number, and duration persisted on the
-imported `Post` / `Episode` model? If yes, the eyebrow line uses them.
-If no, two fallbacks:
+Verified against `django_chat/imports/models.py`:
 
-- Extend the import to capture them from the Simplecast detail
-  payload (the fixtures already include `episode_number`, `season`,
-  and `duration_in_seconds` on the source side).
-- Drop them from the eyebrow line and show only `{visible_date}`.
+- `EpisodeSourceMetadata.episode_number` — **persisted** (line 109).
+- `EpisodeSourceMetadata.duration_seconds` — **persisted** (line 119).
+- `EpisodeSourceMetadata.season_number` — **not persisted**, though
+  `season_number` is parsed into `EpisodeSourceData` at
+  `imports/source_data.py:115`. The model field would need a new
+  migration plus an importer change to capture it.
 
-Resolution belongs in the implementation plan, not this design.
+Decision for this slice: the eyebrow line uses
+`{visible_date} · E{episode_number} · {duration_seconds | format}`.
+**Season is omitted.** Adding a `season_number` field, migration, and
+import change is out of scope — explicitly tracked here so the
+implementation plan does not silently grow it. If host review later
+shows a need for season, that's a follow-up.
+
+Where `episode_number` or `duration_seconds` are missing on a given
+episode, degrade gracefully — show only the parts that are present.
 
 ## What this slice does not change
 
 - Public URL shape (`/`, `/episodes/`, `/episodes/<slug>`,
   `/episodes/<slug>/transcript/`).
 - Import command behaviour or fixtures.
-- Backend models or migrations (modulo the open question above, which
-  may add fields).
+- Backend models or migrations. (Season number is intentionally not
+  added; the eyebrow line uses only fields already persisted.)
 - Wagtail admin templates, forms, or workflows.
 - Deploy automation, CI, or secrets handling.
+- `INSTALLED_APPS`, `DJANGO_VITE`, or any other settings — django-vite
+  is already wired through django-cast.
+
+## What this slice does change in the backend
+
+- `django_chat/core/views.py:12` (`podcast_episode_index`): extended
+  to instantiate `cast.filters.PostFilterset`, apply `filterset.qs`,
+  paginate the result, and pass `filterset` plus pagination context
+  into the template. No model or URL changes.
