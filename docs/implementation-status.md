@@ -22,8 +22,13 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       `c61fbf3`.
 - [x] **5. S3 media storage and audio copy for the sample import** — `a8dbae5`.
 - [x] **6. Basic Django Chat branding, templates, menu links, current public
-      URL compatibility** — `d24968b`. Visual polish is a candidate scope
-      expansion (see Next Action).
+      URL compatibility** — `d24968b`. Polished `2026-04-26`
+      (`32f1725`..`87edd97`): spirit-parity layout with djangochat.com,
+      Roboto type stack self-hosted, Podlove player on episode detail via
+      `django-vite` (facade load mode), filterset-driven search/date
+      facets/ordering, favicon trio, OG/Twitter metadata, branded error
+      pages. See `docs/superpowers/specs/2026-04-26-visual-polish-design.md`
+      and `docs/superpowers/plans/2026-04-26-visual-polish.md`.
 - [x] **7. Smoke-level feed comparison against Simplecast RSS** — `f4fc8fc`.
       Exhaustive parity validation is deferred to production hardening per the
       PRD.
@@ -73,44 +78,32 @@ PRD section "Acceptance Criteria For The Research Spike".
 
 ## Open Work (Highest Signal First)
 
-1. **Visual polish pass** (extends slice 6). User-flagged as priority before
-   host review. No spec gap, but the current templates are minimal: plain
-   "DC" badge for the logo, no per-episode artwork, palette has a green
-   brand-mark next to red eyebrow text, no favicon/OG tags, no typography
-   refinement. Brainstorm intent before touching templates so the work has a
-   target.
-2. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
+1. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
    least one representative episode. The PRD permits either simple page
    content or the `cast_transcripts` worker path; simple page content is the
    lower-cost route for closing this acceptance criterion.
-3. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
+2. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
    preservation, canonical domain, Simplecast directory coordination,
    analytics/CDN/ad-insertion questions. Content scope is in PRD lines
    520–525 and "Production Migration Considerations" section.
-4. **Full-catalog import path** — extend the import command (or document a
+3. **Full-catalog import path** — extend the import command (or document a
    parallel command) for the live ~201-episode catalog, including audio
    transfer at ~11 GB, retry/resume behavior, and the operator runbook. PRD
    "Import Strategy" section is the contract.
-5. **Production VPS, DNS cutover, feed redirects, podcast directory
+4. **Production VPS, DNS cutover, feed redirects, podcast directory
    updates** — last, per user. Out of scope until the items above are
    settled and hosts have reviewed staging.
 
 ## Next Action
 
-Visual polish on the staging templates. The next agent should:
+Host review of the polished staging site, then the transcript demo. After
+host review:
 
-- Run a short brainstorm on what "looks off" means concretely — palette,
-  hierarchy, logo, episode artwork, hero balance — so the design pass has a
-  target rather than drifting.
-- Treat this as a deliberate scope expansion of slice 6, not a new slice.
-- Keep the public URL shape unchanged.
-- Keep the transcript demo, full-catalog import, and
-  `docs/production-migration-notes.md` as follow-ups (in that order).
-
-**Done when** staging screenshots show a coherent Django Chat identity, show
-artwork is used intentionally, favicon and basic page metadata are present
-or explicitly deferred with a reason, and URL/content behavior is
-unchanged.
+- Implement the transcript demo for at least one representative episode
+  (simple page content is the lower-cost path).
+- Then `docs/production-migration-notes.md`.
+- Then the full-catalog import path.
+- Production VPS / DNS cutover stays last, per user.
 
 Production migration (DNS, feed cutover, real production VPS) is explicitly
 deferred until staging looks good to the hosts.
