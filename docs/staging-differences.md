@@ -45,11 +45,13 @@ Staging is intended to prove Django Chat-specific media hosting. Media must use
 a Django Chat-specific S3-compatible bucket and public media host. Do not reuse
 Python Podcast media buckets, credentials, hostnames, or deployment details.
 
-The deployed `import_django_chat_sample --copy-audio` command has been run
-against production settings on the staging host. Sample MP3s are stored in
-the Django Chat staging bucket and reachable through the public media host
-with HTTP 200 and `Content-Type: audio/mpeg`, providing an end-to-end
-playback proof.
+The deployed `import_django_chat_sample --copy-audio --copy-cover-image`
+command has been run against production settings on the staging host.
+Sample MP3s are stored in the Django Chat staging bucket and reachable
+through the public media host with HTTP 200 and `Content-Type: audio/mpeg`,
+providing an end-to-end playback proof. The show artwork has been attached
+as the podcast page's `cover_image` (a `wagtail.images.Image`), which the
+Podlove player surfaces as the per-episode cover.
 
 Expected differences from Simplecast:
 
