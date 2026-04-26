@@ -17,8 +17,9 @@
 
   <select name="o" aria-label="Sort order">
     <option value="">Newest first</option>
+    {# OrderingFilter exposes its bound value as a list (e.g. ['visible_date']), so check membership #}
     {% for value, label in form.o.field.choices %}
-      {% if value %}<option value="{{ value }}"{% if form.o.value == value %} selected{% endif %}>{{ label }}</option>{% endif %}
+      {% if value %}<option value="{{ value }}"{% if form.o.value and value in form.o.value %} selected{% endif %}>{{ label }}</option>{% endif %}
     {% endfor %}
   </select>
 

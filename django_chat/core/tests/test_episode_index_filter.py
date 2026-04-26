@@ -55,3 +55,26 @@ def test_episode_index_no_results_state_renders_when_search_misses(
     assert response.status_code == 200
     body = response.content.decode()
     assert "No episodes match your filters." in body
+
+
+@pytest.mark.django_db
+def test_episode_index_marks_selected_ordering_in_form(client: Client) -> None:
+    import_django_chat_sample()
+
+    response = client.get("/episodes/?o=visible_date")
+
+    body = response.content.decode()
+    assert 'value="visible_date" selected' in body
+    assert 'value="-visible_date" selected' not in body
+
+
+@pytest.mark.django_db
+def test_episode_index_marks_descending_ordering_in_form(client: Client) -> None:
+    import_django_chat_sample()
+
+    response = client.get("/episodes/?o=-visible_date")
+
+    body = response.content.decode()
+    assert 'value="-visible_date" selected' in body
+    # the ascending option is NOT marked selected when descending is active
+    assert 'value="visible_date" selected' not in body
