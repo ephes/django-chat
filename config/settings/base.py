@@ -255,4 +255,26 @@ DJANGO_VITE = {
 
 CAST_FILTERSET_FACETS = ["search", "date", "date_facets", "o"]
 
+# Podlove player theme override. Keyed by the show's template_base_dir
+# (set on the Podcast model during import; see
+# django_chat/imports/import_sample.py). Tokens map to Podlove's theme
+# token API; see cast/podlove.py DEFAULT_PODLOVE_THEME for the full set.
+# Brand is the Django green from the show artwork; brandDark/brandDarkest
+# are darker greens for hover and emphasis; brandLightest is a pale tint
+# for player chrome backgrounds.
+CAST_PODLOVE_PLAYER_THEMES = {
+    "django_chat": {
+        "tokens": {
+            "brand": "#44b78b",
+            "brandDark": "#2d8260",
+            "brandDarkest": "#1f6647",
+            "brandLightest": "#e6f4ee",
+            "shadeDark": "#5d6673",
+            "shadeBase": "#5d6673",
+            "contrast": "#0d0d0d",
+            "alt": "#ffffff",
+        },
+    },
+}
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

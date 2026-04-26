@@ -54,3 +54,21 @@ def test_episode_index_loads_self_hosted_fonts_css(client: Client) -> None:
     # No third-party Google Fonts request:
     assert "fonts.googleapis.com" not in body
     assert "fonts.gstatic.com" not in body
+
+
+@pytest.mark.django_db
+def test_podlove_player_config_uses_django_chat_brand_colors(client: Client) -> None:
+    import_django_chat_sample()
+
+    # template_base_dir=django_chat selects the project's theme override
+    response = client.get("/api/audios/player_config/?template_base_dir=django_chat")
+
+    assert response.status_code == 200
+    config = response.json()
+    tokens = config["theme"]["tokens"]
+    # Brand colour matches the Django green show artwork mark.
+    assert tokens["brand"] == "#44b78b"
+    # The Podlove default orange must NOT bleed through:
+    assert tokens["brand"] != "#E64415"
+    # Contrast pinned to the project ink token.
+    assert tokens["contrast"] == "#0d0d0d"
