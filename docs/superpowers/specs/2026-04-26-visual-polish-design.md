@@ -174,13 +174,25 @@ Composition top-to-bottom:
      (`podcast_episode_index`) that builds `posts` by hand, ignores
      `request.GET`, and sets `is_paginated=False`. To make the filter
      form functional, this view must be extended to:**
-     1. Instantiate `cast.filters.PostFilterset(request.GET,
+     1. Instantiate
+        `cast.filters.PostFilterset(data=request.GET,
         queryset=Episode.objects.live().child_of(podcast)
-        .order_by("-visible_date"), request=request)`.
+        .order_by("-visible_date"))`. The filterset's `__init__`
+        accepts only `data` and `queryset` keyword arguments
+        (verified at `cast/filters.py:397`); do not pass
+        `request`.
      2. Use `filterset.qs` as the base queryset.
      3. Paginate via `django.core.paginator.Paginator` (page-size
-        TBD at plan time, e.g. 20). Set `is_paginated=True` and pass
-        `page_obj` / `paginator` into context.
+        TBD at plan time, e.g. 20). The existing
+        `pagination.html` partial at
+        `django_chat/templates/cast/django_chat/pagination.html`
+        expects these context keys: `has_previous`,
+        `previous_page_number`, `page_number`, `has_next`,
+        `next_page_number`, and `parameters` (a `&key=value&…`
+        suffix that preserves active filter query params minus
+        `page=`). The view must compute and pass all of them, or
+        the partial must be reworked to accept a single `page_obj`
+        — pick at plan time. Set `is_paginated=True`.
      4. Add `filterset` to the render context.
    - Guard the partial with `{% if filterset %}` so unrelated Page
      types render nothing.
@@ -203,8 +215,10 @@ Composition top-to-bottom:
 
 6. **Empty / no-results state**: if filtering returns no rows, render
    "No episodes match your filters." with a "Clear filters" link
-   pointing back to `{{ blog_url }}`. Unfiltered empty state shows a
-   neutral placeholder.
+   pointing at `{% url 'django_chat_episode_index' %}`. (The custom
+   view doesn't currently provide a `blog_url` context var; reverse
+   the route name directly.) Unfiltered empty state shows a neutral
+   placeholder.
 
 ## Episode detail page (`episode.html`)
 
@@ -228,22 +242,35 @@ Composition top-to-bottom:
      stores the audio on `Episode.podcast_audio` (a
      `ForeignKey`-style relation), not as an audio block in
      `page.body` — `_episode_body()` only emits text blocks. So the
-     template must include django-cast's audio partial directly:
+     template must include django-cast's audio partial directly,
+     **preserving the existing no-audio fallback** (the project
+     supports metadata-only sample imports; tests at
+     `django_chat/imports/tests/test_sample_site_routes.py:64,83`
+     assert the `Audio copy pending.` string is present when the MP3
+     hasn't been copied):
 
      ```django
-     {% include "cast/audio/audio.html" with value=episode.podcast_audio page=episode podlove_load_mode="facade" %}
+     <section class="audio-panel" aria-label="Episode audio">
+       {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+         {% include "cast/audio/audio.html" with value=episode.podcast_audio page=episode podlove_load_mode="facade" %}
+       {% else %}
+         <p>Audio copy pending.</p>
+       {% endif %}
+     </section>
      ```
 
-     This partial emits the full Podlove markup (`<podlove-player>`
+     The partial emits the full Podlove markup (`<podlove-player>`
      element with `data-url` pointing at
      `cast:api:audio_podlove_detail` and `data-embed` pointing at
      `cast/js/web-player/embed.5.js`).
    - `podlove_load_mode="facade"` is a template context variable
      consumed by `cast/templates/cast/audio/audio.html` — *not* a
      Django setting. With `"facade"`, the partial renders a
-     lightweight static facade and only loads the heavy Podlove JS
-     when the user clicks. This is the perf path — no Podlove bundle
-     on initial page load.
+     lightweight static facade and defers the heavy Podlove embed
+     script until the user clicks. The django-cast Vite-bundled init
+     module (loaded by `{% vite_asset %}` below) is small and ships
+     on initial load; the perf win is keeping the heavy Podlove
+     embed off the initial page.
    - Add `{% load django_vite %}` and
      `{% vite_asset 'src/audio/podlove-player.ts' app="cast" %}` in
      `{% block javascript %}`. The asset tag emits a hashed
@@ -340,8 +367,10 @@ Visual verification:
 Lighthouse smoke (one-time, on staging):
 
 - After deploy, run Lighthouse against an episode page; performance
-  score should be > 80. Facade mode means the heavy Podlove JS is not
-  in the initial bundle. Not a regression gate, just a sanity check.
+  score should be > 80. Facade mode means the heavy Podlove embed
+  script is not loaded on initial page render — only the small
+  django-cast init module ships eagerly. Not a regression gate, just
+  a sanity check.
 
 Existing suite stays green:
 
