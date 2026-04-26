@@ -65,7 +65,9 @@
       become: true
       become_user: "{{ wagtail_user }}"
       register: ensure_default_site_result
-      changed_when: "'Updated default Site' in ensure_default_site_result.stdout"
+      changed_when: >-
+        'Updated default Site' in ensure_default_site_result.stdout
+        or 'Updated TemplateBaseDirectory' in ensure_default_site_result.stdout
 
     - name: Deploy | Restart Django Chat application service
       ansible.builtin.systemd:

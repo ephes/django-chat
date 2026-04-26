@@ -255,6 +255,14 @@ DJANGO_VITE = {
 
 CAST_FILTERSET_FACETS = ["search", "date", "date_facets", "o"]
 
+# Register the project's theme so it appears in Wagtail's
+# TemplateBaseDirectory choices and resolves via the standard theme
+# lookup (see cast/models/theme.py). Required for the
+# CAST_PODLOVE_PLAYER_THEMES override below to apply when the player
+# config endpoint resolves the active theme via the Wagtail Site
+# setting fallback.
+CAST_CUSTOM_THEMES = [("django_chat", "Django Chat")]
+
 # Podlove player theme override. Keyed by the show's template_base_dir
 # (set on the Podcast model during import; see
 # django_chat/imports/import_sample.py). Tokens map to Podlove's theme
