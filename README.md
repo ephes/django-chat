@@ -146,6 +146,9 @@ The initial host-review admin credential is a staging-only bootstrap secret
 kept outside the repository and outside repo-managed SOPS files. Share or
 rotate it only through the agreed secure channel.
 
+For the current shipped/open-work picture and the next-action target, see
+[`docs/implementation-status.md`](docs/implementation-status.md).
+
 ## Scope
 
 This slice includes a small fixture-backed database/page import, opt-in audio
