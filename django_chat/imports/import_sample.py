@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import mimetypes
 from collections.abc import Callable
@@ -15,11 +16,13 @@ from uuid import UUID
 from cast.models import Audio, Episode, Podcast
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from django.core.files.images import ImageFile
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.text import slugify
+from wagtail.images.models import Image as WagtailImage
 from wagtail.models import Page, Site
 
 from django_chat.imports.models import (
@@ -56,6 +59,7 @@ DETAIL_FIXTURE_FILENAMES = (
 IMPORT_AUDIO_USERNAME = "django-chat-importer"
 
 AudioDownloader = Callable[[str], "DownloadedAudio"]
+ImageDownloader = Callable[[str], bytes]
 
 
 @dataclass(frozen=True)
@@ -143,6 +147,7 @@ def import_django_chat_sample(
     *,
     copy_audio: bool = False,
     audio_downloader: AudioDownloader | None = None,
+    cover_image_downloader: ImageDownloader | None = None,
 ) -> SampleImportResult:
     source_data = load_sample_source_data(fixture_dir)
     with transaction.atomic():
@@ -159,6 +164,12 @@ def import_django_chat_sample(
             source_data.simplecast_podcast,
             source_data.simplecast_site,
         )
+        if cover_image_downloader is not None:
+            _ensure_podcast_cover_image(
+                podcast,
+                str(podcast_metadata.image_url or ""),
+                cover_image_downloader,
+            )
         source_links = _update_podcast_source_links(podcast_metadata, source_data.source_links)
 
         episodes: list[Episode] = []
@@ -220,6 +231,42 @@ def default_download_audio(source_url: str) -> DownloadedAudio:
         content_length=content_length,
         filename=_source_url_filename(source_url),
     )
+
+
+def default_download_image(source_url: str) -> bytes:
+    request = Request(source_url, headers={"User-Agent": "django-chat-sample-import/1.0"})
+    with urlopen(request, timeout=60) as response:
+        return response.read()
+
+
+def _ensure_podcast_cover_image(
+    podcast: Podcast,
+    image_url: str,
+    image_downloader: ImageDownloader,
+) -> None:
+    """Attach the show artwork as a Wagtail Image on the Podcast page.
+
+    Idempotent: skips the download when ``podcast.cover_image`` is already
+    set, or when no image URL is available.
+    """
+    podcast_page = cast(Any, podcast)
+    if podcast_page.cover_image_id is not None:
+        return
+    if not image_url:
+        return
+    image_bytes = image_downloader(image_url)
+    if not image_bytes:
+        return
+    filename = _source_url_filename(image_url) or "show-artwork.jpg"
+    image_title = f"{podcast.title} show artwork"
+    # ImageFile (vs ContentFile) lets Wagtail's pre-save hook populate
+    # width/height from the bytes. ContentFile leaves those fields NULL
+    # and the save fails the NOT NULL constraint on wagtailimages_image.
+    image_file = ImageFile(io.BytesIO(image_bytes), name=filename)
+    image = WagtailImage(title=image_title, file=image_file)
+    image.save()
+    podcast_page.cover_image = image
+    podcast.save()
 
 
 def _load_simplecast_detail_episodes(fixture_path: Path) -> tuple[SimplecastEpisode, ...]:

@@ -304,6 +304,45 @@ def test_import_sample_management_command_can_copy_audio(
     assert _transcript_count() == 0
 
 
+@pytest.mark.django_db
+def test_sample_import_attaches_show_cover_image_when_downloader_provided(
+    tmp_path: Path,
+) -> None:
+    image_downloader = FakeImageDownloader()
+
+    with override_settings(MEDIA_ROOT=tmp_path):
+        result = import_django_chat_sample(cover_image_downloader=image_downloader)
+
+    podcast = Podcast.objects.get(pk=result.podcast.pk)
+    assert podcast.cover_image is not None
+    assert "Django Chat" in podcast.cover_image.title
+    assert len(image_downloader.urls) == 1
+
+
+@pytest.mark.django_db
+def test_sample_import_does_not_attach_cover_when_downloader_omitted(
+    tmp_path: Path,
+) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        result = import_django_chat_sample()
+
+    podcast = Podcast.objects.get(pk=result.podcast.pk)
+    assert podcast.cover_image is None
+
+
+@pytest.mark.django_db
+def test_sample_import_skips_cover_download_when_already_set(tmp_path: Path) -> None:
+    image_downloader = FakeImageDownloader()
+
+    with override_settings(MEDIA_ROOT=tmp_path):
+        first = import_django_chat_sample(cover_image_downloader=image_downloader)
+        # Re-import — cover_image is already set, so no further download:
+        second = import_django_chat_sample(cover_image_downloader=image_downloader)
+
+    assert first.podcast.pk == second.podcast.pk
+    assert len(image_downloader.urls) == 1
+
+
 def _transcript_count() -> int:
     transcript = cast(Any, apps.get_model("cast", "Transcript"))
     return transcript.objects.count()
@@ -332,3 +371,28 @@ class FailingAudioDownloader:
 
 def _fake_audio_content(source_url: str) -> bytes:
     return f"fake audio bytes for {source_url}".encode()
+
+
+# Minimal valid 1x1 PNG. Wagtail's Image.save() runs Pillow on the bytes
+# to read dimensions, so the file must parse — a string of bytes won't.
+def _make_fake_png() -> bytes:
+    import io
+
+    from PIL import Image as PILImage
+
+    buf = io.BytesIO()
+    PILImage.new("RGB", (1, 1), color=(0, 0, 0)).save(buf, format="PNG")
+    return buf.getvalue()
+
+
+_FAKE_PNG = _make_fake_png()
+
+
+class FakeImageDownloader:
+    def __init__(self, *, content: bytes = _FAKE_PNG) -> None:
+        self.urls: list[str] = []
+        self._content = content
+
+    def __call__(self, source_url: str) -> bytes:
+        self.urls.append(source_url)
+        return self._content

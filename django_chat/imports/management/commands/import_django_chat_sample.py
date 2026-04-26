@@ -5,13 +5,18 @@ from typing import Any
 
 from django.core.management.base import BaseCommand, CommandParser
 
-from django_chat.imports.import_sample import DEFAULT_SOURCE_FIXTURE_DIR, import_django_chat_sample
+from django_chat.imports.import_sample import (
+    DEFAULT_SOURCE_FIXTURE_DIR,
+    default_download_image,
+    import_django_chat_sample,
+)
 
 
 class Command(BaseCommand):
     help = (
         "Import the small fixture-backed Django Chat podcast/episode sample. "
-        "This command reads committed local fixtures and downloads media only with --copy-audio."
+        "This command reads committed local fixtures and downloads media only "
+        "with --copy-audio or --copy-cover-image."
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
@@ -32,11 +37,22 @@ class Command(BaseCommand):
                 "storage, then attach cast.Audio rows to the imported episodes."
             ),
         )
+        parser.add_argument(
+            "--copy-cover-image",
+            action="store_true",
+            help=(
+                "Download the show artwork URL and attach it as the Podcast page's "
+                "cover_image. Idempotent — skipped when cover_image is already set."
+            ),
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         result = import_django_chat_sample(
             options["fixture_dir"],
             copy_audio=options["copy_audio"],
+            cover_image_downloader=(
+                default_download_image if options["copy_cover_image"] else None
+            ),
         )
 
         self.stdout.write(
