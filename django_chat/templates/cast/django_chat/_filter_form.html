@@ -1,0 +1,26 @@
+<form method="get" class="filter-form" aria-label="Filter episodes">
+  <label class="visually-hidden" for="id_search">Search</label>
+  <input id="id_search" type="text" name="search" placeholder="Search episodes" value="{{ form.search.value|default_if_none:'' }}">
+
+  <div class="filter-date">
+    <label class="visually-hidden">Date range</label>
+    {# DateFromToRangeFilter renders two <input type="date"> with names date_after and date_before #}
+    {{ form.date }}
+  </div>
+
+  <select name="date_facets" aria-label="Date facets">
+    <option value="">All dates</option>
+    {% for value, label in form.date_facets.field.choices %}
+      <option value="{{ value }}"{% if form.date_facets.value == value %} selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="o" aria-label="Sort order">
+    <option value="">Newest first</option>
+    {% for value, label in form.o.field.choices %}
+      {% if value %}<option value="{{ value }}"{% if form.o.value == value %} selected{% endif %}>{{ label }}</option>{% endif %}
+    {% endfor %}
+  </select>
+
+  <button type="submit">Filter</button>
+</form>

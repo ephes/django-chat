@@ -31,6 +31,14 @@
       </section>
     {% endif %}
 
+    {% if filterset %}
+      {% include "./_filter_form.html" with form=filterset.form %}
+    {% endif %}
+
+    {% if not posts %}
+      <p class="no-results">No episodes match your filters. <a href="{% url 'django_chat_episode_index' %}">Clear filters</a>.</p>
+    {% endif %}
+
     <section class="episode-list" aria-label="Episodes">
       {% for post in posts %}
         <article class="episode-card">
