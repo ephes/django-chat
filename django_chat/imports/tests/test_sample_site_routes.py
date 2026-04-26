@@ -34,11 +34,11 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     ]
     content = response.content.decode()
     assert "Django Chat" in content
-    assert "Django Web Framework Podcast" in content
+    assert "A biweekly podcast on the Django Web Framework" in content
     assert "Django Tasks - Jake Howard" in content
     assert "/episodes/django-tasks-jake-howard/" in content
-    assert "Podcast RSS" in content
-    assert "/episodes/feed/podcast/mp3/rss.xml" in content
+    assert "Listen &amp; Subscribe" in content
+    assert "https://djangochat.com" in content
     assert "Sponsor Us" in content
     assert "https://docs.google.com/document/" in content
     assert "Fosstodon" in content
@@ -78,7 +78,8 @@ def test_imported_sample_episode_detail_renders_copied_audio(
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "<audio" in content
+    assert "<podlove-player" in content
+    assert 'data-load-mode="facade"' in content
     assert "/media/cast_audio/django-chat-sample/django-tasks-jake-howard-" in content
     assert "Audio copy pending." not in content
     assert Audio.objects.count() == 8
