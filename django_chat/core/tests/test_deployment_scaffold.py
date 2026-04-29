@@ -78,10 +78,13 @@ def test_deploy_playbook_role_sequence_is_explicit() -> None:
     assert re.search(r"name:\s*['\"]?\{\{\s*wagtail_systemd_unit_name\s*\}\}['\"]?", playbook)
     assert "state: restarted" in playbook
     group_vars = (ROOT_DIR / "deploy/group_vars/django_chat.yml").read_text()
-    assert "wagtail_db_worker_enabled: false" in group_vars
+    assert "wagtail_db_worker_enabled: true" in group_vars
+    assert 'wagtail_db_worker_backend: "cast_transcripts"' in group_vars
     assert 'uv_version: "0.11.7"' in group_vars
     assert "wagtail_gunicorn_workers: 3" in group_vars
     assert 'wagtail_traefik_cert_resolver: "letsencrypt"' in group_vars
+    assert "Deploy | Restart Django Chat transcript worker service" in playbook
+    assert "wagtail_db_worker_unit_name" in playbook
 
 
 def test_deployment_secret_policy_is_gitignored() -> None:
@@ -111,12 +114,13 @@ def test_host_review_docs_preserve_staging_boundary() -> None:
     assert "Full-catalog audio is copied to the staging media bucket" in host_review
     assert "The staging feed is not canonical" in staging_differences
     assert "Staging does not mean production migration is complete" in staging_differences
-    assert "`cast_transcripts` database worker remains disabled" in staging_differences
+    assert "`cast_transcripts` database worker" in staging_differences
+    assert "Wagtail can queue" in staging_differences
+    assert "Voxhelm transcript generation" in staging_differences
     assert "reviewers do not need SOPS decrypt access" in operations_boundary
-    assert (
-        "served through the public media host have all been verified end-to-end"
-        in operations_boundary
-    )
+    assert "full-catalog audio served through the public media host" in operations_boundary
+    assert "Voxhelm-backed" in operations_boundary
+    assert "transcript demo" in operations_boundary
     assert "djangochat.staging.django-cast.com" in staging_group_vars
 
 

@@ -10,18 +10,18 @@ Staging is live at `https://djangochat.staging.django-cast.com`.
 Current live state:
 
 - `/` redirects to `/episodes/`.
-- The fixture-backed sample has been imported with one podcast and eight
-  episodes.
+- The full public catalog has been imported under the `episodes` podcast.
 - Wagtail admin is available at
   `https://djangochat.staging.django-cast.com/cms/`.
 - A staging-only `host-review-admin` superuser exists for bootstrap access.
-- Sample audio has been copied to the configured S3 bucket and is served
-  through the public media host. All eight episodes have `podcast_audio` set
-  and episode detail pages render the django-cast **Podlove web player**
-  (`<podlove-player>` element).
-- The repo now has a repeatable live full-catalog import command, but the
-  deployed staging database should be checked before host handoff to confirm
-  whether the sample or the full catalog is currently loaded.
+- Full-catalog audio has been copied to the configured S3 bucket and is served
+  through the public media host. All live imported episodes have
+  `podcast_audio` set and episode detail pages render the django-cast
+  **Podlove web player** (`<podlove-player>` element).
+- `/episodes/preview/transcript/` demonstrates a Voxhelm-generated
+  django-cast transcript for the preview episode.
+- The deployed staging database should still be measured before host handoff
+  to confirm counts and endpoint health.
 
 ## Site And Visual Theme
 
@@ -74,22 +74,21 @@ Expected differences from Simplecast:
 The staging feed is not canonical and must not be submitted to podcast
 directories or redirected from Simplecast.
 
-The feed check is a smoke-level comparison for the fixture-backed sample with
-copied audio in place:
+The feed check remains a local smoke-level comparison for the fixture-backed
+sample with copied audio in place:
 
 ```sh
 just compare-feed
 ```
 
 That check validates important sample fields. Production hardening still needs
-full-catalog validation, GUID and enclosure decisions, artwork and namespace
-checks, client testing, and host approval before any live feed change.
+GUID and enclosure decisions, artwork and namespace checks, client testing,
+and host approval before any live feed change.
 
 ## Content Import Scope
 
-The current staging deployment contains the fixture-backed sample import for
-internal smoke review unless an operator has run the live catalog command on
-the host. The representative host-review deployment should use:
+The current staging deployment contains the live catalog import. The
+representative host-review deployment should be refreshed with:
 
 ```sh
 DJANGO_SETTINGS_MODULE=config.settings.production \
@@ -112,7 +111,8 @@ Current import boundaries:
   transcript HTML metadata for idempotent re-runs.
 - Catalog audio copy is optional, streams through a temporary file, and should
   not be run casually because the full transfer was observed at about 11 GB.
-- It does not publish converted transcripts by default.
+- It does not publish full-catalog converted transcripts by default; the
+  staging preview episode has a Voxhelm-generated transcript demo.
 - It does not add large live RSS fixtures, real MP3 fixtures, or live network
   tests to the repository.
 
@@ -135,11 +135,15 @@ are not part of the Django Chat staging scaffold.
 
 ## Transcripts
 
-Simplecast transcript HTML is preserved in source metadata where available, but
-transcript publishing and conversion are not enabled in the default staging
-deployment. The `cast_transcripts` database worker remains disabled unless a
-later staging decision explicitly enables transcript publishing or conversion
-jobs.
+Simplecast transcript HTML is preserved in source metadata where available.
+Staging enables the `cast_transcripts` database worker so Wagtail can queue
+Voxhelm transcript generation for individual reviewed episodes. Full-catalog
+transcript generation remains outside the current staging scope.
+
+In Wagtail admin, edit an episode page and use the **Generate transcript** page
+action to request another transcript. The action requires editable episode and
+audio permissions, copied podcast audio, and the active
+`django-chat-db-worker.service` worker.
 
 ## Production Migration Boundary
 

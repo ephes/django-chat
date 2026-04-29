@@ -35,7 +35,7 @@ wagtail_admin_url: "django-admin/"
 wagtail_traefik_cert_resolver: "letsencrypt"
 wagtail_gunicorn_workers: 3
 wagtail_gunicorn_timeout: 120
-wagtail_db_worker_enabled: false
+wagtail_db_worker_enabled: true
 wagtail_db_worker_backend: "cast_transcripts"
 wagtail_rsync_excludes_extra:
   - ".env"
@@ -70,3 +70,7 @@ wagtail_env_extra:
   DJANGO_CHAT_WAGTAIL_ADMIN_BASE_URL: "https://{{ django_chat_wagtail_fqdn }}/cms/"
   DJANGO_CHAT_SITE_HOSTNAME: "{{ django_chat_wagtail_fqdn }}"
   DJANGO_CHAT_SITE_PORT: "443"
+  CAST_VOXHELM_API_BASE: "{{ service_secrets.cast_voxhelm_api_base | default('') }}"
+  CAST_VOXHELM_API_KEY: "{{ service_secrets.cast_voxhelm_api_key | default('') }}"
+  CAST_VOXHELM_MODEL: "{{ service_secrets.cast_voxhelm_model | default('auto') }}"
+  CAST_VOXHELM_LANGUAGE: "{{ service_secrets.cast_voxhelm_language | default('en') }}"

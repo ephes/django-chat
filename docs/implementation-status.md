@@ -73,15 +73,14 @@ PRD section "Acceptance Criteria For The Research Spike".
       module.
 - [ ] Public URL patterns `/`, `/episodes/`, `/episodes/<slug>`, and
       `/episodes/<slug>/transcript` represented or redirected. **First three
-      ✓; the transcript URL shape reverses via django-cast
-      (`cast:episode-transcript` → `/episodes/<slug>/transcript/`), but no
-      transcript content or demo is imported, so the route returns nothing
-      meaningful in practice.**
+      ✓; `/episodes/preview/transcript/` now returns a Voxhelm-generated
+      django-cast transcript demo. Full-catalog transcript coverage is not
+      implemented.**
 - [x] Menu, social, and distribution links from the Simplecast site
       represented.
-- [ ] Transcript handling demonstrated for at least one representative
-      episode (simple page content or `cast_transcripts` worker path). **Not
-      implemented.**
+- [x] Transcript handling demonstrated for at least one representative
+      episode. `/episodes/preview/transcript/` renders a Voxhelm-generated
+      django-cast `Transcript` with Podlove JSON, WebVTT, and DOTe artifacts.
 - [x] Full catalog import path documented and repeatable. `import_django_chat_catalog`
       fetches the live RSS feed, follows Simplecast pagination/details for
       enrichment, supports limited and dry-run operator exercises, and can
@@ -126,13 +125,12 @@ serving the polished site:
 
 Branch is unpushed at the time of writing.
 
-**Not yet ready for full host review, despite the polish, full catalog/audio
-copy, and RSS-discovery page:**
+**Nearly ready for full host review:**
 
 The deployed staging site remains useful for internal smoke review of
 deployment, CMS access, playback, the visual direction, and the full catalog.
-It is not ready to hand to hosts as the representative show review because the
-transcript-demo acceptance criterion is still open.
+It now has representative catalog/audio/feed state plus a Voxhelm-generated
+transcript demo for `/episodes/preview/transcript/`.
 
 As of 2026-04-29, staging has the full live catalog copied for host-review
 audio validation: `measure_django_chat_catalog
@@ -147,35 +145,52 @@ with 202 items.
   episode-list query/timing data, then run manual Lighthouse/Web Vitals checks
   on deployed staging.
 - Latest-entries feed measurement on 2026-04-29 reported `queries=620` across
-  202 items; investigate before host handoff in case it is an N+1.
+  202 items; research whether the same behavior exists in `../python-podcast`
+  before deciding whether Django Chat needs a local fix, an upstream django-cast
+  fix, or no pre-handoff change.
 - The self-hosted podcast RSS feed is now surfaced at `/episodes/feed/` and in
-  page-head RSS auto-discovery; hosts still need transcript review before the
-  site is ready for full handoff.
+  page-head RSS auto-discovery.
 
 ## Open Work (Highest Signal First)
 
-1. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
-   least one representative episode. PRD permits either simple page
-   content or the `cast_transcripts` worker path; simple page content is
-   the lower-cost route. Closes the "transcript handling demonstrated"
-   acceptance criterion.
-2. **Host review of staging.** With full catalog + RSS-discovery +
-   transcript demo in place, the staging site finally looks like the
-   show. Send hosts the URL + `host-review-admin` credential.
-3. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
+1. **Research/fix latest-entries feed query count before host handoff.**
+   Full-catalog measurement on 2026-04-29 reported `queries=620` for
+   `/episodes/feed/rss.xml` across 202 items. First check whether the same
+   query-count pattern exists in `../python-podcast` on comparable django-cast
+   latest-entries feeds. Then decide whether this is expected django-cast feed
+   behavior, an upstream/shared optimization, a Django Chat-specific issue, or
+   acceptable for host review without a pre-handoff fix.
+2. **Fix transcript visibility for non-preview generated transcripts.** A
+   Voxhelm transcript has also been generated for
+   `/episodes/django-tasks-jake-howard/` and is visible in Wagtail admin, but
+   it is not yet exposed in the Podlove player on the episode detail page and
+   the public `/episodes/django-tasks-jake-howard/transcript/` page is not
+   available as expected. Investigate whether this is a django-cast transcript
+   publishing/config issue, a theme/template issue, or a mismatch between the
+   generated `Transcript` and the episode audio relation. Acceptance: the Jake
+   Howard episode shows transcript availability in the player where
+   django-cast supports it, and its public transcript route returns the themed
+   transcript page.
+3. **Host review of staging.** With full catalog + RSS-discovery +
+   Voxhelm transcript demo in place, the staging site finally looks like the
+   show. Send hosts the URL + `host-review-admin` credential once the query
+   count and transcript-visibility decisions are settled.
+4. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
    preservation, canonical domain, Simplecast directory coordination,
    analytics/CDN/ad-insertion questions. Content scope is in PRD lines
    520–525 and "Production Migration Considerations" section. Required
    before any DNS or feed cutover.
-4. **Production VPS, DNS cutover, feed redirects, podcast directory
-   updates** — last, per user. Out of scope until 1–3 are settled.
+5. **Production VPS, DNS cutover, feed redirects, podcast directory
+   updates** — last, per user. Out of scope until 1–4 are settled.
 
 ## Next Action
 
-Implement the **transcript demo** slice. Before host handoff, use the recorded
-full-catalog measurement to decide whether the latest-entries feed query count
-needs a focused performance fix before hosts review the site.
+Research the latest-entries feed query count. Start by measuring or inspecting
+the comparable `../python-podcast` django-cast feed path, then decide whether
+Django Chat needs a focused performance fix before hosts review the site. If
+not, fix or explicitly disposition the Jake Howard transcript visibility gap,
+then proceed to host review.
 
 Production migration (DNS, feed cutover, real production VPS) is
-explicitly deferred until host review (item 2) has happened and any
+explicitly deferred until host review (item 3) has happened and any
 perf fixes from the catalog measurement have landed.

@@ -12,6 +12,9 @@ from cast.apps import CAST_APPS, CAST_MIDDLEWARE
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parents[2]
 APPS_DIR = ROOT_DIR / "django_chat"
+CAST_APPS_COMPAT = [
+    "django_tasks_db" if app == "django_tasks.backends.database" else app for app in CAST_APPS
+]
 
 env = environ.Env()
 
@@ -50,10 +53,10 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    *CAST_APPS[:-1],
+    *CAST_APPS_COMPAT[:-1],
     "crispy_bootstrap5",
     "cast_bootstrap5.apps.CastBootstrap5Config",
-    CAST_APPS[-1],
+    CAST_APPS_COMPAT[-1],
 ]
 
 LOCAL_APPS = [
@@ -92,11 +95,9 @@ DATABASES["default"]["ATOMIC_REQUESTS"] = True
 TASKS = {
     "default": {
         "BACKEND": "django_tasks.backends.immediate.ImmediateBackend",
-        "ENQUEUE_ON_COMMIT": False,
     },
     "cast_transcripts": {
-        "BACKEND": "django_tasks.backends.immediate.ImmediateBackend",
-        "ENQUEUE_ON_COMMIT": False,
+        "BACKEND": "django_tasks_db.DatabaseBackend",
     },
 }
 

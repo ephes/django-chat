@@ -53,11 +53,9 @@ def test_transcript_task_backends_are_immediate_for_tests() -> None:
     assert set(settings.TASKS) == {"default", "cast_transcripts"}
     assert settings.TASKS["default"] == {
         "BACKEND": "django_tasks.backends.immediate.ImmediateBackend",
-        "ENQUEUE_ON_COMMIT": False,
     }
     assert settings.TASKS["cast_transcripts"] == {
         "BACKEND": "django_tasks.backends.immediate.ImmediateBackend",
-        "ENQUEUE_ON_COMMIT": False,
     }
 
 

@@ -160,14 +160,14 @@ without copied audio, but that is not a complete playback proof. If you choose
 a non-AWS S3-compatible provider that needs an explicit endpoint or region
 setting, extend the deploy vars before the first live deploy.
 
-Current staging media status: sample audio copy succeeds.
-`import_django_chat_sample --copy-audio --copy-cover-image` on the deployed
-staging app uploads all eight sample MP3s plus the show artwork; copied
-media URLs return HTTP 200 with `Content-Type: audio/mpeg` through the
-configured public media host (CloudFront), and episode detail pages render
-the django-cast Podlove player backed by those URLs with the show artwork
-populating the per-episode cover slot. Run both flags together on a fresh
-staging install; either flag is idempotent on subsequent runs.
+Current staging media status: full-catalog audio copy has been verified.
+`import_django_chat_catalog --copy-cover-image --copy-audio` on the deployed
+staging app copied audio for all live imported episodes under the `episodes`
+podcast; copied media URLs are served through the configured public media host
+(CloudFront), and episode detail pages render the django-cast Podlove player
+backed by those URLs. The sample command still supports fixture-backed smoke
+checks, but representative host review should use the catalog command and
+audio completeness checks below.
 
 The full-catalog operator path is now:
 
@@ -228,8 +228,9 @@ a small VPS:
 - `wagtail_gunicorn_timeout: 120`
 - `uv_version: "0.11.7"`
 
-The transcript database worker remains disabled by default, so this sizing is
-for the web app, local PostgreSQL, and Traefik only.
+The `cast_transcripts` database worker is enabled for staging so Wagtail's
+Generate transcript action can queue Voxhelm completion work outside the web
+request. Web sizing remains intentionally small.
 
 The shared deploy vars also set `wagtail_traefik_cert_resolver: "letsencrypt"`
 so the generated Traefik route requests a real ACME certificate instead of
@@ -237,10 +238,67 @@ falling back to Traefik's default self-signed certificate.
 
 ## Transcript Worker
 
-`wagtail_db_worker_enabled` defaults to `false`. The deploy vars keep
-`wagtail_db_worker_backend: cast_transcripts` ready for later use, but no worker
-unit is installed unless transcript publishing or conversion work explicitly
-enables it.
+Staging enables the django-tasks database worker for transcript generation:
+
+```yaml
+wagtail_db_worker_enabled: true
+wagtail_db_worker_backend: cast_transcripts
+```
+
+The deployed unit is `django-chat-db-worker.service` and runs
+`manage.py db_worker --backend cast_transcripts --interval 5`.
+
+Voxhelm-backed transcript generation uses django-cast's `CAST_VOXHELM_*`
+settings. For staging, keep the Voxhelm API base URL, producer token, model,
+and language in `deploy/secrets/staging.sops.yml` as
+`cast_voxhelm_api_base`, `cast_voxhelm_api_key`, `cast_voxhelm_model`, and
+`cast_voxhelm_language`; `deploy/group_vars/django_chat.yml` renders them into
+the deployed `.env`. The matching producer token must also be present in the
+Voxhelm deployment secrets and rendered into `VOXHELM_BEARER_TOKENS`.
+
+To create a transcript from Wagtail admin:
+
+1. Sign in at `https://djangochat.staging.django-cast.com/cms/`.
+2. Open **Pages**, then edit the podcast episode that should receive a
+   transcript.
+3. Use the page action button labeled **Generate transcript**.
+4. Wait for `django-chat-db-worker.service` to process the queued
+   `cast_transcripts` task.
+5. Re-open the public episode page and confirm it links to
+   `/episodes/<slug>/transcript/`.
+
+The action is only visible for users who can edit the episode and change the
+attached podcast audio object. The episode must have copied `podcast_audio`
+with an absolute HTTP(S) media URL that Voxhelm is allowed to fetch.
+
+Check worker status with:
+
+```sh
+systemctl is-active django-chat-db-worker.service
+journalctl -u django-chat-db-worker.service --since "10 minutes ago" --no-pager
+```
+
+For a synchronous operator fallback, run the django-cast management command on
+the staging host:
+
+```sh
+cd /home/django-chat/site
+sudo -u django-chat env DJANGO_SETTINGS_MODULE=config.settings.production \
+  .venv/bin/python manage.py generate_transcripts --episode-id <episode-id>
+```
+
+Look up episode ids with:
+
+```sh
+cd /home/django-chat/site
+sudo -u django-chat env DJANGO_SETTINGS_MODULE=config.settings.production \
+  .venv/bin/python manage.py shell -c '
+from cast.models import Episode, Podcast
+podcast = Podcast.objects.get(slug="episodes")
+for episode in Episode.objects.live().descendant_of(podcast).order_by("-visible_date")[:20]:
+    print(episode.id, episode.slug, episode.title)
+'
+```
 
 ## Staging Admin Bootstrap
 
@@ -263,9 +321,9 @@ Wagtail admin or replace the account when host review access is settled.
 ## Out Of Scope
 
 The deployment scaffold and host review docs are in this repository, and live
-staging is available for internal smoke review. Full host review is deferred
-until the live catalog has been imported on staging and the transcript-demo gap
-listed in `docs/implementation-status.md` is closed.
+staging is available for review preparation. Full host review should still wait
+for the latest `docs/implementation-status.md` next-action guidance, especially
+any pre-handoff performance decision recorded there.
 This deployment path does not include:
 
 - a real production deploy

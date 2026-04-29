@@ -74,3 +74,10 @@
         name: "{{ wagtail_systemd_unit_name }}"
         state: restarted
         daemon_reload: true
+
+    - name: Deploy | Restart Django Chat transcript worker service
+      ansible.builtin.systemd:
+        name: "{{ wagtail_db_worker_unit_name }}"
+        state: restarted
+        daemon_reload: true
+      when: wagtail_db_worker_enabled | bool

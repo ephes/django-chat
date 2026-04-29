@@ -33,4 +33,13 @@ CACHES = {
     },
 }
 
+TASKS = {
+    "default": {
+        "BACKEND": "django_tasks.backends.immediate.ImmediateBackend",
+    },
+    "cast_transcripts": {
+        "BACKEND": "django_tasks.backends.immediate.ImmediateBackend",
+    },
+}
+
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]

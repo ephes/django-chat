@@ -36,6 +36,17 @@ live imported podcast episode. `measure_django_chat_catalog
 200 with 202 items. The self-hosted podcast RSS URL is available from
 `/episodes/feed/` and advertised through RSS auto-discovery links.
 
+Transcript handling is demonstrated at `/episodes/preview/transcript/` with a
+Voxhelm-generated django-cast transcript. The transcript has Podlove JSON,
+WebVTT, and DOTe artifacts attached to the episode audio, and the episode page
+links to the transcript route.
+
+To create another staging transcript during review, sign into Wagtail admin,
+edit the episode page, and use the **Generate transcript** page action button.
+That action queues a `cast_transcripts` task for
+`django-chat-db-worker.service`; after it completes, the public episode page
+should link to `/episodes/<slug>/transcript/`.
+
 ## Review URLs
 
 - Site: `https://djangochat.staging.django-cast.com/`
@@ -159,13 +170,14 @@ repository comments.
 
 ## Known Limitations
 
-- Current staging is not ready for host review until the remaining
-  transcript-demo gap is closed.
+- Full-catalog transcript coverage is not implemented; staging currently proves
+  the Voxhelm/django-cast path with one representative transcript demo.
 - The staging feed is for validation only and is not the canonical Django Chat
   podcast feed.
 - No production DNS, feed redirect, Simplecast migration, or podcast directory
   update has been performed.
 - Simplecast analytics, distribution analytics, and any Simplecast-specific
   player behavior are not reproduced by this scaffold.
-- Transcript conversion and the `cast_transcripts` database worker remain
-  disabled unless transcript publishing is explicitly added for staging.
+- The `cast_transcripts` database worker is enabled on staging for Wagtail's
+  Generate transcript action. Full-catalog transcript generation is still not
+  part of the host-review scope.

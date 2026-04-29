@@ -4,27 +4,16 @@ This repository contains the self-hosted Django Chat site scaffold. The site is
 built with Django, Wagtail, and django-cast, using Python Podcast only as a
 structural reference for local development ergonomics.
 
-Current status: runnable local scaffold with development tooling, a
-fixture-backed source parser, an idempotent sample import, a repeatable live
-full-catalog import command with opt-in streaming audio copy, explicit
-sample audio-copy support for configured media storage, and a basic Django
-Chat-branded browsing experience for imported episodes, plus a smoke-level
-feed comparison for the fixture-backed sample and local catalog performance
-measurement tooling. The repo also contains
-self-contained deployment scaffolding under `deploy/` and host review docs for
-the first staging path. Staging is live at
-`https://djangochat.staging.django-cast.com` with the fixture-backed sample
-imported and Wagtail admin mounted at
-`https://djangochat.staging.django-cast.com/cms/`. Sample audio is copied to
-the configured S3 bucket and served through the public media host, so episode
-detail pages render a working `<audio>` element. Current staging is suitable
-for internal smoke review, but not yet ready for full host review of the
-representative show until the live catalog command has been run on staging and
-the remaining transcript-demo gap is closed. The self-hosted podcast RSS URL is
-surfaced at `/episodes/feed/` and advertised through RSS auto-discovery links.
-No production
-deployment has been performed. The planning source
-of truth is
+Current status: runnable local scaffold with development tooling, source
+parsers, idempotent sample and full-catalog import commands, opt-in streaming
+audio copy, a Django Chat-branded browsing experience for imported episodes,
+feed comparison and catalog measurement tooling, self-contained deployment
+scaffolding under `deploy/`, and host review docs for staging. Staging is live
+at `https://djangochat.staging.django-cast.com` with full-catalog metadata,
+copied audio for all live imported episodes, generated RSS routes, Wagtail
+admin at `https://djangochat.staging.django-cast.com/cms/`, and a
+Voxhelm-generated transcript demo at `/episodes/preview/transcript/`. No
+production deployment has been performed. The planning source of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development
@@ -193,12 +182,12 @@ page-head RSS auto-discovery links, a local smoke-level feed comparison for the
 imported sample, catalog performance measurement tooling, and deployment
 scaffolding.
 
-It does not include transcript conversion, an enabled transcript worker
-service, exhaustive production feed parity, real production
-deployment, production DNS changes, or feed redirects. Sample audio has been
-copied into staging and is reachable through the public media host, so internal
-review can inspect the deployed site/CMS and end-to-end playback before the
-full host-review gate.
+It does not include full-catalog transcript conversion, exhaustive production
+feed parity, real production deployment, production DNS changes, or feed
+redirects. Full-catalog audio has been copied into staging and is reachable
+through the public media host, so internal review can inspect the deployed
+site/CMS, Wagtail-triggered transcript generation, and end-to-end playback
+before the full host-review gate.
 
 Do not commit decrypted Django secret keys, database passwords, S3 credentials,
 Sentry DSNs, Mailgun keys, admin passwords, age private keys, real MP3s, large
