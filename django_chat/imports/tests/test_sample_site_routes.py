@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import pytest
 from cast.models import Audio, Episode
 from django.apps import apps
+from django.core.files.base import ContentFile
 from django.test import Client, override_settings
 from django.urls import resolve, reverse
 
@@ -158,6 +160,53 @@ def test_imported_sample_episode_detail_renders_copied_audio(
 
 
 @pytest.mark.django_db
+def test_imported_sample_episode_surfaces_attached_generated_transcript(
+    client: Client,
+    tmp_path: Any,
+) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
+        episode = Episode.objects.get(slug="django-tasks-jake-howard")
+        assert episode.podcast_audio is not None
+        transcript = _create_generated_transcript(episode.podcast_audio)
+
+        detail_response = client.get("/episodes/django-tasks-jake-howard/")
+        transcript_response = client.get("/episodes/django-tasks-jake-howard/transcript/")
+        podlove_response = client.get(
+            reverse(
+                "cast:api:audio_podlove_detail",
+                kwargs={"pk": episode.podcast_audio.pk, "post_id": episode.pk},
+            )
+        )
+
+    assert detail_response.status_code == 200
+    detail_content = detail_response.content.decode()
+    assert (
+        'href="http://testserver/episodes/django-tasks-jake-howard/transcript/"' in detail_content
+    )
+    assert "<podlove-player" in detail_content
+
+    assert transcript_response.status_code == 200
+    assert "cast/django_chat/transcript.html" in [
+        template.name for template in transcript_response.templates if template.name
+    ]
+    transcript_content = transcript_response.content.decode()
+    assert "Transcript: Django Tasks - Jake Howard" in transcript_content
+    assert "Generated transcript segment for an imported episode." in transcript_content
+
+    assert podlove_response.status_code == 200
+    podlove_data = podlove_response.json()
+    assert len(podlove_data["transcripts"]) == 1
+    podlove_transcript = podlove_data["transcripts"][0]
+    assert podlove_transcript["start"] == "00:00:00.000"
+    assert podlove_transcript["end"] == "00:00:02.000"
+    assert podlove_transcript["speaker"] == "Host"
+    assert podlove_transcript["text"] == "Generated transcript segment for an imported episode."
+    transcript_model = apps.get_model("cast", "Transcript")
+    assert transcript_model.objects.get(pk=transcript.pk).audio == episode.podcast_audio
+
+
+@pytest.mark.django_db
 def test_source_links_are_persisted_for_template_rendering() -> None:
     first_result = import_django_chat_sample()
     source_link_ids = set(PodcastSourceLink.objects.values_list("id", flat=True))
@@ -211,6 +260,45 @@ class FakeAudioDownloader:
 def _transcript_count() -> int:
     transcript = apps.get_model("cast", "Transcript")
     return transcript.objects.count()
+
+
+def _create_generated_transcript(audio: Audio) -> Any:
+    transcript_model = apps.get_model("cast", "Transcript")
+    transcript = transcript_model.objects.create(audio=audio)
+    podlove = {
+        "transcripts": [
+            {
+                "start": "00:00:00.000",
+                "start_ms": 0,
+                "end": "00:00:02.000",
+                "end_ms": 2000,
+                "speaker": "Host",
+                "voice": "",
+                "text": "Generated transcript segment for an imported episode.",
+            }
+        ]
+    }
+    dote = {
+        "lines": [
+            {
+                "startTime": "00:00:00,000",
+                "endTime": "00:00:02,000",
+                "speakerDesignation": "Host",
+                "text": "Generated transcript segment for an imported episode.",
+            }
+        ]
+    }
+    transcript.podlove.save("podlove.json", ContentFile(json.dumps(podlove)))
+    transcript.vtt.save(
+        "transcript.vtt",
+        ContentFile(
+            "WEBVTT\n\n"
+            "00:00:00.000 --> 00:00:02.000\n"
+            "Generated transcript segment for an imported episode.\n"
+        ),
+    )
+    transcript.dote.save("dote.json", ContentFile(json.dumps(dote)))
+    return transcript
 
 
 def _html_between(content: str, start: str, end: str) -> str:
