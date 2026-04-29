@@ -20,11 +20,7 @@
               <a class="button-secondary" href="{{ link.url }}" target="_blank" rel="noopener noreferrer">Apple Podcasts</a>
             {% endif %}
           {% endfor %}
-          {% if source_metadata.website_url %}
-            <a class="button-primary" href="{{ source_metadata.website_url }}" target="_blank" rel="noopener noreferrer">Listen &amp; Subscribe</a>
-          {% else %}
-            <a class="button-primary" href="{% url 'cast:podcast_feed_rss' slug=podcast.slug audio_format='mp3' %}">Listen &amp; Subscribe</a>
-          {% endif %}
+          <a class="button-primary" href="{% url 'cast:feed_detail' slug=podcast.slug %}">Listen &amp; Subscribe</a>
         </div>
       </div>
       {% if source_metadata.image_url %}

@@ -448,11 +448,11 @@ repo.
 
 This repo now includes host review docs for the live staging path at
 `https://djangochat.staging.django-cast.com`, but it does not include
-RSS-discovery page work, transcript conversion, an enabled transcript worker
-service, exhaustive production feed parity, production DNS changes, feed
+transcript conversion, an enabled transcript worker service, exhaustive
+production feed parity, production DNS changes, feed
 redirects, or production migration. Live staging can be used for internal
 smoke review of the sample content, CMS, and end-to-end audio playback: sample
 MP3s are copied to the configured S3 bucket and served through the public
 media host. Full host review is deferred until the live catalog command has
-been run on staging and the RSS-discovery and transcript-demo gaps listed in
-`docs/implementation-status.md` are closed.
+been run on staging and the transcript-demo gap listed in
+`docs/implementation-status.md` is closed.

@@ -31,13 +31,15 @@ audio playback is therefore available end-to-end on staging.
 
 Current staging is suitable for internal smoke review. Full host review is
 deferred until the live catalog has been imported on staging and the
-RSS-discovery and transcript-demo gaps listed in
-`docs/implementation-status.md` are closed.
+transcript-demo gap listed in `docs/implementation-status.md` is closed. The
+self-hosted podcast RSS URL is available from `/episodes/feed/` and advertised
+through RSS auto-discovery links.
 
 ## Review URLs
 
 - Site: `https://djangochat.staging.django-cast.com/`
 - Episode index: `https://djangochat.staging.django-cast.com/episodes/`
+- Subscribe / RSS: `https://djangochat.staging.django-cast.com/episodes/feed/`
 - Episode detail: `https://djangochat.staging.django-cast.com/episodes/<slug>/`
 - Wagtail admin: `https://djangochat.staging.django-cast.com/cms/`
 
@@ -95,6 +97,9 @@ Before sending or refreshing the staging URL for hosts, confirm:
 - Browser DevTools network panel shows `cast/js/web-player/embed.5.js`
   is fetched after initial page paint (on viewport intersection), not as
   part of the critical render path.
+- `/episodes/feed/` renders the Django Chat-branded subscribe page, exposes
+  `/episodes/feed/podcast/mp3/rss.xml`, emits RSS auto-discovery links in the
+  page head, and renders imported platform links.
 
 ## Admin Access
 
@@ -151,7 +156,7 @@ repository comments.
 
 - Current staging uses the fixture-backed sample for internal smoke review.
   Full host review is deferred until the representative catalog is imported on
-  staging and the remaining RSS-discovery and transcript-demo gaps are closed.
+  staging and the remaining transcript-demo gap is closed.
 - The staging feed is for validation only and is not the canonical Django Chat
   podcast feed.
 - No production DNS, feed redirect, Simplecast migration, or podcast directory

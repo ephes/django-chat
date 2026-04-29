@@ -37,13 +37,65 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     assert "A biweekly podcast on the Django Web Framework" in content
     assert "Django Tasks - Jake Howard" in content
     assert "/episodes/django-tasks-jake-howard/" in content
+    assert 'rel="alternate" type="application/rss+xml"' in content
+    assert "http://testserver/episodes/feed/podcast/mp3/rss.xml" in content
     assert "Listen &amp; Subscribe" in content
-    assert "https://djangochat.com" in content
+    assert 'href="/episodes/feed/"' in content
+    assert 'href="https://djangochat.com"' not in content
     assert "Sponsor Us" in content
     assert "https://docs.google.com/document/" in content
     assert "Fosstodon" in content
     assert "Apple Podcasts" in content
     assert "https://itunes.apple.com/us/podcast/django-chat/id1451536459" in content
+    assert "Overcast" in content
+    assert "https://overcast.fm/itunes1451536459/django-chat" in content
+
+
+@pytest.mark.django_db
+def test_imported_sample_feed_detail_renders_rss_and_distribution_links(
+    client: Client,
+) -> None:
+    import_django_chat_sample()
+
+    response = client.get("/episodes/feed/")
+
+    assert response.status_code == 200
+    assert "cast/django_chat/feed_detail.html" in [
+        template.name for template in response.templates if template.name
+    ]
+    content = response.content.decode()
+    assert "Listen &amp; Subscribe" in content
+    assert 'rel="alternate" type="application/rss+xml"' in content
+    assert "http://testserver/episodes/feed/podcast/mp3/rss.xml" in content
+    assert "/episodes/feed/podcast/mp3/rss.xml" in content
+    assert "Apple Podcasts" in content
+    assert (
+        '<a href="https://itunes.apple.com/us/podcast/django-chat/id1451536459"'
+        ' target="_blank" rel="noopener noreferrer">Apple Podcasts</a>'
+    ) in content
+    assert "Overcast" in content
+    assert (
+        '<a href="https://overcast.fm/itunes1451536459/django-chat"'
+        ' target="_blank" rel="noopener noreferrer">Overcast</a>'
+    ) in content
+    assert "Spotify" in content
+    assert "https://open.spotify.com/show/" in content
+    assert "podlove-subscribe-button" not in content
+    assert "subscribe_button/javascripts/app.js" not in content
+    assert "window.podcastData" not in content
+
+
+@pytest.mark.django_db
+def test_feed_detail_canonical_drops_query_strings(client: Client) -> None:
+    import_django_chat_sample()
+
+    response = client.get("/episodes/feed/?utm_source=review")
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert '<link rel="canonical" href="http://testserver/episodes/feed/">' in content
+    assert '<meta property="og:url" content="http://testserver/episodes/feed/">' in content
+    assert "utm_source=review" not in content
 
 
 @pytest.mark.django_db

@@ -1,13 +1,12 @@
 {% load static %}
-{% firstof podcast blog as show %}
-{% firstof page.seo_title page.title "Django Chat" as resolved_title %}
-{% firstof page.search_description show.description "" as resolved_description %}
+{% firstof meta_title page.seo_title page.title podcast.title blog.title "Django Chat" as resolved_title %}
+{% firstof meta_description page.search_description podcast.description blog.description "" as resolved_description %}
 {% firstof source_metadata.image_url "" as resolved_image %}
 <meta property="og:site_name" content="Django Chat">
 <meta property="og:title" content="{{ resolved_title }}">
 <meta property="og:description" content="{{ resolved_description|striptags }}">
 {% if resolved_image %}<meta property="og:image" content="{{ resolved_image }}">{% else %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'django_chat/og-image.png' %}">{% endif %}
-{% if resolved_canonical_url %}<meta property="og:url" content="{{ resolved_canonical_url }}">{% endif %}
+{% if resolved_canonical_url %}<meta property="og:url" content="{{ resolved_canonical_url }}">{% elif request %}<meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">{% endif %}
 <meta property="og:type" content="{{ og_type|default:'website' }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ resolved_title }}">

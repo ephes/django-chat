@@ -1,0 +1,49 @@
+{% extends "./base.html" %}
+
+{% block content %}
+  <main class="subscribe-page">
+    <section class="subscribe-hero">
+      <p class="eyebrow">Podcast RSS</p>
+      <h1>Listen &amp; Subscribe</h1>
+      <p>
+        Use the generated Django Chat podcast feed in any podcast app, or pick
+        one of the imported platform links below.
+      </p>
+      <a class="rss-primary-link" href="{% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' %}">
+        /episodes/feed/podcast/mp3/rss.xml
+      </a>
+    </section>
+
+    {% if source_metadata.visible_distribution_links %}
+      <section class="subscribe-section" aria-labelledby="subscribe-platforms">
+        <h2 id="subscribe-platforms">Podcast apps</h2>
+        <div class="platform-links">
+          {% for link in source_metadata.visible_distribution_links %}
+            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.name }}</a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <section class="subscribe-section" aria-labelledby="subscribe-feeds">
+      <h2 id="subscribe-feeds">Generated feeds</h2>
+      <ul class="feed-list">
+        {% for feed in podcast_feeds %}
+          <li>
+            <strong>{{ feed.format_label }} podcast RSS</strong>
+            <a href="{{ feed.rss_url }}">{{ feed.rss_url }}</a>
+          </li>
+        {% empty %}
+          <li>
+            <strong>Podcast RSS</strong>
+            <a href="{% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' %}">/episodes/feed/podcast/mp3/rss.xml</a>
+          </li>
+        {% endfor %}
+        <li>
+          <strong>Latest entries RSS</strong>
+          <a href="{{ blog_feed_url }}">{{ blog_feed_url }}</a>
+        </li>
+      </ul>
+    </section>
+  </main>
+{% endblock content %}

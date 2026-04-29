@@ -155,8 +155,9 @@ Composition top-to-bottom:
        distribution channel from
        `source_metadata.visible_distribution_links`.
      - "Listen & Subscribe" — black-filled button. Links to the
-       Simplecast site root if present in distribution links, else
-       falls back to the podcast RSS feed URL.
+       branded RSS-discovery page at `cast:feed_detail`
+       (`/episodes/feed/`). This supersedes the earlier visual-polish
+       fallback to the Simplecast site root or direct RSS feed URL.
    - Right col: square show artwork at `min(280px, 35vw)`,
      `border-radius: 4px`, soft shadow.
 

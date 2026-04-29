@@ -20,7 +20,9 @@ the configured S3 bucket and served through the public media host, so episode
 detail pages render a working `<audio>` element. Current staging is suitable
 for internal smoke review, but not yet ready for full host review of the
 representative show until the live catalog command has been run on staging and
-the remaining RSS-discovery and transcript-demo gaps are closed. No production
+the remaining transcript-demo gap is closed. The self-hosted podcast RSS URL is
+surfaced at `/episodes/feed/` and advertised through RSS auto-discovery links.
+No production
 deployment has been performed. The planning source
 of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
@@ -186,11 +188,13 @@ This slice includes a small fixture-backed database/page import, a live
 full-catalog metadata import path, opt-in streaming catalog audio copy, basic
 Django Chat django-cast templates, imported menu/social/distribution link
 rendering, local URL compatibility for `/`, `/episodes/`, and
-`/episodes/<slug>/`, a local smoke-level feed comparison for the imported
-sample, catalog performance measurement tooling, and deployment scaffolding.
+`/episodes/<slug>/`, a branded RSS-discovery page at `/episodes/feed/` with
+page-head RSS auto-discovery links, a local smoke-level feed comparison for the
+imported sample, catalog performance measurement tooling, and deployment
+scaffolding.
 
-It does not include RSS-discovery page work, transcript conversion, an enabled
-transcript worker service, exhaustive production feed parity, real production
+It does not include transcript conversion, an enabled transcript worker
+service, exhaustive production feed parity, real production
 deployment, production DNS changes, or feed redirects. Sample audio has been
 copied into staging and is reachable through the public media host, so internal
 review can inspect the deployed site/CMS and end-to-end playback before the

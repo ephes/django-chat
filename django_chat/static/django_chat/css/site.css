@@ -351,6 +351,88 @@ main {
   color: var(--dc-muted);
 }
 
+.subscribe-page {
+  padding: 56px 0 72px;
+}
+
+.subscribe-hero {
+  max-width: 760px;
+  padding: 0 0 34px;
+}
+
+.subscribe-hero h1 {
+  margin: 4px 0 14px;
+}
+
+.subscribe-hero p {
+  color: var(--dc-muted);
+  font-size: 1.08rem;
+  margin: 0 0 22px;
+}
+
+.rss-primary-link {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--dc-ink);
+  border-radius: var(--dc-radius);
+  background: var(--dc-ink);
+  color: #fff;
+  font-family: "Roboto Mono", ui-monospace, monospace;
+  font-size: 0.92rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.subscribe-section {
+  padding: 28px 0;
+  border-top: 1px solid var(--dc-line);
+}
+
+.subscribe-section h2 {
+  margin: 0 0 16px;
+}
+
+.platform-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.platform-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--dc-line);
+  border-radius: 999px;
+  color: var(--dc-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.feed-list {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.feed-list li {
+  display: grid;
+  gap: 4px;
+}
+
+.feed-list a {
+  font-family: "Roboto Mono", ui-monospace, monospace;
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
 .episode-detail {
   padding: 36px 0 64px;
 }

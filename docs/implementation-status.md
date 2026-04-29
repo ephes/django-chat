@@ -44,6 +44,14 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       live RSS + Simplecast source loader, `import_django_chat_catalog`
       with `--max-episodes`, `--dry-run`, `--copy-cover-image`, and opt-in
       streaming `--copy-audio`, plus `measure_django_chat_catalog`.
+- [x] **9b. Subscribe / RSS-discovery page** — `/episodes/feed/` now renders
+      the Django Chat-branded feed detail page, promotes the generated
+      self-hosted podcast RSS URL (`/episodes/feed/podcast/mp3/rss.xml`),
+      advertises the RSS feeds via `<link rel="alternate"
+      type="application/rss+xml">` head metadata,
+      renders imported platform links from
+      `PodcastSourceMetadata.visible_distribution_links`, and the show hero's
+      "Listen & Subscribe" CTA points there instead of the Simplecast site.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -79,6 +87,10 @@ PRD section "Acceptance Criteria For The Research Spike".
 - [x] Generated podcast feed validates for imported episodes (smoke level via
       `just compare-feed`; exhaustive parity deferred to production hardening
       per PRD).
+- [x] Generated podcast feed URL is surfaced for host review at
+      `/episodes/feed/`, with `/episodes/feed/podcast/mp3/rss.xml` promoted as
+      the primary self-hosted podcast RSS feed and advertised through RSS
+      auto-discovery links in the page head.
 - [ ] Remaining production migration risks documented before any live
       feed/DNS change. **`docs/production-migration-notes.md` does not exist
       yet.**
@@ -106,7 +118,8 @@ serving the polished site:
 
 Branch is unpushed at the time of writing.
 
-**Not yet ready for full host review, despite the polish and catalog importer:**
+**Not yet ready for full host review, despite the polish, catalog importer, and
+RSS-discovery page:**
 
 The deployed staging site remains useful for internal smoke review of
 deployment, CMS access, sample playback, the visual direction, and now safe
@@ -122,8 +135,9 @@ representative show review because:
   near-meaningless. Use `measure_django_chat_catalog` after a full import for
   feed/item count and episode-list query/timing data, then run manual
   Lighthouse/Web Vitals checks on deployed staging.
-- RSS feed URL isn't surfaced on any page yet — acceptance criterion
-  still open.
+- The self-hosted podcast RSS feed is now surfaced at `/episodes/feed/` and in
+  page-head RSS auto-discovery; hosts still need representative catalog and
+  transcript review before the site is ready for full handoff.
 
 ## Open Work (Highest Signal First)
 
@@ -132,49 +146,26 @@ representative show review because:
    metadata/artwork, and add `--copy-audio` only when the ~11 GB media transfer
    is intentionally approved. Then run `measure_django_chat_catalog
    --host=djangochat.staging.django-cast.com` and record feed/list metrics.
-2. **Subscribe / RSS-discovery page** — customise django-cast's
-   `feed_detail.html` (rendered at `cast:feed_detail` → `/episodes/feed/`)
-   to expose the RSS feed URL prominently and embed the Podlove Subscribe
-   Button. Re-target the `Listen & Subscribe` button on the show hero to
-   `{% url 'cast:feed_detail' slug=podcast.slug %}` instead of
-   `source_metadata.website_url` — resolves both the RSS-promotion gap
-   from slice 6 and the post-cutover self-loop risk in one change.
-   Concrete sub-tasks:
-   - Add `django_chat/templates/cast/django_chat/feed_detail.html`
-     extending the relevant cast base; without it the route falls
-     through to `cast/plain/feed_detail.html` and breaks the branded
-     shell.
-   - Decide source-of-truth for platform links: django-cast's feed view
-     reads `CAST_FOLLOW_LINKS` from settings, but real distribution links
-     live in `PodcastSourceMetadata.visible_distribution_links`. Pick one
-     (recommended: read `source_metadata` in the template, ignore
-     `CAST_FOLLOW_LINKS`).
-   - Bring the Podlove Subscribe Button asset into the repo
-     (`django_chat/static/subscribe_button/`). Reference layout in
-     `python-podcast/python_podcast/static/subscribe_button/`. Decide
-     whether to vendor it or pull it as a Python dep.
-   - Keep canonical/OG metadata correct (re-use `_meta.html` with an
-     appropriate `og_type`).
-3. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
+2. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
    least one representative episode. PRD permits either simple page
    content or the `cast_transcripts` worker path; simple page content is
    the lower-cost route. Closes the "transcript handling demonstrated"
    acceptance criterion.
-4. **Host review of staging.** With full catalog + RSS-discovery +
+3. **Host review of staging.** With full catalog + RSS-discovery +
    transcript demo in place, the staging site finally looks like the
    show. Send hosts the URL + `host-review-admin` credential.
-5. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
+4. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
    preservation, canonical domain, Simplecast directory coordination,
    analytics/CDN/ad-insertion questions. Content scope is in PRD lines
    520–525 and "Production Migration Considerations" section. Required
    before any DNS or feed cutover.
-6. **Production VPS, DNS cutover, feed redirects, podcast directory
-   updates** — last, per user. Out of scope until 1–5 are settled.
+5. **Production VPS, DNS cutover, feed redirects, podcast directory
+   updates** — last, per user. Out of scope until 1–4 are settled.
 
 ## Next Action
 
-Implement the **subscribe / RSS-discovery page** slice, then the transcript
-demo. Before host handoff, run the full catalog import on staging, record
+Implement the **transcript demo** slice. Before host handoff, run the full
+catalog import on staging, record
 `measure_django_chat_catalog` output against the deployed catalog, and decide
 whether any measured feed/list performance issue needs a focused fix before
 hosts review the site.

@@ -194,8 +194,7 @@ Optional full-catalog audio copy uses the same deployed environment with
 `--copy-audio`; it can transfer about 11 GB and should be treated as an
 operator-approved media operation, not a casual smoke command. Full host review
 is deferred until the catalog has been imported on staging and the
-RSS-discovery and transcript-demo gaps listed in `docs/implementation-status.md`
-are closed.
+transcript-demo gap listed in `docs/implementation-status.md` is closed.
 
 This repository still does not change DNS, configure Simplecast redirects, cut
 over podcast feeds, deploy production, or migrate production.

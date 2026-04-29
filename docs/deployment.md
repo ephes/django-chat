@@ -264,8 +264,8 @@ Wagtail admin or replace the account when host review access is settled.
 
 The deployment scaffold and host review docs are in this repository, and live
 staging is available for internal smoke review. Full host review is deferred
-until the live catalog has been imported on staging and the RSS-discovery and
-transcript-demo gaps listed in `docs/implementation-status.md` are closed.
+until the live catalog has been imported on staging and the transcript-demo gap
+listed in `docs/implementation-status.md` is closed.
 This deployment path does not include:
 
 - a real production deploy
