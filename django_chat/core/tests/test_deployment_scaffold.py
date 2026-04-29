@@ -108,7 +108,7 @@ def test_host_review_docs_preserve_staging_boundary() -> None:
     assert "Staging is live" in host_review
     assert "https://djangochat.staging.django-cast.com/cms/" in host_review
     assert "Do not commit, document, or print admin passwords" in host_review
-    assert "Sample audio is copied to the staging media bucket" in host_review
+    assert "Full-catalog audio is copied to the staging media bucket" in host_review
     assert "The staging feed is not canonical" in staging_differences
     assert "Staging does not mean production migration is complete" in staging_differences
     assert "`cast_transcripts` database worker remains disabled" in staging_differences

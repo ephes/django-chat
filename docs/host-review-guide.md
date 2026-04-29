@@ -21,21 +21,20 @@ Verified live behavior:
 - `/cms/` redirects anonymous visitors to the Wagtail login.
 - A staging-only `host-review-admin` superuser exists for review bootstrap.
 
-Sample audio is copied to the staging media bucket and served through the
+Full-catalog audio is copied to the staging media bucket and served through the
 public media host. Episode detail pages render the **Podlove web player**
 (`<podlove-player>`) — a styled player from django-cast loaded via
 `django-vite`. The heavy embed script (`cast/js/web-player/embed.5.js`,
 ~138 KB) loads on viewport intersection, keeping it out of the critical
-render path. The MP3 URL responds with HTTP 200 and `audio/mpeg`. Sample
-audio playback is therefore available end-to-end on staging.
+render path. Copied MP3 URLs respond with HTTP 200 and `audio/mpeg`. Audio
+playback is therefore available end-to-end on staging.
 
-As of 2026-04-29, staging has had full-catalog metadata imported but still
-needs the full catalog audio-copy step before it is representative for host
-review. Every live imported podcast episode must have `podcast_audio` before
-the review gate opens; otherwise django-cast's latest-entries RSS route can
-fail while serializing podcast episodes. The self-hosted podcast RSS URL is
-available from `/episodes/feed/` and advertised through RSS auto-discovery
-links.
+As of 2026-04-29, staging has full-catalog metadata plus copied audio for every
+live imported podcast episode. `measure_django_chat_catalog
+--host=djangochat.staging.django-cast.com` reports `live_episodes=202`,
+`with_audio=202`, and `missing_audio=0`; both generated RSS routes return HTTP
+200 with 202 items. The self-hosted podcast RSS URL is available from
+`/episodes/feed/` and advertised through RSS auto-discovery links.
 
 ## Review URLs
 
@@ -160,9 +159,8 @@ repository comments.
 
 ## Known Limitations
 
-- Current staging is not ready for host review until every live imported
-  podcast episode has copied audio and the remaining transcript-demo gap is
-  closed.
+- Current staging is not ready for host review until the remaining
+  transcript-demo gap is closed.
 - The staging feed is for validation only and is not the canonical Django Chat
   podcast feed.
 - No production DNS, feed redirect, Simplecast migration, or podcast directory

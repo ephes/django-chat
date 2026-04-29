@@ -66,9 +66,11 @@ PRD section "Acceptance Criteria For The Research Spike".
 - [x] Staging site exists and loads over HTTPS.
 - [x] Hosts can log into Wagtail admin (`host-review-admin` bootstrap account
       on staging).
-- [x] Representative sample of episodes imported with audio playback (8/8
-      episodes, CloudFront-served MP3s, Podlove `<podlove-player>` element
-      on detail pages with django-vite-loaded init module).
+- [x] Representative episode audio playback proven. Initially verified against
+      the 8/8 copied sample; staging now has the full live catalog copied
+      (202/202 live episodes with audio), CloudFront-served MP3s, and Podlove
+      `<podlove-player>` elements on detail pages with django-vite-loaded init
+      module.
 - [ ] Public URL patterns `/`, `/episodes/`, `/episodes/<slug>`, and
       `/episodes/<slug>/transcript` represented or redirected. **First three
       ✓; the transcript URL shape reverses via django-cast
@@ -118,67 +120,62 @@ serving the polished site:
   `ensure_default_site` post-deploy task.
 - `import_django_chat_sample --copy-audio --copy-cover-image` is the
   documented operator command for a fresh staging build.
+- `import_django_chat_catalog --copy-cover-image --copy-audio` is the
+  documented operator command for representative full-catalog host-review
+  audio state.
 
 Branch is unpushed at the time of writing.
 
-**Not yet ready for full host review, despite the polish, catalog importer, and
-RSS-discovery page:**
+**Not yet ready for full host review, despite the polish, full catalog/audio
+copy, and RSS-discovery page:**
 
 The deployed staging site remains useful for internal smoke review of
-deployment, CMS access, sample playback, the visual direction, and now safe
-catalog-import rehearsal. It is not ready to hand to hosts as the
-representative show review because:
+deployment, CMS access, playback, the visual direction, and the full catalog.
+It is not ready to hand to hosts as the representative show review because the
+transcript-demo acceptance criterion is still open.
 
-- The repo has a repeatable full-catalog command, but staging should be
-  checked after each deploy to confirm whether it currently holds the
-  fixture sample, a limited catalog exercise, or the full live catalog.
-- Full-catalog audio copy remains an explicit operator action because the
-  transfer is about 11 GB.
-- Lighthouse / Web Vitals scores against the 8-episode sample are
-  near-meaningless. Use `measure_django_chat_catalog` after a full import for
-  feed/item count and episode-list query/timing data, then run manual
-  Lighthouse/Web Vitals checks on deployed staging.
+As of 2026-04-29, staging has the full live catalog copied for host-review
+audio validation: `measure_django_chat_catalog
+--host=djangochat.staging.django-cast.com` reports `live_episodes=202`,
+`with_audio=202`, and `missing_audio=0`. Both generated RSS routes return 200
+with 202 items.
+
+- After each deploy or destructive staging refresh, re-check whether staging
+  still holds the intended full live catalog/audio state.
+- Lighthouse / Web Vitals scores against the old 8-episode sample are
+  obsolete. Use the current full-catalog measurement for feed/item count and
+  episode-list query/timing data, then run manual Lighthouse/Web Vitals checks
+  on deployed staging.
+- Latest-entries feed measurement on 2026-04-29 reported `queries=620` across
+  202 items; investigate before host handoff in case it is an N+1.
 - The self-hosted podcast RSS feed is now surfaced at `/episodes/feed/` and in
-  page-head RSS auto-discovery; hosts still need representative catalog and
-  transcript review before the site is ready for full handoff.
+  page-head RSS auto-discovery; hosts still need transcript review before the
+  site is ready for full handoff.
 
 ## Open Work (Highest Signal First)
 
-1. **Make staging catalog/audio state coherent before host review.** Staging
-   currently may contain full-catalog metadata while only a copied-audio
-   subset has `podcast_audio`. That is not a representative podcast state:
-   podcast episodes without audio should be treated as an incomplete import,
-   not worked around in templates or feed views. Use
-   `import_django_chat_catalog --copy-cover-image --copy-audio` when the
-   ~11 GB media transfer is intentionally approved, then confirm
-   `/episodes/feed/podcast/mp3/rss.xml` and `/episodes/feed/rss.xml` both
-   return 200 and run `measure_django_chat_catalog
-   --host=djangochat.staging.django-cast.com`. The measurement output should
-   report `missing_audio=0` before representative host review.
-2. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
+1. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
    least one representative episode. PRD permits either simple page
    content or the `cast_transcripts` worker path; simple page content is
    the lower-cost route. Closes the "transcript handling demonstrated"
    acceptance criterion.
-3. **Host review of staging.** With full catalog + RSS-discovery +
+2. **Host review of staging.** With full catalog + RSS-discovery +
    transcript demo in place, the staging site finally looks like the
    show. Send hosts the URL + `host-review-admin` credential.
-4. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
+3. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
    preservation, canonical domain, Simplecast directory coordination,
    analytics/CDN/ad-insertion questions. Content scope is in PRD lines
    520–525 and "Production Migration Considerations" section. Required
    before any DNS or feed cutover.
-5. **Production VPS, DNS cutover, feed redirects, podcast directory
-   updates** — last, per user. Out of scope until 1–4 are settled.
+4. **Production VPS, DNS cutover, feed redirects, podcast directory
+   updates** — last, per user. Out of scope until 1–3 are settled.
 
 ## Next Action
 
-Make the deployed staging catalog/audio state coherent, then implement the
-**transcript demo** slice. Before host handoff, record
-`measure_django_chat_catalog` output against the deployed catalog and decide
-whether any measured feed/list performance issue needs a focused fix before
-hosts review the site.
+Implement the **transcript demo** slice. Before host handoff, use the recorded
+full-catalog measurement to decide whether the latest-entries feed query count
+needs a focused performance fix before hosts review the site.
 
 Production migration (DNS, feed cutover, real production VPS) is
-explicitly deferred until host review (item 3) has happened and any
+explicitly deferred until host review (item 2) has happened and any
 perf fixes from the catalog measurement have landed.
