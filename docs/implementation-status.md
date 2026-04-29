@@ -148,10 +148,16 @@ with 202 items.
   obsolete. Use the current full-catalog measurement for feed/item count and
   episode-list query/timing data, then run manual Lighthouse/Web Vitals checks
   on deployed staging.
-- Latest-entries feed measurement on 2026-04-29 reported `queries=620` across
-  202 items; research whether the same behavior exists in `../python-podcast`
-  before deciding whether Django Chat needs a local fix, an upstream django-cast
-  fix, or no pre-handoff change.
+- Latest-entries feed query behavior has a scoped Django Chat mitigation.
+  Staging measurement on 2026-04-29 reported `queries=620` across 202 items
+  because django-cast's latest-entries feed builds podcast feeds from base
+  `Post` rows, causing per-episode `specific`, `podcast_audio`, and
+  `transcript` lookups. `../python-podcast` uses the same django-cast
+  latest-entries implementation path, so this is shared upstream behavior, but
+  Django Chat's `/episodes/feed/rss.xml` now routes through a local feed
+  subclass that reuses django-cast's `Episode` queryset with
+  `select_related("podcast_audio__transcript")` and renders the feed body from
+  repository context for the episode-only catalog.
 - The self-hosted podcast RSS feed is now surfaced at `/episodes/feed/` and in
   page-head RSS auto-discovery.
 - Voxhelm-generated transcript handling is verified for an imported,
@@ -164,32 +170,24 @@ with 202 items.
 
 ## Open Work (Highest Signal First)
 
-1. **Research/fix latest-entries feed query count before host handoff.**
-   Full-catalog measurement on 2026-04-29 reported `queries=620` for
-   `/episodes/feed/rss.xml` across 202 items. First check whether the same
-   query-count pattern exists in `../python-podcast` on comparable django-cast
-   latest-entries feeds. Then decide whether this is expected django-cast feed
-   behavior, an upstream/shared optimization, a Django Chat-specific issue, or
-   acceptable for host review without a pre-handoff fix.
-2. **Host review of staging.** With full catalog + RSS-discovery +
+1. **Host review of staging.** With full catalog + RSS-discovery +
    Voxhelm transcript handling in place, the staging site finally looks like
-   the show. Send hosts the URL + `host-review-admin` credential once the query
-   count decision is settled.
-3. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
+   the show. The latest-entries query count decision is settled; send hosts the
+   URL + `host-review-admin` credential.
+2. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
    preservation, canonical domain, Simplecast directory coordination,
    analytics/CDN/ad-insertion questions. Content scope is in PRD lines
    520–525 and "Production Migration Considerations" section. Required
    before any DNS or feed cutover.
-4. **Production VPS, DNS cutover, feed redirects, podcast directory
+3. **Production VPS, DNS cutover, feed redirects, podcast directory
    updates** — last, per user. Out of scope until 1–3 are settled.
 
 ## Next Action
 
-Research the latest-entries feed query count. Start by measuring or inspecting
-the comparable `../python-podcast` django-cast feed path, then decide whether
-Django Chat needs a focused performance fix before hosts review the site. If
-not, proceed to host review.
+Proceed to host review. The latest-entries feed mitigation has been deployed,
+and staging catalog measurement confirms `/episodes/feed/rss.xml` still returns
+202 items with a non-linear query count.
 
 Production migration (DNS, feed cutover, real production VPS) is
-explicitly deferred until host review (item 2) has happened and any
+explicitly deferred until host review (item 1) has happened and any
 perf fixes from the catalog measurement have landed.

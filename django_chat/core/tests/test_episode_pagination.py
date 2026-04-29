@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from django.test import Client
+from django.urls import reverse
 
 from django_chat.imports.import_sample import import_django_chat_sample
 
@@ -12,7 +13,7 @@ from django_chat.imports.import_sample import import_django_chat_sample
 def test_pagination_markup_hidden_for_eight_episode_fixture(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/")
+    response = client.get(episode_index_path())
 
     body = response.content.decode()
     assert response.context["is_paginated"] is False
@@ -24,7 +25,7 @@ def test_pagination_markup_visible_when_page_size_is_small(client: Client) -> No
     import_django_chat_sample()
 
     with patch("django_chat.core.views.EPISODES_PER_PAGE", 3):
-        response = client.get("/episodes/?search=django")
+        response = client.get(f"{episode_index_path()}?search=django")
 
     body = response.content.decode()
     assert response.context["is_paginated"] is True
@@ -38,8 +39,12 @@ def test_pagination_parameters_context_value_strips_page_only(client: Client) ->
     import_django_chat_sample()
 
     with patch("django_chat.core.views.EPISODES_PER_PAGE", 3):
-        response = client.get("/episodes/?search=django&page=2")
+        response = client.get(f"{episode_index_path()}?search=django&page=2")
 
     parameters = response.context["parameters"]
     assert "search=django" in parameters
     assert "page=" not in parameters
+
+
+def episode_index_path() -> str:
+    return reverse("django_chat_episode_index")

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Literal
 from xml.etree import ElementTree
 
+from django.conf import settings
 from django.core.cache import cache
 from django.test import Client
 from django.urls import reverse
@@ -77,12 +78,13 @@ class FeedSmokeResult:
 def compare_django_chat_sample_feed(
     fixture_dir: Path | str = DEFAULT_SOURCE_FIXTURE_DIR,
     *,
-    podcast_slug: str = "episodes",
+    podcast_slug: str | None = None,
     audio_format: str = "mp3",
     host: str = "localhost",
 ) -> FeedSmokeResult:
     """Compare the local generated django-cast podcast feed to the sample RSS fixture."""
 
+    podcast_slug = podcast_slug or settings.DJANGO_CHAT_PODCAST_SLUG
     source = load_source_feed(fixture_dir)
     feed_path = reverse("cast:podcast_feed_rss", args=[podcast_slug, audio_format])
     response = fetch_generated_feed(feed_path, host=host)

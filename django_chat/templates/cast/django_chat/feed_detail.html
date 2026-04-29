@@ -9,9 +9,8 @@
         Use the generated Django Chat podcast feed in any podcast app, or pick
         one of the imported platform links below.
       </p>
-      <a class="rss-primary-link" href="{% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' %}">
-        /episodes/feed/podcast/mp3/rss.xml
-      </a>
+      {% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' as primary_podcast_feed_url %}
+      <a class="rss-primary-link" href="{{ primary_podcast_feed_url }}">{{ primary_podcast_feed_url }}</a>
     </section>
 
     {% if source_metadata.visible_distribution_links %}
@@ -36,7 +35,7 @@
         {% empty %}
           <li>
             <strong>Podcast RSS</strong>
-            <a href="{% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' %}">/episodes/feed/podcast/mp3/rss.xml</a>
+            <a href="{{ primary_podcast_feed_url }}">{{ primary_podcast_feed_url }}</a>
           </li>
         {% endfor %}
         <li>

@@ -390,6 +390,12 @@ environment.
 development. Staging and production must set
 `DJANGO_CHAT_WAGTAIL_ADMIN_BASE_URL` when those environments are introduced.
 
+`DJANGO_CHAT_PODCAST_SLUG` is the project-level slug for the imported podcast
+page and its route prefix. It defaults to `episodes`, producing `/episodes/`,
+`/episodes/feed/`, and `/episodes/feed/rss.xml`. Change it only before import
+or with a planned page reslug, because imported pages, feed URLs, and host
+review documentation assume the same slug.
+
 ## Media Storage
 
 Local and test settings use filesystem media storage by default. S3-compatible

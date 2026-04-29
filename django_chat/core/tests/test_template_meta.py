@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import pytest
+from django.conf import settings
 from django.test import Client
+from django.urls import reverse
 
 from django_chat.imports.import_sample import import_django_chat_sample
 
@@ -10,7 +12,7 @@ from django_chat.imports.import_sample import import_django_chat_sample
 def test_episode_index_emits_favicon_links(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/")
+    response = client.get(episode_index_path())
 
     body = response.content.decode()
     assert 'rel="icon"' in body
@@ -23,7 +25,7 @@ def test_episode_index_emits_favicon_links(client: Client) -> None:
 def test_episode_index_emits_og_tags(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/")
+    response = client.get(episode_index_path())
 
     body = response.content.decode()
     assert 'property="og:site_name"' in body
@@ -37,7 +39,7 @@ def test_episode_index_emits_og_tags(client: Client) -> None:
 def test_episode_detail_emits_article_og_type(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/django-tasks-jake-howard/")
+    response = client.get(episode_detail_path("django-tasks-jake-howard"))
 
     body = response.content.decode()
     assert 'property="og:type" content="article"' in body
@@ -47,7 +49,7 @@ def test_episode_detail_emits_article_og_type(client: Client) -> None:
 def test_episode_index_loads_self_hosted_fonts_css(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/")
+    response = client.get(episode_index_path())
 
     body = response.content.decode()
     assert "django_chat/css/site.css" in body
@@ -74,3 +76,11 @@ def test_podlove_player_config_uses_django_chat_brand_colors(client: Client) -> 
     assert tokens["brand"] != "#E64415"
     # Contrast pinned to the project ink token.
     assert tokens["contrast"] == "#0d0d0d"
+
+
+def episode_index_path() -> str:
+    return reverse("django_chat_episode_index")
+
+
+def episode_detail_path(slug: str) -> str:
+    return f"/{settings.DJANGO_CHAT_PODCAST_SLUG}/{slug}/"

@@ -47,7 +47,7 @@
   <body>
     <header class="site-header">
       <nav class="site-nav" aria-label="Primary">
-        <a class="brand" href="/episodes/" aria-label="Django Chat">
+        <a class="brand" href="{% url 'django_chat_episode_index' %}" aria-label="Django Chat">
           {% if source_metadata.image_url %}
             <img class="brand-mark" src="{{ source_metadata.image_url }}" alt="">
           {% else %}
@@ -56,7 +56,7 @@
           <span class="brand-name">Django Chat</span>
         </a>
         <div class="nav-links">
-          <a href="/episodes/">Episodes</a>
+          <a href="{% url 'django_chat_episode_index' %}">Episodes</a>
           {% if source_metadata %}
             {% for link in source_metadata.visible_menu_links %}
               <a href="{{ link.url }}"{% if link.new_window %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.name }}</a>

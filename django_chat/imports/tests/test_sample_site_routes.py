@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from cast.models import Audio, Episode
 from django.apps import apps
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.test import Client, override_settings
 from django.urls import resolve, reverse
@@ -19,7 +20,7 @@ def test_root_redirects_to_episode_index(client: Client) -> None:
     response = client.get("/")
 
     assert response.status_code == 302
-    assert response["Location"] == "/episodes/"
+    assert response["Location"] == episode_index_path()
 
 
 @pytest.mark.django_db
@@ -28,7 +29,7 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
 ) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/")
+    response = client.get(episode_index_path())
 
     assert response.status_code == 200
     assert "cast/django_chat/blog_list_of_posts.html" in [
@@ -38,11 +39,11 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     assert "Django Chat" in content
     assert "A biweekly podcast on the Django Web Framework" in content
     assert "Django Tasks - Jake Howard" in content
-    assert "/episodes/django-tasks-jake-howard/" in content
+    assert episode_detail_path("django-tasks-jake-howard") in content
     assert 'rel="alternate" type="application/rss+xml"' in content
-    assert "http://testserver/episodes/feed/podcast/mp3/rss.xml" in content
+    assert absolute_url(podcast_feed_path()) in content
     assert "Listen &amp; Subscribe" in content
-    assert 'href="/episodes/feed/"' in content
+    assert f'href="{feed_detail_path()}"' in content
     assert 'href="https://djangochat.com"' not in content
     assert "Sponsor Us" in content
     assert "https://docs.google.com/document/" in content
@@ -54,7 +55,7 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
 
     show_actions = _html_between(content, '<div class="show-actions"', "</div>")
     assert "Listen &amp; Subscribe" in show_actions
-    assert 'href="/episodes/feed/"' in show_actions
+    assert f'href="{feed_detail_path()}"' in show_actions
     assert "Apple Podcasts" not in show_actions
     assert "button-secondary" not in show_actions
 
@@ -69,7 +70,7 @@ def test_imported_sample_feed_detail_renders_rss_and_distribution_links(
 ) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/feed/")
+    response = client.get(feed_detail_path())
 
     assert response.status_code == 200
     assert "cast/django_chat/feed_detail.html" in [
@@ -78,8 +79,8 @@ def test_imported_sample_feed_detail_renders_rss_and_distribution_links(
     content = response.content.decode()
     assert "Listen &amp; Subscribe" in content
     assert 'rel="alternate" type="application/rss+xml"' in content
-    assert "http://testserver/episodes/feed/podcast/mp3/rss.xml" in content
-    assert "/episodes/feed/podcast/mp3/rss.xml" in content
+    assert absolute_url(podcast_feed_path()) in content
+    assert podcast_feed_path() in content
     assert "Apple Podcasts" in content
     assert (
         '<a href="https://itunes.apple.com/us/podcast/django-chat/id1451536459"'
@@ -101,12 +102,12 @@ def test_imported_sample_feed_detail_renders_rss_and_distribution_links(
 def test_feed_detail_canonical_drops_query_strings(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/feed/?utm_source=review")
+    response = client.get(f"{feed_detail_path()}?utm_source=review")
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert '<link rel="canonical" href="http://testserver/episodes/feed/">' in content
-    assert '<meta property="og:url" content="http://testserver/episodes/feed/">' in content
+    assert f'<link rel="canonical" href="{absolute_url(feed_detail_path())}">' in content
+    assert f'<meta property="og:url" content="{absolute_url(feed_detail_path())}">' in content
     assert "utm_source=review" not in content
 
 
@@ -116,7 +117,7 @@ def test_imported_sample_episode_detail_renders_without_copied_audio(
 ) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/django-tasks-jake-howard/")
+    response = client.get(episode_detail_path("django-tasks-jake-howard"))
 
     assert response.status_code == 200
     assert "cast/django_chat/episode.html" in [
@@ -138,7 +139,7 @@ def test_imported_sample_episode_detail_renders_copied_audio(
     with override_settings(MEDIA_ROOT=tmp_path):
         import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
 
-    response = client.get("/episodes/django-tasks-jake-howard/")
+    response = client.get(episode_detail_path("django-tasks-jake-howard"))
 
     assert response.status_code == 200
     content = response.content.decode()
@@ -170,8 +171,8 @@ def test_imported_sample_episode_surfaces_attached_generated_transcript(
         assert episode.podcast_audio is not None
         transcript = _create_generated_transcript(episode.podcast_audio)
 
-        detail_response = client.get("/episodes/django-tasks-jake-howard/")
-        transcript_response = client.get("/episodes/django-tasks-jake-howard/transcript/")
+        detail_response = client.get(episode_detail_path("django-tasks-jake-howard"))
+        transcript_response = client.get(transcript_path("django-tasks-jake-howard"))
         podlove_response = client.get(
             reverse(
                 "cast:api:audio_podlove_detail",
@@ -181,9 +182,7 @@ def test_imported_sample_episode_surfaces_attached_generated_transcript(
 
     assert detail_response.status_code == 200
     detail_content = detail_response.content.decode()
-    assert (
-        'href="http://testserver/episodes/django-tasks-jake-howard/transcript/"' in detail_content
-    )
+    assert f'href="{absolute_url(transcript_path("django-tasks-jake-howard"))}"' in detail_content
     assert "<podlove-player" in detail_content
 
     assert transcript_response.status_code == 200
@@ -233,14 +232,17 @@ def test_source_links_are_persisted_for_template_rendering() -> None:
 
 
 def test_public_url_reversals_still_match_current_shapes() -> None:
+    slug = podcast_slug()
+
     assert reverse("home") == "/"
-    assert reverse("cast:podcast_feed_rss", args=["episodes", "mp3"]) == (
-        "/episodes/feed/podcast/mp3/rss.xml"
+    assert (
+        reverse("cast:podcast_feed_rss", args=[slug, "mp3"]) == f"/{slug}/feed/podcast/mp3/rss.xml"
     )
-    assert reverse("cast:latest_entries_feed", args=["episodes"]) == "/episodes/feed/rss.xml"
-    assert reverse("cast:feed_detail", args=["episodes"]) == "/episodes/feed/"
-    assert reverse("cast:episode-transcript", args=["episodes", "django-tasks-jake-howard"]) == (
-        "/episodes/django-tasks-jake-howard/transcript/"
+    assert reverse("cast:latest_entries_feed", args=[slug]) == f"/{slug}/feed/rss.xml"
+    assert reverse("cast:feed_detail", args=[slug]) == f"/{slug}/feed/"
+    assert (
+        reverse("cast:episode-transcript", args=[slug, "django-tasks-jake-howard"])
+        == f"/{slug}/django-tasks-jake-howard/transcript/"
     )
     assert reverse("wagtailadmin_home") == "/cms/"
     assert reverse("cast:styleguide") == "/styleguide/"
@@ -306,3 +308,35 @@ def _html_between(content: str, start: str, end: str) -> str:
     fragment = content.split(start, maxsplit=1)[1]
     assert end in fragment
     return fragment.split(end, maxsplit=1)[0]
+
+
+def podcast_slug() -> str:
+    return settings.DJANGO_CHAT_PODCAST_SLUG
+
+
+def episode_index_path() -> str:
+    return reverse("django_chat_episode_index")
+
+
+def feed_detail_path() -> str:
+    return reverse("cast:feed_detail", args=[podcast_slug()])
+
+
+def podcast_feed_path() -> str:
+    return reverse("cast:podcast_feed_rss", args=[podcast_slug(), "mp3"])
+
+
+def latest_entries_feed_path() -> str:
+    return reverse("cast:latest_entries_feed", args=[podcast_slug()])
+
+
+def episode_detail_path(slug: str) -> str:
+    return f"/{podcast_slug()}/{slug}/"
+
+
+def transcript_path(slug: str) -> str:
+    return reverse("cast:episode-transcript", args=[podcast_slug(), slug])
+
+
+def absolute_url(path: str) -> str:
+    return f"http://testserver{path}"

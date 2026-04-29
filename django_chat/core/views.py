@@ -5,6 +5,7 @@ from typing import cast as type_cast
 
 from cast.filters import PostFilterset
 from cast.models import Episode, Podcast
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -15,7 +16,7 @@ EPISODES_PER_PAGE = 20
 
 
 def podcast_episode_index(request: HttpRequest) -> HttpResponse:
-    podcast = get_object_or_404(Podcast.objects.live(), slug="episodes")
+    podcast = get_object_or_404(Podcast.objects.live(), slug=settings.DJANGO_CHAT_PODCAST_SLUG)
 
     base_qs = Episode.objects.live().child_of(podcast).order_by("-visible_date")
     filterset = PostFilterset(data=request.GET, queryset=base_qs)

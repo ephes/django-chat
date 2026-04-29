@@ -15,6 +15,7 @@ from urllib.request import Request, urlopen
 from uuid import UUID
 
 from cast.models import Audio, Episode, Podcast
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files import File
 from django.core.files.base import ContentFile
@@ -50,7 +51,6 @@ from django_chat.imports.source_data import (
 )
 
 DEFAULT_SOURCE_FIXTURE_DIR = Path(__file__).parent / "tests" / "fixtures" / "django_chat_source"
-PODCAST_PAGE_SLUG = "episodes"
 
 DETAIL_FIXTURE_FILENAMES = (
     "simplecast_episode_detail_0_preview.json",
@@ -385,11 +385,16 @@ def _get_or_create_podcast_page(
     if metadata is not None:
         return cast(Podcast, metadata.podcast), False
 
-    existing = Podcast.objects.child_of(parent_page).filter(slug=PODCAST_PAGE_SLUG).first()
+    existing = (
+        Podcast.objects.child_of(parent_page).filter(slug=settings.DJANGO_CHAT_PODCAST_SLUG).first()
+    )
     if existing is not None:
         return existing, False
 
-    podcast = Podcast(title=simplecast_podcast.title or rss_podcast.title, slug=PODCAST_PAGE_SLUG)
+    podcast = Podcast(
+        title=simplecast_podcast.title or rss_podcast.title,
+        slug=settings.DJANGO_CHAT_PODCAST_SLUG,
+    )
     _update_podcast_page_fields(podcast, rss_podcast, simplecast_podcast)
     parent_page.add_child(instance=podcast)
     return podcast, True
@@ -414,7 +419,7 @@ def _update_podcast_page_fields(
     page = cast(Any, podcast)
     page.title = title
     page.draft_title = title
-    page.slug = PODCAST_PAGE_SLUG
+    page.slug = settings.DJANGO_CHAT_PODCAST_SLUG
     if page.owner_id is None:
         page.owner = _get_import_user()
     page.author = _join_text(simplecast_podcast.author_names) or rss_podcast.author

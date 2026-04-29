@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandParser
 
 from django_chat.imports.performance import (
@@ -19,8 +20,11 @@ class Command(BaseCommand):
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
             "--podcast-slug",
-            default="episodes",
-            help="Imported podcast slug to measure. Defaults to episodes.",
+            default=settings.DJANGO_CHAT_PODCAST_SLUG,
+            help=(
+                "Imported podcast slug to measure. "
+                f"Defaults to {settings.DJANGO_CHAT_PODCAST_SLUG}."
+            ),
         )
         parser.add_argument(
             "--audio-format",

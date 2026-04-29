@@ -4,6 +4,7 @@ from io import StringIO
 from pathlib import Path
 
 import pytest
+from django.conf import settings
 from django.core.management import call_command
 from django.test import override_settings
 
@@ -23,14 +24,16 @@ def test_catalog_performance_measurement_reports_feed_and_list_metrics(
         import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
         result = measure_catalog_performance(host="testserver")
 
-    assert result.feed.path == "/episodes/feed/podcast/mp3/rss.xml"
+    podcast_slug = settings.DJANGO_CHAT_PODCAST_SLUG
+    assert result.feed.path == f"/{podcast_slug}/feed/podcast/mp3/rss.xml"
     assert result.feed.status_code == 200
     assert result.feed_item_count == 8
     assert result.feed.query_count >= 0
-    assert result.latest_entries_feed.path == "/episodes/feed/rss.xml"
+    assert result.latest_entries_feed.path == f"/{podcast_slug}/feed/rss.xml"
     assert result.latest_entries_feed.status_code == 200
     assert result.latest_entries_item_count == 8
-    assert result.episode_list.path == "/episodes/"
+    assert result.latest_entries_feed.query_count <= 15
+    assert result.episode_list.path == f"/{podcast_slug}/"
     assert result.episode_list.status_code == 200
     assert result.episode_list.query_count > 0
     assert result.audio_completeness.live_episode_count == 8
@@ -67,7 +70,7 @@ def test_catalog_performance_management_command_outputs_metrics(tmp_path: Path) 
 def test_audio_completeness_reports_missing_audio_for_sample_import_without_audio() -> None:
     import_django_chat_sample()
 
-    result = measure_audio_completeness(podcast_slug="episodes")
+    result = measure_audio_completeness(podcast_slug=settings.DJANGO_CHAT_PODCAST_SLUG)
 
     assert result.live_episode_count == 8
     assert result.with_audio_count == 0

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 from django.test import Client
+from django.urls import reverse
 
 from django_chat.imports.import_sample import import_django_chat_sample
 
@@ -10,7 +11,7 @@ from django_chat.imports.import_sample import import_django_chat_sample
 def test_episode_index_filters_by_search_query(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/?search=tasks")
+    response = client.get(f"{episode_index_path()}?search=tasks")
 
     assert response.status_code == 200
     body = response.content.decode()
@@ -22,7 +23,7 @@ def test_episode_index_filters_by_search_query(client: Client) -> None:
 def test_episode_index_unfiltered_lists_all_sample_episodes(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/")
+    response = client.get(episode_index_path())
 
     assert response.status_code == 200
     body = response.content.decode()
@@ -34,7 +35,7 @@ def test_episode_index_unfiltered_lists_all_sample_episodes(client: Client) -> N
 def test_episode_index_exposes_filterset_form_fields(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/")
+    response = client.get(episode_index_path())
 
     body = response.content.decode()
     assert 'name="search"' in body
@@ -50,7 +51,7 @@ def test_episode_index_no_results_state_renders_when_search_misses(
 ) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/?search=zzzzzznotaword")
+    response = client.get(f"{episode_index_path()}?search=zzzzzznotaword")
 
     assert response.status_code == 200
     body = response.content.decode()
@@ -61,7 +62,7 @@ def test_episode_index_no_results_state_renders_when_search_misses(
 def test_episode_index_marks_selected_ordering_in_form(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/?o=visible_date")
+    response = client.get(f"{episode_index_path()}?o=visible_date")
 
     body = response.content.decode()
     assert 'value="visible_date" selected' in body
@@ -72,7 +73,7 @@ def test_episode_index_marks_selected_ordering_in_form(client: Client) -> None:
 def test_episode_index_marks_descending_ordering_in_form(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/?o=-visible_date")
+    response = client.get(f"{episode_index_path()}?o=-visible_date")
 
     body = response.content.decode()
     assert 'value="-visible_date" selected' in body
@@ -84,7 +85,7 @@ def test_episode_index_marks_descending_ordering_in_form(client: Client) -> None
 def test_episode_index_ascending_order_renders_oldest_first(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/?o=visible_date")
+    response = client.get(f"{episode_index_path()}?o=visible_date")
 
     body = response.content.decode()
     # 2019-02-02 "Preview" is the oldest sample episode; 2026-04-15
@@ -102,7 +103,7 @@ def test_episode_index_ascending_order_renders_oldest_first(client: Client) -> N
 def test_episode_index_default_order_renders_newest_first(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/")
+    response = client.get(episode_index_path())
 
     body = response.content.decode()
     preview_pos = body.find("Preview")
@@ -118,7 +119,7 @@ def test_episode_index_default_order_renders_newest_first(client: Client) -> Non
 def test_episode_index_filters_by_date_range_after(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/?date_after=2026-01-01")
+    response = client.get(f"{episode_index_path()}?date_after=2026-01-01")
 
     body = response.content.decode()
     # 2026 episodes should still appear:
@@ -133,7 +134,7 @@ def test_episode_index_filters_by_date_range_after(client: Client) -> None:
 def test_episode_index_filters_by_date_range_before(client: Client) -> None:
     import_django_chat_sample()
 
-    response = client.get("/episodes/?date_before=2019-12-31")
+    response = client.get(f"{episode_index_path()}?date_before=2019-12-31")
 
     body = response.content.decode()
     # The three 2019 episodes survive:
@@ -141,3 +142,7 @@ def test_episode_index_filters_by_date_range_before(client: Client) -> None:
     assert "How to Learn Django" in body
     # 2026 episodes are excluded:
     assert "Django Tasks - Jake Howard" not in body
+
+
+def episode_index_path() -> str:
+    return reverse("django_chat_episode_index")

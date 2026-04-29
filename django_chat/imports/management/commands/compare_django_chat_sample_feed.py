@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
 from django_chat.imports.feed_smoke import (
@@ -30,8 +31,11 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--podcast-slug",
-            default="episodes",
-            help="Imported podcast slug to compare. Defaults to episodes.",
+            default=settings.DJANGO_CHAT_PODCAST_SLUG,
+            help=(
+                "Imported podcast slug to compare. "
+                f"Defaults to {settings.DJANGO_CHAT_PODCAST_SLUG}."
+            ),
         )
         parser.add_argument(
             "--audio-format",

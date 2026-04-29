@@ -5,6 +5,7 @@ from time import perf_counter
 from xml.etree import ElementTree
 
 from cast.models import Episode, Podcast
+from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
 from django.test import Client
@@ -40,12 +41,13 @@ class CatalogPerformanceResult:
 
 def measure_catalog_performance(
     *,
-    podcast_slug: str = "episodes",
+    podcast_slug: str | None = None,
     audio_format: str = "mp3",
     host: str = "localhost",
 ) -> CatalogPerformanceResult:
     """Measure generated feed and episode-index response behavior locally."""
 
+    podcast_slug = podcast_slug or settings.DJANGO_CHAT_PODCAST_SLUG
     client = Client(HTTP_HOST=host)
     feed_path = reverse("cast:podcast_feed_rss", args=[podcast_slug, audio_format])
     cache.clear()
@@ -78,9 +80,10 @@ def measure_catalog_performance(
     )
 
 
-def measure_audio_completeness(*, podcast_slug: str = "episodes") -> AudioCompleteness:
+def measure_audio_completeness(*, podcast_slug: str | None = None) -> AudioCompleteness:
     """Count live imported podcast episodes that still lack copied audio."""
 
+    podcast_slug = podcast_slug or settings.DJANGO_CHAT_PODCAST_SLUG
     podcast = Podcast.objects.get(slug=podcast_slug)
     live_episodes = Episode.objects.live().descendant_of(podcast)
     live_episode_count = live_episodes.count()
