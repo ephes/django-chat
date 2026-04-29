@@ -52,6 +52,9 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       renders imported platform links from
       `PodcastSourceMetadata.visible_distribution_links`, and the show hero's
       "Listen & Subscribe" CTA points there instead of the Simplecast site.
+      Follow-up: the overview hero no longer duplicates Apple Podcasts as a
+      secondary CTA; imported platform links remain in the overview link band
+      and subscribe page.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -141,11 +144,17 @@ representative show review because:
 
 ## Open Work (Highest Signal First)
 
-1. **Run/import the full catalog on staging when ready for the next internal
-   smoke pass.** Use `import_django_chat_catalog --copy-cover-image` for
-   metadata/artwork, and add `--copy-audio` only when the ~11 GB media transfer
-   is intentionally approved. Then run `measure_django_chat_catalog
-   --host=djangochat.staging.django-cast.com` and record feed/list metrics.
+1. **Make staging catalog/audio state coherent before host review.** Staging
+   currently may contain full-catalog metadata while only a copied-audio
+   subset has `podcast_audio`. That is not a representative podcast state:
+   podcast episodes without audio should be treated as an incomplete import,
+   not worked around in templates or feed views. Use
+   `import_django_chat_catalog --copy-cover-image --copy-audio` when the
+   ~11 GB media transfer is intentionally approved, then confirm
+   `/episodes/feed/podcast/mp3/rss.xml` and `/episodes/feed/rss.xml` both
+   return 200 and run `measure_django_chat_catalog
+   --host=djangochat.staging.django-cast.com`. The measurement output should
+   report `missing_audio=0` before representative host review.
 2. **Transcript demo** — implement `/episodes/<slug>/transcript` for at
    least one representative episode. PRD permits either simple page
    content or the `cast_transcripts` worker path; simple page content is
@@ -164,12 +173,12 @@ representative show review because:
 
 ## Next Action
 
-Implement the **transcript demo** slice. Before host handoff, run the full
-catalog import on staging, record
-`measure_django_chat_catalog` output against the deployed catalog, and decide
+Make the deployed staging catalog/audio state coherent, then implement the
+**transcript demo** slice. Before host handoff, record
+`measure_django_chat_catalog` output against the deployed catalog and decide
 whether any measured feed/list performance issue needs a focused fix before
 hosts review the site.
 
 Production migration (DNS, feed cutover, real production VPS) is
-explicitly deferred until host review (item 4) has happened and any
+explicitly deferred until host review (item 3) has happened and any
 perf fixes from the catalog measurement have landed.

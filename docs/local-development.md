@@ -339,12 +339,19 @@ just manage measure_django_chat_catalog
 The command reports:
 
 - generated podcast RSS route status, timing, item count, and query count
+- latest-entries RSS route status, timing, item count, and query count
+- live imported episode audio completeness for the selected podcast slug
 - `/episodes/` response status, timing, and query count
 
-Run it after a full catalog import for meaningful scale data. The limited
-three-episode exercise is useful for command validation only. Lighthouse and
-Web Vitals checks remain manual browser checks against deployed staging once
-the full catalog is present.
+Run it after a full catalog import for meaningful scale data. For
+representative host review, `missing_audio` must be `0`; metadata-only catalog
+imports and limited local smoke imports may report missing audio until
+`--copy-audio` has been run deliberately. The limited three-episode exercise is
+useful for command validation only. Lighthouse and Web Vitals checks remain
+manual browser checks against deployed staging once the full catalog is
+present. The command expects the selected podcast slug to exist and will raise
+`Podcast.DoesNotExist` otherwise; run a sample or catalog import before
+measuring a fresh database.
 
 ## Environment Files
 

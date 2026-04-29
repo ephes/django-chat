@@ -50,6 +50,16 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     assert "Overcast" in content
     assert "https://overcast.fm/itunes1451536459/django-chat" in content
 
+    show_actions = _html_between(content, '<div class="show-actions"', "</div>")
+    assert "Listen &amp; Subscribe" in show_actions
+    assert 'href="/episodes/feed/"' in show_actions
+    assert "Apple Podcasts" not in show_actions
+    assert "button-secondary" not in show_actions
+
+    link_band = _html_between(content, '<section class="link-band"', "</section>")
+    assert "Apple Podcasts" in link_band
+    assert "https://itunes.apple.com/us/podcast/django-chat/id1451536459" in link_band
+
 
 @pytest.mark.django_db
 def test_imported_sample_feed_detail_renders_rss_and_distribution_links(
@@ -201,3 +211,10 @@ class FakeAudioDownloader:
 def _transcript_count() -> int:
     transcript = apps.get_model("cast", "Transcript")
     return transcript.objects.count()
+
+
+def _html_between(content: str, start: str, end: str) -> str:
+    assert start in content
+    fragment = content.split(start, maxsplit=1)[1]
+    assert end in fragment
+    return fragment.split(end, maxsplit=1)[0]

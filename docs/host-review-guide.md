@@ -15,10 +15,10 @@ https://djangochat.staging.django-cast.com
 Verified live behavior:
 
 - `/` redirects to `/episodes/`.
-- `/episodes/` returns the fixture-backed episode index.
+- `/episodes/` returns the Django Chat episode index.
 - `/episodes/django-tasks-jake-howard/` returns an episode detail page.
+- `/episodes/feed/` returns the Django Chat-branded subscribe page.
 - `/cms/` redirects anonymous visitors to the Wagtail login.
-- The deployed database contains one podcast and eight sample episodes.
 - A staging-only `host-review-admin` superuser exists for review bootstrap.
 
 Sample audio is copied to the staging media bucket and served through the
@@ -29,11 +29,13 @@ public media host. Episode detail pages render the **Podlove web player**
 render path. The MP3 URL responds with HTTP 200 and `audio/mpeg`. Sample
 audio playback is therefore available end-to-end on staging.
 
-Current staging is suitable for internal smoke review. Full host review is
-deferred until the live catalog has been imported on staging and the
-transcript-demo gap listed in `docs/implementation-status.md` is closed. The
-self-hosted podcast RSS URL is available from `/episodes/feed/` and advertised
-through RSS auto-discovery links.
+As of 2026-04-29, staging has had full-catalog metadata imported but still
+needs the full catalog audio-copy step before it is representative for host
+review. Every live imported podcast episode must have `podcast_audio` before
+the review gate opens; otherwise django-cast's latest-entries RSS route can
+fail while serializing podcast episodes. The self-hosted podcast RSS URL is
+available from `/episodes/feed/` and advertised through RSS auto-discovery
+links.
 
 ## Review URLs
 
@@ -71,21 +73,23 @@ Before sending or refreshing the staging URL for hosts, confirm:
   management command.
 - For sample-only internal smoke review, use
   `import_django_chat_sample --copy-audio --copy-cover-image`.
-- For representative host review, use `import_django_chat_catalog` for metadata
-  and `import_django_chat_catalog --copy-cover-image` for show artwork. Add
+- For representative host review, use
+  `import_django_chat_catalog --copy-cover-image --copy-audio`. Add
   `--max-episodes 3` only for a limited operator exercise, not for the final
-  review catalog.
-- Review audio has been copied against the deployed environment with production
-  settings when a playback/media review is in scope. Full-catalog audio copy
-  uses `import_django_chat_catalog --copy-cover-image --copy-audio` and can
-  transfer about 11 GB, so run it only when intentionally approved.
+  review catalog. The full-catalog audio copy can transfer about 11 GB, so run
+  it only when intentionally approved.
+- Representative review requires zero live imported episodes missing
+  `podcast_audio`. Confirm this with
+  `measure_django_chat_catalog --host=djangochat.staging.django-cast.com` or a
+  direct database check before sending hosts the staging URL.
 - The show artwork has been attached as the podcast `cover_image` via
   `import_django_chat_sample --copy-cover-image` or
   `import_django_chat_catalog --copy-cover-image` (idempotent). Without this,
   the Podlove player on episode detail pages renders an empty cover slot.
 - `measure_django_chat_catalog --host=djangochat.staging.django-cast.com` has
-  been run after the intended catalog import, and feed/item count plus
-  episode-list query/timing results have been recorded for the review handoff.
+  been run after the intended catalog import, and podcast feed, latest-entries
+  feed, audio-completeness, and episode-list query/timing results have been
+  recorded for the review handoff.
 - `https://<staging-fqdn>/`, `/episodes/`, at least one episode detail page,
   and `/cms/` return expected HTTPS responses.
 - Static assets load.
@@ -100,6 +104,8 @@ Before sending or refreshing the staging URL for hosts, confirm:
 - `/episodes/feed/` renders the Django Chat-branded subscribe page, exposes
   `/episodes/feed/podcast/mp3/rss.xml`, emits RSS auto-discovery links in the
   page head, and renders imported platform links.
+- `/episodes/feed/podcast/mp3/rss.xml` and `/episodes/feed/rss.xml` both
+  return HTTP 200 after the catalog audio copy.
 
 ## Admin Access
 
@@ -154,9 +160,9 @@ repository comments.
 
 ## Known Limitations
 
-- Current staging uses the fixture-backed sample for internal smoke review.
-  Full host review is deferred until the representative catalog is imported on
-  staging and the remaining transcript-demo gap is closed.
+- Current staging is not ready for host review until every live imported
+  podcast episode has copied audio and the remaining transcript-demo gap is
+  closed.
 - The staging feed is for validation only and is not the canonical Django Chat
   podcast feed.
 - No production DNS, feed redirect, Simplecast migration, or podcast directory

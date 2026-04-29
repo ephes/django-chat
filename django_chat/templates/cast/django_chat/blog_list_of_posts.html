@@ -15,11 +15,6 @@
           <div class="show-tagline">{{ page.description|richtext }}</div>
         {% endif %}
         <div class="show-actions" aria-label="Subscribe">
-          {% for link in source_metadata.visible_distribution_links %}
-            {% if link.name == "Apple Podcasts" %}
-              <a class="button-secondary" href="{{ link.url }}" target="_blank" rel="noopener noreferrer">Apple Podcasts</a>
-            {% endif %}
-          {% endfor %}
           <a class="button-primary" href="{% url 'cast:feed_detail' slug=podcast.slug %}">Listen &amp; Subscribe</a>
         </div>
       </div>

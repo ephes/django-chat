@@ -10,6 +10,7 @@ from django.test import override_settings
 from django_chat.imports.import_sample import DownloadedAudio, import_django_chat_sample
 from django_chat.imports.performance import (
     format_catalog_performance_result,
+    measure_audio_completeness,
     measure_catalog_performance,
 )
 
@@ -26,14 +27,24 @@ def test_catalog_performance_measurement_reports_feed_and_list_metrics(
     assert result.feed.status_code == 200
     assert result.feed_item_count == 8
     assert result.feed.query_count >= 0
+    assert result.latest_entries_feed.path == "/episodes/feed/rss.xml"
+    assert result.latest_entries_feed.status_code == 200
+    assert result.latest_entries_item_count == 8
     assert result.episode_list.path == "/episodes/"
     assert result.episode_list.status_code == 200
     assert result.episode_list.query_count > 0
+    assert result.audio_completeness.live_episode_count == 8
+    assert result.audio_completeness.with_audio_count == 8
+    assert result.audio_completeness.missing_audio_count == 0
 
     output = format_catalog_performance_result(result)
     assert "Django Chat catalog performance measurement" in output
+    assert "Podcast feed:" in output
+    assert "Latest entries feed:" in output
     assert "items=8" in output
     assert "Episode list:" in output
+    assert "Audio completeness:" in output
+    assert "missing_audio=0" in output
 
 
 @pytest.mark.django_db
@@ -44,9 +55,23 @@ def test_catalog_performance_management_command_outputs_metrics(tmp_path: Path) 
         call_command("measure_django_chat_catalog", "--host=testserver", stdout=stdout)
 
     output = stdout.getvalue()
-    assert "Feed:" in output
+    assert "Podcast feed:" in output
+    assert "Latest entries feed:" in output
     assert "items=8" in output
     assert "Episode list:" in output
+    assert "Audio completeness:" in output
+    assert "missing_audio=0" in output
+
+
+@pytest.mark.django_db
+def test_audio_completeness_reports_missing_audio_for_sample_import_without_audio() -> None:
+    import_django_chat_sample()
+
+    result = measure_audio_completeness(podcast_slug="episodes")
+
+    assert result.live_episode_count == 8
+    assert result.with_audio_count == 0
+    assert result.missing_audio_count == 8
 
 
 class FakeAudioDownloader:
