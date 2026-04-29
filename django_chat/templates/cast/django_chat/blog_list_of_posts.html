@@ -1,5 +1,6 @@
 {% extends "./base.html" %}
 {% load wagtailcore_tags %}
+{% load wagtailimages_tags %}
 {% load dc_filters %}
 
 {% block title %}{{ page.title }}{% endblock title %}
@@ -18,8 +19,14 @@
           <a class="button-primary" href="{% url 'cast:feed_detail' slug=podcast.slug %}">Listen &amp; Subscribe</a>
         </div>
       </div>
-      {% if source_metadata.image_url %}
-        <img class="show-artwork" src="{{ source_metadata.image_url }}" alt="Django Chat artwork">
+      {% if podcast.cover_image %}
+        {% image podcast.cover_image fill-560x560 as show_artwork %}
+        <img class="show-artwork" src="{{ show_artwork.url }}" width="{{ show_artwork.width }}" height="{{ show_artwork.height }}" alt="Django Chat artwork" fetchpriority="high" decoding="async">
+      {% elif blog.cover_image %}
+        {% image blog.cover_image fill-560x560 as show_artwork %}
+        <img class="show-artwork" src="{{ show_artwork.url }}" width="{{ show_artwork.width }}" height="{{ show_artwork.height }}" alt="Django Chat artwork" fetchpriority="high" decoding="async">
+      {% elif source_metadata.image_url %}
+        <img class="show-artwork" src="{{ source_metadata.image_url }}" width="280" height="280" alt="Django Chat artwork" fetchpriority="high" decoding="async">
       {% endif %}
     </section>
 

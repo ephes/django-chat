@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import io
+from collections.abc import Callable
+from pathlib import Path
+
 import pytest
 from django.conf import settings
-from django.test import Client
+from django.test import Client, override_settings
 from django.urls import reverse
 
 from django_chat.imports.import_sample import import_django_chat_sample
@@ -59,6 +63,43 @@ def test_episode_index_loads_self_hosted_fonts_css(client: Client) -> None:
 
 
 @pytest.mark.django_db
+def test_episode_index_uses_optimized_cover_image_rendition(
+    client: Client,
+    tmp_path: Path,
+) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(cover_image_downloader=_fake_cover_image_downloader())
+
+        response = client.get(episode_index_path())
+
+    body = response.content.decode()
+    artwork_html = _html_around(body, 'class="show-artwork"')
+    assert "/media/images/" in artwork_html
+    assert "fill-560x560" in artwork_html
+    assert 'width="560"' in artwork_html
+    assert 'height="560"' in artwork_html
+    assert 'fetchpriority="high"' in artwork_html
+
+
+@pytest.mark.django_db
+def test_episode_detail_uses_optimized_cover_image_rendition(
+    client: Client,
+    tmp_path: Path,
+) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(cover_image_downloader=_fake_cover_image_downloader())
+
+        response = client.get(episode_detail_path("django-tasks-jake-howard"))
+
+    body = response.content.decode()
+    artwork_html = _html_around(body, 'class="show-artwork"')
+    assert "/media/images/" in artwork_html
+    assert "fill-560x560" in artwork_html
+    assert 'width="560"' in artwork_html
+    assert 'height="560"' in artwork_html
+
+
+@pytest.mark.django_db
 def test_podlove_player_config_uses_django_chat_brand_colors(client: Client) -> None:
     import_django_chat_sample()
 
@@ -84,3 +125,21 @@ def episode_index_path() -> str:
 
 def episode_detail_path(slug: str) -> str:
     return f"/{settings.DJANGO_CHAT_PODCAST_SLUG}/{slug}/"
+
+
+def _fake_cover_image_downloader() -> Callable[[str], bytes]:
+    def download(_source_url: str) -> bytes:
+        from PIL import Image as PILImage
+
+        buf = io.BytesIO()
+        PILImage.new("RGB", (1200, 1200), color=(0, 0, 0)).save(buf, format="PNG")
+        return buf.getvalue()
+
+    return download
+
+
+def _html_around(body: str, needle: str) -> str:
+    index = body.index(needle)
+    start = body.rfind("<img", 0, index)
+    end = body.find(">", index)
+    return body[start : end + 1]

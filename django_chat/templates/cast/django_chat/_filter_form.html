@@ -3,9 +3,12 @@
   <input id="id_search" type="text" name="search" placeholder="Search episodes" value="{{ form.search.value|default_if_none:'' }}">
 
   <div class="filter-date">
-    <label class="visually-hidden">Date range</label>
-    {# DateFromToRangeFilter renders two <input type="date"> with names date_after and date_before #}
-    {{ form.date }}
+    {# Keep names/IDs aligned with django-filter's DateFromToRangeFilter widget. #}
+    <label class="visually-hidden" for="id_date_0">Start date</label>
+    <input type="date" name="date_after" id="id_date_0" value="{{ request.GET.date_after }}">
+    <span aria-hidden="true">-</span>
+    <label class="visually-hidden" for="id_date_1">End date</label>
+    <input type="date" name="date_before" id="id_date_1" value="{{ request.GET.date_before }}">
   </div>
 
   <select name="date_facets" aria-label="Date facets">

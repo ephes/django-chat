@@ -41,6 +41,8 @@ def test_episode_index_exposes_filterset_form_fields(client: Client) -> None:
     assert 'name="search"' in body
     assert 'name="date_after"' in body
     assert 'name="date_before"' in body
+    assert '<label class="visually-hidden" for="id_date_0">Start date</label>' in body
+    assert '<label class="visually-hidden" for="id_date_1">End date</label>' in body
     assert 'name="date_facets"' in body
     assert 'name="o"' in body
 

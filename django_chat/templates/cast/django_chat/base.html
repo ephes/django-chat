@@ -1,4 +1,5 @@
 {% load static %}
+{% load wagtailimages_tags %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -37,6 +38,20 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'django_chat/favicon.svg' %}">
     <link rel="alternate icon" type="image/x-icon" href="{% static 'django_chat/favicon.ico' %}">
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'django_chat/apple-touch-icon.png' %}">
+    <style>
+      /* Critical CLS guard: reserve Podlove height before external CSS loads. */
+      podlove-player {
+        display: block;
+        height: 302px !important;
+        min-height: 302px !important;
+      }
+      @media (max-width: 760px) {
+        podlove-player {
+          height: 514px !important;
+          min-height: 514px !important;
+        }
+      }
+    </style>
     <link rel="stylesheet" href="{% static 'cast_bootstrap5/css/bootstrap5/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}">
     {% block meta %}
@@ -48,10 +63,16 @@
     <header class="site-header">
       <nav class="site-nav" aria-label="Primary">
         <a class="brand" href="{% url 'django_chat_episode_index' %}" aria-label="Django Chat">
-          {% if source_metadata.image_url %}
-            <img class="brand-mark" src="{{ source_metadata.image_url }}" alt="">
+          {% if podcast.cover_image %}
+            {% image podcast.cover_image fill-72x72 as brand_mark %}
+            <img class="brand-mark" src="{{ brand_mark.url }}" width="{{ brand_mark.width }}" height="{{ brand_mark.height }}" alt="">
+          {% elif blog.cover_image %}
+            {% image blog.cover_image fill-72x72 as brand_mark %}
+            <img class="brand-mark" src="{{ brand_mark.url }}" width="{{ brand_mark.width }}" height="{{ brand_mark.height }}" alt="">
+          {% elif source_metadata.image_url %}
+            <img class="brand-mark" src="{{ source_metadata.image_url }}" width="36" height="36" alt="">
           {% else %}
-            <img class="brand-mark" src="{% static 'django_chat/apple-touch-icon.png' %}" alt="">
+            <img class="brand-mark" src="{% static 'django_chat/apple-touch-icon.png' %}" width="36" height="36" alt="">
           {% endif %}
           <span class="brand-name">Django Chat</span>
         </a>

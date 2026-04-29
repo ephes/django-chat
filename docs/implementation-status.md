@@ -144,10 +144,13 @@ with 202 items.
 
 - After each deploy or destructive staging refresh, re-check whether staging
   still holds the intended full live catalog/audio state.
-- Lighthouse / Web Vitals scores against the old 8-episode sample are
-  obsolete. Use the current full-catalog measurement for feed/item count and
-  episode-list query/timing data, then run manual Lighthouse/Web Vitals checks
-  on deployed staging.
+- Lighthouse / Web Vitals readiness is cleared for the public host-review
+  surfaces on deployed staging. The 2026-04-29 Lighthouse run measured `/`,
+  `/episodes/`, `/episodes/django-tasks-jake-howard/`, and `/episodes/feed/`
+  in both mobile and desktop modes with final scores of 98-100 across
+  Performance, Accessibility, Best Practices, and SEO. See
+  `docs/lighthouse-performance.md` for commands, artifact paths, before/after
+  scores, and the remaining Podlove unused-CSS/JS caveat.
 - Latest-entries feed query behavior has a scoped Django Chat mitigation.
   Staging measurement on 2026-04-29 reported `queries=620` across 202 items
   because django-cast's latest-entries feed builds podcast feeds from base
@@ -171,9 +174,9 @@ with 202 items.
 ## Open Work (Highest Signal First)
 
 1. **Host review of staging.** With full catalog + RSS-discovery +
-   Voxhelm transcript handling in place, the staging site finally looks like
-   the show. The latest-entries query count decision is settled; send hosts the
-   URL + `host-review-admin` credential.
+   Voxhelm transcript handling + Lighthouse/Web Vitals readiness in place, the
+   staging site is ready for host review. Send hosts the URL +
+   `host-review-admin` credential.
 2. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
    preservation, canonical domain, Simplecast directory coordination,
    analytics/CDN/ad-insertion questions. Content scope is in PRD lines
@@ -184,9 +187,10 @@ with 202 items.
 
 ## Next Action
 
-Proceed to host review. The latest-entries feed mitigation has been deployed,
-and staging catalog measurement confirms `/episodes/feed/rss.xml` still returns
-202 items with a non-linear query count.
+Proceed to host review. The latest-entries feed mitigation and
+Lighthouse/Web Vitals fixes have been deployed, staging catalog measurement
+confirms both RSS routes still return 202 items, and the host-review public
+pages now score 98-100 in final mobile and desktop Lighthouse runs.
 
 Production migration (DNS, feed cutover, real production VPS) is
 explicitly deferred until host review (item 1) has happened and any

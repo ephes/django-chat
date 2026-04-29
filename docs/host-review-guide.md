@@ -116,6 +116,12 @@ Before sending or refreshing the staging URL for hosts, confirm:
   page head, and renders imported platform links.
 - `/episodes/feed/podcast/mp3/rss.xml` and `/episodes/feed/rss.xml` both
   return HTTP 200 after the catalog audio copy.
+- Lighthouse has been run against deployed staging for `/`, `/episodes/`, a
+  representative episode detail page, and `/episodes/feed/` in both mobile and
+  desktop modes. The 2026-04-29 final gate is cleared with 98-100 scores across
+  Performance, Accessibility, Best Practices, and SEO. See
+  [`docs/lighthouse-performance.md`](lighthouse-performance.md) for commands,
+  report artifact paths, scores, fixes, and caveats.
 
 ## Admin Access
 

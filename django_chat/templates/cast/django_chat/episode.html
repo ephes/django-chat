@@ -1,5 +1,6 @@
 {% extends "./base.html" %}
 {% load wagtailcore_tags %}
+{% load wagtailimages_tags %}
 {% load django_vite %}
 {% load dc_filters %}
 
@@ -15,8 +16,11 @@
       <a class="back-link" href="{% url 'django_chat_episode_index' %}">← Back to Episodes</a>
 
       <header class="episode-hero">
-        {% if source_metadata.image_url %}
-          <img class="show-artwork" src="{{ source_metadata.image_url }}" alt="">
+        {% if blog.cover_image %}
+          {% image blog.cover_image fill-560x560 as episode_artwork %}
+          <img class="show-artwork" src="{{ episode_artwork.url }}" width="{{ episode_artwork.width }}" height="{{ episode_artwork.height }}" alt="" fetchpriority="high" decoding="async">
+        {% elif source_metadata.image_url %}
+          <img class="show-artwork" src="{{ source_metadata.image_url }}" width="280" height="280" alt="" fetchpriority="high" decoding="async">
         {% endif %}
         <div>
           <p class="eyebrow">

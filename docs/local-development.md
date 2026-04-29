@@ -353,6 +353,17 @@ present. The command expects the selected podcast slug to exist and will raise
 `Podcast.DoesNotExist` otherwise; run a sample or catalog import before
 measuring a fresh database.
 
+## Lighthouse And Web Vitals
+
+Run Lighthouse/Web Vitals checks against deployed staging when preparing a host
+handoff. Local sample data is useful for template iteration, but it does not
+exercise the full catalog, deployed static files, media host, or Podlove player
+network behavior.
+
+The current repeatable staging workflow, command flags, report locations, final
+scores, and known caveats are documented in
+[`docs/lighthouse-performance.md`](lighthouse-performance.md).
+
 ## Environment Files
 
 Local settings support a private `.env` file in the repository root. Start from
