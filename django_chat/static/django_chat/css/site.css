@@ -148,6 +148,7 @@ main {
 
 .brand-name {
   font-size: 1rem;
+  white-space: nowrap;
 }
 
 .nav-links {
@@ -569,12 +570,29 @@ main {
 }
 
 @media (max-width: 760px) {
-  .site-nav,
   .show-hero,
   .episode-hero,
   .filter-form {
     grid-template-columns: 1fr;
     align-items: flex-start;
+  }
+
+  .site-nav {
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    justify-content: flex-start;
+    min-height: auto;
+    padding: 12px 0;
+  }
+
+  .nav-links {
+    flex: 1 1 100%;
+    gap: 10px 18px;
+    line-height: 1.25;
+  }
+
+  .nav-links a {
+    flex: 0 0 auto;
   }
 
   .show-hero {
