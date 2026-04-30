@@ -47,8 +47,10 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
 - [x] **9b. Subscribe / RSS-discovery page** — `/episodes/feed/` now renders
       the Django Chat-branded feed detail page, promotes the generated
       self-hosted podcast RSS URL (`/episodes/feed/podcast/mp3/rss.xml`),
-      advertises the RSS feeds via `<link rel="alternate"
-      type="application/rss+xml">` head metadata,
+      keeps the visible podcast feed list MP3-only because imported Django
+      Chat audio is MP3-only, advertises the MP3 podcast RSS and latest
+      entries RSS via `<link rel="alternate" type="application/rss+xml">`
+      head metadata,
       renders imported platform links from
       `PodcastSourceMetadata.visible_distribution_links`, and the show hero's
       "Listen & Subscribe" CTA points there instead of the Simplecast site.
