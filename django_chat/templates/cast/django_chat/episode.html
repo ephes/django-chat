@@ -69,5 +69,111 @@
   {{ block.super }}
   {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
     {% vite_asset 'src/audio/podlove-player.ts' app="cast" %}
+    <script>
+      (() => {
+        const readyAttribute = "data-django-chat-player-ready";
+
+        const markReady = (player) => {
+          player.setAttribute(readyAttribute, "true");
+        };
+
+        const watchIframe = (player, iframe) => {
+          let appObserver = null;
+          let appLookupObserver = null;
+          let isReady = false;
+          let revealFallback = null;
+          let revealWhenLoaded = null;
+
+          const cleanup = () => {
+            iframe.removeEventListener("load", revealWhenLoaded);
+            appObserver?.disconnect();
+            appLookupObserver?.disconnect();
+            window.clearTimeout(revealFallback);
+          };
+
+          const reveal = () => {
+            if (isReady) {
+              return;
+            }
+            isReady = true;
+            cleanup();
+            markReady(player);
+          };
+
+          revealFallback = window.setTimeout(reveal, 3000);
+
+          revealWhenLoaded = () => {
+            try {
+              const iframeDocument = iframe.contentDocument;
+              const app = iframeDocument?.getElementById("app");
+              if (!app) {
+                if (iframeDocument && !appLookupObserver) {
+                  appLookupObserver = new MutationObserver(() => {
+                    revealWhenLoaded();
+                  });
+                  appLookupObserver.observe(iframeDocument, { childList: true, subtree: true });
+                }
+                return false;
+              }
+              if (app.classList.contains("loaded")) {
+                reveal();
+                return true;
+              }
+
+              appLookupObserver?.disconnect();
+              appLookupObserver = null;
+              if (appObserver) {
+                return true;
+              }
+              appObserver = new MutationObserver(() => {
+                if (app.classList.contains("loaded")) {
+                  reveal();
+                }
+              });
+              appObserver.observe(app, { attributes: true, attributeFilter: ["class"] });
+              return true;
+            } catch {
+              reveal();
+              return true;
+            }
+          };
+
+          iframe.addEventListener("load", revealWhenLoaded, { once: true });
+          revealWhenLoaded();
+        };
+
+        const watchPlayer = (player) => {
+          const iframe = player.querySelector("iframe");
+          if (iframe) {
+            watchIframe(player, iframe);
+            return;
+          }
+
+          const revealFallback = window.setTimeout(() => {
+            observer.disconnect();
+            markReady(player);
+          }, 4000);
+          const observer = new MutationObserver(() => {
+            const iframe = player.querySelector("iframe");
+            if (iframe) {
+              window.clearTimeout(revealFallback);
+              observer.disconnect();
+              watchIframe(player, iframe);
+            }
+          });
+          observer.observe(player, { childList: true, subtree: true });
+        };
+
+        const init = () => {
+          document.querySelectorAll("podlove-player").forEach(watchPlayer);
+        };
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init, { once: true });
+        } else {
+          init();
+        }
+      })();
+    </script>
   {% endif %}
 {% endblock javascript %}

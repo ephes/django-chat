@@ -612,6 +612,10 @@ main {
   max-width: 720px;
 }
 
+.audio-panel podlove-player:not([data-django-chat-player-ready]) .podlove-player-host {
+  visibility: hidden;
+}
+
 .audio-panel p {
   margin: 0;
   color: var(--dc-muted);
