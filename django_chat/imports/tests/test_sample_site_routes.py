@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 import pytest
@@ -42,7 +43,6 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     assert episode_detail_path("django-tasks-jake-howard") in content
     assert 'rel="alternate" type="application/rss+xml"' in content
     assert absolute_url(podcast_feed_path()) in content
-    assert "Listen &amp; Subscribe" in content
     assert f'href="{feed_detail_path()}"' in content
     assert 'href="https://djangochat.com"' not in content
     assert "Sponsor Us" in content
@@ -54,18 +54,38 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     assert "https://overcast.fm/itunes1451536459/django-chat" in content
 
     show_actions = _html_between(content, '<div class="show-actions"', "</div>")
-    assert "Listen &amp; Subscribe" in show_actions
+    assert re.search(r">\s*Subscribe\s*</a>", show_actions)
     assert f'href="{feed_detail_path()}"' in show_actions
     assert "Apple Podcasts" not in show_actions
     assert "button-secondary" not in show_actions
 
-    link_band = _html_between(content, '<section class="link-band"', "</section>")
-    assert "Apple Podcasts" in link_band
-    assert "https://itunes.apple.com/us/podcast/django-chat/id1451536459" in link_band
+    platform_band = _html_between(content, '<section class="platform-band"', "</section>")
+    assert "Listen on podcast apps and video platforms" in platform_band
+    assert (
+        "These links open Django Chat on third-party services such as podcast directories,"
+        in platform_band
+    )
+    assert "Apple Podcasts" in platform_band
+    assert "https://itunes.apple.com/us/podcast/django-chat/id1451536459" in platform_band
 
 
 @pytest.mark.django_db
-def test_imported_sample_feed_detail_renders_rss_and_distribution_links(
+def test_imported_sample_index_hides_platform_section_without_distribution_links(
+    client: Client,
+) -> None:
+    import_django_chat_sample()
+    PodcastSourceLink.objects.filter(location="distribution").update(is_visible=False)
+
+    response = client.get(episode_index_path())
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'class="platform-band"' not in content
+    assert "Listen on podcast apps and video platforms" not in content
+
+
+@pytest.mark.django_db
+def test_imported_sample_feed_detail_renders_rss_without_distribution_links(
     client: Client,
 ) -> None:
     import_django_chat_sample()
@@ -87,18 +107,13 @@ def test_imported_sample_feed_detail_renders_rss_and_distribution_links(
     assert "/episodes/feed/podcast/opus/rss.xml" not in content
     assert "Latest entries RSS for site updates" in content
     assert "<strong>Latest entries RSS</strong>" not in content
-    assert "Apple Podcasts" in content
-    assert (
-        '<a href="https://itunes.apple.com/us/podcast/django-chat/id1451536459"'
-        ' target="_blank" rel="noopener noreferrer">Apple Podcasts</a>'
-    ) in content
-    assert "Overcast" in content
-    assert (
-        '<a href="https://overcast.fm/itunes1451536459/django-chat"'
-        ' target="_blank" rel="noopener noreferrer">Overcast</a>'
-    ) in content
-    assert "Spotify" in content
-    assert "https://open.spotify.com/show/" in content
+    assert "supports direct RSS subscriptions" in content
+    assert "Apple Podcasts" not in content
+    assert "https://itunes.apple.com/us/podcast/django-chat/id1451536459" not in content
+    assert "Overcast" not in content
+    assert "https://overcast.fm/itunes1451536459/django-chat" not in content
+    assert "Spotify" not in content
+    assert "https://open.spotify.com/show/" not in content
     assert "podlove-subscribe-button" not in content
     assert "subscribe_button/javascripts/app.js" not in content
     assert "window.podcastData" not in content

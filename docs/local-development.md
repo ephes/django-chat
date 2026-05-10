@@ -169,7 +169,10 @@ just runserver
 Then browse:
 
 - `http://localhost:8000/` redirects to the sample episode index.
-- `http://localhost:8000/episodes/` renders the Django Chat-branded index.
+- `http://localhost:8000/episodes/` renders the Django Chat-branded index
+  with imported podcast app and video-platform links.
+- `http://localhost:8000/episodes/feed/` renders the generated RSS subscribe
+  page.
 - `http://localhost:8000/episodes/django-tasks-jake-howard/` renders an
   imported episode detail page.
 

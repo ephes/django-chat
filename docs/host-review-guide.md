@@ -113,9 +113,9 @@ Before sending or refreshing the staging URL for hosts, confirm:
   part of the critical render path.
 - `/episodes/feed/` renders the Django Chat-branded subscribe page, exposes
   `/episodes/feed/podcast/mp3/rss.xml` as the only visible podcast RSS feed,
-  emits RSS auto-discovery links in the page head, renders imported platform
-  links, and labels `/episodes/feed/rss.xml` as a latest-entries site-update
-  feed rather than a podcast feed.
+  emits RSS auto-discovery links in the page head, and labels
+  `/episodes/feed/rss.xml` as a latest-entries site-update feed rather than a
+  podcast feed. Imported platform links are rendered on `/episodes/`.
 - `/episodes/feed/podcast/mp3/rss.xml` and `/episodes/feed/rss.xml` both
   return HTTP 200 after the catalog audio copy.
 - Lighthouse has been run against deployed staging for `/`, `/episodes/`, a

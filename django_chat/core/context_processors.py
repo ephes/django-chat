@@ -7,10 +7,7 @@ from django.db import DatabaseError
 from django.http import HttpRequest
 
 FEED_DETAIL_META_TITLE = "Listen & Subscribe"
-FEED_DETAIL_META_DESCRIPTION = (
-    "Subscribe to Django Chat through the self-hosted podcast RSS feed or "
-    "imported podcast platform links."
-)
+FEED_DETAIL_META_DESCRIPTION = "Subscribe to Django Chat through the self-hosted podcast RSS feed."
 
 
 def django_chat_source_metadata(_request: HttpRequest) -> dict[str, Any]:

@@ -50,13 +50,11 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       keeps the visible podcast feed list MP3-only because imported Django
       Chat audio is MP3-only, advertises the MP3 podcast RSS and latest
       entries RSS via `<link rel="alternate" type="application/rss+xml">`
-      head metadata,
-      renders imported platform links from
-      `PodcastSourceMetadata.visible_distribution_links`, and the show hero's
-      "Listen & Subscribe" CTA points there instead of the Simplecast site.
-      Follow-up: the overview hero no longer duplicates Apple Podcasts as a
-      secondary CTA; imported platform links remain in the overview link band
-      and subscribe page.
+      head metadata, and the show hero's "Subscribe" CTA points there instead
+      of the Simplecast site. Imported platform links from
+      `PodcastSourceMetadata.visible_distribution_links` live in the larger
+      overview provider section instead of being duplicated on the subscribe
+      page.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.

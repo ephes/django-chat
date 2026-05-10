@@ -15,8 +15,13 @@
         {% if page.description %}
           <div class="show-tagline">{{ page.description|richtext }}</div>
         {% endif %}
-        <div class="show-actions" aria-label="Subscribe">
-          <a class="button-primary" href="{% url 'cast:feed_detail' slug=podcast.slug %}">Listen &amp; Subscribe</a>
+        <div class="show-actions">
+          <a class="button-primary" href="{% url 'cast:feed_detail' slug=podcast.slug %}">
+            <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M4 5.5A14.5 14.5 0 0 1 18.5 20h-3A11.5 11.5 0 0 0 4 8.5v-3Zm0 6A8.5 8.5 0 0 1 12.5 20h-3A5.5 5.5 0 0 0 4 14.5v-3Zm0 6.25A2.25 2.25 0 1 1 8.5 20 2.25 2.25 0 0 1 4 17.75Z"/>
+            </svg>
+            Subscribe
+          </a>
         </div>
       </div>
       {% if podcast.cover_image %}
@@ -31,11 +36,22 @@
     </section>
 
     {% if source_metadata %}
-      <section class="link-band" aria-label="Listen on">
-        {% for link in source_metadata.visible_distribution_links %}
-          <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.name }}</a>
-        {% endfor %}
-      </section>
+      {% with distribution_links=source_metadata.visible_distribution_links %}
+        {% if distribution_links %}
+          <section class="platform-band" aria-labelledby="platform-band-title">
+            <div class="platform-band-copy">
+              <p class="eyebrow">External platforms</p>
+              <h2 id="platform-band-title">Listen on podcast apps and video platforms</h2>
+              <p>These links open Django Chat on third-party services such as podcast directories, podcast apps, and YouTube.</p>
+            </div>
+            <div class="platform-band-links">
+              {% for link in distribution_links %}
+                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.name }}</a>
+              {% endfor %}
+            </div>
+          </section>
+        {% endif %}
+      {% endwith %}
     {% endif %}
 
     {% if filterset %}

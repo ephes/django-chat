@@ -176,9 +176,10 @@ For the current shipped/open-work picture and the next-action target, see
 This slice includes a small fixture-backed database/page import, a live
 full-catalog metadata import path, opt-in streaming catalog audio copy, basic
 Django Chat django-cast templates, imported menu/social/distribution link
-rendering, local URL compatibility for `/`, `/episodes/`, and
-`/episodes/<slug>/`, a branded RSS-discovery page at `/episodes/feed/` with
-page-head RSS auto-discovery links, a local smoke-level feed comparison for the
+rendering on the episode overview, local URL compatibility for `/`,
+`/episodes/`, and `/episodes/<slug>/`, a branded RSS-discovery page at
+`/episodes/feed/` with page-head RSS auto-discovery links, a local
+smoke-level feed comparison for the
 imported sample, catalog performance measurement tooling, and deployment
 scaffolding.
 
