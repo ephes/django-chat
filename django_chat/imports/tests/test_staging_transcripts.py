@@ -11,6 +11,7 @@ from django.test import override_settings
 from django_chat.imports.import_sample import DownloadedAudio, import_django_chat_sample
 from django_chat.imports.staging_transcripts import (
     extract_podlove_api_url,
+    import_staging_transcript_for_episode,
     import_staging_transcripts,
     podlove_segments_to_dote,
     podlove_segments_to_vtt,
@@ -137,6 +138,24 @@ def test_import_staging_transcripts_reports_missing_slug_reasons() -> None:
         ("django-tasks-jake-howard", "local episode has no copied audio"),
         ("missing-slug", "local episode not found"),
     ]
+
+
+@pytest.mark.django_db
+def test_import_staging_transcript_for_episode_reports_missing_audio() -> None:
+    import_django_chat_sample()
+    episode = Episode.objects.get(slug="django-tasks-jake-howard")
+    fetcher = FakeStagingFetcher()
+
+    result = import_staging_transcript_for_episode(
+        episode,
+        host="https://staging.example.test",
+        text_fetcher=fetcher,
+    )
+
+    assert result.imported is False
+    assert result.segment_count == 0
+    assert result.reason == "local episode has no copied audio"
+    assert fetcher.urls == []
 
 
 class FakeAudioDownloader:

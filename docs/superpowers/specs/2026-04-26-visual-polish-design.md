@@ -224,9 +224,11 @@ Composition top-to-bottom:
    `repeat(2, minmax(0, 1fr))` grid):
    - Per row: large bold two-line episode badge, with a light-green `#`
      centered on the first line and the dark-green `episode_number` on
-     the second line. It uses Roboto Flex with `wdth -10`, `opsz 30`,
+     the second line. It uses Roboto Flex with `wdth 25`, `opsz 30`,
      `font-weight: 900`, and overlapping rows so the number sits about
-     one third over the hashtag. It is visual only; the whole row is
+     one third over the hashtag. The `wdth` value is the font's minimum
+     width axis value, matching the requested condensed treatment without
+     relying on browser clamping. It is visual only; the whole row is
      wrapped in `<a href="{{ post.page_url }}">`. Then a column with
      eyebrow meta, title H3, 2-line clamped description.
    - Eyebrow format: `{visible_date} · {duration}`

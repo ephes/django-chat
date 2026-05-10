@@ -101,6 +101,14 @@ def import_staging_transcript_for_episode(
     fetch_text = text_fetcher or default_fetch_text
     podcast_slug = podcast_slug or settings.DJANGO_CHAT_PODCAST_SLUG
     episode_slug = str(episode.slug)
+    if episode.podcast_audio is None:
+        return StagingTranscriptImportItem(
+            slug=episode_slug,
+            imported=False,
+            segment_count=0,
+            reason="local episode has no copied audio",
+        )
+
     episode_url = _staging_episode_url(host, podcast_slug, episode_slug)
     try:
         detail_html = fetch_text(episode_url, timeout)
@@ -234,6 +242,7 @@ def _replace_file(field: Any, name: str, content: ContentFile) -> None:
 
 
 def _dote_time(value: str) -> str:
+    """Convert Podlove HH:MM:SS.mmm timestamps; values without a dot pass through."""
     return value.replace(".", ",", 1)
 
 

@@ -457,16 +457,6 @@ main {
   z-index: 2;
 }
 
-.episode-row:hover .episode-number-badge span:first-child,
-.episode-row:focus .episode-number-badge span:first-child {
-  color: var(--dc-django);
-}
-
-.episode-row:hover .episode-number-badge span:last-child,
-.episode-row:focus .episode-number-badge span:last-child {
-  color: var(--dc-accent-dark);
-}
-
 .episode-row h2 {
   margin: 2px 0 6px;
 }
