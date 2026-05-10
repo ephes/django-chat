@@ -114,8 +114,9 @@ Current import boundaries:
   transcript HTML metadata for idempotent re-runs.
 - Catalog audio copy is optional, streams through a temporary file, and should
   not be run casually because the full transfer was observed at about 11 GB.
-- It does not publish full-catalog converted transcripts by default; the
-  staging preview episode has a Voxhelm-generated transcript demo.
+- It does not convert Simplecast transcript HTML. Existing django-cast
+  transcript artifacts can be copied from staging with
+  `just import-staging-transcripts`.
 - It does not add large live RSS fixtures, real MP3 fixtures, or live network
   tests to the repository.
 
@@ -138,10 +139,12 @@ are not part of the Django Chat staging scaffold.
 
 ## Transcripts
 
-Simplecast transcript HTML is preserved in source metadata where available.
-Staging enables the `cast_transcripts` database worker so Wagtail can queue
-Voxhelm transcript generation for individual reviewed episodes. Full-catalog
-transcript generation remains outside the current staging scope.
+Simplecast transcript HTML is preserved in source metadata where available, but
+it is not used for public transcript rendering. Staging enables the
+`cast_transcripts` database worker so Wagtail can queue Voxhelm transcript generation
+for individual reviewed episodes. Environments can copy the
+resulting django-cast artifacts from staging with
+`just import-staging-transcripts`.
 
 In Wagtail admin, edit an episode page and use the **Generate transcript** page
 action to request another transcript. The action requires editable episode and

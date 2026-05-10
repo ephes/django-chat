@@ -91,6 +91,20 @@ after importing data:
 just manage measure_django_chat_catalog
 ```
 
+Import django-cast transcript artifacts from the current staging system:
+
+```sh
+just import-staging-transcripts
+```
+
+Limit that to one episode with `--slug django-tasks-jake-howard`. This reads
+the staging Podlove player API and writes local Podlove JSON, WebVTT, and DOTe
+transcript files into the same S3/CloudFront media backend used by `just dev`;
+it does not import Simplecast transcript HTML. Use this `just` recipe rather
+than the lower-level `just manage import_django_chat_staging_transcripts`
+command for normal local review, because the recipe supplies the staging media
+storage environment.
+
 Run all local quality checks:
 
 ```sh

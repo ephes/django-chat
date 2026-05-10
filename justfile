@@ -36,6 +36,9 @@ manage *ARGS:
 compare-feed *ARGS:
     uv run python manage.py compare_django_chat_sample_feed {{ARGS}}
 
+import-staging-transcripts *ARGS:
+    just manage-staging-media import_django_chat_staging_transcripts {{ARGS}}
+
 deploy-bootstrap:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -74,7 +77,7 @@ runserver *ARGS:
 runserver-local-media *ARGS:
     uv run python manage.py runserver {{ARGS}}
 
-runserver-staging-media *ARGS:
+manage-staging-media *ARGS:
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -113,4 +116,7 @@ runserver-staging-media *ARGS:
     export DJANGO_CHAT_S3_CUSTOM_DOMAIN="$cloudfront_domain"
     export DJANGO_CHAT_MEDIA_URL="https://${cloudfront_domain}/"
 
-    uv run python manage.py runserver {{ARGS}}
+    uv run python manage.py {{ARGS}}
+
+runserver-staging-media *ARGS:
+    just manage-staging-media runserver {{ARGS}}

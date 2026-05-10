@@ -125,8 +125,8 @@ serving the polished site:
 - Compact Podlove player on episode detail (no facade), themed with the
   Django-green brand tokens via `CAST_PODLOVE_PLAYER_THEMES` and a local
   `data-template` endpoint. The compact template includes the transcript tab
-  panel, so episodes with an attached django-cast `Transcript` can surface
-  transcript data through the player UI.
+  panel; episodes with an attached django-cast `Transcript` expose transcript
+  data through the Podlove API and link to the themed transcript route.
 - Show artwork attached to `Podcast.cover_image` so the player's cover
   slot is populated.
 - Wagtail `Site` row pinned to `djangochat.staging.django-cast.com:443`

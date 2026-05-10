@@ -186,7 +186,7 @@ Then browse:
 The sample import intentionally does not download, stream, copy, or attach MP3
 files unless audio copying is requested explicitly. Original RSS and Simplecast
 enclosure/audio URLs are stored in metadata, and Simplecast transcript HTML is
-preserved in metadata only for later conversion or publishing work.
+preserved in metadata only. It is not used for the public transcript UI.
 
 Copy audio for the same eight fixture-backed sample episodes, and download
 the show artwork as the Podcast page's `cover_image` so the Podlove player
@@ -285,6 +285,31 @@ Operator controls:
 
 Tests use fake fetchers and fake streaming downloaders. Automated tests never
 hit the live feed, Simplecast, real S3, or real MP3 files.
+
+## Staging Transcript Import
+
+Once local episodes have copied audio, pull the existing django-cast transcript
+artifacts from the current staging system into the same S3/CloudFront media
+backend used by `just dev`:
+
+```sh
+just import-staging-transcripts
+```
+
+Limit the import to one episode while checking behavior:
+
+```sh
+just import-staging-transcripts --slug django-tasks-jake-howard
+```
+
+The command fetches each staging episode page, follows the Podlove player
+`data-url`, and stores local `cast.Transcript` files in the same formats
+django-cast serves: Podlove JSON, WebVTT, and DOTe. The `just` recipe uses the
+staging media secrets so the artifacts are readable when you run `just dev`.
+Use this `just` recipe rather than `just manage
+import_django_chat_staging_transcripts` for normal local review, because the
+lower-level command writes to whatever media storage is active in the current
+environment. It does not read or render Simplecast transcript HTML.
 
 ## Feed Smoke Check
 

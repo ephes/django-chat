@@ -28,6 +28,9 @@ player** (`<podlove-player>`) — django-cast's player component loaded via
 one-line-style layout and django-cast's existing player config endpoint for
 brand colors. The light page theme is declared explicitly so browser dark-mode
 preferences do not switch the compact iframe to Podlove's dark background.
+Episodes with converted transcripts expose segments through the Podlove API,
+which enables the compact player's built-in transcript tab, and link to the
+themed transcript route.
 The heavy embed script (`cast/js/web-player/embed.5.js`, ~138 KB) loads on
 viewport intersection, keeping it out of the critical render path.
 Copied MP3 URLs respond with HTTP 200 and `audio/mpeg`. Audio playback is
@@ -40,10 +43,24 @@ live imported podcast episode. `measure_django_chat_catalog
 200 with 202 items. The self-hosted podcast RSS URL is available from
 `/episodes/feed/` and advertised through RSS auto-discovery links.
 
-Transcript handling is demonstrated at `/episodes/preview/transcript/` with a
-Voxhelm-generated django-cast transcript. The transcript has Podlove JSON,
-WebVTT, and DOTe artifacts attached to the episode audio, and the episode page
-links to the transcript route.
+Transcript handling is demonstrated with Voxhelm-generated django-cast
+transcripts. Each imported transcript has Podlove JSON, WebVTT, and DOTe
+artifacts attached to the episode audio, and the episode page links to the
+transcript route.
+
+To refresh local or staging transcript artifacts from the current staging
+system, run:
+
+```sh
+just import-staging-transcripts
+```
+
+Use `--slug <episode-slug>` to import one episode. The command reads the
+staging Podlove player API and writes django-cast `Transcript` artifacts into
+the same S3/CloudFront media backend used by `just dev`; it does not use
+Simplecast transcript HTML. Use this `just` recipe rather than the lower-level
+`just manage import_django_chat_staging_transcripts` command for normal review,
+because the recipe supplies the staging media storage environment.
 
 To create another staging transcript during review, sign into Wagtail admin,
 edit the episode page, and use the **Generate transcript** page action button.
@@ -114,7 +131,7 @@ Before sending or refreshing the staging URL for hosts, confirm:
   plus `data-template` pointing at `/podlove-player-template/`. The referenced
   MP3 URL returns HTTP 200 with `Content-Type: audio/mpeg` through the public
   media host. Episodes with attached django-cast transcripts expose transcript
-  segments through the Podlove API and the compact player transcript tab.
+  segments through the Podlove API and link to the themed transcript route.
 - Browser DevTools network panel shows `cast/js/web-player/embed.5.js`
   is fetched after initial page paint (on viewport intersection), not as
   part of the critical render path.
@@ -185,8 +202,9 @@ repository comments.
 
 ## Known Limitations
 
-- Full-catalog transcript coverage is not implemented; staging currently proves
-  the Voxhelm/django-cast path with one representative transcript demo.
+- Full-catalog transcript coverage depends on which staging episodes currently
+  have django-cast transcript artifacts. Use `just import-staging-transcripts`
+  to copy those artifacts into another environment.
 - The staging feed is for validation only and is not the canonical Django Chat
   podcast feed.
 - No production DNS, feed redirect, Simplecast migration, or podcast directory
