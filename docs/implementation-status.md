@@ -30,6 +30,14 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       facets/ordering, favicon trio, OG/Twitter metadata, branded error
       pages. See `docs/superpowers/specs/2026-04-26-visual-polish-design.md`
       and `docs/superpowers/plans/2026-04-26-visual-polish.md`.
+- [x] **6a. Compact Podlove player template for episode detail** — local
+      Django Chat spike restoring the Python-Podcast-style compact player
+      layout by passing `data-template=/podlove-player-template/` into
+      django-cast's existing Podlove web component. The player still uses
+      `cast:api:player_config` and `CAST_PODLOVE_PLAYER_THEMES`; the page
+      declares a light theme so browser dark-mode preferences do not add a
+      dark iframe strip below the compact controls. Facade mode remains
+      disabled.
 - [x] **7. Smoke-level feed comparison against Simplecast RSS** — `f4fc8fc`.
       Exhaustive parity validation is deferred to production hardening per the
       PRD.
@@ -114,8 +122,11 @@ serving the polished site:
 - Black header with show artwork mark, single-column episode rows,
   Roboto type stack self-hosted, filterset search/date facets/ordering,
   branded error pages, favicon trio, OG/Twitter metadata.
-- Podlove player on episode detail (no facade), themed with the
-  Django-green brand tokens via `CAST_PODLOVE_PLAYER_THEMES`.
+- Compact Podlove player on episode detail (no facade), themed with the
+  Django-green brand tokens via `CAST_PODLOVE_PLAYER_THEMES` and a local
+  `data-template` endpoint. The compact template includes the transcript tab
+  panel, so episodes with an attached django-cast `Transcript` can surface
+  transcript data through the player UI.
 - Show artwork attached to `Podcast.cover_image` so the player's cover
   slot is populated.
 - Wagtail `Site` row pinned to `djangochat.staging.django-cast.com:443`

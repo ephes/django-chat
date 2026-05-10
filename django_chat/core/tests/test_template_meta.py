@@ -19,6 +19,7 @@ def test_episode_index_emits_favicon_links(client: Client) -> None:
     response = client.get(episode_index_path())
 
     body = response.content.decode()
+    assert '<html lang="en" data-theme="light">' in body
     assert 'rel="icon"' in body
     assert "favicon.svg" in body
     assert "favicon.ico" in body
@@ -115,8 +116,30 @@ def test_podlove_player_config_uses_django_chat_brand_colors(client: Client) -> 
     assert tokens["brand"] == "#2d8260"
     # The Podlove default orange must NOT bleed through:
     assert tokens["brand"] != "#E64415"
+    # Used by Podlove for light chrome and the play-button glyph; keep it
+    # opaque so the icon stays visible on the green play button.
+    assert tokens["brandLightest"] == "#ffffff"
+    # The darkest brand token should stay in the green family so compact
+    # player chrome does not fall back to a black/blue default strip.
+    assert tokens["brandDarkest"] == "#14513a"
     # Contrast pinned to the project ink token.
     assert tokens["contrast"] == "#0d0d0d"
+
+
+@pytest.mark.django_db
+def test_podlove_player_template_endpoint_renders_compact_template(client: Client) -> None:
+    response = client.get(reverse("django_chat_podlove_player_template"))
+
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert "<root" in body
+    assert "<play-button" in body
+    assert "<progress-bar" in body
+    assert '<tab-trigger tab="shownotes">' in body
+    assert '<tab-trigger tab="chapters">' in body
+    assert '<tab-trigger tab="transcripts">' in body
+    assert "<tab-transcripts></tab-transcripts>" in body
+    assert '<tab-trigger tab="share">' in body
 
 
 def episode_index_path() -> str:

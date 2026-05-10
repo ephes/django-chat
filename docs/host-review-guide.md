@@ -22,12 +22,16 @@ Verified live behavior:
 - A staging-only `host-review-admin` superuser exists for review bootstrap.
 
 Full-catalog audio is copied to the staging media bucket and served through the
-public media host. Episode detail pages render the **Podlove web player**
-(`<podlove-player>`) — a styled player from django-cast loaded via
-`django-vite`. The heavy embed script (`cast/js/web-player/embed.5.js`,
-~138 KB) loads on viewport intersection, keeping it out of the critical
-render path. Copied MP3 URLs respond with HTTP 200 and `audio/mpeg`. Audio
-playback is therefore available end-to-end on staging.
+public media host. Episode detail pages render a compact **Podlove web
+player** (`<podlove-player>`) — django-cast's player component loaded via
+`django-vite`, with a Django Chat local `data-template` URL for the
+one-line-style layout and django-cast's existing player config endpoint for
+brand colors. The light page theme is declared explicitly so browser dark-mode
+preferences do not switch the compact iframe to Podlove's dark background.
+The heavy embed script (`cast/js/web-player/embed.5.js`, ~138 KB) loads on
+viewport intersection, keeping it out of the critical render path.
+Copied MP3 URLs respond with HTTP 200 and `audio/mpeg`. Audio playback is
+therefore available end-to-end on staging.
 
 As of 2026-04-29, staging has full-catalog metadata plus copied audio for every
 live imported podcast episode. `measure_django_chat_catalog
@@ -94,8 +98,9 @@ Before sending or refreshing the staging URL for hosts, confirm:
   direct database check before sending hosts the staging URL.
 - The show artwork has been attached as the podcast `cover_image` via
   `import_django_chat_sample --copy-cover-image` or
-  `import_django_chat_catalog --copy-cover-image` (idempotent). Without this,
-  the Podlove player on episode detail pages renders an empty cover slot.
+  `import_django_chat_catalog --copy-cover-image` (idempotent). The compact
+  player does not show the old large cover slot, but the imported artwork still
+  feeds page artwork, metadata, and player API image data.
 - `measure_django_chat_catalog --host=djangochat.staging.django-cast.com` has
   been run after the intended catalog import, and podcast feed, latest-entries
   feed, audio-completeness, and episode-list query/timing results have been
@@ -105,9 +110,11 @@ Before sending or refreshing the staging URL for hosts, confirm:
 - Static assets load.
 - An episode detail page renders a `<podlove-player>` element with
   `data-url` pointing at `/api/audios/podlove/<id>/post/<id>/` and
-  `data-config` at `/api/audios/player_config/`, and the referenced MP3
-  URL returns HTTP 200 with `Content-Type: audio/mpeg` through the public
-  media host.
+  `data-config` at `/api/audios/player_config/?template_base_dir=django_chat`,
+  plus `data-template` pointing at `/podlove-player-template/`. The referenced
+  MP3 URL returns HTTP 200 with `Content-Type: audio/mpeg` through the public
+  media host. Episodes with attached django-cast transcripts expose transcript
+  segments through the Podlove API and the compact player transcript tab.
 - Browser DevTools network panel shows `cast/js/web-player/embed.5.js`
   is fetched after initial page paint (on viewport intersection), not as
   part of the critical render path.

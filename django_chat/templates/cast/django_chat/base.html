@@ -1,7 +1,8 @@
 {% load static %}
 {% load wagtailimages_tags %}
 <!DOCTYPE html>
-<html lang="en">
+{# Pin light theme so django-cast does not request dark Podlove iframe chrome on this light site. #}
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -45,10 +46,18 @@
         height: 302px !important;
         min-height: 302px !important;
       }
+      podlove-player[data-template] {
+        height: auto !important;
+        min-height: 112px !important;
+      }
       @media (max-width: 760px) {
         podlove-player {
           height: 514px !important;
           min-height: 514px !important;
+        }
+        podlove-player[data-template] {
+          height: auto !important;
+          min-height: 156px !important;
         }
       }
     </style>

@@ -15,6 +15,10 @@ from django_chat.imports.models import PodcastSourceMetadata
 EPISODES_PER_PAGE = 20
 
 
+def podlove_player_template(request: HttpRequest) -> HttpResponse:
+    return render(request, "cast/django_chat/player_template.html", {})
+
+
 def podcast_episode_index(request: HttpRequest) -> HttpResponse:
     podcast = get_object_or_404(Podcast.objects.live(), slug=settings.DJANGO_CHAT_PODCAST_SLUG)
 

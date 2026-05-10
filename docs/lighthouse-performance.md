@@ -102,10 +102,14 @@ and episode detail page needed small fixes:
   marked `fetchpriority="high"` and `decoding="async"`.
 - The episode filter date inputs now have explicit labels, fixing the
   Lighthouse accessibility failure on `/episodes/`.
-- The Podlove player host element now has a fixed, critical height reservation
-  before the third-party player initializes: 302 px desktop and 514 px mobile.
-  This removed the large episode-detail CLS caused by show notes moving while
-  the player rendered.
+- The Podlove player host element originally used a fixed, critical height
+  reservation before the third-party player initialized: 302 px desktop and
+  514 px mobile. The compact Django Chat player template now has its own
+  shorter `podlove-player[data-template]` reservation, so the one-line-style
+  player does not leave the old tall blank space while still guarding against
+  layout shift. The base template also declares `data-theme="light"` so the
+  player initializer does not request Podlove's dark color scheme on an
+  otherwise light page.
 
 ## Caveats
 

@@ -498,7 +498,18 @@ main {
 }
 
 .audio-panel {
-  margin: 28px 0;
+  margin: 24px 0 30px;
+  max-width: 720px;
+}
+
+.audio-panel podlove-player[data-template] {
+  height: auto !important;
+  min-height: 112px !important;
+}
+
+.audio-panel podlove-player[data-template] .podlove-player-container {
+  min-height: 112px;
+  max-width: 720px;
 }
 
 .audio-panel p {
@@ -617,6 +628,11 @@ main {
   .show-artwork {
     justify-self: start;
     max-width: 220px;
+  }
+
+  .audio-panel podlove-player[data-template],
+  .audio-panel podlove-player[data-template] .podlove-player-container {
+    min-height: 156px !important;
   }
 
   .episode-hero .show-artwork {

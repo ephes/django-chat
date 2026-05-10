@@ -178,7 +178,10 @@ Then browse:
 - `http://localhost:8000/episodes/feed/` renders the generated RSS subscribe
   page.
 - `http://localhost:8000/episodes/django-tasks-jake-howard/` renders an
-  imported episode detail page.
+  imported episode detail page. After running the sample import with
+  `--copy-audio`, the page renders the compact Podlove player; metadata-only
+  imports show `Audio copy pending.` instead. The player uses the local
+  compact `data-template` endpoint and the Django Chat brand config URL.
 
 The sample import intentionally does not download, stream, copy, or attach MP3
 files unless audio copying is requested explicitly. Original RSS and Simplecast
@@ -202,10 +205,12 @@ storage, creates or updates a `cast.Audio` row, and attaches that row to
 
 `--copy-cover-image` downloads the show artwork URL recorded in
 `PodcastSourceMetadata.image_url`, creates a `wagtail.images.Image`, and
-attaches it to `Podcast.cover_image`. The Podlove player surfaces this as the
-per-episode cover (Simplecast does not expose per-episode artwork, so the
-show artwork is reused on every episode — same as djangochat.com). The flag
-is idempotent: subsequent runs do nothing when `cover_image` is already set.
+attaches it to `Podcast.cover_image`. Django Chat's compact Podlove player
+keeps the same django-cast config endpoint and brand tokens, and transcript
+tabs are available when an audio row has an attached django-cast `Transcript`;
+Simplecast does not expose per-episode artwork, so the show artwork remains
+the imported episode image source. The flag is idempotent: subsequent runs do
+nothing when `cover_image` is already set.
 
 Repeated `--copy-audio` runs are idempotent for the sample: existing audio-copy
 metadata rows are reused, files are not downloaded again when the source URL and

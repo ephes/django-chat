@@ -53,15 +53,18 @@ command has been run against production settings on the staging host.
 Sample MP3s are stored in the Django Chat staging bucket and reachable
 through the public media host with HTTP 200 and `Content-Type: audio/mpeg`,
 providing an end-to-end playback proof. The show artwork has been attached
-as the podcast page's `cover_image` (a `wagtail.images.Image`), which the
-Podlove player surfaces as the per-episode cover.
+as the podcast page's `cover_image` (a `wagtail.images.Image`). The compact
+Podlove player no longer displays a large cover slot, but the artwork still
+feeds page artwork, metadata, and player API image data.
 
 Expected differences from Simplecast:
 
 - Audio URLs come from the Django Chat media host, not Simplecast.
-- Simplecast player JavaScript is not used. Episode detail pages embed the
-  Podlove web player (the same player python-podcast.de uses), loaded via
-  `django-vite` against django-cast's prebuilt manifest.
+- Simplecast player JavaScript is not used. Episode detail pages embed a
+  compact Podlove web player, loaded via `django-vite` against django-cast's
+  prebuilt manifest and a Django Chat local `data-template` endpoint. Django
+  Chat declares the public site as a light theme so user-agent dark-mode
+  preferences do not switch the compact player iframe background.
 - The heavy embed script (`cast/js/web-player/embed.5.js`, ~138 KB)
   loads on viewport intersection, keeping it off the critical render path.
 - Simplecast analytics, dynamic ad insertion, and Simplecast download tracking

@@ -274,17 +274,15 @@ CAST_FILTERSET_FACETS = ["search", "date", "date_facets", "o"]
 #                     darker so white text on brand-coloured chrome
 #                     reaches ~4.7:1 contrast (WCAG AA-large).
 #   brandDark       — hover / emphasis variant.
-#   brandDarkest    — pinned to the project ink token (used for muted
-#                     text in the player, not as a "darker green").
-#   brandLightest   — pale-green tint used for player chrome
-#                     backgrounds.
+#   brandDarkest    — darkest green used for player chrome.
+#   brandLightest   — white player chrome and play glyph contrast.
 CAST_PODLOVE_PLAYER_THEMES = {
     "django_chat": {
         "tokens": {
             "brand": "#2d8260",
             "brandDark": "#1f6647",
-            "brandDarkest": "#0d0d0d",
-            "brandLightest": "#e6f4ee",
+            "brandDarkest": "#14513a",
+            "brandLightest": "#ffffff",
             "shadeDark": "#5d6673",
             "shadeBase": "#5d6673",
             "contrast": "#0d0d0d",

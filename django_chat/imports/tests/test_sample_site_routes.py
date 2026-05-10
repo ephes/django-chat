@@ -165,11 +165,14 @@ def test_imported_sample_episode_detail_renders_copied_audio(
     assert response.status_code == 200
     content = response.content.decode()
     assert "<podlove-player" in content
+    assert f'data-template="{reverse("django_chat_podlove_player_template")}"' in content
+    assert 'data-config="/api/audios/player_config/?template_base_dir=django_chat"' in content
     # data-load-mode is intentionally NOT set: django-cast does not ship
     # facade CSS, so the unstyled facade markup conflicts with the loaded
     # player on the rendered page. We let the Vite-loaded init module
     # render the player directly.
     assert "data-load-mode" not in content
+    assert "<audio" not in content
     assert "/media/cast_audio/django-chat-sample/django-tasks-jake-howard-" in content
     # The django-vite asset tag must emit the prebuilt Podlove init module on
     # episode pages with copied audio.
@@ -205,6 +208,11 @@ def test_imported_sample_episode_surfaces_attached_generated_transcript(
     detail_content = detail_response.content.decode()
     assert f'href="{absolute_url(transcript_path("django-tasks-jake-howard"))}"' in detail_content
     assert "<podlove-player" in detail_content
+    assert f'data-template="{reverse("django_chat_podlove_player_template")}"' in detail_content
+    assert (
+        'data-config="/api/audios/player_config/?template_base_dir=django_chat"' in detail_content
+    )
+    assert "Audio copy pending." not in detail_content
 
     assert transcript_response.status_code == 200
     assert "cast/django_chat/transcript.html" in [
@@ -268,6 +276,7 @@ def test_public_url_reversals_still_match_current_shapes() -> None:
     assert reverse("wagtailadmin_home") == "/cms/"
     assert reverse("cast:styleguide") == "/styleguide/"
     assert resolve("/styleguide/").namespace == "cast"
+    assert reverse("django_chat_podlove_player_template") == "/podlove-player-template/"
 
 
 class FakeAudioDownloader:
