@@ -13,7 +13,7 @@ from django.test import Client, override_settings
 from django.urls import resolve, reverse
 
 from django_chat.imports.import_sample import DownloadedAudio, import_django_chat_sample
-from django_chat.imports.models import PodcastSourceLink
+from django_chat.imports.models import EpisodeSourceMetadata, PodcastSourceLink
 
 
 @pytest.mark.django_db
@@ -52,10 +52,17 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     assert "https://itunes.apple.com/us/podcast/django-chat/id1451536459" in content
     assert "Overcast" in content
     assert "https://overcast.fm/itunes1451536459/django-chat" in content
+    assert 'class="play-circle"' not in content
+    assert '<span class="episode-number-badge" aria-hidden="true">' in content
+    assert "<span>#</span>" in content
+    assert "<span>200</span>" in content
+    assert "Episode 200:" in content
+    assert ">EP</span>" not in content
 
     show_actions = _html_between(content, '<div class="show-actions"', "</div>")
     assert re.search(r">\s*Subscribe\s*</a>", show_actions)
     assert f'href="{feed_detail_path()}"' in show_actions
+    assert '<circle cx="5" cy="19" r="2.2"/>' in show_actions
     assert "Apple Podcasts" not in show_actions
     assert "button-secondary" not in show_actions
 
@@ -82,6 +89,25 @@ def test_imported_sample_index_hides_platform_section_without_distribution_links
     content = response.content.decode()
     assert 'class="platform-band"' not in content
     assert "Listen on podcast apps and video platforms" not in content
+
+
+@pytest.mark.django_db
+def test_imported_sample_index_handles_missing_episode_number(
+    client: Client,
+) -> None:
+    import_django_chat_sample()
+    EpisodeSourceMetadata.objects.filter(
+        episode__slug="django-tasks-jake-howard",
+    ).update(episode_number=None)
+
+    response = client.get(episode_index_path())
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Django Tasks - Jake Howard" in content
+    assert 'class="episode-number-badge episode-number-badge-empty" aria-hidden="true"' in content
+    assert ">EP</span>" not in content
+    assert "Episode 200:" not in content
 
 
 @pytest.mark.django_db
@@ -166,6 +192,10 @@ def test_imported_sample_episode_detail_renders_copied_audio(
     content = response.content.decode()
     assert "<podlove-player" in content
     assert f'data-template="{reverse("django_chat_podlove_player_template")}"' in content
+    assert 'data-transcript-overlay="true"' not in content
+    assert 'class="audio-transcript-toggle"' not in content
+    assert "simplecast_transcript_html" not in content
+    assert "Jake Howard" in content
     assert 'data-config="/api/audios/player_config/?template_base_dir=django_chat"' in content
     # data-load-mode is intentionally NOT set: django-cast does not ship
     # facade CSS, so the unstyled facade markup conflicts with the loaded
@@ -209,6 +239,10 @@ def test_imported_sample_episode_surfaces_attached_generated_transcript(
     assert f'href="{absolute_url(transcript_path("django-tasks-jake-howard"))}"' in detail_content
     assert "<podlove-player" in detail_content
     assert f'data-template="{reverse("django_chat_podlove_player_template")}"' in detail_content
+    assert 'data-transcript-overlay="true"' not in detail_content
+    assert 'class="audio-transcript-toggle"' not in detail_content
+    assert 'class="audio-transcript-panel"' not in detail_content
+    assert "Generated transcript segment for an imported episode." not in detail_content
     assert (
         'data-config="/api/audios/player_config/?template_base_dir=django_chat"' in detail_content
     )

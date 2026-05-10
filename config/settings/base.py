@@ -270,12 +270,13 @@ CAST_FILTERSET_FACETS = ["search", "date", "date_facets", "o"]
 # Active when the player config endpoint resolves the theme to
 # `django_chat` — pinned per-site at deploy time by ensure_default_site.
 # Colour decisions:
-#   brand           — same green family as the show artwork (#44b78b),
+#   brand           — same green family as the show artwork (#65a65c),
 #                     darker so white text on brand-coloured chrome
 #                     reaches ~4.7:1 contrast (WCAG AA-large).
 #   brandDark       — hover / emphasis variant.
 #   brandDarkest    — darkest green used for player chrome.
 #   brandLightest   — white player chrome and play glyph contrast.
+#   shade*          — neutral secondary UI text, intentionally not slate-blue.
 CAST_PODLOVE_PLAYER_THEMES = {
     "django_chat": {
         "tokens": {
@@ -283,8 +284,8 @@ CAST_PODLOVE_PLAYER_THEMES = {
             "brandDark": "#1f6647",
             "brandDarkest": "#14513a",
             "brandLightest": "#ffffff",
-            "shadeDark": "#5d6673",
-            "shadeBase": "#5d6673",
+            "shadeDark": "#5f635d",
+            "shadeBase": "#5f635d",
             "contrast": "#0d0d0d",
             "alt": "#ffffff",
         },

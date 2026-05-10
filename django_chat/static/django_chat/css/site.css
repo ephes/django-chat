@@ -12,6 +12,7 @@
   src: url("/static/fonts/RobotoFlex-Variable.woff2") format("woff2-variations"),
        url("/static/fonts/RobotoFlex-Variable.woff2") format("woff2");
   font-weight: 100 1000;
+  font-stretch: 25% 151%;
   font-style: normal;
   font-display: swap;
 }
@@ -28,12 +29,26 @@
 :root {
   --dc-ink: #0d0d0d;
   --dc-paper: #ffffff;
-  --dc-muted: #5d6673;
+  --dc-muted: #5f635d;
   --dc-line: #ececec;
-  --dc-link: #0e7c7b;
-  --dc-django: #44b78b;
+  --dc-link: #14513a;
+  --dc-accent: #2d8260;
+  --dc-accent-dark: #14513a;
+  --dc-django: #65a65c;
   --dc-radius: 4px;
   --dc-container: min(1120px, 100% - 32px);
+  --bs-blue: #2d8260;
+  --bs-indigo: #1f6647;
+  --bs-cyan: #65a65c;
+  --bs-primary: #2d8260;
+  --bs-primary-rgb: 45, 130, 96;
+  --bs-info: #65a65c;
+  --bs-info-rgb: 101, 166, 92;
+  --bs-link-color: #14513a;
+  --bs-link-color-rgb: 20, 81, 58;
+  --bs-link-hover-color: #1f6647;
+  --bs-link-hover-color-rgb: 31, 102, 71;
+  --bs-focus-ring-color: rgb(101 166 92 / 0.25);
 }
 
 *,
@@ -60,6 +75,18 @@ a {
   color: var(--dc-link);
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.18em;
+}
+
+a:hover,
+a:focus {
+  color: var(--dc-accent-dark);
+  text-decoration-color: var(--dc-django);
+}
+
+a:focus-visible {
+  outline: 3px solid rgb(101 166 92 / 0.35);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 h1,
@@ -108,6 +135,13 @@ h3 {
 .site-footer a {
   color: #fff;
   text-decoration: none;
+}
+
+.site-header a:hover,
+.site-header a:focus,
+.site-footer a:hover,
+.site-footer a:focus {
+  color: var(--dc-django);
 }
 
 .site-header {
@@ -209,23 +243,46 @@ main {
 }
 
 .button-primary {
-  background: var(--dc-ink);
+  background: var(--dc-accent-dark);
   color: #fff;
-  border: 1px solid var(--dc-ink);
+  border: 1px solid var(--dc-accent-dark);
+}
+
+.button-primary:hover,
+.button-primary:focus {
+  background: var(--dc-django);
+  border-color: var(--dc-django);
+  color: var(--dc-ink);
 }
 
 .button-secondary {
-  background: var(--dc-paper);
+  background: var(--dc-accent-dark);
+  color: #fff;
+  border: 1px solid var(--dc-accent-dark);
+}
+
+.button-secondary:hover,
+.button-secondary:focus {
+  background: var(--dc-django);
+  border-color: var(--dc-django);
   color: var(--dc-ink);
-  border: 1px solid var(--dc-ink);
 }
 
 .button-icon {
   width: 18px;
   height: 18px;
   margin-right: 8px;
-  fill: currentcolor;
+  fill: none;
   flex: 0 0 auto;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.75;
+}
+
+.button-icon circle {
+  fill: currentcolor;
+  stroke: none;
 }
 
 .platform-band {
@@ -267,6 +324,13 @@ main {
   text-decoration: none;
 }
 
+.platform-band-links a:hover,
+.platform-band-links a:focus {
+  background: rgb(101 166 92 / 0.10);
+  border-color: var(--dc-django);
+  color: var(--dc-accent-dark);
+}
+
 .filter-form {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) auto;
@@ -286,6 +350,13 @@ main {
   border-radius: var(--dc-radius);
   background: var(--dc-paper);
   font: inherit;
+}
+
+.filter-form input:focus,
+.filter-form select:focus {
+  border-color: var(--dc-django);
+  box-shadow: 0 0 0 3px rgb(101 166 92 / 0.18);
+  outline: 0;
 }
 
 .filter-date {
@@ -316,12 +387,18 @@ main {
 .filter-form button {
   min-height: 40px;
   padding: 0 18px;
-  background: var(--dc-ink);
+  background: var(--dc-accent-dark);
   color: #fff;
   border: 0;
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.filter-form button:hover,
+.filter-form button:focus {
+  background: var(--dc-django);
+  color: var(--dc-ink);
 }
 
 .episode-list {
@@ -332,9 +409,9 @@ main {
 
 .episode-row {
   display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: 16px;
-  padding: 22px 0;
+  grid-template-columns: minmax(112px, auto) 1fr;
+  gap: 24px;
+  padding: 28px 0;
   border-top: 1px solid var(--dc-line);
   text-decoration: none;
   color: inherit;
@@ -345,24 +422,49 @@ main {
 }
 
 .episode-row:hover {
-  background: rgb(13 13 13 / 0.03);
+  background: rgb(101 166 92 / 0.08);
 }
 
-.play-circle {
-  width: 36px;
-  height: 36px;
-  border: 1.5px solid var(--dc-ink);
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
+.episode-number-badge {
   align-self: start;
-  margin-top: 4px;
+  display: grid;
+  font-family: "Roboto Flex", "Roboto", system-ui, sans-serif;
+  font-size: clamp(4.2rem, 7vw, 6.6rem);
+  font-variation-settings: "wdth" 25, "opsz" 30;
+  font-weight: 900;
+  justify-items: center;
+  letter-spacing: 0;
+  line-height: 0.64;
+  margin-top: 0;
+  min-width: 112px;
+  text-transform: uppercase;
 }
 
-.play-circle svg {
-  width: 14px;
-  height: 14px;
-  fill: var(--dc-ink);
+.episode-number-badge span {
+  display: block;
+}
+
+.episode-number-badge span:first-child {
+  color: var(--dc-django);
+  font-size: 1.42em;
+  line-height: 0.72;
+  z-index: 1;
+}
+
+.episode-number-badge span:last-child {
+  color: var(--dc-accent-dark);
+  margin-top: -0.74em;
+  z-index: 2;
+}
+
+.episode-row:hover .episode-number-badge span:first-child,
+.episode-row:focus .episode-number-badge span:first-child {
+  color: var(--dc-django);
+}
+
+.episode-row:hover .episode-number-badge span:last-child,
+.episode-row:focus .episode-number-badge span:last-child {
+  color: var(--dc-accent-dark);
 }
 
 .episode-row h2 {
@@ -409,15 +511,22 @@ main {
   max-width: 100%;
   min-height: 48px;
   padding: 0 18px;
-  border: 1px solid var(--dc-ink);
+  border: 1px solid var(--dc-accent-dark);
   border-radius: var(--dc-radius);
-  background: var(--dc-ink);
+  background: var(--dc-accent-dark);
   color: #fff;
   font-family: "Roboto Mono", ui-monospace, monospace;
   font-size: 0.92rem;
   font-weight: 600;
   overflow-wrap: anywhere;
   text-decoration: none;
+}
+
+.rss-primary-link:hover,
+.rss-primary-link:focus {
+  background: var(--dc-django);
+  border-color: var(--dc-django);
+  color: var(--dc-ink);
 }
 
 .subscribe-section {
@@ -503,6 +612,7 @@ main {
 }
 
 .audio-panel podlove-player[data-template] {
+  display: block;
   height: auto !important;
   min-height: 112px !important;
 }
@@ -562,6 +672,13 @@ main {
   border-radius: 999px;
   color: var(--dc-ink);
   text-decoration: none;
+}
+
+.pagination-nav a:hover,
+.pagination-nav a:focus {
+  background: rgb(101 166 92 / 0.10);
+  border-color: var(--dc-django);
+  color: var(--dc-accent-dark);
 }
 
 .site-footer-inner {

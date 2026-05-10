@@ -18,7 +18,9 @@
         <div class="show-actions">
           <a class="button-primary" href="{% url 'cast:feed_detail' slug=podcast.slug %}">
             <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M4 5.5A14.5 14.5 0 0 1 18.5 20h-3A11.5 11.5 0 0 0 4 8.5v-3Zm0 6A8.5 8.5 0 0 1 12.5 20h-3A5.5 5.5 0 0 0 4 14.5v-3Zm0 6.25A2.25 2.25 0 1 1 8.5 20 2.25 2.25 0 0 1 4 17.75Z"/>
+              <path d="M4 11a9 9 0 0 1 9 9"/>
+              <path d="M4 4a16 16 0 0 1 16 16"/>
+              <circle cx="5" cy="19" r="2.2"/>
             </svg>
             Subscribe
           </a>
@@ -64,14 +66,21 @@
       <section class="episode-list" aria-label="Episodes">
         {% for post in posts %}
           <a class="episode-row" href="{{ post.page_url }}">
-            <span class="play-circle" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            </span>
+            {% with episode_number=post.django_chat_source_metadata.episode_number %}
+              {% if episode_number %}
+                <span class="episode-number-badge" aria-hidden="true">
+                  <span>#</span>
+                  <span>{{ episode_number }}</span>
+                </span>
+                <span class="visually-hidden">Episode {{ episode_number }}: </span>
+              {% else %}
+                <span class="episode-number-badge episode-number-badge-empty" aria-hidden="true"></span>
+              {% endif %}
+            {% endwith %}
             <div>
               <p class="eyebrow">
                 <time datetime="{{ post.visible_date|date:'c' }}">{{ post.visible_date|date:'M j, Y' }}</time>
-                {% with episode_number=post.django_chat_source_metadata.episode_number duration=post.django_chat_source_metadata.duration_seconds %}
-                  {% if episode_number %} · E{{ episode_number }}{% endif %}
+                {% with duration=post.django_chat_source_metadata.duration_seconds %}
                   {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
                 {% endwith %}
               </p>

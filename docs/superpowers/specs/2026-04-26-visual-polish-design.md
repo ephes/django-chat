@@ -66,16 +66,19 @@ Defined in `django_chat/static/django_chat/css/site.css` as CSS custom
 properties.
 
 ```
---dc-ink:    #0D0D0D   /* primary ink, header bg, primary button bg */
+--dc-ink:    #0D0D0D   /* primary ink, header bg */
 --dc-paper:  #FFFFFF   /* body bg */
---dc-muted:  #5d6673   /* secondary text */
+--dc-muted:  #5f635d   /* neutral secondary text */
 --dc-line:   #ececec   /* hairline dividers, input borders */
---dc-link:   #0E7C7B   /* link accent, matches djangochat link colour */
---dc-django: #44B78B   /* used only inside the show artwork mark */
+--dc-link:   #14513A   /* dark green link accent, matches player chrome */
+--dc-accent: #2D8260   /* mid green for Bootstrap primary overrides */
+--dc-accent-dark: #14513A /* darkest green used for hover emphasis */
+--dc-django: #65A65C   /* image-sampled logo green used for focus, borders, hover fills */
 ```
 
-Drops the existing `--dc-green`, `--dc-blue`, `--dc-red`, `--dc-panel`
-tokens — they don't appear in djangochat.com's palette.
+Bootstrap's primary, info, link, focus-ring, and default blue/indigo/cyan
+custom properties are also overridden in `site.css` to keep framework chrome
+inside the Django Chat green palette.
 
 Type stack:
 
@@ -154,7 +157,8 @@ Composition top-to-bottom:
      - "Apple Podcasts" — outlined button, links to the Apple
        distribution channel from
        `source_metadata.visible_distribution_links`.
-     - "Listen & Subscribe" — black-filled button. Links to the
+     - "Listen & Subscribe" — dark-green filled button that hovers to
+       the lighter logo green. Links to the
        branded RSS-discovery page at `cast:feed_detail`
        (`/episodes/feed/`). This supersedes the earlier visual-polish
        fallback to the Simplecast site root or direct RSS feed URL.
@@ -169,6 +173,8 @@ Composition top-to-bottom:
 3. **Filter form** (`_filter_form.html` partial, new):
    - Inputs: text `search`, `date_after`, `date_before`, `date_facets`
      dropdown, `o` ordering dropdown, "Filter" submit button.
+   - Submit buttons use the same dark-green normal state and light-green
+     hover/focus state as the Subscribe CTA.
    - Single-row layout on desktop, stacks on mobile.
    - Renders `filterset.form`. **The current `/episodes/` route is a
      custom view at `django_chat/core/views.py:12`
@@ -211,14 +217,19 @@ Composition top-to-bottom:
    - Guard the partial with `{% if filterset %}` so unrelated Page
      types render nothing.
    - Style: light surface (`--dc-paper`), `--dc-line` borders on inputs,
-     `--dc-ink` filled submit button.
+     dark-green filled submit button that hovers to the lighter logo
+     green.
 
 4. **Episode rows** (single column — replaces the current
    `repeat(2, minmax(0, 1fr))` grid):
-   - Per row: 32px play-circle icon (visual only; whole row is wrapped
-     in `<a href="{{ post.page_url }}">`), then a column with eyebrow
-     meta, title H3, 2-line clamped description.
-   - Eyebrow format: `{visible_date} · E{episode_number} · {duration}`
+   - Per row: large bold two-line episode badge, with a light-green `#`
+     centered on the first line and the dark-green `episode_number` on
+     the second line. It uses Roboto Flex with `wdth -10`, `opsz 30`,
+     `font-weight: 900`, and overlapping rows so the number sits about
+     one third over the hashtag. It is visual only; the whole row is
+     wrapped in `<a href="{{ post.page_url }}">`. Then a column with
+     eyebrow meta, title H3, 2-line clamped description.
+   - Eyebrow format: `{visible_date} · {duration}`
      — degrades gracefully when individual fields are missing on an
      episode (see "Eyebrow metadata: what's available" below). No
      season indicator (not persisted; out of scope).
@@ -305,7 +316,8 @@ Composition top-to-bottom:
 4. **Show notes** (from `page.body`):
    - Section headings (`<h2>` / `<h3>` from richtext blocks): Roboto
      700.
-   - Bulleted lists with comfortable line-height; links in `--dc-link`.
+   - Bulleted lists with comfortable line-height; links in dark-green
+     `--dc-link`.
    - Content width capped at ~720px for readability.
 
 5. **Transcript link**: when `episode.transcript` exists, render a plain

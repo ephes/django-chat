@@ -66,12 +66,26 @@ Open `django_chat/static/django_chat/css/site.css` and replace the entire conten
 :root {
   --dc-ink: #0d0d0d;
   --dc-paper: #ffffff;
-  --dc-muted: #5d6673;
+  --dc-muted: #5f635d;
   --dc-line: #ececec;
-  --dc-link: #0e7c7b;
-  --dc-django: #44b78b;
+  --dc-link: #14513a;
+  --dc-accent: #2d8260;
+  --dc-accent-dark: #14513a;
+  --dc-django: #65a65c;
   --dc-radius: 4px;
   --dc-container: min(1120px, 100% - 32px);
+  --bs-blue: #2d8260;
+  --bs-indigo: #1f6647;
+  --bs-cyan: #65a65c;
+  --bs-primary: #2d8260;
+  --bs-primary-rgb: 45, 130, 96;
+  --bs-info: #65a65c;
+  --bs-info-rgb: 101, 166, 92;
+  --bs-link-color: #14513a;
+  --bs-link-color-rgb: 20, 81, 58;
+  --bs-link-hover-color: #1f6647;
+  --bs-link-hover-color-rgb: 31, 102, 71;
+  --bs-focus-ring-color: rgb(101 166 92 / 0.25);
 }
 
 *,
@@ -243,15 +257,29 @@ main {
 }
 
 .button-primary {
-  background: var(--dc-ink);
+  background: var(--dc-accent-dark);
   color: #fff;
-  border: 1px solid var(--dc-ink);
+  border: 1px solid var(--dc-accent-dark);
+}
+
+.button-primary:hover,
+.button-primary:focus {
+  background: var(--dc-django);
+  border-color: var(--dc-django);
+  color: var(--dc-ink);
 }
 
 .button-secondary {
-  background: var(--dc-paper);
+  background: var(--dc-accent-dark);
+  color: #fff;
+  border: 1px solid var(--dc-accent-dark);
+}
+
+.button-secondary:hover,
+.button-secondary:focus {
+  background: var(--dc-django);
+  border-color: var(--dc-django);
   color: var(--dc-ink);
-  border: 1px solid var(--dc-ink);
 }
 
 .link-band {
@@ -321,12 +349,18 @@ main {
 .filter-form button {
   min-height: 40px;
   padding: 0 18px;
-  background: var(--dc-ink);
+  background: var(--dc-accent-dark);
   color: #fff;
   border: 0;
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.filter-form button:hover,
+.filter-form button:focus {
+  background: var(--dc-django);
+  color: var(--dc-ink);
 }
 
 .episode-list {
@@ -337,9 +371,9 @@ main {
 
 .episode-row {
   display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: 16px;
-  padding: 22px 0;
+  grid-template-columns: minmax(112px, auto) 1fr;
+  gap: 24px;
+  padding: 28px 0;
   border-top: 1px solid var(--dc-line);
   text-decoration: none;
   color: inherit;
@@ -350,24 +384,49 @@ main {
 }
 
 .episode-row:hover {
-  background: rgb(13 13 13 / 0.03);
+  background: rgb(101 166 92 / 0.08);
 }
 
-.play-circle {
-  width: 36px;
-  height: 36px;
-  border: 1.5px solid var(--dc-ink);
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
+.episode-number-badge {
   align-self: start;
-  margin-top: 4px;
+  display: grid;
+  font-family: "Roboto Flex", "Roboto", system-ui, sans-serif;
+  font-size: clamp(4.2rem, 7vw, 6.6rem);
+  font-variation-settings: "wdth" 25, "opsz" 30;
+  font-weight: 900;
+  justify-items: center;
+  letter-spacing: 0;
+  line-height: 0.64;
+  margin-top: 0;
+  min-width: 112px;
+  text-transform: uppercase;
 }
 
-.play-circle svg {
-  width: 14px;
-  height: 14px;
-  fill: var(--dc-ink);
+.episode-number-badge span {
+  display: block;
+}
+
+.episode-number-badge span:first-child {
+  color: var(--dc-django);
+  font-size: 1.42em;
+  line-height: 0.72;
+  z-index: 1;
+}
+
+.episode-number-badge span:last-child {
+  color: var(--dc-accent-dark);
+  margin-top: -0.74em;
+  z-index: 2;
+}
+
+.episode-row:hover .episode-number-badge span:first-child,
+.episode-row:focus .episode-number-badge span:first-child {
+  color: var(--dc-django);
+}
+
+.episode-row:hover .episode-number-badge span:last-child,
+.episode-row:focus .episode-number-badge span:last-child {
+  color: var(--dc-accent-dark);
 }
 
 .episode-row h2 {
@@ -579,8 +638,16 @@ Run:
 ```bash
 curl -L -o django_chat/static/fonts/Roboto-Variable.woff2 \
   'https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbWmRwm5qb1Yj.woff2'
-curl -L -o django_chat/static/fonts/RobotoFlex-Variable.woff2 \
-  'https://fonts.gstatic.com/s/robotoflex/v34/NaNeepOXO_NexZs0b5QrzlOHb8wCikXpYqmZsWI-__OGQg.woff2'
+curl -L -o /tmp/RobotoFlex-variable.ttf \
+  'https://raw.githubusercontent.com/googlefonts/roboto-flex/main/fonts/RobotoFlex%5BGRAD%2CXOPQ%2CXTRA%2CYOPQ%2CYTAS%2CYTDE%2CYTFI%2CYTLC%2CYTUC%2Copsz%2Cslnt%2Cwdth%2Cwght%5D.ttf'
+uv run --with fonttools --with brotli pyftsubset /tmp/RobotoFlex-variable.ttf \
+  --output-file=django_chat/static/fonts/RobotoFlex-Variable.woff2 \
+  --flavor=woff2 \
+  --unicodes='U+0000-00FF,U+2010-2015,U+2018-201D,U+2026,U+2190-2193' \
+  --layout-features='*' \
+  --name-IDs='*' \
+  --name-legacy \
+  --name-languages='*'
 curl -L -o django_chat/static/fonts/RobotoMono-Variable.woff2 \
   'https://fonts.gstatic.com/s/robotomono/v23/L0xuDF4xlVMF-BfR8bXMIhJHg45mwgGEFl0_3vqPPRNb_g.woff2'
 ls -lh django_chat/static/fonts/
@@ -588,7 +655,8 @@ ls -lh django_chat/static/fonts/
 
 Expected: three `.woff2` files between 100 KB and 800 KB each.
 
-If any download yields HTML (Google sometimes redirects), copy the matching `woff2` URL by visiting `https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Flex&family=Roboto+Mono&display=swap` in a browser, picking the unicode-range `latin` variant for each, and re-running curl with the new URL. The exact filename suffix is not load-bearing.
+Roboto Flex must include the `wdth` axis; the small Google CSS API latin
+subset is not sufficient because it only contains `wght`.
 
 - [ ] **Step 3: Add `@font-face` rules to the top of `site.css`**
 
@@ -609,6 +677,7 @@ Insert these blocks at the very top of `django_chat/static/django_chat/css/site.
   src: url("/static/fonts/RobotoFlex-Variable.woff2") format("woff2-variations"),
        url("/static/fonts/RobotoFlex-Variable.woff2") format("woff2");
   font-weight: 100 1000;
+  font-stretch: 25% 151%;
   font-style: normal;
   font-display: swap;
 }
@@ -709,7 +778,7 @@ Write the file at `django_chat/static/django_chat/favicon.svg` with this content
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="10" fill="#44b78b"/>
+  <rect width="64" height="64" rx="10" fill="#65a65c"/>
   <path d="M14 20a6 6 0 0 1 6-6h24a6 6 0 0 1 6 6v18a6 6 0 0 1-6 6H28l-10 8v-8h-4a6 6 0 0 1-6-6Z" fill="#ffffff"/>
   <text x="32" y="35" text-anchor="middle" font-family="Roboto, sans-serif" font-weight="800" font-size="13" fill="#0d0d0d">DC</text>
 </svg>
@@ -1324,14 +1393,21 @@ Replace `django_chat/templates/cast/django_chat/blog_list_of_posts.html` with:
       <section class="episode-list" aria-label="Episodes">
         {% for post in posts %}
           <a class="episode-row" href="{{ post.page_url }}">
-            <span class="play-circle" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            </span>
+            {% with episode_number=post.django_chat_source_metadata.episode_number %}
+              {% if episode_number %}
+                <span class="episode-number-badge" aria-hidden="true">
+                  <span>#</span>
+                  <span>{{ episode_number }}</span>
+                </span>
+                <span class="visually-hidden">Episode {{ episode_number }}: </span>
+              {% else %}
+                <span class="episode-number-badge episode-number-badge-empty" aria-hidden="true"></span>
+              {% endif %}
+            {% endwith %}
             <div>
               <p class="eyebrow">
                 <time datetime="{{ post.visible_date|date:'c' }}">{{ post.visible_date|date:'M j, Y' }}</time>
-                {% with episode_number=post.django_chat_source_metadata.episode_number duration=post.django_chat_source_metadata.duration_seconds %}
-                  {% if episode_number %} · E{{ episode_number }}{% endif %}
+                {% with duration=post.django_chat_source_metadata.duration_seconds %}
                   {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
                 {% endwith %}
               </p>
