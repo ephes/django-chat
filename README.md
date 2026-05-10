@@ -97,10 +97,11 @@ Run all local quality checks:
 just check
 ```
 
-Run the local development server:
+Run the local development server. This uses the staging S3/CloudFront media
+backend by default so imported Wagtail images and episode media render locally:
 
 ```sh
-just runserver
+just dev
 ```
 
 After importing the sample, open `http://localhost:8000/episodes/` to browse

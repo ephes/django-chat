@@ -24,15 +24,19 @@ just manage check
 just manage createsuperuser
 ```
 
-Run the development server:
+Run the development server. The default local preview uses the staging
+S3/CloudFront media backend so imported Wagtail images and episode media render
+locally:
 
 ```sh
-just runserver
+just dev
 ```
 
 The default settings module for `manage.py` is `config.settings.local`.
-Local and test settings use SQLite and do not require PostgreSQL or any other
-external service.
+Local and test settings use SQLite and do not require PostgreSQL. The default
+`just dev` command requires `sops`, `yq`, and staging SOPS decrypt access for
+media; use `just runserver-local-media` when you intentionally want filesystem
+media only.
 
 ## Tests And Quality Checks
 
@@ -163,7 +167,7 @@ pages and feed URLs still use django-cast/Wagtail routes.
 Run the development server after importing the sample:
 
 ```sh
-just runserver
+just dev
 ```
 
 Then browse:
@@ -412,9 +416,31 @@ review documentation assume the same slug.
 
 ## Media Storage
 
-Local and test settings use filesystem media storage by default. S3-compatible
-media storage is opt-in through environment variables and does not require or
-ship any credentials in the repository.
+Local and test settings use filesystem media storage by default at the Django
+settings level. The default `just dev` command opts into the staging
+S3/CloudFront media backend because the imported local database can point at
+Wagtail files that live in staging media storage. S3-compatible media storage
+does not require or ship any credentials in the repository.
+
+To run the local dev server against the same S3/CloudFront media backend used
+by staging, use the encrypted staging SOPS file through the default dev command:
+
+```sh
+just dev
+```
+
+This reads `deploy/secrets/staging.sops.yml`, maps the staging media secrets to
+the `DJANGO_CHAT_*` settings variables, and starts `manage.py runserver`.
+Override the encrypted secret path with `DJANGO_CHAT_STAGING_SECRET_FILE` when
+needed. The command requires `sops`, `yq`, and an age key that can decrypt the
+staging secret file.
+
+`just runserver` is an alias for `just dev`. To bypass staging media and use
+only local filesystem media, run:
+
+```sh
+just runserver-local-media
+```
 
 Set `DJANGO_CHAT_MEDIA_STORAGE_BACKEND=s3` only when you have a
 Django Chat-specific bucket and access keys:
