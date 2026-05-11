@@ -8,11 +8,37 @@
 {% block content %}
   {% load static %}
   {% firstof podcast blog as show %}
+  <script>
+    (function () {
+      var html = document.documentElement;
+      html.classList.add('js-vt');
+      if (window.innerWidth <= 1024) {
+        html.classList.add('is-stacked');
+      }
+      var isStacked = html.classList.contains('is-stacked');
+      var resizeTimer = null;
+      window.addEventListener('resize', function () {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+          resizeTimer = null;
+          var desired = window.innerWidth <= 1024;
+          if (desired === isStacked) return;
+          isStacked = desired;
+          var apply = function () { html.classList.toggle('is-stacked', desired); };
+          if (document.startViewTransition) {
+            document.startViewTransition(apply);
+          } else {
+            apply();
+          }
+        }, 120);
+      });
+    })();
+  </script>
   <section class="show-hero" style="background-image: url('{% static 'django_chat/img/show-hero-bg.jpg' %}');">
     <svg class="show-hero-shape" aria-hidden="true" focusable="false" width="0" height="0">
       <defs>
-        <clipPath id="show-hero-clip" clipPathUnits="objectBoundingBox">
-          <path d="M 0,0 L 1,0 L 1,0.407 A 0.752 1.833 0 0 1 0.34 0.828 L 0.118 1 L 0.18 0.696 A 0.752 1.833 0 0 1 0 0.407 Z" />
+        <clipPath id="show-hero-curve-clip" clipPathUnits="objectBoundingBox">
+          <path d="M 0,0 L 1,0 L 1,1 L 0,1 Z M 0,0 L 1,0 A 0.752 3.094 0 0 1 0.34 0.710 L 0.118 1 L 0.18 0.487 A 0.752 3.094 0 0 1 0 0 Z" clip-rule="evenodd" />
         </clipPath>
       </defs>
     </svg>
@@ -33,6 +59,7 @@
       </div>
       <img class="show-hero-logo" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="938" height="858" alt="Django Chat logo" fetchpriority="high" decoding="async">
     </div>
+    <div class="show-hero-curve" aria-hidden="true"></div>
   </section>
   <main>
 
