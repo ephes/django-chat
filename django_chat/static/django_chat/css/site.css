@@ -593,7 +593,7 @@ main {
 
 .episode-hero-content {
   display: flex;
-  /* Match the desktop artwork height so the player pins to the artwork bottom. */
+  /* Match the desktop artwork height so the hero columns stay visually balanced. */
   min-height: 280px;
   flex-direction: column;
 }
@@ -622,7 +622,7 @@ main {
 
 .audio-panel {
   width: min(600px, 100%);
-  margin: auto 0 0 -24px;
+  margin: 24px 0 0 -24px;
 }
 
 .audio-panel podlove-player[data-template] {
