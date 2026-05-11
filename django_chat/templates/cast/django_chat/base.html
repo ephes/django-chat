@@ -80,7 +80,9 @@
           <a href="{% url 'django_chat_episode_index' %}">Episodes</a>
           {% if source_metadata %}
             {% for link in source_metadata.visible_menu_links %}
-              <a href="{{ link.url }}"{% if link.new_window %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.name }}</a>
+              {% if link.name != "YouTube" %}
+                <a href="{{ link.url }}"{% if link.new_window %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.name }}</a>
+              {% endif %}
             {% endfor %}
           {% endif %}
         </div>

@@ -38,7 +38,7 @@
     <svg class="show-hero-shape" aria-hidden="true" focusable="false" width="0" height="0">
       <defs>
         <clipPath id="show-hero-curve-clip" clipPathUnits="objectBoundingBox">
-          <path d="M 0,0 L 1,0 L 1,1 L 0,1 Z M 0,0 L 1,0 A 0.752 3.094 0 0 1 0.34 0.710 L 0.118 1 L 0.18 0.487 A 0.752 3.094 0 0 1 0 0 Z" clip-rule="evenodd" />
+          <path d="M 0,0 L 1,0 L 1,1 L 0,1 Z M 0,0 L 1,0 A 0.752 3.094 0 0 1 0.34 0.710 L 0.118 0.988 L 0.18 0.487 A 0.752 3.094 0 0 1 0 0 Z" clip-rule="evenodd" />
         </clipPath>
       </defs>
     </svg>
@@ -73,8 +73,15 @@
               <p>These links open Django Chat on third-party services such as podcast directories, podcast apps, and YouTube.</p>
             </div>
             <div class="platform-band-links">
-              {% for link in distribution_links %}
-                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.name }}</a>
+              {% for link in distribution_links|youtube_first %}
+                {% if link.name != "Google Podcasts" %}
+                  <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">
+                    {% with icon=link.name|platform_icon %}
+                      {% if icon %}<img class="platform-icon" src="{{ icon }}" width="20" height="20" alt="" aria-hidden="true">{% endif %}
+                    {% endwith %}
+                    <span>{{ link.name }}</span>
+                  </a>
+                {% endif %}
               {% endfor %}
             </div>
           </section>

@@ -220,14 +220,14 @@ main {
 }
 
 .show-hero-curve {
-  background-color: var(--dc-paper);
+  background-color: #dfeede;
   background-image:
     linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
     url("../img/simple-horizontal-light.png");
   background-repeat: repeat;
   background-attachment: fixed;
   clip-path: url(#show-hero-curve-clip);
-  height: clamp(60px, 20vw, 320px);
+  height: clamp(60px, 15vw, 220px);
   margin-top: clamp(-80px, -5vw, -15px);
   position: relative;
   z-index: 1;
@@ -246,10 +246,10 @@ main {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 40px;
   align-items: center;
-  min-height: 30svh;
+  min-height: 14svh;
   width: min(clamp(800px, 66vw, 1000px), 100% - 32px);
   margin: 0 auto;
-  padding: 48px 0 0;
+  padding: 12px 0 8px;
   position: relative;
   z-index: 2;
 }
@@ -295,6 +295,7 @@ main {
   height: auto;
   width: clamp(260px, 20vw, 320px);
   justify-self: end;
+  margin-top: 30px;
   max-width: 100%;
 }
 
@@ -437,17 +438,32 @@ html.is-stacked .show-hero-logo {
 }
 
 .platform-band {
-  display: grid;
-  grid-template-columns: minmax(220px, 0.85fr) minmax(0, 1.15fr);
-  gap: 24px 40px;
-  align-items: start;
-  margin: 0 0 34px;
-  padding: 26px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 28px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-top: -4px;
+  margin-bottom: 40px;
+  padding: 0 max(16px, calc(50vw - 560px)) 40px;
+  background-color: #dfeede;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
+    url("../img/simple-horizontal-light.png");
+  background-repeat: repeat;
+  background-attachment: fixed;
   border-bottom: 1px solid var(--dc-line);
+  position: relative;
+  z-index: 2;
 }
 
 .platform-band h2 {
-  margin: 2px 0 10px;
+  font-size: clamp(1.4rem, 1.6vw + 0.7rem, 2.2rem);
+  margin: 6px 0 12px;
+  text-wrap: balance;
 }
 
 .platform-band p {
@@ -455,23 +471,37 @@ html.is-stacked .show-hero-logo {
   color: var(--dc-muted);
 }
 
+.platform-band-copy p:not(.eyebrow) {
+  max-width: 56ch;
+  margin: 0 auto;
+}
+
 .platform-band-links {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
 }
 
 .platform-band-links a {
   display: inline-flex;
   align-items: center;
+  gap: 10px;
   min-height: 46px;
-  padding: 0 18px;
+  padding: 0 20px;
   border: 1px solid var(--dc-line);
   border-radius: 999px;
   color: var(--dc-ink);
   font-size: 0.96rem;
   font-weight: 700;
   text-decoration: none;
+  background-color: rgb(255 255 255 / 0.6);
+}
+
+.platform-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .platform-band-links a:hover,
@@ -1374,7 +1404,8 @@ html.is-stacked .show-hero-logo {
   }
 
   .platform-band {
-    grid-template-columns: 1fr;
+    padding-top: 0;
+    padding-bottom: 48px;
   }
 
   .show-artwork {
