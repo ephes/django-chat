@@ -1778,3 +1778,46 @@ html.is-stacked .show-hero-logo {
     display: none;
   }
 }
+
+.button-primary,
+.button-secondary,
+.platform-band-links a,
+.footer-mastodon-button,
+.filter-form button,
+.filter-clear-all,
+.pagination-nav a {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.button-primary:hover,
+.button-secondary:hover,
+.platform-band-links a:hover,
+.footer-mastodon-button:hover,
+.filter-form button:hover,
+.filter-clear-all:hover,
+.pagination-nav a:hover {
+  transform: translateY(1px);
+}
+
+.button-primary:active,
+.button-secondary:active,
+.platform-band-links a:active,
+.footer-mastodon-button:active,
+.filter-form button:active,
+.filter-clear-all:active,
+.pagination-nav a:active {
+  transform: translateY(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button-primary,
+  .button-secondary,
+  .platform-band-links a,
+  .footer-mastodon-button,
+  .filter-form button,
+  .filter-clear-all,
+  .pagination-nav a {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    transform: none;
+  }
+}
