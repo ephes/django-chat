@@ -195,8 +195,15 @@ with 202 items.
    analytics/CDN/ad-insertion questions. Content scope is in PRD lines
    520–525 and "Production Migration Considerations" section. Required
    before any DNS or feed cutover.
-3. **Production VPS, DNS cutover, feed redirects, podcast directory
-   updates** — last, per user. Out of scope until 1–3 are settled.
+3. **Episode pagination scroll behavior.** When a user follows pagination on
+   the episode index, the browser currently lands or remains near the bottom
+   of the page, which makes the newly loaded episode list feel misplaced.
+   Decide and implement the preferred behavior: after pagination, move focus
+   and scroll position to the top of the refreshed episode result list while
+   preserving normal browser history/back-button behavior and accessibility.
+4. **Production VPS, DNS cutover, feed redirects, podcast directory
+   updates** — last, per user. Out of scope until host review and production
+   migration notes are settled.
 
 ## Next Action
 
