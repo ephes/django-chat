@@ -1032,17 +1032,30 @@ html.is-stacked .show-hero-logo {
   grid-template-columns: var(--episode-badge-size) 1fr;
   gap: clamp(12px, 2.5vw, 24px);
   align-items: center;
-  padding: 28px clamp(8px, 1.5vw, 20px);
+  padding: 28px 0;
   border-top: 1px solid var(--dc-line);
   text-decoration: none;
   color: inherit;
+  position: relative;
+  isolation: isolate;
 }
 
 .episode-row:first-child {
   border-top: 0;
 }
 
-.episode-row:hover {
+.episode-row::before {
+  content: "";
+  position: absolute;
+  inset: 1px calc(-1 * clamp(8px, 1.5vw, 20px)) 0;
+  background: transparent;
+  border-radius: 12px;
+  z-index: -1;
+  transition: background-color 0.15s ease;
+  pointer-events: none;
+}
+
+.episode-row:hover::before {
   background: rgb(77 165 83 / 0.08);
 }
 
