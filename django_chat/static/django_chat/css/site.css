@@ -471,11 +471,6 @@ html.is-stacked .show-hero-logo {
   color: var(--dc-muted);
 }
 
-.platform-band-copy p:not(.eyebrow) {
-  max-width: 56ch;
-  margin: 0 auto;
-}
-
 .platform-band-links {
   display: flex;
   flex-wrap: wrap;
@@ -495,7 +490,8 @@ html.is-stacked .show-hero-logo {
   font-size: 0.96rem;
   font-weight: 700;
   text-decoration: none;
-  background-color: rgb(255 255 255 / 0.6);
+  background-color: transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .platform-icon {
@@ -522,9 +518,9 @@ html.is-stacked .show-hero-logo {
     auto;
   gap: 12px;
   align-items: center;
-  margin: 0 0 30px;
-  padding: 18px 0;
-  border-top: 1px solid var(--dc-line);
+  width: 100vw;
+  margin: 0 calc(50% - 50vw) 40px;
+  padding: 0 max(16px, calc(50vw - 560px)) 40px;
   border-bottom: 1px solid var(--dc-line);
 }
 
