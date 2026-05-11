@@ -87,10 +87,11 @@ def test_site_css_pins_green_accent_palette() -> None:
     assert "fill: var(--dc-django);" in css
     assert ".episode-number-badge span:last-child {" in css
     assert "color: var(--dc-django);" in css
-    assert "grid-template-columns: 9rem 1fr;" in css
-    assert "width: 9rem;" in css
-    assert "height: 9rem;" in css
-    assert "font-size: 4.5rem;" in css
+    assert "--episode-badge-size: clamp(4.5rem, 9vw, 9rem);" in css
+    assert "grid-template-columns: var(--episode-badge-size) 1fr;" in css
+    assert "width: var(--episode-badge-size);" in css
+    assert "height: var(--episode-badge-size);" in css
+    assert "font-size: clamp(2.25rem, 4.5vw, 4.5rem);" in css
     assert ".rss-primary-link {\n  display: inline-flex;" in css
     assert (
         ".rss-primary-link:hover,\n.rss-primary-link:focus {\n  background: var(--dc-django);"

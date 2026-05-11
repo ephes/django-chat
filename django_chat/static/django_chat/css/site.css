@@ -402,6 +402,7 @@ main {
 }
 
 .episode-list {
+  --episode-badge-size: clamp(4.5rem, 9vw, 9rem);
   display: grid;
   gap: 0;
   padding: 0 0 56px;
@@ -409,10 +410,10 @@ main {
 
 .episode-row {
   display: grid;
-  grid-template-columns: 9rem 1fr;
-  gap: 24px;
+  grid-template-columns: var(--episode-badge-size) 1fr;
+  gap: clamp(12px, 2.5vw, 24px);
   align-items: center;
-  padding: 28px 20px;
+  padding: 28px clamp(8px, 1.5vw, 20px);
   border-top: 1px solid var(--dc-line);
   text-decoration: none;
   color: inherit;
@@ -431,10 +432,10 @@ main {
   border-radius: 5px;
   display: grid;
   font-family: "Roboto Flex", "Roboto", system-ui, sans-serif;
-  font-size: 4.5rem;
+  font-size: clamp(2.25rem, 4.5vw, 4.5rem);
   font-variation-settings: "wdth" 25, "opsz" 30;
   font-weight: 900;
-  height: 9rem;
+  height: var(--episode-badge-size);
   justify-items: center;
   letter-spacing: 0;
   line-height: 0.64;
@@ -444,7 +445,7 @@ main {
   place-content: center;
   position: relative;
   text-transform: uppercase;
-  width: 9rem;
+  width: var(--episode-badge-size);
 }
 
 .episode-number-badge span {
@@ -481,6 +482,20 @@ main {
   margin: 0;
   max-width: 80ch;
   text-wrap: balance;
+}
+
+@media (max-width: 768px) {
+  .episode-row {
+    align-items: start;
+  }
+
+  .episode-number-badge {
+    margin-top: 5px;
+  }
+
+  .episode-summary {
+    -webkit-line-clamp: 3;
+  }
 }
 
 .no-results {
