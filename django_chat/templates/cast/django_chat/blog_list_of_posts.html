@@ -6,15 +6,13 @@
 {% block title %}{{ page.title }}{% endblock title %}
 
 {% block content %}
+  {% load static %}
   {% firstof podcast blog as show %}
-  <main>
-    <section class="show-hero">
+  <section class="show-hero" style="background-image: url('{% static 'django_chat/img/show-hero-bg.jpg' %}');">
+    <div class="show-hero-inner">
       <div class="show-copy">
-        <p class="eyebrow">A biweekly podcast on the Django Web Framework</p>
         <h1>{{ page.title }}</h1>
-        {% if page.description %}
-          <div class="show-tagline">{{ page.description|richtext }}</div>
-        {% endif %}
+        <p class="show-tagline">A biweekly podcast on the Django Web Framework<br>by Will Vincent and Carlton Gibson.</p>
         <div class="show-actions">
           <a class="button-primary" href="{% url 'cast:feed_detail' slug=podcast.slug %}">
             <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -26,16 +24,10 @@
           </a>
         </div>
       </div>
-      {% if podcast.cover_image %}
-        {% image podcast.cover_image fill-560x560 as show_artwork %}
-        <img class="show-artwork" src="{{ show_artwork.url }}" width="{{ show_artwork.width }}" height="{{ show_artwork.height }}" alt="Django Chat artwork" fetchpriority="high" decoding="async">
-      {% elif blog.cover_image %}
-        {% image blog.cover_image fill-560x560 as show_artwork %}
-        <img class="show-artwork" src="{{ show_artwork.url }}" width="{{ show_artwork.width }}" height="{{ show_artwork.height }}" alt="Django Chat artwork" fetchpriority="high" decoding="async">
-      {% elif source_metadata.image_url %}
-        <img class="show-artwork" src="{{ source_metadata.image_url }}" width="280" height="280" alt="Django Chat artwork" fetchpriority="high" decoding="async">
-      {% endif %}
-    </section>
+      <img class="show-hero-logo" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="938" height="858" alt="Django Chat logo" fetchpriority="high" decoding="async">
+    </div>
+  </section>
+  <main>
 
     {% if source_metadata %}
       {% with distribution_links=source_metadata.visible_distribution_links %}

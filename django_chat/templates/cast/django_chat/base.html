@@ -72,17 +72,7 @@
     <header class="site-header">
       <nav class="site-nav" aria-label="Primary">
         <a class="brand" href="{% url 'django_chat_episode_index' %}" aria-label="Django Chat">
-          {% if podcast.cover_image %}
-            {% image podcast.cover_image fill-72x72 as brand_mark %}
-            <img class="brand-mark" src="{{ brand_mark.url }}" width="{{ brand_mark.width }}" height="{{ brand_mark.height }}" alt="">
-          {% elif blog.cover_image %}
-            {% image blog.cover_image fill-72x72 as brand_mark %}
-            <img class="brand-mark" src="{{ brand_mark.url }}" width="{{ brand_mark.width }}" height="{{ brand_mark.height }}" alt="">
-          {% elif source_metadata.image_url %}
-            <img class="brand-mark" src="{{ source_metadata.image_url }}" width="36" height="36" alt="">
-          {% else %}
-            <img class="brand-mark" src="{% static 'django_chat/apple-touch-icon.png' %}" width="36" height="36" alt="">
-          {% endif %}
+          <img class="brand-mark" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="39" height="36" alt="">
           <span class="brand-name">Django Chat</span>
         </a>
         <div class="nav-links">

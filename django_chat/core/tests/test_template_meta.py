@@ -120,25 +120,6 @@ def test_site_css_pins_green_accent_palette() -> None:
 
 
 @pytest.mark.django_db
-def test_episode_index_uses_optimized_cover_image_rendition(
-    client: Client,
-    tmp_path: Path,
-) -> None:
-    with override_settings(MEDIA_ROOT=tmp_path):
-        import_django_chat_sample(cover_image_downloader=_fake_cover_image_downloader())
-
-        response = client.get(episode_index_path())
-
-    body = response.content.decode()
-    artwork_html = _html_around(body, 'class="show-artwork"')
-    assert "/media/images/" in artwork_html
-    assert "fill-560x560" in artwork_html
-    assert 'width="560"' in artwork_html
-    assert 'height="560"' in artwork_html
-    assert 'fetchpriority="high"' in artwork_html
-
-
-@pytest.mark.django_db
 def test_episode_detail_uses_optimized_cover_image_rendition(
     client: Client,
     tmp_path: Path,
