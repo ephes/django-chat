@@ -63,7 +63,6 @@
     </style>
     <script src="{% static 'django_chat/js/view-transitions.js' %}?v=vt-prototype-11"></script>
     {% block render_expect %}{% endblock render_expect %}
-    <link rel="stylesheet" href="{% static 'cast_bootstrap5/css/bootstrap5/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=date-picker-1">
     {% block meta %}
       {% include "./_meta.html" %}
@@ -110,7 +109,6 @@
       </div>
     </footer>
     {% block javascript %}
-      <script defer src="{% static 'cast_bootstrap5/js/bootstrap5/bootstrap.bundle.min.js' %}"></script>
       <script defer src="{% static 'django_chat/js/date-picker.js' %}?v=date-picker-3"></script>
     {% endblock javascript %}
   </body>

@@ -44,8 +44,6 @@ wagtail_rsync_excludes_extra:
   - "deploy/secrets"
 wagtail_staticfiles_required_paths:
   - "staticfiles/staticfiles.json"
-  - "staticfiles/cast_bootstrap5/vite/manifest.json"
-  - "staticfiles/cast_bootstrap5/vite/manifest.json.gz"
   - "staticfiles/cast/vite/manifest.json"
   - "staticfiles/cast/vite/manifest.json.gz"
 wagtail_django_secret_key: "{{ service_secrets.django_secret_key }}"

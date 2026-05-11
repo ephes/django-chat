@@ -38,15 +38,14 @@ def test_cast_404_handler_renders_without_static_manifest(client: Client) -> Non
     assert response.status_code == 404
 
 
-def test_cast_app_ordering_is_pinned() -> None:
+def test_cast_app_dependencies_use_django_cast_defaults() -> None:
     installed_apps = list(settings.INSTALLED_APPS)
 
-    assert installed_apps.index("crispy_bootstrap5") < installed_apps.index(
-        "cast_bootstrap5.apps.CastBootstrap5Config",
-    )
-    assert installed_apps.index("cast_bootstrap5.apps.CastBootstrap5Config") < installed_apps.index(
-        "cast.apps.CastConfig",
-    )
+    assert "cast_bootstrap5.apps.CastBootstrap5Config" not in installed_apps
+    assert "crispy_bootstrap5" not in installed_apps
+    assert installed_apps.index("crispy_bootstrap4") < installed_apps.index("cast.apps.CastConfig")
+    assert settings.CRISPY_ALLOWED_TEMPLATE_PACKS == ["bootstrap4"]
+    assert settings.CRISPY_TEMPLATE_PACK == "bootstrap4"
 
 
 def test_transcript_task_backends_are_immediate_for_tests() -> None:

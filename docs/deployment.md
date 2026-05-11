@@ -111,15 +111,13 @@ to use the repo or Wagtail admin.
 uv run python manage.py check_django_chat_static_assets
 ```
 
-That command verifies that the installed `django-cast` and `cast-bootstrap5`
-package Vite manifests exist before a deploy starts.
+That command verifies that the installed `django-cast` package Vite manifest
+exists before a deploy starts.
 
 During deployment, `wagtail_deploy` runs `collectstatic` and then fails if these
 collected files are missing:
 
 - `staticfiles/staticfiles.json`
-- `staticfiles/cast_bootstrap5/vite/manifest.json`
-- `staticfiles/cast_bootstrap5/vite/manifest.json.gz`
 - `staticfiles/cast/vite/manifest.json`
 - `staticfiles/cast/vite/manifest.json.gz`
 

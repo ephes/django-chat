@@ -40,18 +40,6 @@
   --dc-django: #4da553;
   --dc-radius: 4px;
   --dc-container: min(1120px, 100% - 32px);
-  --bs-blue: #2d8260;
-  --bs-indigo: #1f6647;
-  --bs-cyan: #4da553;
-  --bs-primary: #2d8260;
-  --bs-primary-rgb: 45, 130, 96;
-  --bs-info: #4da553;
-  --bs-info-rgb: 77, 165, 83;
-  --bs-link-color: #14513a;
-  --bs-link-color-rgb: 20, 81, 58;
-  --bs-link-hover-color: #1f6647;
-  --bs-link-hover-color-rgb: 31, 102, 71;
-  --bs-focus-ring-color: rgb(77 165 83 / 0.25);
 }
 
 *,

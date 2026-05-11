@@ -66,6 +66,18 @@ def test_episode_index_loads_self_hosted_fonts_css(client: Client) -> None:
 
 
 @pytest.mark.django_db
+def test_episode_index_omits_bootstrap_package_assets(client: Client) -> None:
+    import_django_chat_sample()
+
+    response = client.get(episode_index_path())
+
+    body = response.content.decode()
+    assert "cast_bootstrap5" not in body
+    assert "bootstrap.min.css" not in body
+    assert "bootstrap.bundle.min.js" not in body
+
+
+@pytest.mark.django_db
 def test_episode_index_loads_view_transition_script_and_hooks(client: Client) -> None:
     import_django_chat_sample()
 
@@ -108,7 +120,7 @@ def test_episode_detail_exposes_view_transition_episode_hooks(client: Client) ->
     assert "<h1 data-vt-episode-title>Django Tasks - Jake Howard</h1>" in body
 
 
-def test_site_css_pins_green_accent_palette() -> None:
+def test_site_css_pins_django_chat_palette() -> None:
     css_path = settings.ROOT_DIR / "django_chat/static/django_chat/css/site.css"
     css = css_path.read_text()
     normalized_css = css.lower()
@@ -126,10 +138,9 @@ def test_site_css_pins_green_accent_palette() -> None:
     assert ".audio-panel,\n.audio-panel *,\npodlove-player,\npodlove-player * {" in css
     assert "--dc-link: #14513a;" in css
     assert "--dc-muted: #5f635d;" in css
+    assert "--dc-accent: #2d8260;" in css
+    assert "--dc-accent-dark: #14513a;" in css
     assert "--dc-django: #4da553;" in css
-    assert "--bs-primary: #2d8260;" in css
-    assert "--bs-info: #4da553;" in css
-    assert "--bs-link-color: #14513a;" in css
     assert "RobotoFlex-Variable.woff2" not in css
     assert 'font-family: "Roboto", system-ui, sans-serif;' in css
     assert ".button-primary {\n  background: var(--dc-accent-dark);" in css

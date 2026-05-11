@@ -349,9 +349,9 @@ not change settings or installed apps. Confirmed via inspection:
 
 - `django_vite` is included in `INSTALLED_APPS` transitively through
   `cast.apps.CAST_APPS` (`config/settings/base.py:53`).
-- `DJANGO_VITE` is configured for both the `cast` and `cast-bootstrap5`
-  apps in `config/settings/base.py:241-254`, with `manifest_path`
-  pointing at the prebuilt manifest shipped in the django-cast package.
+- `DJANGO_VITE` is configured for the `cast` app in
+  `config/settings/base.py`, with `manifest_path` pointing at the
+  prebuilt manifest shipped in the django-cast package.
 
 The only change needed is **template usage**: in `episode.html`, add
 `{% load django_vite %}` and emit

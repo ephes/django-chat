@@ -24,6 +24,8 @@ The research should answer:
 `python-podcast` is a deployed Django/Wagtail/django-cast project. It uses:
 
 - `django-cast`, `cast-bootstrap5`, and `cast-vue`.
+  Django Chat later removed its direct `cast-bootstrap5` dependency after the
+  project-specific templates and CSS replaced the Bootstrap 5 theme.
 - Wagtail pages for podcast/blog content.
 - `cast.Audio`, `cast.Episode`, and `cast.Podcast`.
 - S3-compatible media storage through `django-storages`.
@@ -356,8 +358,7 @@ public setup instructions.
   - `wagtail_admin_url`, if Django Chat should override the role default
     `hidden_admin/`
   - explicit `wagtail_staticfiles_required_paths` matching the installed
-    django-cast/cast-bootstrap5 assets, rather than inheriting an app-specific
-    list by accident
+    django-cast assets, rather than inheriting an app-specific list by accident
 - Secrets:
   - `django_secret_key`
   - `postgres_password`
@@ -393,7 +394,7 @@ The current Simplecast site is a JavaScript app with Simplecast-hosted CSS/asset
 Practical design options:
 
 1. Minimal branded django-cast theme:
-   - Use existing Bootstrap 5/django-cast templates.
+   - Use existing django-cast templates as a starting point.
    - Add Django Chat artwork, colors, typography, and navigation.
    - Fastest and enough for staging.
 

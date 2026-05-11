@@ -6,7 +6,6 @@ from types import ModuleType
 from typing import Any
 
 import cast
-import cast_bootstrap5
 import environ
 from cast.apps import CAST_APPS, CAST_MIDDLEWARE
 
@@ -52,12 +51,7 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 
-THIRD_PARTY_APPS = [
-    *CAST_APPS_COMPAT[:-1],
-    "crispy_bootstrap5",
-    "cast_bootstrap5.apps.CastBootstrap5Config",
-    CAST_APPS_COMPAT[-1],
-]
+THIRD_PARTY_APPS = list(CAST_APPS_COMPAT)
 
 LOCAL_APPS = [
     "django_chat.core.apps.CoreConfig",
@@ -215,18 +209,15 @@ WAGTAILIMAGES_MAX_UPLOAD_SIZE = 30 * 1024 * 1024
 
 DJANGO_CHAT_PODCAST_SLUG = "episodes"
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap4", "bootstrap5"]
-CRISPY_TEMPLATE_PACK = "bootstrap5"
+CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap4"]
+CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 CAST_COMMENTS_ENABLED = False
 # Registered themes in the Wagtail TemplateBaseDirectory choice list.
 # `django_chat` is the project theme (see CAST_PODLOVE_PLAYER_THEMES below
-# and ensure_default_site for how this gets pinned per-site at deploy
-# time). `bootstrap5` ships with cast_bootstrap5 and is kept available so
-# the styleguide / theme selector continues to work.
+# and ensure_default_site for how this gets pinned per-site at deploy time).
 CAST_CUSTOM_THEMES = [
     ("django_chat", "Django Chat"),
-    ("bootstrap5", "Bootstrap 5"),
 ]
 
 
@@ -250,14 +241,6 @@ DJANGO_VITE = {
     "cast": {
         "static_url_prefix": "cast/vite/",
         "manifest_path": _package_manifest_path(cast, "cast", "vite"),
-    },
-    "cast-bootstrap5": {
-        "static_url_prefix": "cast_bootstrap5/vite/",
-        "manifest_path": _package_manifest_path(
-            cast_bootstrap5,
-            "cast_bootstrap5",
-            "vite",
-        ),
     },
 }
 
