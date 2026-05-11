@@ -1,10 +1,5 @@
 (() => {
-  const filterForm = document.querySelector(".filter-form");
-
-  if (!(filterForm instanceof HTMLFormElement)) {
-    return;
-  }
-
+  let activeFilterForm = null;
   let popoverCounter = 0;
   const pad = (value) => String(value).padStart(2, "0");
 
@@ -46,7 +41,11 @@
     });
 
   const closeOpenPopovers = (except = null) => {
-    filterForm.querySelectorAll("[data-filter-popover].is-open").forEach((popover) => {
+    if (!activeFilterForm) {
+      return;
+    }
+
+    activeFilterForm.querySelectorAll("[data-filter-popover].is-open").forEach((popover) => {
       if (popover !== except) {
         popover.classList.remove("is-open");
         const button = popover.parentElement?.querySelector("[aria-expanded='true']");
@@ -485,11 +484,19 @@
     syncButton();
   };
 
-  filterForm.querySelectorAll('input[type="date"]').forEach(enhanceDateInput);
-  filterForm.querySelectorAll("select").forEach(enhanceSelect);
+  const enhanceFilterForm = (filterForm) => {
+    if (!(filterForm instanceof HTMLFormElement) || filterForm.hasAttribute("data-filter-enhanced")) {
+      return;
+    }
+
+    filterForm.setAttribute("data-filter-enhanced", "true");
+    activeFilterForm = filterForm;
+    filterForm.querySelectorAll('input[type="date"]').forEach(enhanceDateInput);
+    filterForm.querySelectorAll("select").forEach(enhanceSelect);
+  };
 
   document.addEventListener("click", (event) => {
-    if (event.target instanceof Node && filterForm.contains(event.target)) {
+    if (event.target instanceof Node && activeFilterForm?.contains(event.target)) {
       return;
     }
     closeOpenPopovers();
@@ -500,4 +507,10 @@
       closeOpenPopovers();
     }
   });
+
+  document.addEventListener("django-chat:filter-form-replaced", () => {
+    enhanceFilterForm(document.querySelector(".filter-form"));
+  });
+
+  enhanceFilterForm(document.querySelector(".filter-form"));
 })();

@@ -10,8 +10,12 @@
   {% include "./_meta.html" with og_type="article" %}
 {% endblock meta %}
 
+{% block render_expect %}
+  <link rel="expect" href="#episode-detail-main" blocking="render">
+{% endblock render_expect %}
+
 {% block content %}
-  <main data-vt-page="episode-detail" data-vt-episode-slug="{{ page.slug }}">
+  <main id="episode-detail-main" data-vt-page="episode-detail" data-vt-episode-slug="{{ page.slug }}">
     <article class="episode-detail">
       <a class="back-link" href="{% url 'django_chat_episode_index' %}" data-vt-episode-slug="{{ page.slug }}">← Back to Episodes</a>
 

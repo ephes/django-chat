@@ -74,7 +74,8 @@ def test_episode_index_loads_view_transition_script_and_hooks(client: Client) ->
     body = response.content.decode()
     assert 'src="/static/django_chat/js/view-transitions.js' in body
     assert 'type="module" src="/static/django_chat/js/view-transitions.js"' not in body
-    assert '<main data-vt-page="episode-index">' in body
+    assert '<link rel="expect" href="#episode-index-main" blocking="render">' in body
+    assert '<main id="episode-index-main" data-vt-page="episode-index">' in body
     filter_form_attrs = tag_attrs(body, "form", {"class": "filter-form"})
     assert filter_form_attrs is not None
     assert filter_form_attrs["aria-label"] == "Filter episodes"
@@ -95,7 +96,8 @@ def test_episode_detail_exposes_view_transition_episode_hooks(client: Client) ->
     response = client.get(episode_detail_path("django-tasks-jake-howard"))
 
     body = response.content.decode()
-    assert 'data-vt-page="episode-detail"' in body
+    assert '<link rel="expect" href="#episode-detail-main" blocking="render">' in body
+    assert 'id="episode-detail-main" data-vt-page="episode-detail"' in body
     assert 'data-vt-episode-slug="django-tasks-jake-howard"' in body
     assert (
         'class="back-link" href="/episodes/" data-vt-episode-slug="django-tasks-jake-howard"'

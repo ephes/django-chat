@@ -16,8 +16,9 @@
       : null;
   let pendingEpisodeSlug = "";
   let pendingFilterNavigation = false;
-  let paginationController = null;
-  let paginationTransitionId = 0;
+  let indexNavigationController = null;
+  let indexTransitionId = 0;
+  let lastIndexUrl = null;
   let suppressPaginationPopstateUrl = "";
   const storageKeys = {
     episodeIndexUrl: "djangoChatEpisodeIndexUrl",
@@ -188,6 +189,9 @@
 
   const initPage = () => {
     restoreBackLink();
+    if (activePage() === "episode-index") {
+      lastIndexUrl = new URL(window.location.href);
+    }
   };
 
   const findEpisodeTitle = (slug) => {
@@ -289,16 +293,18 @@
     return new DOMParser().parseFromString(await response.text(), "text/html");
   };
 
-  const replaceEpisodeResults = (nextDocument) => {
-    const currentResults = document.querySelector("[data-vt-results]");
-    const nextResults = nextDocument.querySelector("[data-vt-results]");
-    if (!(currentResults instanceof HTMLElement) || !(nextResults instanceof HTMLElement)) {
-      return null;
+  const replaceFilterForm = (nextDocument) => {
+    const currentForm = document.querySelector(".filter-form");
+    const nextForm = nextDocument.querySelector(".filter-form");
+    if (!currentForm || !nextForm) {
+      return false;
     }
+    currentForm.replaceWith(nextForm.cloneNode(true));
+    return true;
+  };
 
+  const replaceEpisodeResults = (currentResults, nextResults, previousName) => {
     nextResults.setAttribute("aria-busy", currentResults.getAttribute("aria-busy") || "false");
-    const previousName = currentResults.style.getPropertyValue("view-transition-name");
-    currentResults.style.setProperty("view-transition-name", transitionNames.results);
     nextResults.style.setProperty("view-transition-name", transitionNames.results);
     currentResults.replaceWith(nextResults);
 
@@ -328,23 +334,27 @@
     ].forEach((selector) => syncElementFromNextDocument(selector, nextDocument));
   };
 
-  const updatePaginationUrl = (url, nextDocument) => {
+  const updateIndexUrl = (url, nextDocument, { pushState = true } = {}) => {
     const title = nextDocument.querySelector("title");
     if (title) {
       document.title = title.textContent || document.title;
     }
     syncPaginationHead(nextDocument);
     suppressPaginationPopstateUrl = "";
-    history.pushState({ djangoChatPagination: true }, "", url);
+    if (pushState) {
+      history.pushState({ djangoChatIndexNavigation: true }, "", url);
+    }
+    lastIndexUrl = new URL(url.href);
   };
 
-  const updatePaginationStatus = (url) => {
+  const updateIndexStatus = (url, kind) => {
     const status = document.querySelector("[data-vt-pagination-status]");
     if (!status) {
       return;
     }
 
-    status.textContent = `Episode page ${pageNumber(url)} loaded.`;
+    status.textContent =
+      kind === "filter" ? "Episode results updated." : `Episode page ${pageNumber(url)} loaded.`;
   };
 
   const focusPaginationResults = () => {
@@ -365,46 +375,66 @@
     }
   };
 
-  const softNavigatePagination = async (url, { pushState = true } = {}) => {
-    // Keep pagination as ordinary links when same-document transitions are unavailable.
+  const classifySoftIndexNavigation = (url) => {
+    if (lastIndexUrl && searchWithoutPage(lastIndexUrl) !== searchWithoutPage(url)) {
+      return "filter";
+    }
+
+    return "pagination";
+  };
+
+  const softNavigateIndex = async (url, { pushState = true, kind = "" } = {}) => {
+    // Keep index controls as ordinary navigations when same-document transitions are unavailable.
     if (!document.startViewTransition || (reduceMotion && reduceMotion.matches)) {
       window.location.href = url.href;
       return;
     }
 
-    if (paginationController) {
-      paginationController.abort();
+    if (indexNavigationController) {
+      indexNavigationController.abort();
     }
-    paginationController = new AbortController();
+    indexNavigationController = new AbortController();
     const currentResults = document.querySelector("[data-vt-results]");
-    if (currentResults) {
+    if (currentResults instanceof HTMLElement) {
       currentResults.setAttribute("aria-busy", "true");
     }
-    const nextDocument = await htmlFromUrl(url.href, paginationController.signal);
+    const nextDocument = await htmlFromUrl(url.href, indexNavigationController.signal);
+    const nextResults = nextDocument.querySelector("[data-vt-results]");
+    if (!(currentResults instanceof HTMLElement) || !(nextResults instanceof HTMLElement)) {
+      throw new Error("Index navigation response is missing episode results.");
+    }
+
     const html = document.documentElement;
-    const transitionId = paginationTransitionId + 1;
-    paginationTransitionId = transitionId;
+    const transitionId = indexTransitionId + 1;
+    indexTransitionId = transitionId;
     let cleanupEntries = [];
-    html.setAttribute("data-vt-same-pagination", "true");
+    const transitionKind = kind || classifySoftIndexNavigation(url);
+    if (transitionKind === "pagination") {
+      html.setAttribute("data-vt-same-pagination", "true");
+    }
+
+    const namedOldResults = nameElement(currentResults, transitionNames.results);
+    const previousResultsName = namedOldResults[0] ? namedOldResults[0].previousName : "";
 
     const viewTransition = document.startViewTransition(() => {
-      cleanupEntries = replaceEpisodeResults(nextDocument) || [];
-      if (pushState) {
-        updatePaginationUrl(url, nextDocument);
-      } else {
-        const title = nextDocument.querySelector("title");
-        if (title) {
-          document.title = title.textContent || document.title;
-        }
-        syncPaginationHead(nextDocument);
+      cleanupEntries = replaceEpisodeResults(currentResults, nextResults, previousResultsName);
+      if (replaceFilterForm(nextDocument)) {
+        document.dispatchEvent(new CustomEvent("django-chat:filter-form-replaced"));
       }
-      focusPaginationResults();
-      scrollPaginationResultsIntoView();
-      updatePaginationStatus(url);
+      updateIndexUrl(url, nextDocument, { pushState });
+      if (transitionKind === "pagination") {
+        focusPaginationResults();
+        scrollPaginationResultsIntoView();
+      }
+      updateIndexStatus(url, transitionKind);
     });
 
+    if (transitionKind === "filter") {
+      addType(viewTransition, "filter");
+    }
+
     viewTransition.finished.finally(() => {
-      if (transitionId !== paginationTransitionId) {
+      if (transitionId !== indexTransitionId) {
         return;
       }
       html.removeAttribute("data-vt-same-pagination");
@@ -413,8 +443,16 @@
       if (results instanceof HTMLElement) {
         results.setAttribute("aria-busy", "false");
       }
-      paginationController = null;
+      indexNavigationController = null;
     });
+  };
+
+  const formActionUrl = (form) => {
+    const action = form.getAttribute("action") || window.location.href;
+    const url = new URL(action, window.location.href);
+    url.search = new URLSearchParams(new FormData(form)).toString();
+    url.hash = "";
+    return url;
   };
 
   const suppressPaginationPopstateForCurrentPage = () => {
@@ -462,6 +500,23 @@
 
       if (link.getAttribute("data-vt-transition") === "filter") {
         pendingFilterNavigation = true;
+        const url = new URL(link.href, window.location.href);
+        if (
+          isPlainNavigationClick(event, link) &&
+          url.origin === window.location.origin &&
+          activePage() === "episode-index"
+        ) {
+          event.preventDefault();
+          softNavigateIndex(url, { kind: "filter" }).catch((error) => {
+            if (error.name !== "AbortError") {
+              const currentResults = document.querySelector("[data-vt-results]");
+              if (currentResults) {
+                currentResults.setAttribute("aria-busy", "false");
+              }
+              window.location.href = url.href;
+            }
+          });
+        }
       }
 
       if (link.getAttribute("data-vt-transition") === "pagination") {
@@ -472,7 +527,7 @@
           activePage() === "episode-index"
         ) {
           event.preventDefault();
-          softNavigatePagination(url).catch((error) => {
+          softNavigateIndex(url, { kind: "pagination" }).catch((error) => {
             if (error.name !== "AbortError") {
               const currentResults = document.querySelector("[data-vt-results]");
               if (currentResults) {
@@ -493,6 +548,23 @@
       const form = event.target;
       if (form instanceof HTMLFormElement && form.getAttribute("data-vt-transition") === "filter") {
         pendingFilterNavigation = true;
+        if (activePage() === "episode-index") {
+          event.preventDefault();
+          const url = formActionUrl(form);
+          if (url.origin !== window.location.origin) {
+            window.location.href = url.href;
+            return;
+          }
+          softNavigateIndex(url, { kind: "filter" }).catch((error) => {
+            if (error.name !== "AbortError") {
+              const currentResults = document.querySelector("[data-vt-results]");
+              if (currentResults) {
+                currentResults.setAttribute("aria-busy", "false");
+              }
+              window.location.href = url.href;
+            }
+          });
+        }
       }
     },
     { capture: true },
@@ -545,8 +617,16 @@
       }
     }
 
-    softNavigatePagination(new URL(window.location.href), { pushState: false }).catch((error) => {
+    const url = new URL(window.location.href);
+    softNavigateIndex(url, {
+      pushState: false,
+      kind: classifySoftIndexNavigation(url),
+    }).catch((error) => {
       if (error.name !== "AbortError") {
+        const currentResults = document.querySelector("[data-vt-results]");
+        if (currentResults) {
+          currentResults.setAttribute("aria-busy", "false");
+        }
         window.location.reload();
       }
     });

@@ -76,10 +76,14 @@ fallback:
 - Intercept plain same-origin pagination clicks only when
   `document.startViewTransition()` is available and reduced motion is not
   requested.
+- Intercept filter/search form submissions and filter-clear links under the
+  same conditions. This avoids a first-submit full document reload and the
+  associated white flash when the browser skips the native MPA transition.
 - Fetch the next full server-rendered page, parse it with `DOMParser`, and swap
-  only the `.episode-results` container inside `document.startViewTransition()`.
+  the filter form plus the `.episode-results` container inside
+  `document.startViewTransition()`.
 - Update the URL with `history.pushState()` and handle pagination
-  back/forward with the same result-container swap.
+  back/forward with the same index-page swap.
 - Keep this dependency-free. This is intentionally not htmx and does not add a
   partial-template response mode yet.
 - Sync basic head metadata for the soft pagination URL and move focus into the
@@ -95,6 +99,11 @@ the remembered episode-row click URL, so an episode opened from page 2 can
 return to `/episodes/?page=2` and still use the shared detail-to-overview
 transition. Without JavaScript or storage, the static fallback remains
 `/episodes/`.
+
+The index and detail templates add `rel="expect"` render-blocking hints for
+their main content elements. These hints give native cross-document transitions
+a stable first paint target before snapshots are finalized, reducing the chance
+of a skipped or visually empty first overview/detail transition after reload.
 
 The current helper deliberately gates on the Navigation API plus
 `pageswap`/`pagereveal`, which keeps this prototype conservative and

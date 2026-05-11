@@ -5,6 +5,10 @@
 
 {% block title %}{{ page.title }}{% endblock title %}
 
+{% block render_expect %}
+  <link rel="expect" href="#episode-index-main" blocking="render">
+{% endblock render_expect %}
+
 {% block content %}
   {% load static %}
   {% firstof podcast blog as show %}
@@ -61,7 +65,7 @@
     </div>
     <div class="show-hero-curve" aria-hidden="true"></div>
   </section>
-  <main data-vt-page="episode-index">
+  <main id="episode-index-main" data-vt-page="episode-index">
 
     {% if source_metadata %}
       {% with distribution_links=source_metadata.visible_distribution_links %}
