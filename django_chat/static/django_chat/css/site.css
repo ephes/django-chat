@@ -24,6 +24,10 @@
   font-display: swap;
 }
 
+@view-transition {
+  navigation: auto;
+}
+
 :root {
   --dc-ink: #0d0d0d;
   --dc-paper: #ffffff;
@@ -68,6 +72,13 @@ body {
   font-family: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 16px;
   line-height: 1.55;
+}
+
+.audio-panel,
+.audio-panel *,
+podlove-player,
+podlove-player * {
+  view-transition-name: none;
 }
 
 a {
@@ -596,6 +607,14 @@ html.is-stacked .show-hero-logo {
   z-index: 2;
 }
 
+.episode-detail-badge {
+  --episode-badge-size: clamp(5rem, 7vw, 6.5rem);
+  display: inline-grid;
+  font-size: clamp(2.35rem, 3.5vw, 3.35rem);
+  line-height: 0.78;
+  margin: 0 0 12px;
+}
+
 .episode-row h2 {
   margin: 2px 0 6px;
 }
@@ -1053,6 +1072,136 @@ html.is-stacked .show-hero-logo {
 
 .status-page p {
   color: var(--dc-muted);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: dc-vt-root-out 360ms ease both;
+  }
+
+  ::view-transition-new(root) {
+    animation: dc-vt-root-in 460ms ease both;
+  }
+
+  ::view-transition-group(dc-episode-badge),
+  ::view-transition-group(dc-episode-title) {
+    animation-duration: 680ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  ::view-transition-old(dc-episode-badge),
+  ::view-transition-new(dc-episode-badge),
+  ::view-transition-old(dc-episode-title),
+  ::view-transition-new(dc-episode-title) {
+    height: 100%;
+    object-fit: contain;
+  }
+
+  html:active-view-transition-type(episode)::view-transition-old(root),
+  html:active-view-transition-type(episode)::view-transition-new(root) {
+    animation-duration: 560ms;
+  }
+
+  html:active-view-transition-type(episode)::view-transition-old(root) {
+    animation-name: dc-vt-episode-root-out;
+  }
+
+  html:active-view-transition-type(episode)::view-transition-new(root) {
+    animation-name: dc-vt-episode-root-in;
+  }
+
+  html:active-view-transition-type(filter)::view-transition-old(root),
+  html:active-view-transition-type(filter)::view-transition-new(root) {
+    animation: none;
+  }
+
+  html:active-view-transition-type(filter)::view-transition-old(dc-episode-results) {
+    animation: dc-vt-filter-out 420ms ease both;
+  }
+
+  html:active-view-transition-type(filter)::view-transition-new(dc-episode-results) {
+    animation: dc-vt-filter-in 520ms ease both;
+  }
+
+  html[data-vt-same-pagination]::view-transition-old(root),
+  html[data-vt-same-pagination]::view-transition-new(root) {
+    animation: none;
+  }
+
+  html[data-vt-same-pagination]::view-transition-old(dc-episode-results) {
+    animation: dc-vt-page-crossfade-out 820ms ease both;
+  }
+
+  html[data-vt-same-pagination]::view-transition-new(dc-episode-results) {
+    animation: dc-vt-page-crossfade-in 940ms ease both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@keyframes dc-vt-root-out {
+  to {
+    opacity: 0.82;
+    transform: scale(0.995);
+  }
+}
+
+@keyframes dc-vt-root-in {
+  from {
+    opacity: 0;
+    transform: scale(1.005);
+  }
+}
+
+@keyframes dc-vt-episode-root-out {
+  to {
+    opacity: 0;
+    transform: translateX(-28px) scale(0.99);
+  }
+}
+
+@keyframes dc-vt-episode-root-in {
+  from {
+    opacity: 0;
+    transform: translateX(34px) scale(1.01);
+  }
+}
+
+@keyframes dc-vt-filter-out {
+  to {
+    opacity: 0;
+    filter: blur(2px);
+    transform: scale(0.985);
+  }
+}
+
+@keyframes dc-vt-filter-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: scale(1.015);
+  }
+}
+
+@keyframes dc-vt-page-crossfade-out {
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+@keyframes dc-vt-page-crossfade-in {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
 }
 
 @media (max-width: 760px) {

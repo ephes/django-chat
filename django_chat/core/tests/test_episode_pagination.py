@@ -30,8 +30,22 @@ def test_pagination_markup_visible_when_page_size_is_small(client: Client) -> No
     body = response.content.decode()
     assert response.context["is_paginated"] is True
     assert 'class="pagination-nav"' in body
+    assert "data-vt-pagination-nav" in body
+    assert 'data-vt-transition="pagination" data-vt-pagination-direction="forwards"' in body
     # parameters context preserves the active filter on Older/Newer links
     assert "search=django" in body
+
+
+@pytest.mark.django_db
+def test_pagination_markup_exposes_direction_hooks_on_middle_page(client: Client) -> None:
+    import_django_chat_sample()
+
+    with patch("django_chat.core.views.EPISODES_PER_PAGE", 3):
+        response = client.get(f"{episode_index_path()}?page=2")
+
+    body = response.content.decode()
+    assert 'data-vt-pagination-direction="backwards"' in body
+    assert 'data-vt-pagination-direction="forwards"' in body
 
 
 @pytest.mark.django_db

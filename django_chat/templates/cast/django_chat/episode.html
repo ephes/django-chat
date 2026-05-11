@@ -11,9 +11,9 @@
 {% endblock meta %}
 
 {% block content %}
-  <main>
+  <main data-vt-page="episode-detail" data-vt-episode-slug="{{ page.slug }}">
     <article class="episode-detail">
-      <a class="back-link" href="{% url 'django_chat_episode_index' %}">← Back to Episodes</a>
+      <a class="back-link" href="{% url 'django_chat_episode_index' %}" data-vt-episode-slug="{{ page.slug }}">← Back to Episodes</a>
 
       <header class="episode-hero">
         {% if blog.cover_image %}
@@ -31,7 +31,20 @@
                 {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
               {% endwith %}
             </p>
-            <h1>{{ page.title }}</h1>
+            {% with episode_number=page.django_chat_source_metadata.episode_number %}
+              {% if episode_number %}
+                <span class="episode-number-badge episode-detail-badge" aria-hidden="true" data-vt-episode-badge>
+                  <svg class="episode-number-hash" viewBox="69 -20 1469 1498" aria-hidden="true" focusable="false">
+                    <g transform="matrix(1 0 0 -1 0 1458)">
+                      <polygon points="678,614 868,614 928,845 738,845"/>
+                      <path d="M170.292556039989 -20 508.7603037580848 -19.464836470782757 918.678445532918 1478.1410460919142H579.973683744669ZM688.6828394904733 -20H1027.2102258354425L1436.533565454185 1478.1410460919142H1098.1254563629627ZM68.6566945835948 322.81718850135803H1474.0595328360796V619.4398350194097H68.6566945835948ZM132.93327566981316 840.1874244064093H1538.1694269105792V1135.2045803368092H132.93327566981316Z"/>
+                    </g>
+                  </svg>
+                  <span>{{ episode_number }}</span>
+                </span>
+              {% endif %}
+            {% endwith %}
+            <h1 data-vt-episode-title>{{ page.title }}</h1>
             <div class="episode-actions">
               {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
                 <a href="{{ episode.podcast_audio.mp3.url }}" download>Download MP3</a>

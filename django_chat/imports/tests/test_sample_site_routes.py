@@ -53,7 +53,7 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     assert "Overcast" in content
     assert "https://overcast.fm/itunes1451536459/django-chat" in content
     assert 'class="play-circle"' not in content
-    assert '<span class="episode-number-badge" aria-hidden="true">' in content
+    assert '<span class="episode-number-badge" aria-hidden="true" data-vt-episode-badge>' in content
     assert '<svg class="episode-number-hash"' in content
     assert "<span>200</span>" in content
     assert "Episode 200:" in content

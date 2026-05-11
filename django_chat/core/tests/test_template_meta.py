@@ -64,11 +64,59 @@ def test_episode_index_loads_self_hosted_fonts_css(client: Client) -> None:
     assert "fonts.gstatic.com" not in body
 
 
+@pytest.mark.django_db
+def test_episode_index_loads_view_transition_script_and_hooks(client: Client) -> None:
+    import_django_chat_sample()
+
+    response = client.get(episode_index_path())
+
+    body = response.content.decode()
+    assert 'src="/static/django_chat/js/view-transitions.js' in body
+    assert 'type="module" src="/static/django_chat/js/view-transitions.js"' not in body
+    assert '<main data-vt-page="episode-index">' in body
+    assert 'class="filter-form" aria-label="Filter episodes" data-vt-transition="filter"' in body
+    assert "data-vt-pagination-status" in body
+    assert 'class="episode-results" data-vt-results aria-busy="false"' in body
+    assert 'class="episode-row" href="/episodes/django-tasks-jake-howard/"' in body
+    assert 'data-vt-episode-slug="django-tasks-jake-howard"' in body
+    assert "data-vt-episode-badge" in body
+    assert "<h2 data-vt-episode-title>Django Tasks - Jake Howard</h2>" in body
+
+
+@pytest.mark.django_db
+def test_episode_detail_exposes_view_transition_episode_hooks(client: Client) -> None:
+    import_django_chat_sample()
+
+    response = client.get(episode_detail_path("django-tasks-jake-howard"))
+
+    body = response.content.decode()
+    assert 'data-vt-page="episode-detail"' in body
+    assert 'data-vt-episode-slug="django-tasks-jake-howard"' in body
+    assert (
+        'class="back-link" href="/episodes/" data-vt-episode-slug="django-tasks-jake-howard"'
+        in body
+    )
+    assert 'class="episode-number-badge episode-detail-badge"' in body
+    assert "data-vt-episode-badge" in body
+    assert "<h1 data-vt-episode-title>Django Tasks - Jake Howard</h1>" in body
+
+
 def test_site_css_pins_green_accent_palette() -> None:
     css_path = settings.ROOT_DIR / "django_chat/static/django_chat/css/site.css"
     css = css_path.read_text()
     normalized_css = css.lower()
 
+    assert "@view-transition {\n  navigation: auto;\n}" in css
+    assert "@media (prefers-reduced-motion: no-preference)" in css
+    assert "@media (prefers-reduced-motion: reduce)" in css
+    assert (
+        "html:active-view-transition-type(filter)::view-transition-old(dc-episode-results)" in css
+    )
+    assert "html[data-vt-same-pagination]::view-transition-new(dc-episode-results)" in css
+    assert "::view-transition-group(dc-episode-badge)" in css
+    assert "::view-transition-group(dc-episode-title)" in css
+    assert ".episode-detail-badge {" in css
+    assert ".audio-panel,\n.audio-panel *,\npodlove-player,\npodlove-player * {" in css
     assert "--dc-link: #14513a;" in css
     assert "--dc-muted: #5f635d;" in css
     assert "--dc-django: #4da553;" in css
