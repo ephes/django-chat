@@ -9,6 +9,13 @@
   {% load static %}
   {% firstof podcast blog as show %}
   <section class="show-hero" style="background-image: url('{% static 'django_chat/img/show-hero-bg.jpg' %}');">
+    <svg class="show-hero-shape" aria-hidden="true" focusable="false" width="0" height="0">
+      <defs>
+        <clipPath id="show-hero-clip" clipPathUnits="objectBoundingBox">
+          <path d="M 0,0 L 1,0 L 1,0.407 A 0.752 1.833 0 0 1 0.34 0.828 L 0.118 1 L 0.18 0.696 A 0.752 1.833 0 0 1 0 0.407 Z" />
+        </clipPath>
+      </defs>
+    </svg>
     <div class="show-hero-inner">
       <div class="show-copy">
         <h1>{{ page.title }}</h1>

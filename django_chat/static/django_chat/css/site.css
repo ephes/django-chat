@@ -195,8 +195,16 @@ main {
   background-position: center;
   background-size: cover;
   color: #fff;
-  height: 40svh;
+  height: 54svh;
   width: 100%;
+  clip-path: url(#show-hero-clip);
+}
+
+.show-hero-shape {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 .show-hero-inner {
@@ -207,7 +215,7 @@ main {
   height: 100%;
   width: var(--dc-container);
   margin: 0 auto;
-  padding: 0;
+  padding: 0 0 20svh;
 }
 
 .show-hero h1 {
