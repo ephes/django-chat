@@ -77,6 +77,7 @@ def test_filter_navigation_keeps_replaced_form_enhanced(
 ) -> None:
     page.goto(f"{live_server.url}{episode_index_path()}")
     page.locator(".filter-form[data-filter-enhanced='true']").wait_for()
+    page.evaluate("window.__djangoChatSearchPageId = 'before-filter-submit'")
 
     page.locator("#id_search").fill("tasks")
     page.get_by_role("button", name="Filter").click()
@@ -84,6 +85,9 @@ def test_filter_navigation_keeps_replaced_form_enhanced(
         "() => new URL(window.location.href).searchParams.get('search') === 'tasks'"
     )
 
+    # Search/filter submits should stay on the native document-navigation path
+    # so the cross-document filter view transition can run.
+    assert page.evaluate("window.__djangoChatSearchPageId") is None
     page.locator(".filter-form[data-filter-enhanced='true']").wait_for()
     assert page.locator(".filter-date-control").count() == 2
     assert page.locator(".filter-select-control").count() == 2

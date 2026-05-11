@@ -76,12 +76,13 @@ fallback:
 - Intercept plain same-origin pagination clicks only when
   `document.startViewTransition()` is available and reduced motion is not
   requested.
-- Intercept filter/search form submissions and filter-clear links under the
-  same conditions. This avoids a first-submit full document reload and the
-  associated white flash when the browser skips the native MPA transition.
-- Fetch the next full server-rendered page, parse it with `DOMParser`, and swap
-  the filter form plus the `.episode-results` container inside
-  `document.startViewTransition()`.
+- Keep filter/search form submissions and filter-clear links on native
+  cross-document navigation. The same-document interception path made the search
+  transition easy to miss, while the original MPA path gives the
+  `pageswap`/`pagereveal` filter transition a stable lifecycle.
+- For pagination, fetch the next full server-rendered page, parse it with
+  `DOMParser`, and swap the filter form plus the `.episode-results` container
+  inside `document.startViewTransition()`.
 - Update the URL with `history.pushState()` and handle pagination
   back/forward with the same index-page swap.
 - Keep this dependency-free. This is intentionally not htmx and does not add a

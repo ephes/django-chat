@@ -449,14 +449,6 @@
     });
   };
 
-  const formActionUrl = (form) => {
-    const action = form.getAttribute("action") || window.location.href;
-    const url = new URL(action, window.location.href);
-    url.search = new URLSearchParams(new FormData(form)).toString();
-    url.hash = "";
-    return url;
-  };
-
   const suppressPaginationPopstateForCurrentPage = () => {
     suppressPaginationPopstateUrl = window.location.href;
   };
@@ -502,23 +494,6 @@
 
       if (link.getAttribute("data-vt-transition") === "filter") {
         pendingFilterNavigation = true;
-        const url = new URL(link.href, window.location.href);
-        if (
-          isPlainNavigationClick(event, link) &&
-          url.origin === window.location.origin &&
-          activePage() === "episode-index"
-        ) {
-          event.preventDefault();
-          softNavigateIndex(url, { kind: "filter" }).catch((error) => {
-            if (error.name !== "AbortError") {
-              const currentResults = document.querySelector("[data-vt-results]");
-              if (currentResults) {
-                currentResults.setAttribute("aria-busy", "false");
-              }
-              window.location.href = url.href;
-            }
-          });
-        }
       }
 
       if (link.getAttribute("data-vt-transition") === "pagination") {
@@ -550,23 +525,6 @@
       const form = event.target;
       if (form instanceof HTMLFormElement && form.getAttribute("data-vt-transition") === "filter") {
         pendingFilterNavigation = true;
-        if (activePage() === "episode-index") {
-          event.preventDefault();
-          const url = formActionUrl(form);
-          if (url.origin !== window.location.origin) {
-            window.location.href = url.href;
-            return;
-          }
-          softNavigateIndex(url, { kind: "filter" }).catch((error) => {
-            if (error.name !== "AbortError") {
-              const currentResults = document.querySelector("[data-vt-results]");
-              if (currentResults) {
-                currentResults.setAttribute("aria-busy", "false");
-              }
-              window.location.href = url.href;
-            }
-          });
-        }
       }
     },
     { capture: true },
