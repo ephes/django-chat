@@ -201,7 +201,21 @@ with 202 items.
    Decide and implement the preferred behavior: after pagination, move focus
    and scroll position to the top of the refreshed episode result list while
    preserving normal browser history/back-button behavior and accessibility.
-4. **Production VPS, DNS cutover, feed redirects, podcast directory
+4. **Episode search/filter bar styling.** The episode index search/date/sort
+   controls currently read as a mostly default form cluster compared with the
+   polished hero, platform links, pagination pills, and line-based episode
+   list. Restyle this as an intentional Django Chat control strip: align it
+   with the main content width, use the existing ink/green/muted/line tokens,
+   keep inputs and selects visually consistent, make the submit and clear
+   affordances match the site's pill button language, preserve visible focus
+   states and screen-reader labels, and verify the layout on narrow mobile
+   where the date range and selects must stack cleanly without cramped text.
+5. **Upgrade Wagtail to 7.4.** The project currently permits Wagtail 7.x and
+   the lockfile is on Wagtail 7.3.x. Upgrade the dependency set to Wagtail
+   7.4, review Wagtail release notes for required settings/template/admin
+   changes, run migrations/checks/tests/hooks, and smoke-test the public
+   episode pages, feeds, imports, and Wagtail admin before deploying.
+6. **Production VPS, DNS cutover, feed redirects, podcast directory
    updates** — last, per user. Out of scope until host review and production
    migration notes are settled.
 
