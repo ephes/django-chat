@@ -81,6 +81,16 @@ is intentionally scoped to `config`, `django_chat`, and `manage.py` for now so
 the command checks local code without taking on Django, Wagtail, or django-cast
 internals as a strict typing target.
 
+## Browser Checks
+
+Playwright is available in the development dependency group for local rendered
+UI checks. After installing Python dependencies, install the Chromium browser
+bundle once on a machine that needs browser-driven checks:
+
+```sh
+uv run python -m playwright install chromium
+```
+
 ## Git Hooks
 
 This repo uses `prek` as the hook runner. Install the hooks after dependencies

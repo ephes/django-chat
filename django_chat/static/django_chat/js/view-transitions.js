@@ -461,6 +461,10 @@
         rememberEpisodeIndexUrl(pendingEpisodeSlug);
       }
 
+      if (link.getAttribute("data-vt-transition") === "filter") {
+        pendingFilterNavigation = true;
+      }
+
       if (link.getAttribute("data-vt-transition") === "pagination") {
         const url = new URL(link.href, window.location.href);
         if (

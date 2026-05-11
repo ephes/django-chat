@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from html.parser import HTMLParser
+
 import pytest
 from django.test import Client
 from django.urls import reverse
@@ -38,6 +40,7 @@ def test_episode_index_exposes_filterset_form_fields(client: Client) -> None:
     response = client.get(episode_index_path())
 
     body = response.content.decode()
+    assert 'type="text"' in body
     assert 'name="search"' in body
     assert 'name="date_after"' in body
     assert 'name="date_before"' in body
@@ -45,6 +48,46 @@ def test_episode_index_exposes_filterset_form_fields(client: Client) -> None:
     assert '<label class="visually-hidden" for="id_date_1">End date</label>' in body
     assert 'name="date_facets"' in body
     assert 'name="o"' in body
+
+
+@pytest.mark.django_db
+def test_episode_index_omits_clear_search_link_without_search_query(client: Client) -> None:
+    import_django_chat_sample()
+
+    response = client.get(episode_index_path())
+
+    body = response.content.decode()
+    assert clear_search_link_attrs(body) is None
+
+
+@pytest.mark.django_db
+def test_episode_index_clear_search_link_removes_only_search_query(client: Client) -> None:
+    import_django_chat_sample()
+
+    response = client.get(
+        f"{episode_index_path()}?search=tasks&date_after=2026-01-01&o=visible_date&page=2"
+    )
+
+    body = response.content.decode()
+    attrs = clear_search_link_attrs(body)
+    assert attrs is not None
+    assert attrs["aria-label"] == "Clear search"
+    assert attrs["data-vt-transition"] == "filter"
+    assert attrs["href"] == "/episodes/?date_after=2026-01-01&o=visible_date"
+
+
+@pytest.mark.django_db
+def test_episode_index_clear_search_link_drops_to_index_without_other_filters(
+    client: Client,
+) -> None:
+    import_django_chat_sample()
+
+    response = client.get(f"{episode_index_path()}?search=tasks")
+
+    body = response.content.decode()
+    attrs = clear_search_link_attrs(body)
+    assert attrs is not None
+    assert attrs["href"] == "/episodes/"
 
 
 @pytest.mark.django_db
@@ -148,3 +191,22 @@ def test_episode_index_filters_by_date_range_before(client: Client) -> None:
 
 def episode_index_path() -> str:
     return reverse("django_chat_episode_index")
+
+
+def clear_search_link_attrs(body: str) -> dict[str, str] | None:
+    parser = ClearSearchLinkParser()
+    parser.feed(body)
+    return parser.attrs
+
+
+class ClearSearchLinkParser(HTMLParser):
+    attrs: dict[str, str] | None
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.attrs = None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attrs_dict = {key: value or "" for key, value in attrs}
+        if tag == "a" and "filter-search-clear" in attrs_dict.get("class", "").split():
+            self.attrs = attrs_dict

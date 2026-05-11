@@ -39,6 +39,14 @@ def podcast_episode_index(request: HttpRequest) -> HttpResponse:
     parameters_querystring = parameters.urlencode()
     parameters_suffix = "&" + parameters_querystring if parameters_querystring else ""
 
+    clear_search_parameters = request.GET.copy()
+    clear_search_parameters.pop("page", None)
+    clear_search_parameters.pop("search", None)
+    clear_search_querystring = clear_search_parameters.urlencode()
+    clear_search_url = request.path
+    if clear_search_querystring:
+        clear_search_url = f"{clear_search_url}?{clear_search_querystring}"
+
     template_base_dir = podcast.get_template_base_dir(type_cast(Any, request))
     type_cast(Any, request).cast_site_template_base_dir = template_base_dir
     canonical_url = request.build_absolute_uri(podcast.get_url(request=request) or request.path)
@@ -69,6 +77,7 @@ def podcast_episode_index(request: HttpRequest) -> HttpResponse:
             "has_next": page_obj.has_next(),
             "next_page_number": next_page_number,
             "parameters": parameters_suffix,
+            "clear_search_url": clear_search_url,
             "filterset": filterset,
             "canonical_url": canonical_url,
             "source_metadata": source_metadata,

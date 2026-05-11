@@ -491,6 +491,44 @@ html.is-stacked .show-hero-logo {
   font: inherit;
 }
 
+.filter-search {
+  position: relative;
+  min-width: 0;
+}
+
+.filter-search--with-clear input {
+  padding-right: 38px;
+}
+
+.filter-search-clear {
+  align-items: center;
+  border-radius: 50%;
+  color: var(--dc-muted);
+  display: flex;
+  font-size: 1.4rem;
+  font-weight: 400;
+  height: 28px;
+  justify-content: center;
+  line-height: 1;
+  position: absolute;
+  right: 6px;
+  text-decoration: none;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+}
+
+.filter-search-clear:hover,
+.filter-search-clear:focus {
+  background: rgb(77 165 83 / 0.12);
+  color: var(--dc-accent-dark);
+}
+
+.filter-search-clear:focus-visible {
+  outline: 3px solid rgb(77 165 83 / 0.35);
+  outline-offset: 2px;
+}
+
 .filter-form input:focus,
 .filter-form select:focus {
   border-color: var(--dc-django);

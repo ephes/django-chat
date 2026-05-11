@@ -1,6 +1,11 @@
 <form method="get" class="filter-form" aria-label="Filter episodes" data-vt-transition="filter">
   <label class="visually-hidden" for="id_search">Search</label>
-  <input id="id_search" type="text" name="search" placeholder="Search episodes" value="{{ form.search.value|default_if_none:'' }}">
+  <div class="filter-search{% if form.search.value %} filter-search--with-clear{% endif %}">
+    <input id="id_search" type="text" name="search" placeholder="Search episodes" value="{{ form.search.value|default_if_none:'' }}">
+    {% if form.search.value %}
+      <a class="filter-search-clear" href="{{ clear_search_url }}" aria-label="Clear search" data-vt-transition="filter"><span aria-hidden="true">&times;</span></a>
+    {% endif %}
+  </div>
 
   <div class="filter-date">
     {# Keep names/IDs aligned with django-filter's DateFromToRangeFilter widget. #}
