@@ -8,16 +8,6 @@
 }
 
 @font-face {
-  font-family: "Roboto Flex";
-  src: url("/static/fonts/RobotoFlex-Variable.woff2") format("woff2-variations"),
-       url("/static/fonts/RobotoFlex-Variable.woff2") format("woff2");
-  font-weight: 100 1000;
-  font-stretch: 25% 151%;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
   font-family: "Roboto Mono";
   src: url("/static/fonts/RobotoMono-Variable.woff2") format("woff2-variations"),
        url("/static/fonts/RobotoMono-Variable.woff2") format("woff2");
@@ -92,7 +82,7 @@ a:focus-visible {
 h1,
 h2,
 h3 {
-  font-family: "Roboto Flex", "Roboto", system-ui, sans-serif;
+  font-family: "Roboto", system-ui, sans-serif;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.1;
@@ -431,9 +421,8 @@ main {
   background: var(--dc-accent-dark);
   border-radius: 5px;
   display: grid;
-  font-family: "Roboto Flex", "Roboto", system-ui, sans-serif;
+  font-family: "Roboto", system-ui, sans-serif;
   font-size: clamp(2.25rem, 4.5vw, 4.5rem);
-  font-variation-settings: "wdth" 25, "opsz" 30;
   font-weight: 900;
   height: var(--episode-badge-size);
   justify-items: center;
@@ -640,14 +629,205 @@ main {
   display: block;
   height: auto !important;
   min-height: 112px !important;
+  max-width: 600px;
+  position: relative;
 }
 
 .audio-panel podlove-player[data-template] .podlove-player-container {
+  inset: 0;
   min-height: 112px;
   max-width: 600px;
+  position: absolute;
+  transition: opacity 160ms ease;
+  width: 100%;
+  z-index: 2;
+}
+
+.audio-panel podlove-player[data-template] .podlove-player-click-to-load {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--dc-ink);
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+.audio-panel podlove-player[data-template] .podlove-player-button {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  min-height: 0;
+  padding: 0;
+}
+
+.audio-panel podlove-player[data-template] .podlove-hover-placeholder {
+  align-items: center;
+  background: #fff;
+  border: 1px solid rgb(13 13 13 / 0.1);
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgb(13 13 13 / 0.05);
+  color: var(--dc-ink);
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 112px;
+  padding: 24px;
+  text-align: left;
+  transition: border-color 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+  width: 100%;
+}
+
+.audio-panel podlove-player[data-template] .podlove-hover-placeholder:hover,
+.audio-panel podlove-player[data-template] .podlove-hover-placeholder:focus {
+  background: #fff;
+  border-color: rgb(101 166 92 / 0.55);
+  box-shadow: 0 2px 12px rgb(20 81 58 / 0.12);
+  color: var(--dc-ink);
+}
+
+.audio-panel podlove-player[data-template] .podlove-hover-placeholder:focus-visible {
+  outline: 3px solid rgb(101 166 92 / 0.35);
+  outline-offset: 3px;
+}
+
+.podlove-facade-controls {
+  align-items: center;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 42px auto minmax(76px, 1fr) auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.podlove-facade-play {
+  align-items: center;
+  background: var(--dc-accent);
+  border-radius: 999px;
+  display: inline-flex;
+  height: 42px;
+  justify-content: center;
+  position: relative;
+  width: 42px;
+}
+
+.podlove-facade-play-icon {
+  border-bottom: 8px solid transparent;
+  border-left: 12px solid #fff;
+  border-top: 8px solid transparent;
+  display: block;
+  height: 0;
+  margin-left: 3px;
+  width: 0;
+}
+
+.podlove-facade-spinner {
+  animation: podlove-facade-spin 780ms linear infinite;
+  border: 3px solid rgb(255 255 255 / 0.38);
+  border-top-color: #fff;
+  border-radius: 999px;
+  display: none;
+  height: 20px;
+  position: absolute;
+  width: 20px;
+}
+
+.podlove-facade-time,
+.podlove-facade-duration {
+  color: var(--dc-muted);
+  font-family: "Roboto Mono", ui-monospace, monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.podlove-facade-progress {
+  background: rgb(13 13 13 / 0.13);
+  border-radius: 999px;
+  display: block;
+  height: 4px;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.podlove-facade-progress span {
+  background: var(--dc-accent);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  width: 0;
+}
+
+.podlove-facade-tabs {
+  align-items: center;
+  display: flex;
+  gap: 13px;
+  justify-content: flex-end;
+}
+
+.podlove-facade-tabs span {
+  background: rgb(95 99 93 / 0.22);
+  border-radius: 999px;
+  display: block;
+  height: 18px;
+  width: 18px;
+}
+
+.audio-panel podlove-player[data-django-chat-player-loading="true"] .podlove-facade-play-icon {
+  display: none;
+}
+
+.audio-panel podlove-player[data-django-chat-player-loading="true"] .podlove-facade-spinner {
+  display: block;
+}
+
+.audio-panel podlove-player[data-django-chat-player-ready="true"] [data-django-chat-player-placeholder] {
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+@keyframes podlove-facade-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.audio-panel podlove-player[data-template] .podlove-player-host {
+  inset: 0;
+  min-height: 112px !important;
+  opacity: 1;
+  position: absolute;
+  transition: opacity 160ms ease;
+  width: 100%;
+  z-index: 1;
+}
+
+.audio-panel podlove-player[data-template] iframe {
+  border: 0;
+  display: block;
+  min-height: 112px !important;
+  width: 100% !important;
+}
+
+.audio-panel podlove-player[data-django-chat-player-ready="true"] .podlove-player-container {
+  min-height: 0 !important;
+  position: relative;
+  z-index: auto;
+}
+
+.audio-panel podlove-player[data-django-chat-player-ready="true"] .podlove-player-host {
+  position: relative;
+  z-index: auto;
 }
 
 .audio-panel podlove-player:not([data-django-chat-player-ready]) .podlove-player-host {
+  opacity: 0;
   visibility: hidden;
 }
 
@@ -782,6 +962,46 @@ main {
 
   .episode-hero-content .audio-panel {
     margin: 24px 0 0;
+  }
+
+  .audio-panel podlove-player[data-template],
+  .audio-panel podlove-player[data-template] .podlove-player-container {
+    min-height: 168px !important;
+  }
+
+  .audio-panel podlove-player[data-template] .podlove-player-click-to-load {
+    align-items: stretch;
+  }
+
+  .audio-panel podlove-player[data-template] .podlove-hover-placeholder {
+    gap: 22px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    min-height: 168px;
+    padding: 24px;
+  }
+
+  .audio-panel podlove-player[data-template] iframe {
+    min-height: 168px !important;
+  }
+
+  .audio-panel podlove-player[data-template] .podlove-player-host {
+    min-height: 168px !important;
+  }
+
+  .audio-panel podlove-player[data-django-chat-player-ready="true"] .podlove-player-container {
+    min-height: 0 !important;
+  }
+
+  .podlove-facade-controls {
+    gap: 15px;
+    grid-template-columns: 42px minmax(64px, auto) minmax(70px, 1fr) auto;
+  }
+
+  .podlove-facade-tabs {
+    border-top: 1px solid var(--dc-line);
+    justify-content: space-between;
+    padding-top: 18px;
   }
 
   .episode-hero .show-artwork {

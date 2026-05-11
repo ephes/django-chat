@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import re
 from collections.abc import Callable
 from pathlib import Path
 
@@ -74,14 +75,13 @@ def test_site_css_pins_green_accent_palette() -> None:
     assert "--bs-primary: #2d8260;" in css
     assert "--bs-info: #4da553;" in css
     assert "--bs-link-color: #14513a;" in css
-    assert 'font-family: "Roboto Flex";' in css
-    assert "font-stretch: 25% 151%;" in css
+    assert "RobotoFlex-Variable.woff2" not in css
+    assert 'font-family: "Roboto", system-ui, sans-serif;' in css
     assert ".button-primary {\n  background: var(--dc-accent-dark);" in css
     assert ".button-secondary {\n  background: var(--dc-accent-dark);" in css
     assert ".filter-form button {\n  min-height: 40px;" in css
     assert "background: var(--dc-accent-dark);" in css
     assert ".filter-form button:hover,\n.filter-form button:focus {" in css
-    assert 'font-variation-settings: "wdth" 25, "opsz" 30;' in css
     assert "font-weight: 900;" in css
     assert ".episode-number-hash {" in css
     assert "fill: var(--dc-django);" in css
@@ -92,6 +92,21 @@ def test_site_css_pins_green_accent_palette() -> None:
     assert "width: var(--episode-badge-size);" in css
     assert "height: var(--episode-badge-size);" in css
     assert "font-size: clamp(2.25rem, 4.5vw, 4.5rem);" in css
+    assert (
+        'podlove-player[data-django-chat-player-ready="true"] '
+        "[data-django-chat-player-placeholder]" in css
+    )
+    ready_container_blocks = _css_blocks(
+        css,
+        '.audio-panel podlove-player[data-django-chat-player-ready="true"] '
+        ".podlove-player-container",
+    )
+    assert len(ready_container_blocks) == 2
+    assert all("min-height: 0 !important;" in block for block in ready_container_blocks)
+    assert "position: relative;" in ready_container_blocks[0]
+    assert all("opacity: 0;" not in block for block in ready_container_blocks)
+    assert not re.search(r"(?<!min-)height: 112px !important;", css)
+    assert not re.search(r"(?<!min-)height: 168px !important;", css)
     assert ".rss-primary-link {\n  display: inline-flex;" in css
     assert (
         ".rss-primary-link:hover,\n.rss-primary-link:focus {\n  background: var(--dc-django);"
@@ -212,3 +227,15 @@ def _html_around(body: str, needle: str) -> str:
     start = body.rfind("<img", 0, index)
     end = body.find(">", index)
     return body[start : end + 1]
+
+
+def _css_blocks(css: str, selector: str) -> list[str]:
+    blocks = []
+    search_from = 0
+    while True:
+        start = css.find(f"{selector} {{", search_from)
+        if start == -1:
+            return blocks
+        end = css.index("}", start)
+        blocks.append(css[start : end + 1])
+        search_from = end + 1

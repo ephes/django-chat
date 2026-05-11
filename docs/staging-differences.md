@@ -66,7 +66,10 @@ Expected differences from Simplecast:
   Chat declares the public site as a light theme so user-agent dark-mode
   preferences do not switch the compact player iframe background.
 - The heavy embed script (`cast/js/web-player/embed.5.js`, ~138 KB)
-  loads on viewport intersection, keeping it off the critical render path.
+  loads only after the user interacts with the lightweight player-shaped
+  facade by hover, focus, tap, or click, keeping it off the critical render
+  path. The facade keeps the compact player footprint stable until the real
+  iframe is ready.
 - Simplecast analytics, dynamic ad insertion, and Simplecast download tracking
   are not reproduced.
 - Browser playback behavior may differ because the player comes from the

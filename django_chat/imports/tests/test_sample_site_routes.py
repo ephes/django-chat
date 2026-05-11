@@ -197,11 +197,17 @@ def test_imported_sample_episode_detail_renders_copied_audio(
     assert "simplecast_transcript_html" not in content
     assert "Jake Howard" in content
     assert 'data-config="/api/audios/player_config/?template_base_dir=django_chat"' in content
-    # data-load-mode is intentionally NOT set: django-cast does not ship
-    # facade CSS, so the unstyled facade markup conflicts with the loaded
-    # player on the rendered page. We let the Vite-loaded init module
-    # render the player directly.
-    assert "data-load-mode" not in content
+    assert 'data-load-mode="click"' in content
+    assert 'data-django-chat-load-on-hover="true"' in content
+    assert "data-django-chat-player-placeholder" in content
+    assert 'aria-label="Load audio player"' in content
+    assert "podlove-facade-play" in content
+    assert "podlove-facade-progress" in content
+    assert "podlove-placeholder-artwork" not in content
+    assert "Load player" not in content
+    assert "placeholder.hidden = true" not in content
+    assert 'placeholder.setAttribute("aria-busy", "true")' in content
+    assert "scheduleInitialize()" in content
     assert "<audio" not in content
     assert "/media/cast_audio/django-chat-sample/django-tasks-jake-howard-" in content
     # The django-vite asset tag must emit the prebuilt Podlove init module on

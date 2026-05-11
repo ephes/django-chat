@@ -74,9 +74,86 @@
     <script>
       (() => {
         const readyAttribute = "data-django-chat-player-ready";
+        const loadingAttribute = "data-django-chat-player-loading";
+        const loadStartedAttribute = "data-django-chat-player-load-started";
+        const hoverLoadAttribute = "data-django-chat-load-on-hover";
+        const hoverLoadArmedAttribute = "data-django-chat-hover-load-armed";
 
         const markReady = (player) => {
+          player.removeAttribute(loadingAttribute);
           player.setAttribute(readyAttribute, "true");
+          player
+            .querySelectorAll("[data-django-chat-player-placeholder]")
+            .forEach((placeholder) => {
+              placeholder.removeAttribute("aria-busy");
+              placeholder.setAttribute("aria-hidden", "true");
+              placeholder.setAttribute("tabindex", "-1");
+              if (placeholder === document.activeElement) {
+                placeholder.blur();
+              }
+            });
+        };
+
+        const markLoading = (player) => {
+          player.removeAttribute(readyAttribute);
+          player.setAttribute(loadingAttribute, "true");
+          player
+            .querySelectorAll("[data-django-chat-player-placeholder]")
+            .forEach((placeholder) => {
+              placeholder.setAttribute("aria-busy", "true");
+              placeholder.setAttribute("aria-label", "Loading audio player");
+            });
+        };
+
+        const loadPlayer = (player) => {
+          if (player.hasAttribute(loadStartedAttribute) || player.querySelector("iframe")) {
+            return;
+          }
+
+          player.setAttribute(loadStartedAttribute, "true");
+          markLoading(player);
+
+          const schedule = () => {
+            if (typeof player.scheduleInitialize === "function") {
+              player.scheduleInitialize();
+              return;
+            }
+
+            const fallbackButton = player.querySelector(".podlove-player-button");
+            if (fallbackButton instanceof HTMLButtonElement) {
+              // Fallback: trigger Podlove's native click-to-load handler on the facade button.
+              fallbackButton.click();
+            }
+          };
+
+          if (window.customElements?.whenDefined) {
+            window.customElements.whenDefined("podlove-player").then(schedule).catch(schedule);
+          } else {
+            schedule();
+          }
+        };
+
+        const armHoverLoad = (player) => {
+          if (
+            player.getAttribute(hoverLoadAttribute) !== "true" ||
+            player.hasAttribute(hoverLoadArmedAttribute)
+          ) {
+            return;
+          }
+
+          player.setAttribute(hoverLoadArmedAttribute, "true");
+          const trigger = () => loadPlayer(player);
+          const triggerMouseHover = (event) => {
+            if (event.pointerType && event.pointerType !== "mouse") {
+              return;
+            }
+            trigger();
+          };
+          player.addEventListener("pointerenter", triggerMouseHover, { passive: true });
+          player.addEventListener("focusin", trigger);
+          player
+            .querySelectorAll("[data-django-chat-player-placeholder]")
+            .forEach((placeholder) => placeholder.addEventListener("click", trigger, { once: true }));
         };
 
         const watchIframe = (player, iframe) => {
@@ -151,23 +228,32 @@
             return;
           }
 
-          const revealFallback = window.setTimeout(() => {
-            observer.disconnect();
-            markReady(player);
-          }, 4000);
+          const waitsForUserLoad = player.getAttribute("data-load-mode") === "click";
+          let revealFallback = null;
           const observer = new MutationObserver(() => {
             const iframe = player.querySelector("iframe");
             if (iframe) {
-              window.clearTimeout(revealFallback);
+              window.clearTimeout(revealFallback ?? undefined);
               observer.disconnect();
               watchIframe(player, iframe);
             }
           });
           observer.observe(player, { childList: true, subtree: true });
+
+          // Click-to-load players should only become ready after Podlove inserts an iframe.
+          if (!waitsForUserLoad) {
+            revealFallback = window.setTimeout(() => {
+              observer.disconnect();
+              markReady(player);
+            }, 4000);
+          }
         };
 
         const init = () => {
-          document.querySelectorAll("podlove-player").forEach(watchPlayer);
+          document.querySelectorAll("podlove-player").forEach((player) => {
+            armHoverLoad(player);
+            watchPlayer(player);
+          });
         };
 
         if (document.readyState === "loading") {

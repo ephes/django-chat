@@ -33,8 +33,8 @@ segments through the Podlove API, keep the compact player's transcript tab
 available, and link to the themed transcript route. The compact player
 constrains expanded tab panels so transcript content does not stretch the
 episode hero artwork.
-The heavy embed script (`cast/js/web-player/embed.5.js`, ~138 KB) loads on
-viewport intersection, keeping it out of the critical render path.
+The heavy embed script (`cast/js/web-player/embed.5.js`, ~138 KB) loads after
+interaction with the player facade, keeping it out of the critical render path.
 Copied MP3 URLs respond with HTTP 200 and `audio/mpeg`. Audio playback is
 therefore available end-to-end on staging.
 
@@ -130,14 +130,18 @@ Before sending or refreshing the staging URL for hosts, confirm:
 - An episode detail page renders a `<podlove-player>` element with
   `data-url` pointing at `/api/audios/podlove/<id>/post/<id>/` and
   `data-config` at `/api/audios/player_config/?template_base_dir=django_chat`,
-  plus `data-template` pointing at `/podlove-player-template/`. The referenced
-  MP3 URL returns HTTP 200 with `Content-Type: audio/mpeg` through the public
-  media host. Episodes with attached django-cast transcripts expose transcript
-  segments through the Podlove API, keep the compact player's transcript tab
-  available, and link to the themed transcript route.
+  plus `data-template` pointing at `/podlove-player-template/` and
+  `data-load-mode="click"` so the heavy player loads only after user
+  interaction. Django Chat renders a lightweight player-shaped facade that
+  starts the player on hover, focus, tap, or button click and stays in place
+  while the real iframe initializes. The referenced MP3 URL returns HTTP 200
+  with `Content-Type: audio/mpeg` through the public media host.
+  Episodes with attached django-cast transcripts expose transcript segments
+  through the Podlove API, keep the compact player's transcript tab available
+  after loading the player, and link to the themed transcript route.
 - Browser DevTools network panel shows `cast/js/web-player/embed.5.js`
-  is fetched after initial page paint (on viewport intersection), not as
-  part of the critical render path.
+  is fetched after interacting with the player facade, not as part of the
+  critical render path.
 - `/episodes/feed/` renders the Django Chat-branded subscribe page, exposes
   `/episodes/feed/podcast/mp3/rss.xml` as the only visible podcast RSS feed,
   emits RSS auto-discovery links in the page head, and labels

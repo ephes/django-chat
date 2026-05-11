@@ -110,14 +110,25 @@ and episode detail page needed small fixes:
   layout shift. The base template also declares `data-theme="light"` so the
   player initializer does not request Podlove's dark color scheme on an
   otherwise light page.
+- The compact player mobile reservation is kept in sync between the critical
+  inline CSS and the site stylesheet so the show notes do not move when the
+  player iframe is inserted.
+- Public runtime CSS uses the smaller Roboto variable font for headings and
+  episode-number badges instead of loading the larger Roboto Flex display font
+  on Lighthouse-critical pages.
+- Episode detail pages keep the Podlove player's click-to-load mode under the
+  hood so the heavyweight embed script, player API response, and third-party
+  player assets are requested only after user interaction. Django Chat renders
+  its own lightweight player-shaped facade, keeps that footprint stable while
+  the iframe initializes, and starts the player on hover, focus, tap, or button
+  click.
 
 ## Caveats
 
-Lighthouse still reports unused CSS and JavaScript on the episode detail page
-from the third-party Podlove web player bundle loaded from `cdn.podlove.org`.
-That code is required for the interactive player and remains lazy/deferred
-outside the first paint path. The final performance scores are still near 100,
-so no further player replacement or redesign is part of the host-review gate.
+The 2026-04-29 Lighthouse reports predate the click-to-load player facade.
+Subsequent browser network checks confirm that the third-party Podlove web
+player bundle is not requested on initial episode detail page load; it is loaded
+after the user hovers, focuses, taps, or clicks the player facade.
 
 The root URL intentionally redirects to `/episodes/`. Lighthouse records that
 redirect but final root scores are still 98-100.
