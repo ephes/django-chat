@@ -4,6 +4,7 @@ ANSIBLE_GALAXY_CMD := env_var_or_default("ANSIBLE_GALAXY_CMD", "uvx --from ansib
 ANSIBLE_PLAYBOOK_CMD := env_var_or_default("ANSIBLE_PLAYBOOK_CMD", "uvx --from ansible-core ansible-playbook")
 SOPS_AGE_KEY_FILE := env_var_or_default("SOPS_AGE_KEY_FILE", "~/.config/sops/age/keys.txt")
 DJANGO_CHAT_STAGING_SECRET_FILE := env_var_or_default("DJANGO_CHAT_STAGING_SECRET_FILE", "deploy/secrets/staging.sops.yml")
+SLOPSCOPE_SPEC := env_var_or_default("SLOPSCOPE_SPEC", "slopscope")
 
 default:
     @just --list
@@ -29,6 +30,9 @@ check:
     just format-check
     just typecheck
     just test
+
+loc:
+    @uv run --no-project --prerelease allow --with "{{SLOPSCOPE_SPEC}}" --with rich slopscope .
 
 manage *ARGS:
     uv run python manage.py {{ARGS}}
@@ -67,6 +71,9 @@ deploy-production: deploy-static-check deploy-bootstrap
 
 test *ARGS:
     uv run pytest {{ARGS}}
+
+test-browser *ARGS:
+    DJANGO_CHAT_BROWSER_TESTS=1 uv run pytest django_chat/core/tests/test_browser_js.py {{ARGS}}
 
 dev *ARGS:
     just runserver-staging-media {{ARGS}}

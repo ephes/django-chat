@@ -35,6 +35,9 @@ DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = ["test_*.py", "*_test.py", "tests.py"]
 testpaths = ["django_chat"]
 addopts = ["-ra"]
+markers = [
+    "browser: browser-driven tests that run only when DJANGO_CHAT_BROWSER_TESTS=1 is set",
+]
 
 [tool.ruff]
 target-version = "py314"
@@ -50,3 +53,9 @@ python-version = "3.14"
 
 [tool.ty.src]
 include = ["config", "django_chat", "manage.py"]
+
+[tool.slopscope]
+exclude_dirs = ["docs/_build"]
+source_dirs = ["config", "django_chat"]
+test_dirs = ["django_chat/core/tests", "django_chat/imports/tests"]
+areas = ["config", "django_chat", "docs", "deploy", "tooling"]

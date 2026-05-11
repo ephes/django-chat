@@ -81,6 +81,27 @@ is intentionally scoped to `config`, `django_chat`, and `manage.py` for now so
 the command checks local code without taking on Django, Wagtail, or django-cast
 internals as a strict typing target.
 
+## Line Counts
+
+Print repository line-count summaries by language, source/test split, area, and
+directory:
+
+```sh
+just loc
+```
+
+During the `slopscope` pre-release phase, `just loc` installs `slopscope`
+outside the project environment with `uv run --no-project --prerelease allow`
+and explicit Rich support. Override `SLOPSCOPE_SPEC` with a local checkout when
+developing or testing a sibling `slopscope` clone:
+
+```sh
+SLOPSCOPE_SPEC=../slopscope just loc
+```
+
+`slopscope` uses `cloc` when it is available and otherwise falls back to its
+Python physical-line counter.
+
 ## Browser Checks
 
 Playwright is available in the development dependency group for local rendered
@@ -90,6 +111,16 @@ bundle once on a machine that needs browser-driven checks:
 ```sh
 uv run python -m playwright install chromium
 ```
+
+Run browser-driven JavaScript tests:
+
+```sh
+just test-browser
+```
+
+The browser tests are opt-in. The normal `just test` suite skips them unless
+`DJANGO_CHAT_BROWSER_TESTS=1` is set, so day-to-day Python tests do not require
+a local browser install.
 
 ## Git Hooks
 
