@@ -20,6 +20,7 @@
   let indexTransitionId = 0;
   let lastIndexUrl = null;
   let suppressPaginationPopstateUrl = "";
+  let lastPaginationUrl = `${window.location.pathname}${window.location.search}`;
   const storageKeys = {
     episodeIndexUrl: "djangoChatEpisodeIndexUrl",
   };
@@ -345,6 +346,7 @@
       history.pushState({ djangoChatIndexNavigation: true }, "", url);
     }
     lastIndexUrl = new URL(url.href);
+    lastPaginationUrl = `${url.pathname}${url.search}`;
   };
 
   const updateIndexStatus = (url, kind) => {
@@ -609,6 +611,12 @@
     if (activePage() !== "episode-index" || !document.querySelector("[data-vt-results]")) {
       return;
     }
+    const currentPathSearch = `${window.location.pathname}${window.location.search}`;
+    if (currentPathSearch === lastPaginationUrl) {
+      // Hash-only change (in-page anchor) — let the browser handle scrolling.
+      return;
+    }
+    lastPaginationUrl = currentPathSearch;
     if (suppressPaginationPopstateUrl) {
       const shouldSuppress = suppressPaginationPopstateUrl === window.location.href;
       suppressPaginationPopstateUrl = "";

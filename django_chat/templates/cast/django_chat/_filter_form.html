@@ -1,4 +1,6 @@
-<form method="get" class="filter-form" aria-label="Filter episodes" autocomplete="off" data-vt-transition="filter">
+<form method="get" class="filter-form" id="all-episodes" aria-label="Filter episodes" autocomplete="off" data-vt-transition="filter">
+  <input type="checkbox" id="dc-filter-extras-toggle" class="filter-extras-toggle">
+
   <label class="visually-hidden" for="id_search">Search</label>
   <div class="filter-search{% if form.search.value %} filter-search--with-clear{% endif %}">
     <input id="id_search" type="text" name="search" placeholder="Search episodes" value="{{ form.search.value|default_if_none:'' }}" autocomplete="off">
@@ -7,32 +9,39 @@
     {% endif %}
   </div>
 
-  <div class="filter-date">
-    {# Keep names/IDs aligned with django-filter's DateFromToRangeFilter widget. #}
-    <label class="visually-hidden" for="id_date_0">Start date</label>
-    <input type="date" name="date_after" id="id_date_0" value="{{ request.GET.date_after }}" autocomplete="off">
-    <span aria-hidden="true">-</span>
-    <label class="visually-hidden" for="id_date_1">End date</label>
-    <input type="date" name="date_before" id="id_date_1" value="{{ request.GET.date_before }}" autocomplete="off">
+  <label class="filter-more-toggle" for="dc-filter-extras-toggle">
+    <span>More filters</span>
+    <svg class="filter-more-chevron" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </label>
+
+  <div class="filter-extras">
+    <div class="filter-date">
+      {# Keep names/IDs aligned with django-filter's DateFromToRangeFilter widget. #}
+      <label class="visually-hidden" for="id_date_0">Start date</label>
+      <input type="date" name="date_after" id="id_date_0" value="{{ request.GET.date_after }}" autocomplete="off">
+      <span aria-hidden="true">-</span>
+      <label class="visually-hidden" for="id_date_1">End date</label>
+      <input type="date" name="date_before" id="id_date_1" value="{{ request.GET.date_before }}" autocomplete="off">
+    </div>
+
+    <select name="date_facets" aria-label="Date facets" autocomplete="off">
+      <option value="">All dates</option>
+      {% for value, label in form.date_facets.field.choices %}
+        <option value="{{ value }}"{% if form.date_facets.value == value %} selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="o" aria-label="Sort order" autocomplete="off">
+      <option value="">Newest first</option>
+      {# OrderingFilter exposes its bound value as a list (e.g. ['visible_date']), so check membership #}
+      {% for value, label in form.o.field.choices %}
+        {% if value %}<option value="{{ value }}"{% if form.o.value and value in form.o.value %} selected{% endif %}>{{ label }}</option>{% endif %}
+      {% endfor %}
+    </select>
+
+    <button type="submit">Filter</button>
+    {% if has_filters %}
+      <a class="filter-clear-all" href="{% url 'django_chat_episode_index' %}" data-vt-transition="filter">Clear</a>
+    {% endif %}
   </div>
-
-  <select name="date_facets" aria-label="Date facets" autocomplete="off">
-    <option value="">All dates</option>
-    {% for value, label in form.date_facets.field.choices %}
-      <option value="{{ value }}"{% if form.date_facets.value == value %} selected{% endif %}>{{ label }}</option>
-    {% endfor %}
-  </select>
-
-  <select name="o" aria-label="Sort order" autocomplete="off">
-    <option value="">Newest first</option>
-    {# OrderingFilter exposes its bound value as a list (e.g. ['visible_date']), so check membership #}
-    {% for value, label in form.o.field.choices %}
-      {% if value %}<option value="{{ value }}"{% if form.o.value and value in form.o.value %} selected{% endif %}>{{ label }}</option>{% endif %}
-    {% endfor %}
-  </select>
-
-  <button type="submit">Filter</button>
-  {% if has_filters %}
-    <a class="filter-clear-all" href="{% url 'django_chat_episode_index' %}" data-vt-transition="filter">Clear</a>
-  {% endif %}
 </form>
