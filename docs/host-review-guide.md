@@ -25,12 +25,14 @@ Full-catalog audio is copied to the staging media bucket and served through the
 public media host. Episode detail pages render a compact **Podlove web
 player** (`<podlove-player>`) — django-cast's player component loaded via
 `django-vite`, with a Django Chat local `data-template` URL for the
-one-line-style layout and django-cast's existing player config endpoint for
-brand colors. The light page theme is declared explicitly so browser dark-mode
-preferences do not switch the compact iframe to Podlove's dark background.
-Episodes with converted transcripts expose segments through the Podlove API,
-which enables the compact player's built-in transcript tab, and link to the
-themed transcript route.
+compact hero layout with constrained tab panels and django-cast's existing
+player config endpoint for brand colors. The light page theme is declared
+explicitly so browser dark-mode preferences do not switch the compact iframe
+to Podlove's dark background. Episodes with converted transcripts expose
+segments through the Podlove API, keep the compact player's transcript tab
+available, and link to the themed transcript route. The compact player
+constrains expanded tab panels so transcript content does not stretch the
+episode hero artwork.
 The heavy embed script (`cast/js/web-player/embed.5.js`, ~138 KB) loads on
 viewport intersection, keeping it out of the critical render path.
 Copied MP3 URLs respond with HTTP 200 and `audio/mpeg`. Audio playback is
@@ -131,7 +133,8 @@ Before sending or refreshing the staging URL for hosts, confirm:
   plus `data-template` pointing at `/podlove-player-template/`. The referenced
   MP3 URL returns HTTP 200 with `Content-Type: audio/mpeg` through the public
   media host. Episodes with attached django-cast transcripts expose transcript
-  segments through the Podlove API and link to the themed transcript route.
+  segments through the Podlove API, keep the compact player's transcript tab
+  available, and link to the themed transcript route.
 - Browser DevTools network panel shows `cast/js/web-player/embed.5.js`
   is fetched after initial page paint (on viewport intersection), not as
   part of the critical render path.

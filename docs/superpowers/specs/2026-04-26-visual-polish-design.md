@@ -259,11 +259,15 @@ Composition top-to-bottom:
    - Right: eyebrow meta line (`{visible_date} · E{episode_number} ·
      {duration}`, degrades when fields are missing), page title H1
      (Roboto Flex 800, 36px), small icon-link row — SHARE / FACEBOOK /
-     TWITTER / DOWNLOAD MP3. "Subscribe" is dropped from this row (it
-     lives on the show hero, not per episode).
+     TWITTER / DOWNLOAD MP3 — with the Podlove player pinned to the
+     bottom of the same content column and capped around 600px. On desktop,
+     the player is offset slightly left into the artwork/title
+     gap so the controls sit closer to the artwork. "Subscribe" is dropped
+     from this row (it lives on the show hero, not per episode).
 
-3. **Podlove player** — replaces the manual `<audio controls>` element
-   currently at `episode.html:17`:
+3. **Podlove player** — lives inside the right side of the two-column hero
+   and replaces the manual `<audio controls>` element currently at
+   `episode.html:17`:
    - Drop the explicit `<audio>` tag from `episode.html`.
    - **Important:** the importer at `django_chat/imports/import_sample.py`
      stores the audio on `Episode.podcast_audio` (a
@@ -290,6 +294,12 @@ Composition top-to-bottom:
      element with `data-url` pointing at
      `cast:api:audio_podlove_detail` and `data-embed` pointing at
      `cast/js/web-player/embed.5.js`).
+   - Keep the local player template compact, but preserve Podlove tab triggers
+     and tab panels, especially transcripts. Expanded tab panels must be
+     constrained inside the player so transcript/shownotes panes do not stretch
+     the two-column hero or distort the artwork. Episode transcript access is
+     also available in the explicit Transcript action link above the player and
+     in `/episodes/<slug>/transcript/`.
    - **No `podlove_load_mode`.** django-cast supports a `"facade"`
      mode that emits a static fake-player markup, but it does not
      ship CSS for the facade classes. On staging the unstyled

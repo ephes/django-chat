@@ -22,35 +22,37 @@
         {% elif source_metadata.image_url %}
           <img class="show-artwork" src="{{ source_metadata.image_url }}" width="280" height="280" alt="" fetchpriority="high" decoding="async">
         {% endif %}
-        <div>
-          <p class="eyebrow">
-            <time datetime="{{ page.visible_date|date:'c' }}">{{ page.visible_date|date:'F j, Y' }}</time>
-            {% with episode_number=page.django_chat_source_metadata.episode_number duration=page.django_chat_source_metadata.duration_seconds %}
-              {% if episode_number %} · E{{ episode_number }}{% endif %}
-              {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
-            {% endwith %}
-          </p>
-          <h1>{{ page.title }}</h1>
-          <div class="episode-actions">
-            {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
-              <a href="{{ episode.podcast_audio.mp3.url }}" download>Download MP3</a>
-            {% endif %}
-            {% if episode_transcript_url %}
-              <a href="{{ episode_transcript_url }}">Transcript</a>
-            {% endif %}
-            <a href="https://twitter.com/intent/tweet?url={{ resolved_canonical_url|urlencode }}&text={{ page.title|urlencode }}" target="_blank" rel="noopener noreferrer">Twitter</a>
-            <a href="https://www.facebook.com/sharer/sharer.php?u={{ resolved_canonical_url|urlencode }}" target="_blank" rel="noopener noreferrer">Facebook</a>
+        <div class="episode-hero-content">
+          <div>
+            <p class="eyebrow">
+              <time datetime="{{ page.visible_date|date:'c' }}">{{ page.visible_date|date:'F j, Y' }}</time>
+              {% with episode_number=page.django_chat_source_metadata.episode_number duration=page.django_chat_source_metadata.duration_seconds %}
+                {% if episode_number %} · E{{ episode_number }}{% endif %}
+                {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
+              {% endwith %}
+            </p>
+            <h1>{{ page.title }}</h1>
+            <div class="episode-actions">
+              {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+                <a href="{{ episode.podcast_audio.mp3.url }}" download>Download MP3</a>
+              {% endif %}
+              {% if episode_transcript_url %}
+                <a href="{{ episode_transcript_url }}">Transcript</a>
+              {% endif %}
+              <a href="https://twitter.com/intent/tweet?url={{ resolved_canonical_url|urlencode }}&text={{ page.title|urlencode }}" target="_blank" rel="noopener noreferrer">Twitter</a>
+              <a href="https://www.facebook.com/sharer/sharer.php?u={{ resolved_canonical_url|urlencode }}" target="_blank" rel="noopener noreferrer">Facebook</a>
+            </div>
           </div>
+
+          <section class="audio-panel" aria-label="Episode audio">
+            {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+              {% include "cast/django_chat/audio.html" with value=episode.podcast_audio page=episode %}
+            {% else %}
+              <p>Audio copy pending.</p>
+            {% endif %}
+          </section>
         </div>
       </header>
-
-      <section class="audio-panel" aria-label="Episode audio">
-        {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
-          {% include "cast/django_chat/audio.html" with value=episode.podcast_audio page=episode %}
-        {% else %}
-          <p>Audio copy pending.</p>
-        {% endif %}
-      </section>
 
       <div class="show-notes">
         {% for block in page.body %}

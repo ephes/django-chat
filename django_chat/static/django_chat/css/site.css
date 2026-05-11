@@ -574,6 +574,13 @@ main {
   justify-self: start;
 }
 
+.episode-hero-content {
+  display: flex;
+  /* Match the desktop artwork height so the player pins to the artwork bottom. */
+  min-height: 280px;
+  flex-direction: column;
+}
+
 .episode-hero h1 {
   margin: 4px 0 14px;
   font-size: clamp(1.8rem, 2.5vw + 1rem, 2.4rem);
@@ -597,8 +604,8 @@ main {
 }
 
 .audio-panel {
-  margin: 24px 0 30px;
-  max-width: 720px;
+  width: min(600px, 100%);
+  margin: auto 0 0 -24px;
 }
 
 .audio-panel podlove-player[data-template] {
@@ -609,7 +616,7 @@ main {
 
 .audio-panel podlove-player[data-template] .podlove-player-container {
   min-height: 112px;
-  max-width: 720px;
+  max-width: 600px;
 }
 
 .audio-panel podlove-player:not([data-django-chat-player-ready]) .podlove-player-host {
@@ -741,9 +748,12 @@ main {
     max-width: 220px;
   }
 
-  .audio-panel podlove-player[data-template],
-  .audio-panel podlove-player[data-template] .podlove-player-container {
-    min-height: 156px !important;
+  .episode-hero-content {
+    min-height: 0;
+  }
+
+  .episode-hero-content .audio-panel {
+    margin: 24px 0 0;
   }
 
   .episode-hero .show-artwork {

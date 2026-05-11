@@ -1,4 +1,4 @@
-<root data-test="player--m" style="max-width:720px;min-width:260px;">
+<root data-test="player--m" style="max-width:600px;min-width:260px;">
   <div class="p-4 flex flex-col">
     <div class="flex w-12/12">
       <div class="flex w-8/12 mobile:w-full">
@@ -10,20 +10,20 @@
         </div>
       </div>
       <div class="flex w-4/12 ml-6 mt-4 mobile:hidden">
-        <div class="flex w-full justify-between">
-          <tab-trigger tab="shownotes">
+        <div class="flex w-full justify-start">
+          <tab-trigger tab="shownotes" class="mr-4">
             <icon type="info"></icon>
           </tab-trigger>
-          <tab-trigger tab="chapters">
+          <tab-trigger tab="chapters" class="mr-4">
             <icon type="chapter"></icon>
           </tab-trigger>
-          <tab-trigger tab="transcripts">
+          <tab-trigger tab="transcripts" class="mr-4">
             <icon type="transcripts"></icon>
           </tab-trigger>
-          <tab-trigger tab="files">
+          <tab-trigger tab="files" class="mr-4">
             <icon type="download"></icon>
           </tab-trigger>
-          <tab-trigger tab="playlist">
+          <tab-trigger tab="playlist" class="mr-4">
             <icon type="playlist"></icon>
           </tab-trigger>
           <tab-trigger tab="share">
@@ -59,7 +59,7 @@
       </div>
     </div>
   </div>
-  <div class="w-full relative overflow-hidden">
+  <div class="w-full relative overflow-auto" style="max-height:420px;">
     <tab name="shownotes">
       <tab-shownotes></tab-shownotes>
     </tab>

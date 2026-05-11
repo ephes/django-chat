@@ -175,11 +175,13 @@ def test_podlove_player_template_endpoint_renders_compact_template(client: Clien
     assert "<root" in body
     assert "<play-button" in body
     assert "<progress-bar" in body
-    assert '<tab-trigger tab="shownotes">' in body
-    assert '<tab-trigger tab="chapters">' in body
+    assert "<timer-duration" in body
+    assert '<tab-trigger tab="shownotes"' in body
+    assert '<tab-trigger tab="chapters"' in body
     assert '<tab-trigger tab="transcripts">' in body
     assert "<tab-transcripts></tab-transcripts>" in body
     assert '<tab-trigger tab="share">' in body
+    assert 'style="max-height:420px;"' in body
 
 
 def episode_index_path() -> str:
