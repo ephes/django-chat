@@ -32,7 +32,7 @@
   --dc-ink: #0d0d0d;
   --dc-paper: #ffffff;
   --dc-muted: #5f635d;
-  --dc-line: #ececec;
+  --dc-line: #d8d8d8;
   --dc-link: #14513a;
   --dc-accent: #2d8260;
   --dc-accent-dark: #14513a;
@@ -67,7 +67,13 @@ html {
 
 body {
   margin: 0;
-  background: var(--dc-paper);
+  background-color: var(--dc-paper);
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
+    url("../img/simple-horizontal-light.png");
+  background-repeat: repeat;
+  background-size: auto;
+  background-attachment: fixed;
   color: var(--dc-ink);
   font-family: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 16px;
@@ -214,7 +220,12 @@ main {
 }
 
 .show-hero-curve {
-  background: var(--dc-paper);
+  background-color: var(--dc-paper);
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
+    url("../img/simple-horizontal-light.png");
+  background-repeat: repeat;
+  background-attachment: fixed;
   clip-path: url(#show-hero-curve-clip);
   height: clamp(60px, 20vw, 320px);
   margin-top: clamp(-80px, -5vw, -15px);
