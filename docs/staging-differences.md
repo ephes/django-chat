@@ -169,3 +169,6 @@ This slice does not:
 - create production cutover instructions
 
 Those decisions require host review and a separate production migration plan.
+The current migration questions, feed continuity risks, media decisions, and
+pre-cutover checklist are tracked in
+[`docs/production-migration-notes.md`](production-migration-notes.md).

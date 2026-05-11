@@ -63,6 +63,12 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       `PodcastSourceMetadata.visible_distribution_links` live in the larger
       overview provider section instead of being duplicated on the subscribe
       page.
+- [x] **9c. Pre-host-review backlog cleanup** — production migration risks are
+      documented in `docs/production-migration-notes.md`; episode pagination
+      focuses and scrolls to the refreshed results container after same-page
+      pagination; the episode filter/search controls are styled as a
+      Django Chat control strip with a full clear affordance; and the Wagtail
+      dependency set is upgraded to Wagtail 7.4.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -107,9 +113,8 @@ PRD section "Acceptance Criteria For The Research Spike".
       `/episodes/feed/`, with `/episodes/feed/podcast/mp3/rss.xml` promoted as
       the primary self-hosted podcast RSS feed and advertised through RSS
       auto-discovery links in the page head.
-- [ ] Remaining production migration risks documented before any live
-      feed/DNS change. **`docs/production-migration-notes.md` does not exist
-      yet.**
+- [x] Remaining production migration risks documented before any live
+      feed/DNS change in `docs/production-migration-notes.md`.
 
 ## Where We Are
 
@@ -142,12 +147,14 @@ serving the polished site:
 
 Branch is unpushed at the time of writing.
 
-**Nearly ready for full host review:**
+**Ready for full host review:**
 
 The deployed staging site remains useful for internal smoke review of
 deployment, CMS access, playback, the visual direction, and the full catalog.
-It now has representative catalog/audio/feed state plus a Voxhelm-generated
-transcript demo for `/episodes/preview/transcript/`.
+It now has representative catalog/audio/feed state, Voxhelm-generated
+transcript demos, documented production migration risks, pagination behavior
+that returns reviewers to the refreshed episode results, and a polished
+episode filter/search strip.
 
 As of 2026-04-29, staging has the full live catalog copied for host-review
 audio validation: `measure_django_chat_catalog
@@ -187,44 +194,22 @@ with 202 items.
 ## Open Work (Highest Signal First)
 
 1. **Host review of staging.** With full catalog + RSS-discovery +
-   Voxhelm transcript handling + Lighthouse/Web Vitals readiness in place, the
-   staging site is ready for host review. Send hosts the URL +
-   `host-review-admin` credential.
-2. **`docs/production-migration-notes.md`** — feed redirect risks, GUID
-   preservation, canonical domain, Simplecast directory coordination,
-   analytics/CDN/ad-insertion questions. Content scope is in PRD lines
-   520–525 and "Production Migration Considerations" section. Required
-   before any DNS or feed cutover.
-3. **Episode pagination scroll behavior.** When a user follows pagination on
-   the episode index, the browser currently lands or remains near the bottom
-   of the page, which makes the newly loaded episode list feel misplaced.
-   Decide and implement the preferred behavior: after pagination, move focus
-   and scroll position to the top of the refreshed episode result list while
-   preserving normal browser history/back-button behavior and accessibility.
-4. **Episode search/filter bar styling.** The episode index search/date/sort
-   controls currently read as a mostly default form cluster compared with the
-   polished hero, platform links, pagination pills, and line-based episode
-   list. Restyle this as an intentional Django Chat control strip: align it
-   with the main content width, use the existing ink/green/muted/line tokens,
-   keep inputs and selects visually consistent, make the submit and clear
-   affordances match the site's pill button language, preserve visible focus
-   states and screen-reader labels, and verify the layout on narrow mobile
-   where the date range and selects must stack cleanly without cramped text.
-5. **Upgrade Wagtail to 7.4.** The project currently permits Wagtail 7.x and
-   the lockfile is on Wagtail 7.3.x. Upgrade the dependency set to Wagtail
-   7.4, review Wagtail release notes for required settings/template/admin
-   changes, run migrations/checks/tests/hooks, and smoke-test the public
-   episode pages, feeds, imports, and Wagtail admin before deploying.
-6. **Production VPS, DNS cutover, feed redirects, podcast directory
+   Voxhelm transcript handling + Lighthouse/Web Vitals readiness + documented
+   production migration risks + pre-review UI polish in place, the staging site
+   is ready for host review. Send hosts the URL + `host-review-admin`
+   credential.
+2. **Production VPS, DNS cutover, feed redirects, podcast directory
    updates** — last, per user. Out of scope until host review and production
    migration notes are settled.
 
 ## Next Action
 
-Proceed to host review. The latest-entries feed mitigation and
-Lighthouse/Web Vitals fixes have been deployed, staging catalog measurement
-confirms both RSS routes still return 202 items, and the host-review public
-pages now score 98-100 in final mobile and desktop Lighthouse runs.
+Proceed to host review after deploying the current pre-review cleanup. The
+latest-entries feed mitigation and Lighthouse/Web Vitals fixes have been
+deployed, staging catalog measurement confirms both RSS routes still return
+202 items, and the host-review public pages scored 98-100 in final mobile and
+desktop Lighthouse runs. The current cleanup adds production migration notes,
+pagination focus/scroll behavior, episode filter styling, and Wagtail 7.4.
 
 Production migration (DNS, feed cutover, real production VPS) is
 explicitly deferred until host review (item 1) has happened and any

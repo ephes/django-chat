@@ -58,6 +58,7 @@ def test_episode_index_omits_clear_search_link_without_search_query(client: Clie
 
     body = response.content.decode()
     assert clear_search_link_attrs(body) is None
+    assert clear_filters_link_attrs(body) is None
 
 
 @pytest.mark.django_db
@@ -74,6 +75,11 @@ def test_episode_index_clear_search_link_removes_only_search_query(client: Clien
     assert attrs["aria-label"] == "Clear search"
     assert attrs["data-vt-transition"] == "filter"
     assert attrs["href"] == "/episodes/?date_after=2026-01-01&o=visible_date"
+
+    clear_attrs = clear_filters_link_attrs(body)
+    assert clear_attrs is not None
+    assert clear_attrs["data-vt-transition"] == "filter"
+    assert clear_attrs["href"] == "/episodes/"
 
 
 @pytest.mark.django_db
@@ -194,19 +200,26 @@ def episode_index_path() -> str:
 
 
 def clear_search_link_attrs(body: str) -> dict[str, str] | None:
-    parser = ClearSearchLinkParser()
+    parser = LinkClassParser("filter-search-clear")
     parser.feed(body)
     return parser.attrs
 
 
-class ClearSearchLinkParser(HTMLParser):
+def clear_filters_link_attrs(body: str) -> dict[str, str] | None:
+    parser = LinkClassParser("filter-clear-all")
+    parser.feed(body)
+    return parser.attrs
+
+
+class LinkClassParser(HTMLParser):
     attrs: dict[str, str] | None
 
-    def __init__(self) -> None:
+    def __init__(self, class_name: str) -> None:
         super().__init__()
+        self.class_name = class_name
         self.attrs = None
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attrs_dict = {key: value or "" for key, value in attrs}
-        if tag == "a" and "filter-search-clear" in attrs_dict.get("class", "").split():
+        if tag == "a" and self.class_name in attrs_dict.get("class", "").split():
             self.attrs = attrs_dict

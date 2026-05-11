@@ -88,7 +88,7 @@
 
     <p class="visually-hidden" aria-live="polite" aria-atomic="true" data-vt-pagination-status></p>
 
-    <div class="episode-results" data-vt-results aria-busy="false">
+    <div class="episode-results" data-vt-results aria-busy="false" tabindex="-1" aria-label="Episode results">
       {% if not posts %}
         <p class="no-results">No episodes match your filters. <a href="{% url 'django_chat_episode_index' %}">Clear filters</a>.</p>
       {% else %}

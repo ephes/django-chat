@@ -123,7 +123,9 @@ Before sending or refreshing the staging URL for hosts, confirm:
 - `measure_django_chat_catalog --host=djangochat.staging.django-cast.com` has
   been run after the intended catalog import, and podcast feed, latest-entries
   feed, audio-completeness, and episode-list query/timing results have been
-  recorded for the review handoff.
+  recorded for the review handoff. Run deployed management commands as the
+  `django-chat` app user so file-based cache entries stay readable by the
+  service process.
 - `https://<staging-fqdn>/`, `/episodes/`, at least one episode detail page,
   and `/cms/` return expected HTTPS responses.
 - Static assets load.

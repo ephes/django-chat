@@ -172,7 +172,9 @@ and decrypted secret files must stay out of the repository.
 The host review workflow is documented in
 [`docs/host-review-guide.md`](docs/host-review-guide.md), and known differences
 between staging, Simplecast, and a future production migration are documented in
-[`docs/staging-differences.md`](docs/staging-differences.md).
+[`docs/staging-differences.md`](docs/staging-differences.md). Production
+migration risks and cutover decisions are tracked separately in
+[`docs/production-migration-notes.md`](docs/production-migration-notes.md).
 
 Current staging smoke review uses:
 

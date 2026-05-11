@@ -483,23 +483,45 @@ html.is-stacked .show-hero-logo {
 
 .filter-form {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns:
+    minmax(220px, 2fr)
+    minmax(280px, 1.5fr)
+    minmax(150px, 0.85fr)
+    minmax(150px, 0.85fr)
+    auto
+    auto;
   gap: 12px;
-  margin: 0 0 28px;
-  padding: 14px;
-  border: 1px solid var(--dc-line);
-  border-radius: var(--dc-radius);
+  align-items: center;
+  margin: 0 0 30px;
+  padding: 18px 0;
+  border-top: 1px solid var(--dc-line);
+  border-bottom: 1px solid var(--dc-line);
 }
 
 .filter-form input,
 .filter-form select {
   width: 100%;
-  min-height: 40px;
-  padding: 0 12px;
-  border: 1px solid var(--dc-line);
-  border-radius: var(--dc-radius);
-  background: var(--dc-paper);
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #d6ddd4;
+  border-radius: 999px;
+  background: #fbfdfb;
+  color: var(--dc-ink);
   font: inherit;
+  font-size: 0.95rem;
+}
+
+.filter-form select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--dc-accent-dark) 50%),
+    linear-gradient(135deg, var(--dc-accent-dark) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50%;
+  background-repeat: no-repeat;
+  background-size: 6px 6px, 6px 6px;
+  padding-right: 34px;
 }
 
 .filter-search {
@@ -522,7 +544,7 @@ html.is-stacked .show-hero-logo {
   justify-content: center;
   line-height: 1;
   position: absolute;
-  right: 6px;
+  right: 8px;
   text-decoration: none;
   top: 50%;
   transform: translateY(-50%);
@@ -548,15 +570,20 @@ html.is-stacked .show-hero-logo {
 }
 
 .filter-date {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 6px;
   min-width: 0;
 }
 
+.filter-date span {
+  color: var(--dc-muted);
+  font-weight: 700;
+}
+
 .filter-date input,
 .filter-date input[type="date"] {
-  flex: 1;
   min-width: 0;
 }
 
@@ -573,11 +600,11 @@ html.is-stacked .show-hero-logo {
 }
 
 .filter-form button {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 18px;
   background: var(--dc-accent-dark);
   color: #fff;
-  border: 0;
+  border: 1px solid var(--dc-accent-dark);
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
@@ -586,7 +613,46 @@ html.is-stacked .show-hero-logo {
 .filter-form button:hover,
 .filter-form button:focus {
   background: var(--dc-django);
+  border-color: var(--dc-django);
   color: var(--dc-ink);
+}
+
+.filter-clear-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--dc-line);
+  border-radius: 999px;
+  color: var(--dc-muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.filter-clear-all:hover,
+.filter-clear-all:focus {
+  background: rgb(77 165 83 / 0.10);
+  border-color: var(--dc-django);
+  color: var(--dc-accent-dark);
+}
+
+@media (max-width: 1080px) {
+  .filter-form {
+    grid-template-columns: minmax(260px, 1.4fr) minmax(260px, 1.2fr) minmax(150px, 0.8fr);
+  }
+
+  .filter-form button,
+  .filter-clear-all {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .filter-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 .episode-list {
@@ -1372,5 +1438,15 @@ html.is-stacked .show-hero-logo {
 
   .episode-hero .show-artwork {
     max-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-date {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-date span {
+    display: none;
   }
 }

@@ -29,6 +29,10 @@ def test_pagination_markup_visible_when_page_size_is_small(client: Client) -> No
 
     body = response.content.decode()
     assert response.context["is_paginated"] is True
+    assert "data-vt-results" in body
+    assert 'aria-busy="false"' in body
+    assert 'tabindex="-1"' in body
+    assert 'aria-label="Episode results"' in body
     assert 'class="pagination-nav"' in body
     assert "data-vt-pagination-nav" in body
     assert 'data-vt-transition="pagination" data-vt-pagination-direction="forwards"' in body

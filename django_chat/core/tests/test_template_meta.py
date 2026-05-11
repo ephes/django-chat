@@ -127,7 +127,8 @@ def test_site_css_pins_green_accent_palette() -> None:
     assert 'font-family: "Roboto", system-ui, sans-serif;' in css
     assert ".button-primary {\n  background: var(--dc-accent-dark);" in css
     assert ".button-secondary {\n  background: var(--dc-accent-dark);" in css
-    assert ".filter-form button {\n  min-height: 40px;" in css
+    assert ".filter-form button {\n  min-height: 44px;" in css
+    assert ".filter-clear-all {" in css
     assert "background: var(--dc-accent-dark);" in css
     assert ".filter-form button:hover,\n.filter-form button:focus {" in css
     assert "font-weight: 900;" in css

@@ -51,6 +51,14 @@
     - role: local.ops_library.wagtail_deploy
 
   post_tasks:
+    - name: Deploy | Ensure Django cache files are owned by the app user
+      ansible.builtin.file:
+        path: "{{ wagtail_cache_dir }}"
+        state: directory
+        owner: "{{ wagtail_user }}"
+        group: "{{ wagtail_group }}"
+        recurse: true
+
     - name: Deploy | Ensure default Wagtail Site matches deploy hostname
       ansible.builtin.shell: |
         set -a

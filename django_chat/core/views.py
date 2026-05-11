@@ -77,6 +77,7 @@ def podcast_episode_index(request: HttpRequest) -> HttpResponse:
             "has_next": page_obj.has_next(),
             "next_page_number": next_page_number,
             "parameters": parameters_suffix,
+            "has_filters": bool(parameters_querystring),
             "clear_search_url": clear_search_url,
             "filterset": filterset,
             "canonical_url": canonical_url,

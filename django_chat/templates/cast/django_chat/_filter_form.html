@@ -32,4 +32,7 @@
   </select>
 
   <button type="submit">Filter</button>
+  {% if has_filters %}
+    <a class="filter-clear-all" href="{% url 'django_chat_episode_index' %}" data-vt-transition="filter">Clear</a>
+  {% endif %}
 </form>

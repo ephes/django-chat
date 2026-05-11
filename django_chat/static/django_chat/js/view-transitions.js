@@ -296,10 +296,10 @@
       return null;
     }
 
+    nextResults.setAttribute("aria-busy", currentResults.getAttribute("aria-busy") || "false");
     const previousName = currentResults.style.getPropertyValue("view-transition-name");
     currentResults.style.setProperty("view-transition-name", transitionNames.results);
     nextResults.style.setProperty("view-transition-name", transitionNames.results);
-    nextResults.setAttribute("aria-busy", "false");
     currentResults.replaceWith(nextResults);
 
     return [{ element: nextResults, previousName }];
@@ -349,21 +349,20 @@
 
   const focusPaginationResults = () => {
     const results = document.querySelector("[data-vt-results]");
-    const focusTarget =
-      document.querySelector("[data-vt-results] .pagination-nav a") ||
-      document.querySelector("[data-vt-results] .episode-row") ||
-      results;
 
-    if (focusTarget instanceof HTMLElement) {
-      if (focusTarget === results && !focusTarget.hasAttribute("tabindex")) {
-        focusTarget.setAttribute("tabindex", "-1");
-        focusTarget.setAttribute("data-vt-temporary-tabindex", "true");
-      }
-      focusTarget.focus({ preventScroll: true });
-      return focusTarget;
+    if (results instanceof HTMLElement) {
+      results.focus({ preventScroll: true });
+      return results;
     }
 
     return null;
+  };
+
+  const scrollPaginationResultsIntoView = () => {
+    const results = document.querySelector("[data-vt-results]");
+    if (results instanceof HTMLElement) {
+      results.scrollIntoView({ block: "start", inline: "nearest" });
+    }
   };
 
   const softNavigatePagination = async (url, { pushState = true } = {}) => {
@@ -386,7 +385,6 @@
     const transitionId = paginationTransitionId + 1;
     paginationTransitionId = transitionId;
     let cleanupEntries = [];
-    let focusTarget = null;
     html.setAttribute("data-vt-same-pagination", "true");
 
     const viewTransition = document.startViewTransition(() => {
@@ -400,7 +398,8 @@
         }
         syncPaginationHead(nextDocument);
       }
-      focusTarget = focusPaginationResults();
+      focusPaginationResults();
+      scrollPaginationResultsIntoView();
       updatePaginationStatus(url);
     });
 
@@ -409,11 +408,11 @@
         return;
       }
       html.removeAttribute("data-vt-same-pagination");
-      if (focusTarget && focusTarget.getAttribute("data-vt-temporary-tabindex") === "true") {
-        focusTarget.removeAttribute("tabindex");
-        focusTarget.removeAttribute("data-vt-temporary-tabindex");
-      }
       restoreNamedElements(cleanupEntries);
+      const results = document.querySelector("[data-vt-results]");
+      if (results instanceof HTMLElement) {
+        results.setAttribute("aria-busy", "false");
+      }
       paginationController = null;
     });
   };
