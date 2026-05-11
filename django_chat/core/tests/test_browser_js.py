@@ -10,7 +10,6 @@ from playwright.sync_api import Locator, Page, expect, sync_playwright
 
 from django_chat.imports.import_sample import import_django_chat_sample
 
-
 pytestmark = [
     pytest.mark.browser,
     pytest.mark.skipif(
