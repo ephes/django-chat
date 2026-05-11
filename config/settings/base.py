@@ -259,6 +259,8 @@ CAST_FILTERSET_FACETS = ["search", "date", "date_facets", "o"]
 #   brandDark       — hover / emphasis variant.
 #   brandDarkest    — darkest green used for player chrome.
 #   brandLightest   — white player chrome and play glyph contrast.
+#   alt             — transparent player surface so the page texture shows
+#                     through the embedded player chrome.
 #   shade*          — neutral secondary UI text, intentionally not slate-blue.
 CAST_PODLOVE_PLAYER_THEMES = {
     "django_chat": {
@@ -270,7 +272,7 @@ CAST_PODLOVE_PLAYER_THEMES = {
             "shadeDark": "#5f635d",
             "shadeBase": "#5f635d",
             "contrast": "#0d0d0d",
-            "alt": "#ffffff",
+            "alt": "transparent",
         },
     },
 }

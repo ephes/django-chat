@@ -31,6 +31,7 @@
 :root {
   --dc-ink: #0d0d0d;
   --dc-paper: #ffffff;
+  --dc-player-surface: transparent;
   --dc-muted: #5f635d;
   --dc-line: #d8d8d8;
   --dc-link: #14513a;
@@ -1316,7 +1317,7 @@ html.is-stacked .show-hero-logo {
 
 .audio-panel podlove-player[data-template] .podlove-hover-placeholder {
   align-items: start;
-  background: #fff;
+  background: var(--dc-player-surface);
   border: 0;
   border-radius: 0;
   box-shadow: none;
@@ -1333,7 +1334,7 @@ html.is-stacked .show-hero-logo {
 
 .audio-panel podlove-player[data-template] .podlove-hover-placeholder:hover,
 .audio-panel podlove-player[data-template] .podlove-hover-placeholder:focus {
-  background: #fff;
+  background: var(--dc-player-surface);
   color: var(--dc-ink);
 }
 
@@ -1458,7 +1459,9 @@ html.is-stacked .show-hero-logo {
   z-index: 1;
 }
 
-.audio-panel podlove-player[data-template] iframe {
+.audio-panel podlove-player[data-template] .podlove-player-container iframe {
+  /* Podlove's custom element injects light iframe backgrounds after this stylesheet. */
+  background: var(--dc-player-surface) !important;
   border: 0;
   display: block;
   min-height: 112px !important;

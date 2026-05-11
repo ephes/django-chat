@@ -142,6 +142,17 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert "--dc-accent: #2d8260;" in css
     assert "--dc-accent-dark: #14513a;" in css
     assert "--dc-django: #4da553;" in css
+    assert "--dc-player-surface: transparent;" in css
+    assert (
+        ".audio-panel podlove-player[data-template] .podlove-hover-placeholder {\n"
+        "  align-items: start;\n"
+        "  background: var(--dc-player-surface);"
+    ) in css
+    assert (
+        ".audio-panel podlove-player[data-template] .podlove-player-container iframe {\n"
+        "  /* Podlove's custom element injects light iframe backgrounds after this stylesheet. */\n"
+        "  background: var(--dc-player-surface) !important;"
+    ) in css
     assert "RobotoFlex-Variable.woff2" not in css
     assert 'font-family: "Roboto", system-ui, sans-serif;' in css
     assert ".button-primary {\n  background: var(--dc-accent-dark);" in css
@@ -235,6 +246,8 @@ def test_podlove_player_config_uses_django_chat_brand_colors(client: Client) -> 
     assert tokens["shadeBase"] == "#5f635d"
     # Contrast pinned to the project ink token.
     assert tokens["contrast"] == "#0d0d0d"
+    # Player surface should blend with the textured page background.
+    assert tokens["alt"] == "transparent"
 
 
 @pytest.mark.django_db
