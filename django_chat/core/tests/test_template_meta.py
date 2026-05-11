@@ -70,9 +70,9 @@ def test_site_css_pins_green_accent_palette() -> None:
 
     assert "--dc-link: #14513a;" in css
     assert "--dc-muted: #5f635d;" in css
-    assert "--dc-django: #65a65c;" in css
+    assert "--dc-django: #4da553;" in css
     assert "--bs-primary: #2d8260;" in css
-    assert "--bs-info: #65a65c;" in css
+    assert "--bs-info: #4da553;" in css
     assert "--bs-link-color: #14513a;" in css
     assert 'font-family: "Roboto Flex";' in css
     assert "font-stretch: 25% 151%;" in css
@@ -83,11 +83,14 @@ def test_site_css_pins_green_accent_palette() -> None:
     assert ".filter-form button:hover,\n.filter-form button:focus {" in css
     assert 'font-variation-settings: "wdth" 25, "opsz" 30;' in css
     assert "font-weight: 900;" in css
-    assert ".episode-number-badge span:first-child {" in css
-    assert "color: var(--dc-django);" in css
+    assert ".episode-number-hash {" in css
+    assert "fill: var(--dc-django);" in css
     assert ".episode-number-badge span:last-child {" in css
-    assert "font-size: 1.42em;" in css
-    assert "margin-top: -0.74em;" in css
+    assert "color: var(--dc-django);" in css
+    assert "grid-template-columns: 9rem 1fr;" in css
+    assert "width: 9rem;" in css
+    assert "height: 9rem;" in css
+    assert "font-size: 4.5rem;" in css
     assert ".rss-primary-link {\n  display: inline-flex;" in css
     assert (
         ".rss-primary-link:hover,\n.rss-primary-link:focus {\n  background: var(--dc-django);"

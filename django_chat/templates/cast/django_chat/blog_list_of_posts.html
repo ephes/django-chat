@@ -69,7 +69,12 @@
             {% with episode_number=post.django_chat_source_metadata.episode_number %}
               {% if episode_number %}
                 <span class="episode-number-badge" aria-hidden="true">
-                  <span>#</span>
+                  <svg class="episode-number-hash" viewBox="69 -20 1469 1498" aria-hidden="true" focusable="false">
+                    <g transform="matrix(1 0 0 -1 0 1458)">
+                      <polygon points="678,614 868,614 928,845 738,845"/>
+                      <path d="M170.292556039989 -20 508.7603037580848 -19.464836470782757 918.678445532918 1478.1410460919142H579.973683744669ZM688.6828394904733 -20H1027.2102258354425L1436.533565454185 1478.1410460919142H1098.1254563629627ZM68.6566945835948 322.81718850135803H1474.0595328360796V619.4398350194097H68.6566945835948ZM132.93327566981316 840.1874244064093H1538.1694269105792V1135.2045803368092H132.93327566981316Z"/>
+                    </g>
+                  </svg>
                   <span>{{ episode_number }}</span>
                 </span>
                 <span class="visually-hidden">Episode {{ episode_number }}: </span>
