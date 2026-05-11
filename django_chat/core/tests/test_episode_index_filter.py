@@ -40,14 +40,38 @@ def test_episode_index_exposes_filterset_form_fields(client: Client) -> None:
     response = client.get(episode_index_path())
 
     body = response.content.decode()
-    assert 'type="text"' in body
-    assert 'name="search"' in body
-    assert 'name="date_after"' in body
-    assert 'name="date_before"' in body
+    form_attrs = tag_attrs(body, "form", {"class": "filter-form"})
+    assert form_attrs is not None
+    assert form_attrs["method"] == "get"
+    assert form_attrs["aria-label"] == "Filter episodes"
+    assert form_attrs["autocomplete"] == "off"
+    assert form_attrs["data-vt-transition"] == "filter"
+    search_attrs = tag_attrs(body, "input", {"name": "search"})
+    assert search_attrs is not None
+    assert search_attrs["type"] == "text"
+    assert search_attrs["placeholder"] == "Search episodes"
+    assert search_attrs["value"] == ""
+    assert search_attrs["autocomplete"] == "off"
+    start_date_attrs = tag_attrs(body, "input", {"name": "date_after"})
+    assert start_date_attrs is not None
+    assert start_date_attrs["id"] == "id_date_0"
+    assert start_date_attrs["value"] == ""
+    assert start_date_attrs["autocomplete"] == "off"
+    end_date_attrs = tag_attrs(body, "input", {"name": "date_before"})
+    assert end_date_attrs is not None
+    assert end_date_attrs["id"] == "id_date_1"
+    assert end_date_attrs["value"] == ""
+    assert end_date_attrs["autocomplete"] == "off"
     assert '<label class="visually-hidden" for="id_date_0">Start date</label>' in body
     assert '<label class="visually-hidden" for="id_date_1">End date</label>' in body
-    assert 'name="date_facets"' in body
-    assert 'name="o"' in body
+    date_facets_attrs = tag_attrs(body, "select", {"name": "date_facets"})
+    assert date_facets_attrs is not None
+    assert date_facets_attrs["aria-label"] == "Date facets"
+    assert date_facets_attrs["autocomplete"] == "off"
+    ordering_attrs = tag_attrs(body, "select", {"name": "o"})
+    assert ordering_attrs is not None
+    assert ordering_attrs["aria-label"] == "Sort order"
+    assert ordering_attrs["autocomplete"] == "off"
 
 
 @pytest.mark.django_db
@@ -59,6 +83,34 @@ def test_episode_index_omits_clear_search_link_without_search_query(client: Clie
     body = response.content.decode()
     assert clear_search_link_attrs(body) is None
     assert clear_filters_link_attrs(body) is None
+
+
+@pytest.mark.django_db
+def test_episode_index_ignores_empty_search_filter_state(client: Client) -> None:
+    import_django_chat_sample()
+
+    response = client.get(f"{episode_index_path()}?search=")
+
+    body = response.content.decode()
+    assert clear_search_link_attrs(body) is None
+    assert clear_filters_link_attrs(body) is None
+    assert response.context["parameters"] == ""
+    assert response.context["has_filters"] is False
+
+
+@pytest.mark.django_db
+def test_episode_index_ignores_empty_filter_form_values(client: Client) -> None:
+    import_django_chat_sample()
+
+    response = client.get(
+        f"{episode_index_path()}?search=&date_after=&date_before=&date_facets=&o="
+    )
+
+    body = response.content.decode()
+    assert clear_search_link_attrs(body) is None
+    assert clear_filters_link_attrs(body) is None
+    assert response.context["parameters"] == ""
+    assert response.context["has_filters"] is False
 
 
 @pytest.mark.django_db
@@ -89,6 +141,22 @@ def test_episode_index_clear_search_link_drops_to_index_without_other_filters(
     import_django_chat_sample()
 
     response = client.get(f"{episode_index_path()}?search=tasks")
+
+    body = response.content.decode()
+    attrs = clear_search_link_attrs(body)
+    assert attrs is not None
+    assert attrs["href"] == "/episodes/"
+
+
+@pytest.mark.django_db
+def test_episode_index_clear_search_link_drops_empty_sibling_filters(
+    client: Client,
+) -> None:
+    import_django_chat_sample()
+
+    response = client.get(
+        f"{episode_index_path()}?search=tasks&date_after=&date_before=&date_facets=&o="
+    )
 
     body = response.content.decode()
     attrs = clear_search_link_attrs(body)
@@ -209,6 +277,29 @@ def clear_filters_link_attrs(body: str) -> dict[str, str] | None:
     parser = LinkClassParser("filter-clear-all")
     parser.feed(body)
     return parser.attrs
+
+
+def tag_attrs(body: str, tag: str, matching_attrs: dict[str, str]) -> dict[str, str] | None:
+    parser = TagAttrsParser(tag, matching_attrs)
+    parser.feed(body)
+    return parser.attrs
+
+
+class TagAttrsParser(HTMLParser):
+    attrs: dict[str, str] | None
+
+    def __init__(self, tag: str, matching_attrs: dict[str, str]) -> None:
+        super().__init__()
+        self.tag = tag
+        self.matching_attrs = matching_attrs
+        self.attrs = None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attrs_dict = {key: value or "" for key, value in attrs}
+        if tag == self.tag and all(
+            attrs_dict.get(key) == value for key, value in self.matching_attrs.items()
+        ):
+            self.attrs = attrs_dict
 
 
 class LinkClassParser(HTMLParser):

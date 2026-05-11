@@ -196,16 +196,17 @@
       next.setAttribute("aria-label", "Next month");
       next.textContent = ">";
 
-      previous.addEventListener("click", () => {
-        viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
+      const moveMonth = (event, monthDelta) => {
+        // Rerendering detaches event.target before the document click handler
+        // can check whether the click happened inside the filter form.
+        event.stopPropagation();
+        viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + monthDelta, 1);
         renderCalendar();
         focusDate(firstOfVisibleMonth());
-      });
-      next.addEventListener("click", () => {
-        viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
-        renderCalendar();
-        focusDate(firstOfVisibleMonth());
-      });
+      };
+
+      previous.addEventListener("click", (event) => moveMonth(event, -1));
+      next.addEventListener("click", (event) => moveMonth(event, 1));
 
       header.append(previous, title, next);
       popover.append(header);

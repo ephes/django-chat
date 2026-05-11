@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import re
 from collections.abc import Callable
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
@@ -74,7 +75,11 @@ def test_episode_index_loads_view_transition_script_and_hooks(client: Client) ->
     assert 'src="/static/django_chat/js/view-transitions.js' in body
     assert 'type="module" src="/static/django_chat/js/view-transitions.js"' not in body
     assert '<main data-vt-page="episode-index">' in body
-    assert 'class="filter-form" aria-label="Filter episodes" data-vt-transition="filter"' in body
+    filter_form_attrs = tag_attrs(body, "form", {"class": "filter-form"})
+    assert filter_form_attrs is not None
+    assert filter_form_attrs["aria-label"] == "Filter episodes"
+    assert filter_form_attrs["autocomplete"] == "off"
+    assert filter_form_attrs["data-vt-transition"] == "filter"
     assert "data-vt-pagination-status" in body
     assert 'class="episode-results" data-vt-results aria-busy="false"' in body
     assert 'class="episode-row" href="/episodes/django-tasks-jake-howard/"' in body
@@ -242,6 +247,29 @@ def episode_index_path() -> str:
 
 def episode_detail_path(slug: str) -> str:
     return f"/{settings.DJANGO_CHAT_PODCAST_SLUG}/{slug}/"
+
+
+def tag_attrs(body: str, tag: str, matching_attrs: dict[str, str]) -> dict[str, str] | None:
+    parser = TagAttrsParser(tag, matching_attrs)
+    parser.feed(body)
+    return parser.attrs
+
+
+class TagAttrsParser(HTMLParser):
+    attrs: dict[str, str] | None
+
+    def __init__(self, tag: str, matching_attrs: dict[str, str]) -> None:
+        super().__init__()
+        self.tag = tag
+        self.matching_attrs = matching_attrs
+        self.attrs = None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attrs_dict = {key: value or "" for key, value in attrs}
+        if tag == self.tag and all(
+            attrs_dict.get(key) == value for key, value in self.matching_attrs.items()
+        ):
+            self.attrs = attrs_dict
 
 
 def _fake_cover_image_downloader() -> Callable[[str], bytes]:

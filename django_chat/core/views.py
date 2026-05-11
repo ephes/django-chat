@@ -7,12 +7,24 @@ from cast.filters import PostFilterset
 from cast.models import Episode, Podcast
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, render
 
 from django_chat.imports.models import PodcastSourceMetadata
 
 EPISODES_PER_PAGE = 20
+
+
+def active_filter_parameters(request: HttpRequest) -> QueryDict:
+    parameters = request.GET.copy()
+    parameters.pop("page", None)
+    for key in list(parameters):
+        values = [value for value in parameters.getlist(key) if value]
+        if values:
+            parameters.setlist(key, values)
+        else:
+            parameters.pop(key, None)
+    return parameters
 
 
 def podlove_player_template(request: HttpRequest) -> HttpResponse:
@@ -34,13 +46,11 @@ def podcast_episode_index(request: HttpRequest) -> HttpResponse:
     for post in posts:
         type_cast(Any, post).page_url = post.get_url(request=request)
 
-    parameters = request.GET.copy()
-    parameters.pop("page", None)
+    parameters = active_filter_parameters(request)
     parameters_querystring = parameters.urlencode()
     parameters_suffix = "&" + parameters_querystring if parameters_querystring else ""
 
-    clear_search_parameters = request.GET.copy()
-    clear_search_parameters.pop("page", None)
+    clear_search_parameters = parameters.copy()
     clear_search_parameters.pop("search", None)
     clear_search_querystring = clear_search_parameters.urlencode()
     clear_search_url = request.path

@@ -1,7 +1,7 @@
-<form method="get" class="filter-form" aria-label="Filter episodes" data-vt-transition="filter">
+<form method="get" class="filter-form" aria-label="Filter episodes" autocomplete="off" data-vt-transition="filter">
   <label class="visually-hidden" for="id_search">Search</label>
   <div class="filter-search{% if form.search.value %} filter-search--with-clear{% endif %}">
-    <input id="id_search" type="text" name="search" placeholder="Search episodes" value="{{ form.search.value|default_if_none:'' }}">
+    <input id="id_search" type="text" name="search" placeholder="Search episodes" value="{{ form.search.value|default_if_none:'' }}" autocomplete="off">
     {% if form.search.value %}
       <a class="filter-search-clear" href="{{ clear_search_url }}" aria-label="Clear search" data-vt-transition="filter"><span aria-hidden="true">&times;</span></a>
     {% endif %}
@@ -10,20 +10,20 @@
   <div class="filter-date">
     {# Keep names/IDs aligned with django-filter's DateFromToRangeFilter widget. #}
     <label class="visually-hidden" for="id_date_0">Start date</label>
-    <input type="date" name="date_after" id="id_date_0" value="{{ request.GET.date_after }}">
+    <input type="date" name="date_after" id="id_date_0" value="{{ request.GET.date_after }}" autocomplete="off">
     <span aria-hidden="true">-</span>
     <label class="visually-hidden" for="id_date_1">End date</label>
-    <input type="date" name="date_before" id="id_date_1" value="{{ request.GET.date_before }}">
+    <input type="date" name="date_before" id="id_date_1" value="{{ request.GET.date_before }}" autocomplete="off">
   </div>
 
-  <select name="date_facets" aria-label="Date facets">
+  <select name="date_facets" aria-label="Date facets" autocomplete="off">
     <option value="">All dates</option>
     {% for value, label in form.date_facets.field.choices %}
       <option value="{{ value }}"{% if form.date_facets.value == value %} selected{% endif %}>{{ label }}</option>
     {% endfor %}
   </select>
 
-  <select name="o" aria-label="Sort order">
+  <select name="o" aria-label="Sort order" autocomplete="off">
     <option value="">Newest first</option>
     {# OrderingFilter exposes its bound value as a list (e.g. ['visible_date']), so check membership #}
     {% for value, label in form.o.field.choices %}

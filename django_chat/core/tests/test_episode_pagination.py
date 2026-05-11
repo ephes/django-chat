@@ -64,5 +64,17 @@ def test_pagination_parameters_context_value_strips_page_only(client: Client) ->
     assert "page=" not in parameters
 
 
+@pytest.mark.django_db
+def test_pagination_parameters_context_value_strips_empty_filters(client: Client) -> None:
+    import_django_chat_sample()
+
+    with patch("django_chat.core.views.EPISODES_PER_PAGE", 3):
+        response = client.get(
+            f"{episode_index_path()}?search=&date_after=&date_before=&date_facets=&o=&page=2"
+        )
+
+    assert response.context["parameters"] == ""
+
+
 def episode_index_path() -> str:
     return reverse("django_chat_episode_index")
