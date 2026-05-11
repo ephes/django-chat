@@ -495,9 +495,20 @@ html.is-stacked .show-hero-logo {
 }
 
 .platform-icon {
+  display: inline-block;
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask-image: var(--platform-icon-url);
+  mask-image: var(--platform-icon-url);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  transition: background-color 0.15s ease;
 }
 
 .platform-band-links a:hover,
@@ -1191,15 +1202,49 @@ html.is-stacked .show-hero-logo {
 .site-footer-inner {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 24px 0;
   font-size: 0.9rem;
 }
 
-.site-footer .social-links {
-  display: flex;
-  gap: 16px;
+.footer-mastodon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid rgb(255 255 255 / 0.35);
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.footer-mastodon-button:hover,
+.footer-mastodon-button:focus {
+  background-color: rgb(77 165 83 / 0.15);
+  border-color: var(--dc-django);
+  color: var(--dc-django);
+}
+
+.footer-mastodon-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.site-footer .footer-cast-link {
+  color: var(--dc-django);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-footer .footer-cast-link:hover,
+.site-footer .footer-cast-link:focus {
+  color: #fff;
 }
 
 .status-page {

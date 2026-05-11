@@ -77,7 +77,7 @@
                 {% if link.name != "Google Podcasts" %}
                   <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">
                     {% with icon=link.name|platform_icon %}
-                      {% if icon %}<img class="platform-icon" src="{{ icon }}" width="20" height="20" alt="" aria-hidden="true">{% endif %}
+                      {% if icon %}<span class="platform-icon" style="--platform-icon-url: url('{{ icon }}')" aria-hidden="true"></span>{% endif %}
                     {% endwith %}
                     <span>{{ link.name }}</span>
                   </a>
