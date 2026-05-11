@@ -561,6 +561,262 @@ html.is-stacked .show-hero-logo {
   padding-right: 34px;
 }
 
+.filter-control {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.filter-form .filter-native-control {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.filter-control-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid #d6ddd4;
+  border-radius: 999px;
+  background: #fbfdfb;
+  color: var(--dc-ink);
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.filter-control-button:hover,
+.filter-control-button:focus {
+  border-color: var(--dc-django);
+  color: var(--dc-ink);
+}
+
+.filter-control-button:focus-visible {
+  box-shadow: 0 0 0 3px rgb(77 165 83 / 0.18);
+  outline: 0;
+}
+
+.filter-control-button[aria-expanded="true"] {
+  border-color: var(--dc-accent);
+  box-shadow: 0 0 0 3px rgb(77 165 83 / 0.16);
+}
+
+.filter-control-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-date-button.is-empty {
+  color: var(--dc-muted);
+}
+
+.filter-calendar-icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+}
+
+.filter-calendar-icon::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: -2px;
+  right: -2px;
+  border-top: 2px solid currentColor;
+}
+
+.filter-calendar-icon::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 3px;
+  width: 7px;
+  height: 5px;
+  border-left: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+}
+
+.filter-select-icon {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid var(--dc-accent-dark);
+}
+
+.filter-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  display: none;
+  border: 1px solid #cfd8ce;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 16px 34px rgb(13 13 13 / 0.18);
+  color: var(--dc-ink);
+}
+
+.filter-popover--align-right {
+  right: 0;
+  left: auto;
+}
+
+.filter-popover.is-open {
+  display: block;
+}
+
+.filter-date-popover {
+  width: min(300px, calc(100vw - 40px));
+  padding: 14px;
+}
+
+.filter-date-popover-header {
+  display: grid;
+  grid-template-columns: 38px 1fr 38px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.filter-date-popover-header strong {
+  text-align: center;
+}
+
+.filter-popover-icon-button,
+.filter-date-day,
+.filter-date-actions button,
+.filter-select-option {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.filter-popover-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  color: var(--dc-accent-dark);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.filter-popover-icon-button:hover,
+.filter-popover-icon-button:focus,
+.filter-date-day:hover,
+.filter-date-day:focus,
+.filter-date-actions button:hover,
+.filter-date-actions button:focus,
+.filter-select-option:hover,
+.filter-select-option:focus {
+  background: rgb(77 165 83 / 0.12);
+  outline: 0;
+}
+
+.filter-date-weekdays,
+.filter-date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.filter-date-weekdays {
+  margin-bottom: 4px;
+  color: var(--dc-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.filter-date-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  border-radius: 999px;
+  color: var(--dc-ink);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.filter-date-day.is-outside-month {
+  color: #8b9089;
+}
+
+.filter-date-day.is-today {
+  box-shadow: inset 0 0 0 1px var(--dc-django);
+}
+
+.filter-date-day.is-selected {
+  background: var(--dc-accent-dark);
+  color: #fff;
+  font-weight: 700;
+}
+
+.filter-date-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--dc-line);
+}
+
+.filter-date-actions button {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: var(--dc-accent-dark);
+  font-weight: 700;
+}
+
+.filter-select-popover {
+  min-width: 100%;
+  max-width: calc(100vw - 40px);
+  overflow: hidden;
+  padding: 6px;
+}
+
+.filter-select-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 9px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.filter-select-option.is-selected {
+  background: var(--dc-accent-dark);
+  color: #fff;
+  font-weight: 700;
+}
+
 .filter-search {
   position: relative;
   min-width: 0;
@@ -614,7 +870,7 @@ html.is-stacked .show-hero-logo {
   min-width: 0;
 }
 
-.filter-date span {
+.filter-date > span[aria-hidden="true"] {
   color: var(--dc-muted);
   font-weight: 700;
 }
@@ -636,7 +892,7 @@ html.is-stacked .show-hero-logo {
   border: 0;
 }
 
-.filter-form button {
+.filter-form > button[type="submit"] {
   min-height: 44px;
   padding: 0 18px;
   background: var(--dc-accent-dark);
@@ -647,8 +903,8 @@ html.is-stacked .show-hero-logo {
   cursor: pointer;
 }
 
-.filter-form button:hover,
-.filter-form button:focus {
+.filter-form > button[type="submit"]:hover,
+.filter-form > button[type="submit"]:focus {
   background: var(--dc-django);
   border-color: var(--dc-django);
   color: var(--dc-ink);
@@ -680,7 +936,7 @@ html.is-stacked .show-hero-logo {
     grid-template-columns: minmax(260px, 1.4fr) minmax(260px, 1.2fr) minmax(150px, 0.8fr);
   }
 
-  .filter-form button,
+  .filter-form > button[type="submit"],
   .filter-clear-all {
     width: 100%;
   }
@@ -1518,7 +1774,7 @@ html.is-stacked .show-hero-logo {
     grid-template-columns: 1fr;
   }
 
-  .filter-date span {
+  .filter-date > span[aria-hidden="true"] {
     display: none;
   }
 }

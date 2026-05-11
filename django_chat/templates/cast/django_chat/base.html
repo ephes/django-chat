@@ -63,7 +63,7 @@
     </style>
     <script src="{% static 'django_chat/js/view-transitions.js' %}?v=vt-prototype-10"></script>
     <link rel="stylesheet" href="{% static 'cast_bootstrap5/css/bootstrap5/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=vt-prototype-10">
+    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=date-picker-1">
     {% block meta %}
       {% include "./_meta.html" %}
     {% endblock meta %}
@@ -110,6 +110,7 @@
     </footer>
     {% block javascript %}
       <script defer src="{% static 'cast_bootstrap5/js/bootstrap5/bootstrap.bundle.min.js' %}"></script>
+      <script defer src="{% static 'django_chat/js/date-picker.js' %}?v=date-picker-1"></script>
     {% endblock javascript %}
   </body>
 </html>

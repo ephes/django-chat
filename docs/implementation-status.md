@@ -209,7 +209,8 @@ latest-entries feed mitigation and Lighthouse/Web Vitals fixes have been
 deployed, staging catalog measurement confirms both RSS routes still return
 202 items, and the host-review public pages scored 98-100 in final mobile and
 desktop Lighthouse runs. The current cleanup adds production migration notes,
-pagination focus/scroll behavior, episode filter styling, and Wagtail 7.4.
+pagination focus/scroll behavior, episode filter styling including custom
+date/select popovers, and Wagtail 7.4.
 
 Production migration (DNS, feed cutover, real production VPS) is
 explicitly deferred until host review (item 1) has happened and any
