@@ -32,6 +32,7 @@
   --dc-link: #14513a;
   --dc-accent: #2d8260;
   --dc-accent-dark: #14513a;
+  --dc-player-play: #1f6647;
   --dc-django: #4da553;
   --dc-radius: 4px;
   --dc-container: min(1120px, 100% - 32px);
@@ -706,27 +707,25 @@ main {
 }
 
 .audio-panel podlove-player[data-template] .podlove-hover-placeholder {
-  align-items: center;
+  align-items: start;
   background: #fff;
-  border: 1px solid rgb(13 13 13 / 0.1);
-  border-radius: 3px;
-  box-shadow: 0 1px 4px rgb(13 13 13 / 0.05);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   color: var(--dc-ink);
   display: grid;
   gap: 24px;
   grid-template-columns: minmax(0, 1fr) auto;
   min-height: 112px;
-  padding: 24px;
+  padding: 16px;
   text-align: left;
-  transition: border-color 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+  transition: opacity 160ms ease;
   width: 100%;
 }
 
 .audio-panel podlove-player[data-template] .podlove-hover-placeholder:hover,
 .audio-panel podlove-player[data-template] .podlove-hover-placeholder:focus {
   background: #fff;
-  border-color: rgb(101 166 92 / 0.55);
-  box-shadow: 0 2px 12px rgb(20 81 58 / 0.12);
   color: var(--dc-ink);
 }
 
@@ -739,20 +738,21 @@ main {
   align-items: center;
   display: grid;
   gap: 20px;
-  grid-template-columns: 42px auto minmax(76px, 1fr) auto;
+  grid-template-columns: 50px auto minmax(76px, 1fr) auto;
+  height: 56px;
   min-width: 0;
   width: 100%;
 }
 
 .podlove-facade-play {
   align-items: center;
-  background: var(--dc-accent);
+  background: var(--dc-player-play);
   border-radius: 999px;
   display: inline-flex;
-  height: 42px;
+  height: 50px;
   justify-content: center;
   position: relative;
-  width: 42px;
+  width: 50px;
 }
 
 .podlove-facade-play-icon {
@@ -807,6 +807,7 @@ main {
   align-items: center;
   display: flex;
   gap: 13px;
+  height: 56px;
   justify-content: flex-end;
 }
 
@@ -1019,7 +1020,7 @@ main {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
     min-height: 168px;
-    padding: 24px;
+    padding: 16px;
   }
 
   .audio-panel podlove-player[data-template] iframe {
@@ -1035,12 +1036,18 @@ main {
   }
 
   .podlove-facade-controls {
-    gap: 15px;
-    grid-template-columns: 42px minmax(64px, auto) minmax(70px, 1fr) auto;
+    gap: 20px;
+    grid-template-columns: 50px minmax(70px, 1fr) auto;
+    height: 50px;
+  }
+
+  .podlove-facade-time {
+    display: none;
   }
 
   .podlove-facade-tabs {
     border-top: 1px solid var(--dc-line);
+    height: auto;
     justify-content: space-between;
     padding-top: 18px;
   }

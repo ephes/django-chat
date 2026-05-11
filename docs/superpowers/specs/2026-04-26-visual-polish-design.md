@@ -73,6 +73,7 @@ properties.
 --dc-link:   #14513A   /* dark green link accent, matches player chrome */
 --dc-accent: #2D8260   /* mid green for Bootstrap primary overrides */
 --dc-accent-dark: #14513A /* darkest green used for hover emphasis */
+--dc-player-play: #1F6647 /* Podlove play-button green */
 --dc-django: #65A65C   /* image-sampled logo green used for focus, borders, hover fills */
 ```
 
