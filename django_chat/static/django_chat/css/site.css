@@ -1271,6 +1271,15 @@ html.is-stacked .show-hero-logo {
   overflow-wrap: anywhere;
 }
 
+/* Establish a containment context so `.episode-detail` can size itself
+   against its own width via `@container` / `cqi`, instead of guessing
+   the layout from the viewport. The container name lets the mobile
+   stack rule below target this scope precisely. */
+#episode-detail-main {
+  container-type: inline-size;
+  container-name: episode-detail;
+}
+
 .episode-detail {
   --episode-sticky-gap: 32px;
   /* Vertical distance from the menu bar bottom to the sidebar's natural top:
@@ -1284,12 +1293,21 @@ html.is-stacked .show-hero-logo {
      same row-1 height. That keeps the show-notes hairline and the rail
      hairline on the same baseline without needing subgrid (which can't
      coexist with `position: sticky` because subgrid forces the sidebar to
-     be as tall as the body row). */
-  --episode-cover-size: clamp(10rem, 18vw, 13rem);
+     be as tall as the body row). 18 cqi instead of vw so the cover stops
+     growing once the centered main container reaches its 1120 px cap. The
+     lower bound (11.25 rem = 180 px) is tuned so the cover keeps dominating
+     the hero row height all the way down to the mobile-stack threshold
+     — otherwise the content (wrapped title + audio) becomes the taller
+     side and the rail hairline drifts above the show-notes hairline. */
+  --episode-cover-size: clamp(11.25rem, 18cqi, 13rem);
   padding: 36px 0 64px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
-  column-gap: 48px;
+  /* Fluid column-gap and sidebar width so the two-column layout survives
+     down to ~780 cqi before the mobile-stack container query trips. The
+     sidebar min (230 px) is sized so the logo at its lower-bound cover-size
+     (180 × 1.094 ≈ 197 px wide) still fits inside the 32 px padding-left. */
+  grid-template-columns: minmax(0, 1fr) clamp(230px, 24cqi, 280px);
+  column-gap: clamp(24px, 4cqi, 48px);
   align-items: start;
 }
 
@@ -1427,11 +1445,21 @@ html.is-stacked .show-hero-logo {
 
 .episode-hero h1 {
   margin: 0 0 18px;
-  font-size: clamp(1.8rem, 2.5vw + 1rem, 2.4rem);
+  /* Container-driven (cqi) so the title shrinks with `.episode-detail`'s
+     width — keeps the title from wrapping onto a third line and bloating
+     the hero row past the cover height in the narrow 2-column band. */
+  font-size: clamp(1.8rem, 4cqi, 2.4rem);
   letter-spacing: -0.02em;
 }
 
-@media (max-width: 1024px) {
+/* Mobile-stack switch is now tied to the article's own container width
+   instead of the whole viewport. The cutoff is chosen so the title still
+   wraps to two lines max in the hero column at the breakpoint — at
+   narrower container widths the title spills to a third line and pushes
+   the show-notes hairline below the rail hairline. The shrinking title
+   `font-size: clamp(..., 4cqi, ...)` keeps the line count stable across
+   the full 2-column range. */
+@container episode-detail (max-width: 777px) {
   .episode-detail {
     grid-template-columns: 1fr;
     grid-template-rows: none;
