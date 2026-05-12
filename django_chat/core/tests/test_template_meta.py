@@ -246,8 +246,9 @@ def test_podlove_player_config_uses_django_chat_brand_colors(client: Client) -> 
     assert tokens["shadeBase"] == "#5f635d"
     # Contrast pinned to the project ink token.
     assert tokens["contrast"] == "#0d0d0d"
-    # Player surface should blend with the textured page background.
-    assert tokens["alt"] == "transparent"
+    # Podlove uses `alt` for text in expanded panels such as transcripts.
+    # Keep it opaque; the page blend is handled by the local iframe/template CSS.
+    assert tokens["alt"] == "#ffffff"
 
 
 @pytest.mark.django_db
