@@ -19,42 +19,85 @@
     <article class="episode-detail">
       <a class="back-link" href="{% url 'django_chat_episode_index' %}" data-vt-episode-slug="{{ page.slug }}">← Back to Episodes</a>
 
-      <header class="episode-hero">
+      <aside class="episode-sidebar" aria-label="Episode tools">
         <img class="show-artwork show-artwork--default" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="280" height="256" alt="" fetchpriority="high" decoding="async">
-        <div class="episode-hero-content">
-          <div>
-            <p class="eyebrow">
-              <time datetime="{{ page.visible_date|date:'c' }}">{{ page.visible_date|date:'F j, Y' }}</time>
-              {% with episode_number=page.django_chat_source_metadata.episode_number duration=page.django_chat_source_metadata.duration_seconds %}
-                {% if episode_number %} · E{{ episode_number }}{% endif %}
-                {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
-              {% endwith %}
-            </p>
-            {% with episode_number=page.django_chat_source_metadata.episode_number %}
-              {% if episode_number %}
-                <span class="episode-number-badge episode-detail-badge" aria-hidden="true" data-vt-episode-badge>
-                  <svg class="episode-number-hash" viewBox="69 -20 1469 1498" aria-hidden="true" focusable="false">
-                    <g transform="matrix(1 0 0 -1 0 1458)">
-                      <polygon points="678,614 868,614 928,845 738,845"/>
-                      <path d="M170.292556039989 -20 508.7603037580848 -19.464836470782757 918.678445532918 1478.1410460919142H579.973683744669ZM688.6828394904733 -20H1027.2102258354425L1436.533565454185 1478.1410460919142H1098.1254563629627ZM68.6566945835948 322.81718850135803H1474.0595328360796V619.4398350194097H68.6566945835948ZM132.93327566981316 840.1874244064093H1538.1694269105792V1135.2045803368092H132.93327566981316Z"/>
-                    </g>
-                  </svg>
-                  <span>{{ episode_number }}</span>
-                </span>
-              {% endif %}
+
+        <nav class="episode-action-rail" aria-label="Episode actions">
+          <button type="button" class="rail-item" data-action="share" aria-haspopup="dialog">
+            <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 4v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+              <path d="M7 9l5-5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+            </svg>
+            <span>Share</span>
+          </button>
+
+          <button type="button" class="rail-item" data-action="embed" aria-haspopup="dialog">
+            <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 8l-5 4 5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M15 8l5 4-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            <span>Embed</span>
+          </button>
+
+          {% if episode.podcast %}
+            <a class="rail-item" href="{% url 'cast:feed_detail' slug=episode.podcast.slug %}">
+              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M5 4a14 14 0 0 1 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                <path d="M5 10a8 8 0 0 1 8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                <circle cx="6" cy="17" r="1.8" fill="currentColor"/>
+              </svg>
+              <span>Subscribe</span>
+            </a>
+          {% endif %}
+
+          {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+            <a class="rail-item" href="{{ episode.podcast_audio.mp3.url }}" download>
+              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 4v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                <path d="M7 12l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <path d="M5 20h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+              </svg>
+              <span>Download MP3</span>
+            </a>
+          {% endif %}
+
+          {% if episode_transcript_url %}
+            <a class="rail-item" href="{{ episode_transcript_url }}">
+              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 4h9l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+                <path d="M15 4v4h4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+                <path d="M8 13h8M8 16h8M8 19h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+              </svg>
+              <span>Transcript</span>
+            </a>
+          {% endif %}
+        </nav>
+      </aside>
+
+      <div class="episode-main">
+        <header class="episode-hero">
+          <p class="eyebrow">
+            <time datetime="{{ page.visible_date|date:'c' }}">{{ page.visible_date|date:'F j, Y' }}</time>
+            {% with episode_number=page.django_chat_source_metadata.episode_number duration=page.django_chat_source_metadata.duration_seconds %}
+              {% if episode_number %} · E{{ episode_number }}{% endif %}
+              {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
             {% endwith %}
-            <h1 data-vt-episode-title>{{ page.title }}</h1>
-            <div class="episode-actions">
-              {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
-                <a href="{{ episode.podcast_audio.mp3.url }}" download>Download MP3</a>
-              {% endif %}
-              {% if episode_transcript_url %}
-                <a href="{{ episode_transcript_url }}">Transcript</a>
-              {% endif %}
-              <a href="https://twitter.com/intent/tweet?url={{ resolved_canonical_url|urlencode }}&text={{ page.title|urlencode }}" target="_blank" rel="noopener noreferrer">Twitter</a>
-              <a href="https://www.facebook.com/sharer/sharer.php?u={{ resolved_canonical_url|urlencode }}" target="_blank" rel="noopener noreferrer">Facebook</a>
-            </div>
-          </div>
+          </p>
+          {% with episode_number=page.django_chat_source_metadata.episode_number %}
+            {% if episode_number %}
+              <span class="episode-number-badge episode-detail-badge" aria-hidden="true" data-vt-episode-badge>
+                <svg class="episode-number-hash" viewBox="69 -20 1469 1498" aria-hidden="true" focusable="false">
+                  <g transform="matrix(1 0 0 -1 0 1458)">
+                    <polygon points="678,614 868,614 928,845 738,845"/>
+                    <path d="M170.292556039989 -20 508.7603037580848 -19.464836470782757 918.678445532918 1478.1410460919142H579.973683744669ZM688.6828394904733 -20H1027.2102258354425L1436.533565454185 1478.1410460919142H1098.1254563629627ZM68.6566945835948 322.81718850135803H1474.0595328360796V619.4398350194097H68.6566945835948ZM132.93327566981316 840.1874244064093H1538.1694269105792V1135.2045803368092H132.93327566981316Z"/>
+                  </g>
+                </svg>
+                <span>{{ episode_number }}</span>
+              </span>
+            {% endif %}
+          {% endwith %}
+          <h1 data-vt-episode-title>{{ page.title }}</h1>
 
           <section class="audio-panel" aria-label="Episode audio">
             {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
@@ -63,19 +106,106 @@
               <p>Audio copy pending.</p>
             {% endif %}
           </section>
+        </header>
+
+        <h2 class="show-notes-title">Show notes</h2>
+
+        <dialog id="share-dialog" class="share-modal" aria-labelledby="share-dialog-title"
+                data-share-url="{{ resolved_canonical_url }}"
+                data-share-title="{{ page.title }}">
+          <div class="share-modal-inner">
+            <header class="share-modal-header">
+              <h2 id="share-dialog-title">Share this episode</h2>
+              <button type="button" class="share-modal-close" data-share-close aria-label="Close share dialog">
+                <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+                  <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </header>
+
+            <div class="share-pills">
+              <a class="share-pill" data-share-net="twitter" target="_blank" rel="noopener noreferrer">
+                <svg class="share-pill-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M18.244 2H21l-6.52 7.452L22 22h-6.844l-4.62-6.04L4.8 22H2.043l6.97-7.965L2 2h7.018l4.18 5.524L18.244 2zm-2.4 18h1.55L7.27 4H5.61l10.234 16z"/>
+                </svg>
+                <span>Twitter</span>
+              </a>
+              <a class="share-pill" data-share-net="facebook" target="_blank" rel="noopener noreferrer">
+                <svg class="share-pill-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M13.5 22v-8.5h2.95l.55-3.5h-3.5V7.7c0-1.05.35-1.7 1.85-1.7h1.85V2.95C16.6 2.85 15.4 2.7 14 2.7c-2.95 0-4.95 1.85-4.95 5v2.3H6v3.5h3.05V22h4.45z"/>
+                </svg>
+                <span>Facebook</span>
+              </a>
+              <a class="share-pill" data-share-net="linkedin" target="_blank" rel="noopener noreferrer">
+                <svg class="share-pill-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M4.98 3.5c0 1.38-1.12 2.5-2.5 2.5S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.22 8h4.56v14H.22V8zm7.34 0h4.37v1.92h.06c.6-1.1 2.05-2.27 4.22-2.27 4.51 0 5.34 2.97 5.34 6.84V22h-4.55v-6.55c0-1.56-.03-3.57-2.17-3.57-2.17 0-2.5 1.7-2.5 3.46V22H7.56V8z"/>
+                </svg>
+                <span>LinkedIn</span>
+              </a>
+              <button type="button" class="share-pill" data-share-net="mastodon">
+                <svg class="share-pill-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M23.268 5.313c-.35-2.578-2.617-4.61-5.304-5.004C17.51.242 15.792 0 11.813 0h-.03c-3.98 0-4.835.242-5.288.309C3.882.692 1.496 2.518.917 5.127.64 6.412.61 7.837.661 9.143c.074 1.874.088 3.745.26 5.611.118 1.24.325 2.47.62 3.68.55 2.237 2.777 4.098 4.96 4.857 2.336.792 4.849.923 7.256.38.265-.061.527-.132.786-.213.585-.184 1.27-.39 1.774-.753a.057.057 0 0 0 .023-.043v-1.809a.052.052 0 0 0-.02-.041.053.053 0 0 0-.046-.01 20.282 20.282 0 0 1-4.709.545c-2.73 0-3.463-1.284-3.674-1.818a5.593 5.593 0 0 1-.319-1.433.053.053 0 0 1 .066-.054c1.517.363 3.072.546 4.632.546.376 0 .75 0 1.125-.01 1.57-.044 3.224-.124 4.768-.422.038-.008.077-.015.11-.024 2.435-.464 4.753-1.92 4.989-5.604.008-.145.03-1.52.03-1.67.002-.512.167-3.63-.024-5.545zm-3.748 9.195h-2.561V8.29c0-1.309-.55-1.976-1.67-1.976-1.23 0-1.846.79-1.846 2.35v3.403h-2.546V8.663c0-1.56-.617-2.35-1.848-2.35-1.112 0-1.668.668-1.67 1.977v6.218H4.822V8.102c0-1.31.337-2.35 1.011-3.12.696-.77 1.608-1.164 2.74-1.164 1.311 0 2.302.5 2.962 1.498l.638 1.06.638-1.06c.66-.999 1.65-1.498 2.96-1.498 1.13 0 2.043.395 2.74 1.164.675.77 1.012 1.81 1.012 3.12z"/>
+                </svg>
+                <span>Mastodon</span>
+              </button>
+              <a class="share-pill" data-share-net="email">
+                <svg class="share-pill-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M3 5.5h18c.55 0 1 .45 1 1V7l-10 6L2 7v-.5c0-.55.45-1 1-1zm19 4.2v8.3c0 .55-.45 1-1 1H3c-.55 0-1-.45-1-1V9.7l9.45 5.95c.34.22.76.22 1.1 0L22 9.7z"/>
+                </svg>
+                <span>Email</span>
+              </a>
+            </div>
+
+            <p class="share-mastodon-status" hidden data-mastodon-status>
+              <span>Mastodon via <strong data-mastodon-status-host></strong></span>
+              <button type="button" class="share-mastodon-change" data-mastodon-forget>Change instance</button>
+            </p>
+
+            <div class="share-mastodon-prompt" hidden data-mastodon-prompt>
+              <label for="share-mastodon-instance">Your Mastodon instance</label>
+              <div class="share-mastodon-row">
+                <span class="share-mastodon-prefix">https://</span>
+                <input type="text" id="share-mastodon-instance" data-mastodon-instance placeholder="mastodon.social" autocomplete="off" spellcheck="false">
+                <button type="button" data-mastodon-submit>Continue</button>
+              </div>
+              <p class="share-mastodon-hint">We'll remember this for next time.</p>
+            </div>
+
+            <fieldset class="share-startat">
+              <legend>Start at a specific time</legend>
+              <label class="share-startat-toggle">
+                <input type="checkbox" data-startat-toggle>
+                <span>Start at</span>
+              </label>
+              <label class="share-startat-time">
+                <span class="visually-hidden">Time (minutes:seconds)</span>
+                <input type="text" data-startat-time placeholder="MM:SS" pattern="[0-9]{1,3}:[0-5][0-9]" inputmode="numeric" autocomplete="off" disabled>
+              </label>
+            </fieldset>
+
+            <div class="share-copy">
+              <label for="share-url-input" class="visually-hidden">Episode URL</label>
+              <input type="text" id="share-url-input" data-share-url-input readonly>
+              <button type="button" class="button-primary share-copy-button" data-share-copy>
+                <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <rect x="8" y="3" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                  <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M16 17v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"/>
+                </svg>
+                <span data-share-copy-label>Copy</span>
+              </button>
+            </div>
+          </div>
+        </dialog>
+
+        <div class="show-notes">
+          {% for block in page.body %}
+            <section class="block-{{ block.block_type }}">
+              {% for child_block in block.value %}
+                {% include_block child_block %}
+              {% endfor %}
+            </section>
+          {% endfor %}
         </div>
-      </header>
-
-      <h2 class="show-notes-title">Show notes</h2>
-
-      <div class="show-notes">
-        {% for block in page.body %}
-          <section class="block-{{ block.block_type }}">
-            {% for child_block in block.value %}
-              {% include_block child_block %}
-            {% endfor %}
-          </section>
-        {% endfor %}
       </div>
     </article>
   </main>
@@ -83,6 +213,7 @@
 
 {% block javascript %}
   {{ block.super }}
+  <script defer src="{% static 'django_chat/js/share-modal.js' %}?v=share-1"></script>
   {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
     {% vite_asset 'src/audio/podlove-player.ts' app="cast" %}
     <script>
