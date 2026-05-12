@@ -38,7 +38,7 @@
       });
     })();
   </script>
-  <section class="show-hero" style="background-image: url('{% static 'django_chat/img/show-hero-bg.jpg' %}');">
+  <section class="show-hero" aria-labelledby="show-hero-title" style="background-image: url('{% static 'django_chat/img/show-hero-bg.jpg' %}');">
     <svg class="show-hero-shape" aria-hidden="true" focusable="false" width="0" height="0">
       <defs>
         <clipPath id="show-hero-curve-clip" clipPathUnits="objectBoundingBox">
@@ -48,7 +48,7 @@
     </svg>
     <div class="show-hero-inner">
       <div class="show-copy">
-        <h1>{{ page.title }}</h1>
+        <h1 id="show-hero-title">{{ page.title }}</h1>
         <p class="show-tagline">A biweekly podcast on the Django Web Framework<br>by Will Vincent and Carlton Gibson.</p>
         <div class="show-actions">
           <a class="button-primary" href="{% url 'cast:feed_detail' slug=podcast.slug %}">
