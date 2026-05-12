@@ -11,9 +11,22 @@ from cast.apps import CAST_APPS, CAST_MIDDLEWARE
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parents[2]
 APPS_DIR = ROOT_DIR / "django_chat"
+# django-cast ≤ 0.2.55 listed `django_tasks.backends.database` in CAST_APPS;
+# 0.2.56 changed it to plain `django_tasks`. Our TASKS config below routes
+# `cast_transcripts` through `django_tasks_db.DatabaseBackend`, so we must
+# ensure `django_tasks_db` ends up in INSTALLED_APPS regardless of which
+# cast version is installed:
+#   - replace any legacy `django_tasks.backends.database` entry (not
+#     importable) with `django_tasks_db`,
+#   - then append `django_tasks_db` if it isn't there yet,
+#   - de-dupe in case both old and new shapes coexist.
 CAST_APPS_COMPAT = [
     "django_tasks_db" if app == "django_tasks.backends.database" else app for app in CAST_APPS
 ]
+if "django_tasks_db" not in CAST_APPS_COMPAT:
+    CAST_APPS_COMPAT.append("django_tasks_db")
+_seen: set[str] = set()
+CAST_APPS_COMPAT = [app for app in CAST_APPS_COMPAT if not (app in _seen or _seen.add(app))]
 
 env = environ.Env()
 
