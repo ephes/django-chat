@@ -202,7 +202,7 @@ def test_site_css_pins_django_chat_palette() -> None:
 
 
 @pytest.mark.django_db
-def test_episode_detail_uses_optimized_cover_image_rendition(
+def test_episode_detail_uses_svg_logo_when_cover_image_is_imported(
     client: Client,
     tmp_path: Path,
 ) -> None:
@@ -212,11 +212,14 @@ def test_episode_detail_uses_optimized_cover_image_rendition(
         response = client.get(episode_detail_path("django-tasks-jake-howard"))
 
     body = response.content.decode()
-    artwork_html = _html_around(body, 'class="show-artwork"')
-    assert "/media/images/" in artwork_html
-    assert "fill-560x560" in artwork_html
-    assert 'width="560"' in artwork_html
-    assert 'height="560"' in artwork_html
+    assert 'class="show-artwork show-artwork--default"' in body, (
+        "episode detail hero should use the static SVG logo even when cover_image is imported"
+    )
+    artwork_html = _html_around(body, 'class="show-artwork show-artwork--default"')
+    assert "/static/django_chat/img/django-chat-logo.svg" in artwork_html
+    assert "/media/images/" not in artwork_html
+    assert 'width="280"' in artwork_html
+    assert 'height="256"' in artwork_html
 
 
 @pytest.mark.django_db

@@ -32,7 +32,7 @@ to Podlove's dark background. Episodes with converted transcripts expose
 segments through the Podlove API, keep the compact player's transcript tab
 available, and link to the themed transcript route. The compact player
 constrains expanded tab panels so transcript content does not stretch the
-episode hero artwork.
+episode hero logo.
 The heavy embed script (`cast/js/web-player/embed.5.js`, ~138 KB) loads after
 interaction with the player facade, keeping it out of the critical render path.
 Copied MP3 URLs respond with HTTP 200 and `audio/mpeg`. Audio playback is
@@ -118,8 +118,11 @@ Before sending or refreshing the staging URL for hosts, confirm:
 - The show artwork has been attached as the podcast `cover_image` via
   `import_django_chat_sample --copy-cover-image` or
   `import_django_chat_catalog --copy-cover-image` (idempotent). The compact
-  player does not show the old large cover slot, but the imported artwork still
-  feeds page artwork, metadata, and player API image data.
+  player does not show the old large cover slot, and episode detail pages show
+  the static Django Chat SVG logo in the hero. The imported raster artwork
+  still feeds django-cast metadata, feed, and player API image data.
+  Project-level social image tags use `PodcastSourceMetadata.image_url` when
+  available, not this Wagtail `cover_image`.
 - `measure_django_chat_catalog --host=djangochat.staging.django-cast.com` has
   been run after the intended catalog import, and podcast feed, latest-entries
   feed, audio-completeness, and episode-list query/timing results have been

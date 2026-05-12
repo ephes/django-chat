@@ -54,8 +54,11 @@ Sample MP3s are stored in the Django Chat staging bucket and reachable
 through the public media host with HTTP 200 and `Content-Type: audio/mpeg`,
 providing an end-to-end playback proof. The show artwork has been attached
 as the podcast page's `cover_image` (a `wagtail.images.Image`). The compact
-Podlove player no longer displays a large cover slot, but the artwork still
-feeds page artwork, metadata, and player API image data.
+Podlove player no longer displays a large cover slot, and episode detail
+heroes render the static Django Chat SVG logo. The imported raster artwork
+still feeds django-cast metadata, feed, and player API image data.
+Project-level social image tags use `PodcastSourceMetadata.image_url` when
+available, not this Wagtail `cover_image`.
 
 Expected differences from Simplecast:
 

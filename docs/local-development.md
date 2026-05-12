@@ -222,7 +222,9 @@ Then browse:
   imported episode detail page. After running the sample import with
   `--copy-audio`, the page renders the compact Podlove player; metadata-only
   imports show `Audio copy pending.` instead. The player uses the local
-  compact `data-template` endpoint and the Django Chat brand config URL.
+  compact `data-template` endpoint and the Django Chat brand config URL. The
+  visible episode hero artwork is the static Django Chat SVG logo, even when
+  the import has attached the original show artwork to `Podcast.cover_image`.
 
 The sample import intentionally does not download, stream, copy, or attach MP3
 files unless audio copying is requested explicitly. Original RSS and Simplecast
@@ -230,8 +232,8 @@ enclosure/audio URLs are stored in metadata, and Simplecast transcript HTML is
 preserved in metadata only. It is not used for the public transcript UI.
 
 Copy audio for the same eight fixture-backed sample episodes, and download
-the show artwork as the Podcast page's `cover_image` so the Podlove player
-chrome has an episode poster to display:
+the show artwork as the Podcast page's `cover_image` so django-cast metadata,
+feed, and player API paths have a local image:
 
 ```sh
 just manage import_django_chat_sample --copy-audio --copy-cover-image
@@ -246,12 +248,17 @@ storage, creates or updates a `cast.Audio` row, and attaches that row to
 
 `--copy-cover-image` downloads the show artwork URL recorded in
 `PodcastSourceMetadata.image_url`, creates a `wagtail.images.Image`, and
-attaches it to `Podcast.cover_image`. Django Chat's compact Podlove player
-keeps the same django-cast config endpoint and brand tokens, and transcript
-tabs are available when an audio row has an attached django-cast `Transcript`;
-Simplecast does not expose per-episode artwork, so the show artwork remains
-the imported episode image source. The flag is idempotent: subsequent runs do
-nothing when `cover_image` is already set.
+attaches it to `Podcast.cover_image`. That imported raster image remains
+available to django-cast metadata, feed, and player API paths; episode detail
+pages render the static SVG logo directly instead of sending the Wagtail image
+through the rendition pipeline. Django Chat's compact Podlove player keeps the
+same django-cast config endpoint and brand tokens, and transcript tabs are
+available when an audio row has an attached django-cast `Transcript`. The flag
+is idempotent: subsequent runs do nothing when `cover_image` is already set.
+Project-level Open Graph and Twitter image tags use
+`PodcastSourceMetadata.image_url` when available, falling back to the local
+`og-image.png`; that social metadata path is separate from
+`Podcast.cover_image`.
 
 Repeated `--copy-audio` runs are idempotent for the sample: existing audio-copy
 metadata rows are reused, files are not downloaded again when the source URL and

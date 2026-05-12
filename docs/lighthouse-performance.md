@@ -78,6 +78,12 @@ Baseline scores before optimization:
 
 Final scores after optimization and staging deploy:
 
+These 2026-04-29 measurements predate the later episode-detail template change
+that made the hero render the static Django Chat SVG logo even when
+`Podcast.cover_image` is set. Re-run the episode-detail audits after deploying
+that change before treating the episode-detail rows as current performance
+evidence.
+
 | Page | Mode | Performance | Accessibility | Best Practices | SEO | LCP | CLS | TBT |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `/` -> `/episodes/` | desktop | 100 | 100 | 100 | 100 | 0.5 s | 0 | 0 ms |
@@ -94,11 +100,12 @@ Final scores after optimization and staging deploy:
 The baseline was already strong for the subscribe page, but the episode index
 and episode detail page needed small fixes:
 
-- Visible show artwork now uses the copied Wagtail `Podcast.cover_image`
-  renditions (`fill-560x560` for hero artwork, `fill-72x72` for the brand mark)
-  instead of downloading the external Simplecast original. This reduced index
-  payload from about 530 KiB to 190 KiB and improved mobile LCP.
-- Artwork images now include stable `width` and `height`; hero artwork is
+- The episode index visible artwork uses local Django Chat assets instead of
+  downloading the external Simplecast original. This reduced index payload from
+  about 530 KiB to 190 KiB and improved mobile LCP. A later episode-detail
+  template change also renders the static Django Chat SVG logo directly in the
+  hero; that later change is not reflected in the 2026-04-29 table above.
+- Artwork images now include stable `width` and `height`; the hero logo is
   marked `fetchpriority="high"` and `decoding="async"`.
 - The episode filter date inputs now have explicit labels, fixing the
   Lighthouse accessibility failure on `/episodes/`.
