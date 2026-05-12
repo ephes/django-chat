@@ -42,6 +42,11 @@
   --dc-radius: 4px;
   --dc-container: min(1120px, 100% - 32px);
   --dc-h2-size: clamp(1.6rem, 1.6vw + 0.8rem, 2.2rem);
+  /* Approximate height of `.site-header` on desktop. Used by fixed-positioned
+     surfaces (e.g. the episode sidebar) that need to sit below the menu bar
+     at scroll-y = 0. Slightly larger than the measured 69px to absorb minor
+     clamp variance. */
+  --site-header-height: 72px;
 }
 
 *,
@@ -53,6 +58,11 @@
 html {
   -webkit-font-smoothing: antialiased;
   text-size-adjust: 100%;
+  /* Sticky `.site-header` covers the top `--site-header-height` of the
+     viewport. Reserve that space for any element scrolled into view
+     (anchor links, scrollIntoView, focus-driven scrolls) so the target
+     lands below the menu bar, not behind it. */
+  scroll-padding-top: var(--site-header-height);
 }
 
 body {
@@ -154,6 +164,44 @@ h3 {
   border-bottom: 1px solid #000;
   container-type: inline-size;
   container-name: site-header;
+  position: sticky;
+  top: 0;
+  /* Above the sticky episode sidebar, which would otherwise paint on top
+     by virtue of appearing later in the DOM. */
+  z-index: 10;
+}
+
+/* Auto-hide on scroll-down, reveal on scroll-up. A tiny script in
+   `header-autohide.js` toggles `.site-header--hidden` based on scroll
+   direction; the actual slide-and-fade is this CSS transition. When JS
+   is disabled the class is never added, so the header simply stays
+   sticky-visible (progressive enhancement, core functionality intact). */
+.site-header {
+  transition: transform 220ms ease, opacity 220ms ease;
+  will-change: transform;
+}
+
+.site-header--hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  /* Pointer-events: none so the invisible bar above the viewport top
+     does not eat clicks on content right under it. */
+  pointer-events: none;
+}
+
+/* Keyboard users tabbing through the page must never land on an
+   invisible offscreen link. Reveal the header whenever anything inside
+   it has focus, overriding the hidden state. */
+.site-header:focus-within {
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition: none;
+  }
 }
 
 .site-nav,
@@ -1110,7 +1158,7 @@ html.is-stacked .show-hero-logo {
 }
 
 .episode-detail-badge {
-  --episode-badge-size: clamp(10rem, 18vw, 13rem);
+  --episode-badge-size: var(--episode-cover-size);
   display: inline-grid;
   font-size: clamp(4rem, 9vw, 6.5rem);
   line-height: 0.78;
@@ -1224,41 +1272,66 @@ html.is-stacked .show-hero-logo {
 }
 
 .episode-detail {
+  --episode-sticky-gap: 32px;
+  /* Vertical distance from the menu bar bottom to the sidebar's natural top:
+     `.episode-detail` padding-top (36) + back-link line height (~22) +
+     back-link margin-bottom (20). The sidebar's height is sized so the
+     bottom of its border-left divider mirrors this same distance to the
+     viewport bottom at scroll = 0 (symmetric breath above / below). */
+  --episode-natural-top-gap: 78px;
+  /* Shared cover size: both the episode number badge and the sidebar logo
+     cap at this height so the hero column and the sidebar column have the
+     same row-1 height. That keeps the show-notes hairline and the rail
+     hairline on the same baseline without needing subgrid (which can't
+     coexist with `position: sticky` because subgrid forces the sidebar to
+     be as tall as the body row). */
+  --episode-cover-size: clamp(10rem, 18vw, 13rem);
   padding: 36px 0 64px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
-  /* Three rows: back-link, hero/cover, body/rail. Subgrid on the columns inherits these
-     row tracks so the hero+cover share a row and body+rail share the next row, which
-     lets the divider lines under the audio and under the cover sit on the same baseline. */
-  grid-template-rows: auto auto auto;
   column-gap: 48px;
-  row-gap: 0;
-  align-items: stretch;
+  align-items: start;
 }
 
 .episode-main {
   grid-column: 1;
-  grid-row: 2 / 4;
-  display: grid;
-  grid-template-rows: subgrid;
   min-width: 0;
 }
 
 .episode-sidebar {
   grid-column: 2;
-  grid-row: 2 / 4;
-  display: grid;
-  grid-template-rows: subgrid;
+  position: sticky;
+  top: calc(var(--site-header-height) + var(--episode-sticky-gap));
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  /* Match the .episode-hero { margin-bottom: 28px } — combined with the
+     logo's `max-height: var(--episode-cover-size)` below, this lands the
+     rail's top hairline on the same baseline as the show-notes hairline
+     at any desktop viewport width. */
+  gap: 28px;
+  /* Stretch the column (and its border-left divider) so the bottom of the
+     line mirrors the natural top gap to the menu — symmetric breath at
+     scroll=0. The user accepted the small "anschmiegen" slide as the page
+     starts to scroll, so we don't try to match the sticky-pinned position
+     for symmetry here. */
+  height: calc(100dvh - var(--site-header-height) - 2 * var(--episode-natural-top-gap));
+  /* Floor at the rail's intrinsic content height: if the viewport is too
+     short to fit everything with both gaps, keep the rail full-size and
+     let the page scroll (the sidebar then exceeds the viewport bottom,
+     but no item gets squashed). */
+  min-height: max-content;
 }
 
-.episode-hero,
+.episode-sidebar > .show-artwork.show-artwork--default {
+  /* Cap at cover height so the logo column matches the hero row height. */
+  max-height: var(--episode-cover-size);
+  width: auto;
+}
+
 .episode-sidebar > .show-artwork {
-  grid-row: 1;
-}
-
-.episode-body,
-.episode-sidebar > .episode-action-rail {
-  grid-row: 2;
+  /* Logo first visually; rail stays first in DOM order for a11y. */
+  order: -1;
 }
 
 .back-link {
@@ -1380,6 +1453,11 @@ html.is-stacked .show-hero-logo {
   .episode-sidebar {
     border-left: none;
     padding-left: 0;
+    position: static;
+    /* Reset both height anchors set on desktop — otherwise the explicit
+       `height: calc(...)` clips the stacked rail + logo on mobile. */
+    height: auto;
+    min-height: 0;
   }
 
   .episode-sidebar .show-artwork {
