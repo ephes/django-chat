@@ -1110,11 +1110,11 @@ html.is-stacked .show-hero-logo {
 }
 
 .episode-detail-badge {
-  --episode-badge-size: clamp(5rem, 7vw, 6.5rem);
+  --episode-badge-size: clamp(10rem, 18vw, 13rem);
   display: inline-grid;
-  font-size: clamp(2.35rem, 3.5vw, 3.35rem);
+  font-size: clamp(4rem, 9vw, 6.5rem);
   line-height: 0.78;
-  margin: 0 0 12px;
+  margin: 0;
 }
 
 .episode-row h2 {
@@ -1226,10 +1226,39 @@ html.is-stacked .show-hero-logo {
 .episode-detail {
   padding: 36px 0 64px;
   display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  /* Three rows: back-link, hero/cover, body/rail. Subgrid on the columns inherits these
+     row tracks so the hero+cover share a row and body+rail share the next row, which
+     lets the divider lines under the audio and under the cover sit on the same baseline. */
+  grid-template-rows: auto auto auto;
   column-gap: 48px;
   row-gap: 0;
-  align-items: start;
+  align-items: stretch;
+}
+
+.episode-main {
+  grid-column: 1;
+  grid-row: 2 / 4;
+  display: grid;
+  grid-template-rows: subgrid;
+  min-width: 0;
+}
+
+.episode-sidebar {
+  grid-column: 2;
+  grid-row: 2 / 4;
+  display: grid;
+  grid-template-rows: subgrid;
+}
+
+.episode-hero,
+.episode-sidebar > .show-artwork {
+  grid-row: 1;
+}
+
+.episode-body,
+.episode-sidebar > .episode-action-rail {
+  grid-row: 2;
 }
 
 .back-link {
@@ -1246,11 +1275,8 @@ html.is-stacked .show-hero-logo {
 }
 
 .episode-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding-right: 32px;
-  border-right: 1px solid var(--dc-line);
+  padding-left: 32px;
+  border-left: 1px solid var(--dc-line);
 }
 
 .episode-sidebar .show-artwork {
@@ -1266,6 +1292,8 @@ html.is-stacked .show-hero-logo {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--dc-muted);
+  padding-top: 36px;
+  border-top: 1px solid var(--dc-line);
 }
 
 .rail-item {
@@ -1287,9 +1315,6 @@ html.is-stacked .show-hero-logo {
   width: 100%;
 }
 
-.rail-item:first-child {
-  border-top: 1px solid var(--dc-line);
-}
 
 .rail-item:hover,
 .rail-item:focus-visible {
@@ -1309,16 +1334,26 @@ html.is-stacked .show-hero-logo {
   flex-shrink: 0;
 }
 
-.episode-main {
+.episode-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 28px;
+  align-items: start;
+  margin-bottom: 28px;
+}
+
+.episode-hero .visually-hidden {
+  grid-column: 1;
+}
+
+.episode-hero-content {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
-.episode-hero {
-  margin-bottom: 8px;
-}
-
 .episode-hero h1 {
-  margin: 4px 0 14px;
+  margin: 0 0 18px;
   font-size: clamp(1.8rem, 2.5vw + 1rem, 2.4rem);
   letter-spacing: -0.02em;
 }
@@ -1326,28 +1361,40 @@ html.is-stacked .show-hero-logo {
 @media (max-width: 1024px) {
   .episode-detail {
     grid-template-columns: 1fr;
-    row-gap: 24px;
+    grid-template-rows: none;
+    row-gap: 32px;
+  }
+
+  .episode-main,
+  .episode-sidebar {
+    grid-column: 1;
+    grid-row: auto;
+    display: block;
+  }
+
+  .episode-hero {
+    grid-template-columns: 1fr;
+    row-gap: 20px;
   }
 
   .episode-sidebar {
-    border-right: none;
-    padding-right: 0;
-    border-bottom: 1px solid var(--dc-line);
-    padding-bottom: 24px;
+    border-left: none;
+    padding-left: 0;
+  }
+
+  .episode-sidebar .show-artwork {
+    max-width: 200px;
+    margin: 28px auto 0;
+  }
+
+  .episode-body {
+    /* On mobile the rail provides the divider underneath the body; suppress the inline one. */
+    border-top: none;
+    padding-top: 0;
   }
 
   .episode-action-rail {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0 28px;
-  }
-
-  .rail-item {
-    border-top: none !important;
-    border-bottom: none;
-    grid-template-columns: 22px auto;
-    padding: 4px 0;
-    width: auto;
+    padding-top: 28px;
   }
 }
 
@@ -1570,12 +1617,17 @@ html.is-stacked .show-hero-logo {
   font-weight: 600;
 }
 
+.episode-body {
+  padding-top: 36px;
+  border-top: 1px solid var(--dc-line);
+}
+
 .show-notes-title {
   font-family: "Roboto", system-ui, sans-serif;
-  font-size: 1.55rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
-  margin: 36px 0 18px;
+  letter-spacing: -0.015em;
+  margin: 0 0 20px;
 }
 
 .show-notes {
@@ -1587,20 +1639,59 @@ html.is-stacked .show-hero-logo {
 .show-notes h3 {
   font-family: "Roboto", system-ui, sans-serif;
   font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
 }
 
 .show-notes h2 {
-  font-size: 1.25rem;
-  margin: 30px 0 10px;
+  font-size: 1.3rem;
+  margin: 40px 0 10px;
 }
 
-.show-notes h3 {
-  font-size: 1.35rem;
-  margin: 36px 0 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--dc-line);
+/*
+ * Section-marker styling. Imported show-notes use both real <h3> ("Sponsor") and
+ * paragraph-as-heading patterns like `<p>🔗 Links</p><ul>...</ul>`. Until the import
+ * layer normalises those into structured blocks (see backlog), this CSS-only rule
+ * lifts both shapes to a heading appearance. `:has(+ ul/ol)` targets only paragraphs
+ * that introduce a list directly, which matches the actual content shape; ordinary
+ * body paragraphs are followed by other paragraphs and stay regular.
+ */
+.show-notes h3,
+.show-notes p:has(+ ul),
+.show-notes p:has(+ ol) {
+  font-family: "Roboto", system-ui, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--dc-ink);
   letter-spacing: -0.005em;
+  margin: 32px 0 10px;
+}
+
+.show-notes p {
+  margin: 0 0 14px;
+}
+
+.show-notes p:last-child {
+  margin-bottom: 0;
+}
+
+.show-notes ul,
+.show-notes ol {
+  margin: 4px 0 16px;
+  padding-left: 22px;
+}
+
+.show-notes li {
+  margin-bottom: 4px;
+}
+
+.show-notes li:last-child {
+  margin-bottom: 0;
+}
+
+.show-notes ul + h3,
+.show-notes ol + h3,
+.show-notes p + h3 {
+  margin-top: 44px;
 }
 
 .show-notes a {
@@ -1705,8 +1796,9 @@ html.is-stacked .show-hero-logo {
   }
 
   ::view-transition-group(dc-episode-badge),
-  ::view-transition-group(dc-episode-title) {
-    animation-duration: 680ms;
+  ::view-transition-group(dc-episode-title),
+  ::view-transition-group(dc-episode-eyebrow) {
+    animation-duration: 820ms;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 

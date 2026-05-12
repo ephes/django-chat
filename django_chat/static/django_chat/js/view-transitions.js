@@ -28,6 +28,7 @@
   const transitionNames = {
     episodeBadge: "dc-episode-badge",
     episodeTitle: "dc-episode-title",
+    episodeEyebrow: "dc-episode-eyebrow",
     results: "dc-episode-results",
   };
 
@@ -220,6 +221,20 @@
     const escapedSlug = window.CSS && window.CSS.escape ? window.CSS.escape(slug) : slug;
     return document.querySelector(`[data-vt-episode-slug="${escapedSlug}"] [data-vt-episode-badge]`);
   };
+
+  const findEpisodeEyebrow = (slug) => {
+    if (activePage() === "episode-detail") {
+      return document.querySelector("[data-vt-page='episode-detail'] [data-vt-episode-eyebrow]");
+    }
+
+    if (!slug) {
+      return null;
+    }
+
+    const escapedSlug = window.CSS && window.CSS.escape ? window.CSS.escape(slug) : slug;
+    return document.querySelector(`[data-vt-episode-slug="${escapedSlug}"] [data-vt-episode-eyebrow]`);
+  };
+
 
   const classifyIndexNavigation = (fromUrl, toUrl) => {
     if (fromUrl.pathname !== toUrl.pathname) {
@@ -505,6 +520,7 @@
       namedElements = namedElements.concat(
         nameElement(findEpisodeBadge(transition.episodeSlug), transitionNames.episodeBadge),
         nameElement(findEpisodeTitle(transition.episodeSlug), transitionNames.episodeTitle),
+        nameElement(findEpisodeEyebrow(transition.episodeSlug), transitionNames.episodeEyebrow),
       );
     }
 

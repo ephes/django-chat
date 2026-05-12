@@ -19,72 +19,9 @@
     <article class="episode-detail">
       <a class="back-link" href="{% url 'django_chat_episode_index' %}" data-vt-episode-slug="{{ page.slug }}">← Back to Episodes</a>
 
-      <aside class="episode-sidebar" aria-label="Episode tools">
-        <img class="show-artwork show-artwork--default" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="280" height="256" alt="" fetchpriority="high" decoding="async">
-
-        <nav class="episode-action-rail" aria-label="Episode actions">
-          <button type="button" class="rail-item" data-action="share" aria-haspopup="dialog">
-            <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M12 4v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-              <path d="M7 9l5-5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-              <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-            </svg>
-            <span>Share</span>
-          </button>
-
-          <button type="button" class="rail-item" data-action="embed" aria-haspopup="dialog">
-            <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M9 8l-5 4 5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-              <path d="M15 8l5 4-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            </svg>
-            <span>Embed</span>
-          </button>
-
-          {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
-            <a class="rail-item" href="{{ episode.podcast_audio.mp3.url }}" download>
-              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M12 4v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-                <path d="M7 12l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                <path d="M5 20h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-              </svg>
-              <span>Download MP3</span>
-            </a>
-          {% endif %}
-
-          {% if episode.podcast %}
-            <a class="rail-item" href="{% url 'cast:feed_detail' slug=episode.podcast.slug %}">
-              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M5 4a14 14 0 0 1 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-                <path d="M5 10a8 8 0 0 1 8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-                <circle cx="6" cy="17" r="1.8" fill="currentColor"/>
-              </svg>
-              <span>Subscribe</span>
-            </a>
-          {% endif %}
-
-          {% if episode_transcript_url %}
-            <a class="rail-item" href="{{ episode_transcript_url }}">
-              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M6 4h9l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
-                <path d="M15 4v4h4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
-                <path d="M8 13h8M8 16h8M8 19h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
-              </svg>
-              <span>Transcript</span>
-            </a>
-          {% endif %}
-        </nav>
-      </aside>
-
       <div class="episode-main">
         <header class="episode-hero">
-          <p class="eyebrow">
-            <time datetime="{{ page.visible_date|date:'c' }}">{{ page.visible_date|date:'F j, Y' }}</time>
-            {% with episode_number=page.django_chat_source_metadata.episode_number duration=page.django_chat_source_metadata.duration_seconds %}
-              {% if episode_number %} · E{{ episode_number }}{% endif %}
-              {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
-            {% endwith %}
-          </p>
-          {% with episode_number=page.django_chat_source_metadata.episode_number %}
+          {% with episode_number=page.django_chat_source_metadata.episode_number duration=page.django_chat_source_metadata.duration_seconds %}
             {% if episode_number %}
               <span class="episode-number-badge episode-detail-badge" aria-hidden="true" data-vt-episode-badge>
                 <svg class="episode-number-hash" viewBox="69 -20 1469 1498" aria-hidden="true" focusable="false">
@@ -95,20 +32,28 @@
                 </svg>
                 <span>{{ episode_number }}</span>
               </span>
+              <span class="visually-hidden">Episode {{ episode_number }}</span>
             {% endif %}
-          {% endwith %}
-          <h1 data-vt-episode-title>{{ page.title }}</h1>
+            <div class="episode-hero-content">
+              <p class="eyebrow" data-vt-episode-eyebrow>
+                <time datetime="{{ page.visible_date|date:'c' }}">{{ page.visible_date|date:'M j, Y' }}</time>
+                {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
+              </p>
+              <h1 data-vt-episode-title>{{ page.title }}</h1>
 
-          <section class="audio-panel" aria-label="Episode audio">
-            {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
-              {% include "cast/django_chat/audio.html" with value=episode.podcast_audio page=episode %}
-            {% else %}
-              <p>Audio copy pending.</p>
-            {% endif %}
-          </section>
+              <section class="audio-panel" aria-label="Episode audio">
+                {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+                  {% include "cast/django_chat/audio.html" with value=episode.podcast_audio page=episode %}
+                {% else %}
+                  <p>Audio copy pending.</p>
+                {% endif %}
+              </section>
+            </div>
+          {% endwith %}
         </header>
 
-        <h2 class="show-notes-title">Show notes</h2>
+        <div class="episode-body">
+          <h2 class="show-notes-title">Show notes</h2>
 
         <dialog id="share-dialog" class="share-modal" aria-labelledby="share-dialog-title"
                 data-share-url="{{ resolved_canonical_url }}"
@@ -245,16 +190,73 @@
           </div>
         </dialog>
 
-        <div class="show-notes">
-          {% for block in page.body %}
-            <section class="block-{{ block.block_type }}">
-              {% for child_block in block.value %}
-                {% include_block child_block %}
-              {% endfor %}
-            </section>
-          {% endfor %}
+          <div class="show-notes">
+            {% for block in page.body %}
+              <section class="block-{{ block.block_type }}">
+                {% for child_block in block.value %}
+                  {% include_block child_block %}
+                {% endfor %}
+              </section>
+            {% endfor %}
+          </div>
         </div>
       </div>
+
+      <aside class="episode-sidebar" aria-label="Episode tools">
+        <nav class="episode-action-rail" aria-label="Episode actions">
+          <button type="button" class="rail-item" data-action="share" aria-haspopup="dialog">
+            <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 4v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+              <path d="M7 9l5-5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+            </svg>
+            <span>Share</span>
+          </button>
+
+          <button type="button" class="rail-item" data-action="embed" aria-haspopup="dialog">
+            <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 8l-5 4 5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M15 8l5 4-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            <span>Embed</span>
+          </button>
+
+          {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+            <a class="rail-item" href="{{ episode.podcast_audio.mp3.url }}" download>
+              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 4v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                <path d="M7 12l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <path d="M5 20h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+              </svg>
+              <span>Download MP3</span>
+            </a>
+          {% endif %}
+
+          {% if episode.podcast %}
+            <a class="rail-item" href="{% url 'cast:feed_detail' slug=episode.podcast.slug %}">
+              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M5 4a14 14 0 0 1 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                <path d="M5 10a8 8 0 0 1 8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                <circle cx="6" cy="17" r="1.8" fill="currentColor"/>
+              </svg>
+              <span>Subscribe</span>
+            </a>
+          {% endif %}
+
+          {% if episode_transcript_url %}
+            <a class="rail-item" href="{{ episode_transcript_url }}">
+              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 4h9l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+                <path d="M15 4v4h4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+                <path d="M8 13h8M8 16h8M8 19h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+              </svg>
+              <span>Transcript</span>
+            </a>
+          {% endif %}
+        </nav>
+
+        <img class="show-artwork show-artwork--default" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="280" height="256" alt="" fetchpriority="high" decoding="async">
+      </aside>
     </article>
   </main>
 {% endblock content %}

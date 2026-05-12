@@ -125,7 +125,7 @@
                 {% endif %}
               {% endwith %}
               <div>
-                <p class="eyebrow">
+                <p class="eyebrow" data-vt-episode-eyebrow>
                   <time datetime="{{ post.visible_date|date:'c' }}">{{ post.visible_date|date:'M j, Y' }}</time>
                   {% with duration=post.django_chat_source_metadata.duration_seconds %}
                     {% with duration_label=duration|duration_minutes %}{% if duration_label %} · {{ duration_label }}{% endif %}{% endwith %}
