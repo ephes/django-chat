@@ -40,17 +40,6 @@
             <span>Embed</span>
           </button>
 
-          {% if episode.podcast %}
-            <a class="rail-item" href="{% url 'cast:feed_detail' slug=episode.podcast.slug %}">
-              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M5 4a14 14 0 0 1 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-                <path d="M5 10a8 8 0 0 1 8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-                <circle cx="6" cy="17" r="1.8" fill="currentColor"/>
-              </svg>
-              <span>Subscribe</span>
-            </a>
-          {% endif %}
-
           {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
             <a class="rail-item" href="{{ episode.podcast_audio.mp3.url }}" download>
               <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -59,6 +48,17 @@
                 <path d="M5 20h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
               </svg>
               <span>Download MP3</span>
+            </a>
+          {% endif %}
+
+          {% if episode.podcast %}
+            <a class="rail-item" href="{% url 'cast:feed_detail' slug=episode.podcast.slug %}">
+              <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M5 4a14 14 0 0 1 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                <path d="M5 10a8 8 0 0 1 8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                <circle cx="6" cy="17" r="1.8" fill="currentColor"/>
+              </svg>
+              <span>Subscribe</span>
             </a>
           {% endif %}
 
@@ -265,6 +265,6 @@
   <script defer src="{% static 'django_chat/js/embed-modal.js' %}?v=embed-1"></script>
   {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
     {% vite_asset 'src/audio/podlove-player.ts' app="cast" %}
-    <script defer src="{% static 'django_chat/js/podlove-loader.js' %}?v=podlove-1"></script>
+    <script defer src="{% static 'django_chat/js/podlove-loader.js' %}?v=podlove-3"></script>
   {% endif %}
 {% endblock javascript %}

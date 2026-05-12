@@ -5,6 +5,28 @@
   const hoverLoadAttribute = "data-django-chat-load-on-hover";
   const hoverLoadArmedAttribute = "data-django-chat-hover-load-armed";
 
+  // Parse ?t=<seconds | MM:SS | HH:MM:SS> from the page URL. Returns whole seconds or null.
+  // Each segment must be digits only; minutes and seconds are clamped to 0..59 in colon forms.
+  const parseStartAt = (search) => {
+    const raw = new URLSearchParams(search).get("t");
+    if (!raw) return null;
+    if (/^\d+$/.test(raw)) {
+      const n = Number(raw);
+      return Number.isFinite(n) && n >= 0 ? Math.floor(n) : null;
+    }
+    if (!/^\d+:\d+(?::\d+)?$/.test(raw)) return null;
+    const parts = raw.split(":").map((p) => Number(p));
+    if (parts.length === 2) {
+      const [m, s] = parts;
+      if (s > 59) return null;
+      return m * 60 + s;
+    }
+    const [h, m, s] = parts;
+    if (m > 59 || s > 59) return null;
+    return h * 3600 + m * 60 + s;
+  };
+  const startAtSeconds = parseStartAt(window.location.search);
+
   const markReady = (player) => {
     player.removeAttribute(loadingAttribute);
     player.setAttribute(readyAttribute, "true");
@@ -175,10 +197,33 @@
     }
   };
 
+  // NOTE: Receiver-side auto-seek is intentionally not implemented yet.
+  //
+  // Two earlier attempts were tried and both proved unreliable:
+  //   1. `iframe.contentWindow.postMessage({ type: "REQUEST_PLAYTIME", payload })` — that
+  //      shape is Podlove's internal Redux action and is not exposed to external messages
+  //      through the iframe-resizer plumbing.
+  //   2. Setting the parent's `window.location.hash` to `#t=HH:MM:SS` — Podlove's iframe
+  //      is initialized without iframe-resizer's `inPageLinks` option, so parent hash
+  //      changes do not propagate, and the player's own `?t=` share parser reads the
+  //      iframe's own `window.location.search`, not the parent's.
+  //
+  // The URL convention is already shipped on the producer side via the Share modal. When
+  // staging gains a real audio episode we can verify which integration path Podlove
+  // actually supports (iframe-src injection, config-prefetch with `playtime`, custom
+  // events) and wire it here. Until then `parseStartAt` is exposed so the auto-load gate
+  // below stays meaningful.
+
   const init = () => {
     document.querySelectorAll("podlove-player").forEach((player) => {
       armHoverLoad(player);
       watchPlayer(player);
+      if (startAtSeconds != null) {
+        // A shared URL with ?t= signals intent to play from that point. Bypass the click-
+        // to-load gate so the player is ready immediately; receiver-side seek wiring is
+        // tracked in the file comment above.
+        loadPlayer(player);
+      }
     });
   };
 
