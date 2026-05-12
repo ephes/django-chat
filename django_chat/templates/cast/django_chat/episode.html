@@ -123,7 +123,8 @@
               </button>
             </header>
 
-            <div class="share-pills">
+            <section class="share-channels" aria-label="Share channels">
+              <div class="share-pills">
               <a class="share-pill" data-share-net="twitter" target="_blank" rel="noopener noreferrer">
                 <svg class="share-pill-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                   <path fill="currentColor" d="M18.244 2H21l-6.52 7.452L22 22h-6.844l-4.62-6.04L4.8 22H2.043l6.97-7.965L2 2h7.018l4.18 5.524L18.244 2zm-2.4 18h1.55L7.27 4H5.61l10.234 16z"/>
@@ -154,46 +155,93 @@
                 </svg>
                 <span>Email</span>
               </a>
-            </div>
-
-            <p class="share-mastodon-status" hidden data-mastodon-status>
-              <span>Mastodon via <strong data-mastodon-status-host></strong></span>
-              <button type="button" class="share-mastodon-change" data-mastodon-forget>Change instance</button>
-            </p>
-
-            <div class="share-mastodon-prompt" hidden data-mastodon-prompt>
-              <label for="share-mastodon-instance">Your Mastodon instance</label>
-              <div class="share-mastodon-row">
-                <span class="share-mastodon-prefix">https://</span>
-                <input type="text" id="share-mastodon-instance" data-mastodon-instance placeholder="mastodon.social" autocomplete="off" spellcheck="false">
-                <button type="button" data-mastodon-submit>Continue</button>
               </div>
-              <p class="share-mastodon-hint">We'll remember this for next time.</p>
-            </div>
 
-            <fieldset class="share-startat">
-              <legend>Start at a specific time</legend>
-              <label class="share-startat-toggle">
-                <input type="checkbox" data-startat-toggle>
-                <span>Start at</span>
-              </label>
-              <label class="share-startat-time">
-                <span class="visually-hidden">Time (minutes:seconds)</span>
-                <input type="text" data-startat-time placeholder="MM:SS" pattern="[0-9]{1,3}:[0-5][0-9]" inputmode="numeric" autocomplete="off" disabled>
-              </label>
-            </fieldset>
+              <p class="share-mastodon-status" hidden data-mastodon-status>
+                <span>Mastodon via <strong data-mastodon-status-host></strong></span>
+                <button type="button" class="share-mastodon-change" data-mastodon-forget>Change instance</button>
+              </p>
 
-            <div class="share-copy">
-              <label for="share-url-input" class="visually-hidden">Episode URL</label>
-              <input type="text" id="share-url-input" data-share-url-input readonly>
-              <button type="button" class="button-primary share-copy-button" data-share-copy>
-                <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <rect x="8" y="3" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
-                  <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M16 17v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"/>
+              <div class="share-mastodon-prompt" hidden data-mastodon-prompt>
+                <label for="share-mastodon-instance">Your Mastodon instance</label>
+                <div class="share-mastodon-row">
+                  <span class="share-mastodon-prefix">https://</span>
+                  <input type="text" id="share-mastodon-instance" data-mastodon-instance placeholder="mastodon.social" autocomplete="off" spellcheck="false">
+                  <button type="button" data-mastodon-submit>Continue</button>
+                </div>
+                <p class="share-mastodon-hint">We'll remember this for next time.</p>
+              </div>
+            </section>
+
+            <section class="share-controls">
+              <fieldset class="share-startat">
+                <legend>Start at a specific time</legend>
+                <label class="share-startat-toggle">
+                  <input type="checkbox" data-startat-toggle>
+                  <span>Start at</span>
+                </label>
+                <label class="share-startat-time">
+                  <span class="visually-hidden">Time (minutes:seconds)</span>
+                  <input type="text" data-startat-time placeholder="MM:SS" pattern="[0-9]{1,3}:[0-5][0-9]" inputmode="numeric" autocomplete="off" disabled>
+                </label>
+              </fieldset>
+
+              <div class="share-copy">
+                <label for="share-url-input" class="visually-hidden">Episode URL</label>
+                <input type="text" id="share-url-input" data-share-url-input readonly>
+                <button type="button" class="button-primary share-copy-button" data-share-copy>
+                  <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <rect x="8" y="3" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                    <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M16 17v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"/>
+                  </svg>
+                  <span data-share-copy-label>Copy</span>
+                </button>
+              </div>
+            </section>
+          </div>
+        </dialog>
+
+        <dialog id="embed-dialog" class="share-modal embed-modal" aria-labelledby="embed-dialog-title"
+                data-embed-url="{{ request.scheme }}://{{ request.get_host }}{% url 'django_chat_episode_embed' episode_slug=page.slug %}"
+                data-embed-title="{{ page.title }}"
+                data-has-audio="{% if episode.podcast_audio and episode.podcast_audio.mp3 %}1{% else %}0{% endif %}">
+          <div class="share-modal-inner">
+            <header class="share-modal-header">
+              <h2 id="embed-dialog-title">Embed this episode</h2>
+              <button type="button" class="share-modal-close" data-embed-close aria-label="Close embed dialog">
+                <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+                  <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
                 </svg>
-                <span data-share-copy-label>Copy</span>
               </button>
-            </div>
+            </header>
+
+            <section class="embed-info" aria-label="Embed preview">
+              <div class="embed-info-body">
+                <img class="embed-info-logo" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="64" height="59" alt="">
+                <div class="embed-info-text">
+                  <a class="embed-info-title" href="{{ page.get_url }}" target="_blank" rel="noopener">{{ page.title }}</a>
+                  {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+                    <p class="embed-info-hint">Listeners can play this episode without leaving your site.</p>
+                  {% else %}
+                    <p class="embed-info-hint"><strong>Audio coming soon.</strong> This episode is still in the works — tap the title to open the show notes.</p>
+                  {% endif %}
+                </div>
+              </div>
+            </section>
+
+            <section class="share-controls">
+              <label class="embed-snippet-label" for="embed-snippet-input">Embed code</label>
+              <div class="share-copy embed-snippet">
+                <textarea id="embed-snippet-input" data-embed-snippet readonly rows="3"></textarea>
+                <button type="button" class="button-primary share-copy-button" data-embed-copy>
+                  <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <rect x="8" y="3" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                    <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M16 17v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"/>
+                  </svg>
+                  <span data-embed-copy-label>Copy</span>
+                </button>
+              </div>
+            </section>
           </div>
         </dialog>
 
@@ -214,199 +262,9 @@
 {% block javascript %}
   {{ block.super }}
   <script defer src="{% static 'django_chat/js/share-modal.js' %}?v=share-1"></script>
+  <script defer src="{% static 'django_chat/js/embed-modal.js' %}?v=embed-1"></script>
   {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
     {% vite_asset 'src/audio/podlove-player.ts' app="cast" %}
-    <script>
-      (() => {
-        const readyAttribute = "data-django-chat-player-ready";
-        const loadingAttribute = "data-django-chat-player-loading";
-        const loadStartedAttribute = "data-django-chat-player-load-started";
-        const hoverLoadAttribute = "data-django-chat-load-on-hover";
-        const hoverLoadArmedAttribute = "data-django-chat-hover-load-armed";
-
-        const markReady = (player) => {
-          player.removeAttribute(loadingAttribute);
-          player.setAttribute(readyAttribute, "true");
-          player
-            .querySelectorAll("[data-django-chat-player-placeholder]")
-            .forEach((placeholder) => {
-              placeholder.removeAttribute("aria-busy");
-              placeholder.setAttribute("aria-hidden", "true");
-              placeholder.setAttribute("tabindex", "-1");
-              if (placeholder === document.activeElement) {
-                placeholder.blur();
-              }
-            });
-        };
-
-        const markLoading = (player) => {
-          player.removeAttribute(readyAttribute);
-          player.setAttribute(loadingAttribute, "true");
-          player
-            .querySelectorAll("[data-django-chat-player-placeholder]")
-            .forEach((placeholder) => {
-              placeholder.setAttribute("aria-busy", "true");
-              placeholder.setAttribute("aria-label", "Loading audio player");
-            });
-        };
-
-        const loadPlayer = (player) => {
-          if (player.hasAttribute(loadStartedAttribute) || player.querySelector("iframe")) {
-            return;
-          }
-
-          player.setAttribute(loadStartedAttribute, "true");
-          markLoading(player);
-
-          const schedule = () => {
-            if (typeof player.scheduleInitialize === "function") {
-              player.scheduleInitialize();
-              return;
-            }
-
-            const fallbackButton = player.querySelector(".podlove-player-button");
-            if (fallbackButton instanceof HTMLButtonElement) {
-              // Fallback: trigger Podlove's native click-to-load handler on the facade button.
-              fallbackButton.click();
-            }
-          };
-
-          if (window.customElements?.whenDefined) {
-            window.customElements.whenDefined("podlove-player").then(schedule).catch(schedule);
-          } else {
-            schedule();
-          }
-        };
-
-        const armHoverLoad = (player) => {
-          if (
-            player.getAttribute(hoverLoadAttribute) !== "true" ||
-            player.hasAttribute(hoverLoadArmedAttribute)
-          ) {
-            return;
-          }
-
-          player.setAttribute(hoverLoadArmedAttribute, "true");
-          const trigger = () => loadPlayer(player);
-          const triggerMouseHover = (event) => {
-            if (event.pointerType && event.pointerType !== "mouse") {
-              return;
-            }
-            trigger();
-          };
-          player.addEventListener("pointerenter", triggerMouseHover, { passive: true });
-          player.addEventListener("focusin", trigger);
-          player
-            .querySelectorAll("[data-django-chat-player-placeholder]")
-            .forEach((placeholder) => placeholder.addEventListener("click", trigger, { once: true }));
-        };
-
-        const watchIframe = (player, iframe) => {
-          let appObserver = null;
-          let appLookupObserver = null;
-          let isReady = false;
-          let revealFallback = null;
-          let revealWhenLoaded = null;
-
-          const cleanup = () => {
-            iframe.removeEventListener("load", revealWhenLoaded);
-            appObserver?.disconnect();
-            appLookupObserver?.disconnect();
-            window.clearTimeout(revealFallback);
-          };
-
-          const reveal = () => {
-            if (isReady) {
-              return;
-            }
-            isReady = true;
-            cleanup();
-            markReady(player);
-          };
-
-          revealFallback = window.setTimeout(reveal, 3000);
-
-          revealWhenLoaded = () => {
-            try {
-              const iframeDocument = iframe.contentDocument;
-              const app = iframeDocument?.getElementById("app");
-              if (!app) {
-                if (iframeDocument && !appLookupObserver) {
-                  appLookupObserver = new MutationObserver(() => {
-                    revealWhenLoaded();
-                  });
-                  appLookupObserver.observe(iframeDocument, { childList: true, subtree: true });
-                }
-                return false;
-              }
-              if (app.classList.contains("loaded")) {
-                reveal();
-                return true;
-              }
-
-              appLookupObserver?.disconnect();
-              appLookupObserver = null;
-              if (appObserver) {
-                return true;
-              }
-              appObserver = new MutationObserver(() => {
-                if (app.classList.contains("loaded")) {
-                  reveal();
-                }
-              });
-              appObserver.observe(app, { attributes: true, attributeFilter: ["class"] });
-              return true;
-            } catch {
-              reveal();
-              return true;
-            }
-          };
-
-          iframe.addEventListener("load", revealWhenLoaded, { once: true });
-          revealWhenLoaded();
-        };
-
-        const watchPlayer = (player) => {
-          const iframe = player.querySelector("iframe");
-          if (iframe) {
-            watchIframe(player, iframe);
-            return;
-          }
-
-          const waitsForUserLoad = player.getAttribute("data-load-mode") === "click";
-          let revealFallback = null;
-          const observer = new MutationObserver(() => {
-            const iframe = player.querySelector("iframe");
-            if (iframe) {
-              window.clearTimeout(revealFallback ?? undefined);
-              observer.disconnect();
-              watchIframe(player, iframe);
-            }
-          });
-          observer.observe(player, { childList: true, subtree: true });
-
-          // Click-to-load players should only become ready after Podlove inserts an iframe.
-          if (!waitsForUserLoad) {
-            revealFallback = window.setTimeout(() => {
-              observer.disconnect();
-              markReady(player);
-            }, 4000);
-          }
-        };
-
-        const init = () => {
-          document.querySelectorAll("podlove-player").forEach((player) => {
-            armHoverLoad(player);
-            watchPlayer(player);
-          });
-        };
-
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", init, { once: true });
-        } else {
-          init();
-        }
-      })();
-    </script>
+    <script defer src="{% static 'django_chat/js/podlove-loader.js' %}?v=podlove-1"></script>
   {% endif %}
 {% endblock javascript %}

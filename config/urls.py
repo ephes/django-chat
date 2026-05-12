@@ -8,7 +8,7 @@ from django.urls import include, path
 from django.views.decorators.cache import cache_page
 from django.views.generic import RedirectView
 from django_chat.core.feeds import DjangoChatLatestEntriesFeed
-from django_chat.core.views import podcast_episode_index, podlove_player_template
+from django_chat.core.views import episode_embed, podcast_episode_index, podlove_player_template
 from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
@@ -42,6 +42,11 @@ urlpatterns = [
         "podlove-player-template/",
         cache_page(5 * 60)(podlove_player_template),
         name="django_chat_podlove_player_template",
+    ),
+    path(
+        f"{settings.DJANGO_CHAT_PODCAST_SLUG}/<slug:episode_slug>/embed/",
+        episode_embed,
+        name="django_chat_episode_embed",
     ),
     path("", include("cast.urls", namespace="cast")),
     path("", include(wagtail_urls)),

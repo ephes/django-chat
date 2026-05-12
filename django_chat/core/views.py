@@ -9,6 +9,7 @@ from django.conf import settings
 from django.core.paginator import Paginator
 from django.http import HttpRequest, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from django_chat.imports.models import PodcastSourceMetadata
 
@@ -29,6 +30,25 @@ def active_filter_parameters(request: HttpRequest) -> QueryDict:
 
 def podlove_player_template(request: HttpRequest) -> HttpResponse:
     return render(request, "cast/django_chat/player_template.html", {})
+
+
+@xframe_options_exempt
+def episode_embed(request: HttpRequest, episode_slug: str) -> HttpResponse:
+    """Minimal player-only view suitable for `<iframe>` embedding on third-party sites."""
+    podcast = get_object_or_404(Podcast.objects.live(), slug=settings.DJANGO_CHAT_PODCAST_SLUG)
+    episode = get_object_or_404(Episode.objects.live().child_of(podcast), slug=episode_slug)
+    template_base_dir = podcast.get_template_base_dir(type_cast(Any, request))
+    type_cast(Any, request).cast_site_template_base_dir = template_base_dir
+    return render(
+        request,
+        "cast/django_chat/episode_embed.html",
+        {
+            "episode": episode,
+            "page": episode,
+            "podcast": podcast,
+            "template_base_dir": template_base_dir,
+        },
+    )
 
 
 def podcast_episode_index(request: HttpRequest) -> HttpResponse:

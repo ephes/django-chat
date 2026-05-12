@@ -1,0 +1,91 @@
+{% load static %}
+{% load django_vite %}<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ episode.title }} | Django Chat</title>
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ episode.get_url }}">
+    <style>
+      html, body { margin: 0; padding: 0; background: transparent; }
+      body {
+        font-family: "Roboto", system-ui, -apple-system, sans-serif;
+        color: #1c1c1c;
+        padding: 12px;
+      }
+      .embed-shell { display: block; max-width: 720px; margin: 0 auto; }
+      .embed-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin: 0 0 8px;
+        letter-spacing: -0.01em;
+      }
+      .embed-title a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .embed-title a:hover { text-decoration: underline; }
+      podlove-player {
+        display: block;
+        height: auto !important;
+        min-height: 112px !important;
+      }
+      @media (max-width: 760px) {
+        podlove-player {
+          min-height: 168px !important;
+        }
+      }
+      .embed-placeholder {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 20px;
+        border-radius: 14px;
+        background: rgb(77 165 83 / 0.10);
+        color: #14513a;
+        min-height: 112px;
+      }
+      .embed-placeholder-logo {
+        width: 64px;
+        height: auto;
+        flex-shrink: 0;
+        filter: drop-shadow(2px 3px 1px rgb(0 0 0 / 0.18));
+      }
+      .embed-placeholder-text {
+        margin: 0;
+        font-size: 0.92rem;
+        line-height: 1.4;
+      }
+      .embed-placeholder-text strong {
+        display: block;
+        font-size: 1rem;
+        margin-bottom: 2px;
+      }
+    </style>
+    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=date-picker-1">
+  </head>
+  <body>
+    <div class="embed-shell">
+      <p class="embed-title">
+        <a href="{{ request.scheme }}://{{ request.get_host }}{{ episode.get_url }}" target="_top">{{ episode.title }}</a>
+      </p>
+      {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+        <div class="audio-panel" aria-label="Episode audio">
+          {% include "cast/django_chat/audio.html" with value=episode.podcast_audio page=episode %}
+        </div>
+      {% else %}
+        <div class="embed-placeholder">
+          <img class="embed-placeholder-logo" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="64" height="59" alt="">
+          <p class="embed-placeholder-text">
+            <strong>Audio coming soon</strong>
+            We're still polishing this episode. Tap the title above to visit Django Chat.
+          </p>
+        </div>
+      {% endif %}
+    </div>
+    {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+      {% vite_asset 'src/audio/podlove-player.ts' app="cast" %}
+      <script defer src="{% static 'django_chat/js/podlove-loader.js' %}?v=podlove-1"></script>
+    {% endif %}
+  </body>
+</html>

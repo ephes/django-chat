@@ -206,8 +206,8 @@ def test_imported_sample_episode_detail_renders_copied_audio(
     assert "podlove-placeholder-artwork" not in content
     assert "Load player" not in content
     assert "placeholder.hidden = true" not in content
-    assert 'placeholder.setAttribute("aria-busy", "true")' in content
-    assert "scheduleInitialize()" in content
+    # The Podlove click/hover initializer now lives in a shared external script.
+    assert "django_chat/js/podlove-loader.js" in content
     assert "<audio" not in content
     assert "/media/cast_audio/django-chat-sample/django-tasks-jake-howard-" in content
     # The django-vite asset tag must emit the prebuilt Podlove init module on
