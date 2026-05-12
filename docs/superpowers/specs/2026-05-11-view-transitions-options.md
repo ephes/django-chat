@@ -230,6 +230,81 @@ Cons:
 
 Do not use this for the prototype.
 
+## Future Option: Persistent Audio Player
+
+The current View Transitions work can make episode navigation feel smoother, but
+it cannot keep audio alive through normal MPA navigation. A cross-document view
+transition snapshots the old and new documents around a same-origin navigation;
+the old document, including the Podlove iframe/audio state, is still replaced.
+That means a Simplecast-style stable player needs a client-side navigation
+layer or another persistent shell, not just native MPA View Transitions.
+
+This is a possible future enhancement for
+`https://djangochat.staging.django-cast.com/episodes/`, especially if we want a
+player that starts on an episode detail page and keeps playing while the user
+returns to the episode index or opens another episode.
+
+Preferred future direction:
+
+- Add a small client-side navigation layer for the episode index and episode
+  detail pages.
+- Keep one global mini-player in `base.html`, outside the content region that
+  gets swapped during navigation.
+- Prefer a custom HTML audio mini-player for the persistent surface, using the
+  imported MP3 URL and episode metadata, rather than trying to preserve the
+  full Podlove iframe as the long-lived player.
+- Keep the rich Podlove player on episode detail pages until the persistent
+  player is proven. Later, decide whether the detail-page player should hand off
+  to the global player or become a secondary rich view of the same audio state.
+- Treat playback start as user-gesture-driven. Browser autoplay policies still
+  apply; the persistent player solves "continue playback while navigating", not
+  "start audible playback automatically on a fresh page load".
+
+Implementation options:
+
+- Turbo Drive plus a `data-turbo-permanent` global player is the strongest fit.
+  Turbo keeps the browser document alive and can preserve marked elements across
+  visits while the server remains the source of HTML. This would be the closest
+  route to a Simplecast-like feel without rebuilding the site as a full SPA.
+- A custom PJAX/navigation layer could build on the existing
+  `view-transitions.js` direction and avoid a dependency, but we would own body
+  swapping, head metadata syncing, script lifecycle, history, scroll/focus,
+  analytics hooks, error fallback, and Podlove cleanup.
+- htmx `hx-boost` can progressively enhance normal links/forms, but its
+  preservation model is less attractive for this case because the current player
+  is iframe-based. If htmx is used, prefer preserving a custom global audio
+  element rather than the Podlove iframe.
+- swup or Barba-style libraries are viable but more animation/router oriented
+  than this project needs for a first persistent-player pass.
+- An iframe app shell would preserve playback but is a poor fit for URL,
+  accessibility, SEO, and deep-link behavior.
+
+Rough effort:
+
+- Prototype: 1-2 days for Turbo Drive plus a simple persistent `<audio>`
+  mini-player on episode/index navigation.
+- Production-ready version: 4-8 days after prototype, mostly browser testing,
+  history/scroll/focus behavior, metadata/head updates, no-JavaScript fallback,
+  and django-cast/Podlove script lifecycle checks.
+- Full Simplecast-like polish: 1-2+ weeks if it includes queueing, expanded and
+  collapsed player states, Media Session controls, mobile bottom-bar behavior,
+  handoff from detail players, and visual transition tuning.
+
+Useful references:
+
+- Chrome cross-document View Transitions:
+  https://developer.chrome.com/docs/web-platform/view-transitions/cross-document
+- Turbo permanent elements:
+  https://turbo.hotwired.dev/handbook/building
+- htmx boosted navigation:
+  https://htmx.org/attributes/hx-boost/
+- htmx preserved elements:
+  https://htmx.org/attributes/hx-preserve/
+- Media Session API:
+  https://developer.mozilla.org/en-US/docs/Web/API/MediaSession
+- Chrome autoplay policy:
+  https://developer.chrome.com/blog/autoplay
+
 ## Design Guardrails
 
 - Respect `prefers-reduced-motion: reduce`.
