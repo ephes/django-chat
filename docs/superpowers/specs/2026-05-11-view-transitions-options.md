@@ -61,28 +61,31 @@ Use htmx only if the native MPA path cannot make the search/filter experience
 feel good enough, or if we later decide that search results should update
 without a full document load.
 
-## Prototype Update: Pagination Pivot
+## Prototype Update: Index Navigation Pivot
 
 The first implementation pass confirmed that native cross-document transitions
 work well for episode overview/detail navigation, especially with shared title
 and episode-number badge elements. Pagination was different: even with
 `ViewTransition.types`, browser behavior felt like a fast full-page top/down
-navigation rather than a stable result-list change.
+navigation rather than a stable result-list change. Native cross-document
+search transitions also reset the next page to the top, putting the animated
+result list below the first viewport on the first search.
 
-For the prototype, pagination therefore switched to a same-document progressive
-enhancement while keeping normal server-rendered pagination links as the
+For the prototype, index navigation therefore switched to a same-document
+progressive enhancement while keeping normal server-rendered links/forms as the
 fallback:
 
 - Intercept plain same-origin pagination clicks only when
   `document.startViewTransition()` is available and reduced motion is not
   requested.
-- Keep filter/search form submissions and filter-clear links on native
-  cross-document navigation. The same-document interception path made the search
-  transition easy to miss, while the original MPA path gives the
-  `pageswap`/`pagereveal` filter transition a stable lifecycle.
-- For pagination, fetch the next full server-rendered page, parse it with
-  `DOMParser`, and swap the filter form plus the `.episode-results` container
-  inside `document.startViewTransition()`.
+- Intercept filter/search form submissions and filter-clear links under the
+  same conditions. Native cross-document search transitions reset the next page
+  to the top, which puts the animated result list below the first viewport on
+  the first search.
+- For pagination and filter/search, start `document.startViewTransition()`
+  immediately, fetch the next full server-rendered page inside its update
+  callback, parse it with `DOMParser`, and swap the filter form plus the
+  `.episode-results` container.
 - Update the URL with `history.pushState()` and handle pagination
   back/forward with the same index-page swap.
 - Keep this dependency-free. This is intentionally not htmx and does not add a
@@ -94,6 +97,12 @@ The pagination animation is intentionally slower than the original guardrail
 while the prototype is being judged visually: the current result-list crossfade
 uses roughly 820ms out and 940ms in. Tighten this before production if it feels
 too slow after visual iteration.
+
+Because the fetch runs inside the same-document transition update callback, a
+slow response can make the old result-list snapshot appear frozen until the
+replacement HTML arrives. Keep the hard-navigation fallback for unsupported or
+reduced-motion contexts, and consider a timeout fallback if the prototype ever
+feels stuck on slower networks.
 
 The detail page "Back to Episodes" link is also progressively adjusted from
 the remembered episode-row click URL, so an episode opened from page 2 can

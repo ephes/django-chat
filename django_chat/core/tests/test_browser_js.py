@@ -77,6 +77,43 @@ def test_filter_navigation_keeps_replaced_form_enhanced(
 ) -> None:
     page.goto(f"{live_server.url}{episode_index_path()}")
     page.locator(".filter-form[data-filter-enhanced='true']").wait_for()
+    page.evaluate(
+        """() => {
+            window.__djangoChatViewTransitionCalls = 0;
+            window.__djangoChatViewTransitionReadyTypes = [];
+            window.__djangoChatViewTransitionReadyMetrics = [];
+            const originalStartViewTransition = document.startViewTransition.bind(document);
+            document.startViewTransition = (callback) => {
+                const transition = originalStartViewTransition(callback);
+                window.__djangoChatViewTransitionCalls += 1;
+                transition.ready.then(
+                    () => {
+                        const results = document.querySelector("[data-vt-results]");
+                        const rect = results.getBoundingClientRect();
+                        window.__djangoChatViewTransitionReadyTypes.push(
+                            Array.from(transition.types || []).join(",")
+                        );
+                        window.__djangoChatViewTransitionReadyMetrics.push({
+                            resultsTop: rect.top,
+                            scrollY: window.scrollY,
+                            viewportHeight: window.innerHeight,
+                        });
+                    },
+                    () => window.__djangoChatViewTransitionReadyTypes.push("rejected")
+                );
+                return transition;
+            };
+        }"""
+    )
+    page.evaluate(
+        """() => document.querySelector(".filter-form").scrollIntoView({
+            block: "end",
+            inline: "nearest",
+        })"""
+    )
+    page.locator("[data-vt-results]").scroll_into_view_if_needed()
+    scroll_before = page.evaluate("window.scrollY")
+    assert scroll_before > 0
     page.evaluate("window.__djangoChatSearchPageId = 'before-filter-submit'")
 
     page.locator("#id_search").fill("tasks")
@@ -85,9 +122,15 @@ def test_filter_navigation_keeps_replaced_form_enhanced(
         "() => new URL(window.location.href).searchParams.get('search') === 'tasks'"
     )
 
-    # Search/filter submits should stay on the native document-navigation path
-    # so the cross-document filter view transition can run.
-    assert page.evaluate("window.__djangoChatSearchPageId") is None
+    # Search/filter submits should stay on the same document so the first
+    # visible result-list transition happens where the user submitted the form.
+    assert page.evaluate("window.__djangoChatSearchPageId") == "before-filter-submit"
+    page.wait_for_function("() => window.__djangoChatViewTransitionReadyTypes.length > 0")
+    assert page.evaluate("window.__djangoChatViewTransitionCalls") == 1
+    assert page.evaluate("window.__djangoChatViewTransitionReadyTypes[0]") == "filter"
+    ready_metrics = page.evaluate("window.__djangoChatViewTransitionReadyMetrics[0]")
+    assert ready_metrics["scrollY"] > 0
+    assert 0 <= ready_metrics["resultsTop"] < ready_metrics["viewportHeight"]
     page.locator(".filter-form[data-filter-enhanced='true']").wait_for()
     assert page.locator(".filter-date-control").count() == 2
     assert page.locator(".filter-select-control").count() == 2
