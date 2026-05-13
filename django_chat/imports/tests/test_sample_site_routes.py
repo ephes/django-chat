@@ -128,6 +128,8 @@ def test_imported_sample_feed_detail_renders_rss_without_distribution_links(
     assert absolute_url(podcast_feed_path()) in content
     assert "MP3 podcast feed" in content
     assert podcast_feed_path() in content
+    assert content.index("MP3 podcast feed") < content.index("Latest entries")
+    assert "Site feed" in content
     assert "/episodes/feed/podcast/m4a/rss.xml" not in content
     assert "/episodes/feed/podcast/oga/rss.xml" not in content
     assert "/episodes/feed/podcast/opus/rss.xml" not in content

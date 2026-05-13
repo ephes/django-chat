@@ -9,24 +9,24 @@
   {% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' as podcast_mp3_path %}
   <main class="subscribe-page">
     <article class="card feed-card subscribe-feature">
-      <h2 class="feed-card-title">Latest entries</h2>
-      <p class="feed-card-desc">Every new page or post on the site beyond episodes — drop this into your feed reader if you want to follow the project itself, not just listen.</p>
-      <pre class="feed-card-url"><code id="feed-url-blog">{{ request.scheme }}://{{ request.get_host }}{{ blog_feed_url }}</code></pre>
+      <h2 class="feed-card-title">MP3 podcast feed</h2>
+      <p class="feed-card-desc">The main Django Chat episode feed. Best compatibility with podcast apps.</p>
+      <pre class="feed-card-url"><code id="feed-url-podcast-mp3">{{ request.scheme }}://{{ request.get_host }}{{ podcast_mp3_path }}</code></pre>
       <div class="feed-card-actions">
-        <button type="button" class="feed-action feed-action--primary" data-copy-target="feed-url-blog">
+        <button type="button" class="feed-action feed-action--primary" data-copy-target="feed-url-podcast-mp3">
           <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <rect x="8" y="4" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
             <rect x="4" y="8" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
           </svg>
           <span class="feed-action-label" data-copy-default="Copy URL" data-copy-done="Copied!">Copy URL</span>
         </button>
-        <a class="feed-action" href="feed://{{ request.get_host }}{{ blog_feed_url }}">
+        <a class="feed-action" href="podcast://{{ request.get_host }}{{ podcast_mp3_path }}">
           <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M7 4.5v15l13-7.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
           </svg>
-          <span>Open in reader</span>
+          <span>Open in player</span>
         </a>
-        <a class="feed-action" href="{{ blog_feed_url }}">
+        <a class="feed-action" href="{{ podcast_mp3_path }}">
           <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M9 7 4 12l5 5M15 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -36,28 +36,28 @@
     </article>
 
     <section class="subscribe-audio" aria-labelledby="audio-feeds-heading">
-      <h2 class="subscribe-audio-heading" id="audio-feeds-heading">Podcast audio feeds</h2>
-      <p class="subscribe-audio-intro">RSS feeds for podcast apps — one URL per audio format.</p>
+      <h2 class="subscribe-audio-heading" id="audio-feeds-heading">Site feed</h2>
+      <p class="subscribe-audio-intro">RSS for site updates beyond the podcast episode feed.</p>
       <ul class="audio-feeds" role="list">
         <li class="audio-feed feed-card">
-          <h3 class="feed-card-title feed-card-title--compact">MP3 podcast feed</h3>
-          <p class="feed-card-desc">The main Django Chat episode feed. Best compatibility with podcast apps.</p>
-          <pre class="feed-card-url"><code id="feed-url-podcast-mp3">{{ request.scheme }}://{{ request.get_host }}{{ podcast_mp3_path }}</code></pre>
+          <h3 class="feed-card-title feed-card-title--compact">Latest entries</h3>
+          <p class="feed-card-desc">Every new page or post on the site beyond episodes — use this if you want to follow the project itself, not just listen.</p>
+          <pre class="feed-card-url"><code id="feed-url-blog">{{ request.scheme }}://{{ request.get_host }}{{ blog_feed_url }}</code></pre>
           <div class="feed-card-actions">
-            <button type="button" class="feed-action feed-action--primary" data-copy-target="feed-url-podcast-mp3">
+            <button type="button" class="feed-action feed-action--primary" data-copy-target="feed-url-blog">
               <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <rect x="8" y="4" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
                 <rect x="4" y="8" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
               </svg>
               <span class="feed-action-label" data-copy-default="Copy URL" data-copy-done="Copied!">Copy URL</span>
             </button>
-            <a class="feed-action" href="podcast://{{ request.get_host }}{{ podcast_mp3_path }}">
+            <a class="feed-action" href="feed://{{ request.get_host }}{{ blog_feed_url }}">
               <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M7 4.5v15l13-7.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
               </svg>
-              <span>Open in player</span>
+              <span>Open in reader</span>
             </a>
-            <a class="feed-action" href="{{ podcast_mp3_path }}">
+            <a class="feed-action" href="{{ blog_feed_url }}">
               <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M9 7 4 12l5 5M15 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
