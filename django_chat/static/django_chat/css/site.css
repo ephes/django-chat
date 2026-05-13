@@ -636,8 +636,11 @@ html.is-stacked .show-hero-logo {
   display: none;
 }
 
-/* Medium and up: extras always visible as a wrapping flex row, toggle hidden. */
-@media (min-width: 600px) {
+/* Medium and up: extras always visible as a wrapping flex row, toggle hidden.
+   Threshold chosen so the extras always fit on a single row (measured wrap point
+   ~720–725px with Clear visible) — below this we keep the accordion to avoid a
+   three-row glitch between two-row and collapsed layouts. */
+@media (min-width: 740px) {
   .filter-more-toggle {
     display: none;
   }
