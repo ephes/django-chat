@@ -79,6 +79,11 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       pagination; the episode filter/search controls are styled as a
       Django Chat control strip with a full clear affordance; and the Wagtail
       dependency set is upgraded to Wagtail 7.4.
+- [x] **9d. Feed cutover risk analysis and plan** —
+      `docs/feed-cutover-analysis.md` documents the ways a feed migration can
+      break subscribers, compares the 2026-05-13 Simplecast and staging feed
+      state, records the fixed no-Simplecast-redirect/S3-CDN-served-feed
+      constraints, and proposes a phased cutover plan.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -209,9 +214,17 @@ with 202 items.
    production migration risks + pre-review UI polish in place, the staging site
    is ready for host review. Send hosts the URL + `host-review-admin`
    credential.
-2. **Production VPS, DNS cutover, feed redirects, podcast directory
-   updates** — last, per user. Out of scope until host review and production
-   migration notes are settled.
+2. **Live feed parity checker.** Add a command/script that compares the current
+   Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
+   generated or S3/CDN-served Django Chat podcast feed. It should fail on item
+   count, missing/extra GUIDs, GUID order, publication-date, title, enclosure
+   type, latest-episode, and copied-media byte-size regressions, with explicit
+   warnings for approved differences such as moved enclosure URLs or equivalent
+   duration formatting.
+3. **Production VPS, DNS cutover, URL redirects, podcast directory
+   updates** — last, per user. Out of scope until host review, production
+   migration notes, and the
+   [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.
 
 ## Next Action
 

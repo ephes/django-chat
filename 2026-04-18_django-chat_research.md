@@ -124,9 +124,9 @@ Self-hosting is feasible. The lowest-risk technical base is to build a fresh Dja
 The project splits into two scopes:
 
 1. Staging proof of concept: import content and media, deploy to a staging domain, provide admin/repo access, and let hosts judge fit.
-2. Production migration: preserve podcast client continuity, redirect or replace the canonical feed, update podcast directories, and decide whether audio distribution and analytics move fully away from Simplecast.
+2. Production migration: preserve podcast client continuity while moving the canonical feed and media to S3/CDN under `djangochat.com`, update podcast directories, add any needed `djangochat.com` URL redirects, and retire Simplecast.
 
-The staging proof of concept is moderate effort because the local deployment pattern already exists. Production migration is higher-risk because podcast feed continuity, media URLs, analytics, and Simplecast redirects need host participation.
+The staging proof of concept is moderate effort because the local deployment pattern already exists. Production migration is higher-risk because podcast feed continuity, S3/CDN feed publishing, media URLs, directory updates, analytics changes, and the no-Simplecast-redirect constraint need careful coordination.
 
 ## Proposed MVP
 
@@ -519,11 +519,15 @@ Recommended contents:
     pinned Git commit SHA until tags exist, then move to a tag.
   - What `just deploy-staging` means once deployment commands exist.
 - `docs/production-migration-notes.md`
-  - Feed redirect risks.
+  - Feed cutover risks.
   - GUID preservation.
-  - Canonical domain decisions.
-  - Simplecast redirect and podcast directory coordination.
-  - Analytics, CDN, and ad insertion questions.
+  - Canonical domain and S3/CDN feed/media requirements.
+  - Podcast directory coordination without a Simplecast feed redirect.
+  - Analytics, CDN, and ad insertion questions after Simplecast retirement.
+- `docs/feed-cutover-analysis.md`
+  - Detailed feed migration failure modes.
+  - Fixed constraints for the `djangochat.com` S3/CDN-served feed move.
+  - Proposed live-feed parity, URL redirect, monitoring, and rollback plan.
 
 Do not move this PRD into `docs/` immediately. It is easier to find while the
 repo is still mostly empty, and it is a historical research artifact rather
@@ -548,14 +552,18 @@ Implementation tracking should stay lightweight:
 
 Production migration is not just deploying the app.
 
-Needs host decisions:
+Fixed production decisions:
 
-- Should `djangochat.com` continue to be the canonical site domain?
-- Should the podcast feed move from Simplecast to django-cast?
-- Should Simplecast redirect the old feed to the new feed?
+- `djangochat.com` remains the canonical site domain.
+- The podcast feed moves from Simplecast to this repo.
+- The production feed and audio are served from S3/CDN.
+- Simplecast will not redirect the old feed URL.
+- Simplecast is retired after migration.
+
+Open production details:
+
 - Should old episode URLs be preserved exactly, redirected, or allowed to change?
-- Should audio download URLs be hosted by S3/CloudFront directly, or through another CDN/analytics layer?
-- Is Simplecast analytics, distribution, or ad insertion currently required?
+- Should a non-Simplecast analytics/download-tracking layer sit in front of the S3/CDN media URLs?
 - Are transcripts owned/exportable and intended to be published on the self-hosted site?
 - Are sponsor mentions/ad markers purely in audio/show notes, or are there dynamic ad features in use?
 
@@ -565,8 +573,8 @@ Podcast feed continuity checklist:
 - Compare item GUIDs, titles, dates, durations, enclosure sizes, and episode numbers against Simplecast RSS.
 - Preserve existing GUIDs for migrated episodes; GUID changes can cause podcast clients to treat old catalog items as new episodes.
 - Verify artwork dimensions and podcast namespace fields.
-- Confirm `itunes:new-feed-url` behavior.
-- Coordinate Simplecast feed redirect or directory updates with hosts.
+- Confirm `itunes:new-feed-url` behavior in the new feed.
+- Coordinate podcast directory updates with hosts.
 - Test Apple Podcasts, Spotify, Pocket Casts, and generic RSS clients before switching.
 
 ## Risks
@@ -659,6 +667,8 @@ Production migration hardening:
    `docs/operations-boundary.md` before the first deploy run.
 9. Deploy staging, create host admin accounts, and document the review workflow in `docs/host-review-guide.md` and `docs/staging-differences.md`.
 10. Decide whether production migration needs a separate follow-up PRD after host review.
+    Use `docs/feed-cutover-analysis.md` as the feed-specific input to that
+    decision.
 
 ## Recommended Next Steps
 

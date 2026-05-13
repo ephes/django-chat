@@ -174,7 +174,9 @@ The host review workflow is documented in
 between staging, Simplecast, and a future production migration are documented in
 [`docs/staging-differences.md`](docs/staging-differences.md). Production
 migration risks and cutover decisions are tracked separately in
-[`docs/production-migration-notes.md`](docs/production-migration-notes.md).
+[`docs/production-migration-notes.md`](docs/production-migration-notes.md),
+with feed-specific failure modes and the proposed feed cutover plan in
+[`docs/feed-cutover-analysis.md`](docs/feed-cutover-analysis.md).
 
 Current staging smoke review uses:
 
@@ -201,11 +203,12 @@ imported sample, catalog performance measurement tooling, and deployment
 scaffolding.
 
 It does not include full-catalog transcript conversion, exhaustive production
-feed parity, real production deployment, production DNS changes, or feed
-redirects. Full-catalog audio has been copied into staging and is reachable
-through the public media host, so internal review can inspect the deployed
-site/CMS, Wagtail-triggered transcript generation, and end-to-end playback
-before the full host-review gate.
+feed parity, real production deployment, production DNS changes, static
+S3/CDN feed publishing, podcast directory updates, Simplecast retirement, or
+production URL redirects. Full-catalog audio has been copied into staging and
+is reachable through the public media host, so internal review can inspect the
+deployed site/CMS, Wagtail-triggered transcript generation, and end-to-end
+playback before the full host-review gate.
 
 Do not commit decrypted Django secret keys, database passwords, S3 credentials,
 Sentry DSNs, Mailgun keys, admin passwords, age private keys, real MP3s, large

@@ -1,9 +1,15 @@
 # Production Migration Notes
 
-These notes define the production migration questions that must be settled
-after host review and before any live DNS, feed redirect, or podcast directory
-change. Staging proves the self-hosted app can serve Django Chat content; it is
-not a production cutover plan by itself.
+These notes define the production migration work that must be completed after
+host review and before any live DNS, feed, or podcast directory change. Staging
+proves the self-hosted app can serve Django Chat content; it is not a
+production cutover plan by itself.
+
+The detailed feed-specific failure analysis, remaining tactical choices, and
+proposed cutover plan live in
+[`feed-cutover-analysis.md`](feed-cutover-analysis.md). Treat that document as
+the planning checklist before the feed moves from Simplecast to the final
+S3/CDN-served `djangochat.com` feed.
 
 ## Current Boundary
 
@@ -16,22 +22,33 @@ host review because it does not change:
 - the public Simplecast episode URLs
 - Simplecast analytics, CDN behavior, or ad insertion
 
-Do not redirect the Simplecast feed, submit the staging feed to directories, or
-publish production cutover instructions until the decisions below are resolved.
+Do not submit the staging feed to directories or publish production cutover
+instructions until the feed cutover plan is implemented and verified.
 
-## Host Decisions
+## Fixed Decisions
 
-Before production migration, hosts need to decide:
+The production migration has these fixed decisions:
 
-- whether `djangochat.com` remains the canonical site domain
-- whether the podcast feed moves from Simplecast to django-cast
-- whether Simplecast should redirect the old feed to the new feed
-- whether old episode URLs must be preserved exactly, redirected, or allowed to
-  change
-- whether audio download URLs should be served directly from S3/CloudFront or
-  through another CDN, analytics, or download-tracking layer
-- whether Simplecast analytics, distribution analytics, or dynamic ad insertion
-  is still required
+- `djangochat.com` remains the canonical site domain
+- the podcast feed moves from Simplecast to this repo
+- the production podcast feed and media are served from S3/CDN
+- Simplecast will not redirect the old feed URL
+- Simplecast is retired after migration
+
+The old feed URL is `https://feeds.simplecast.com/WpQaX_cs`. Because it is not
+under `djangochat.com`, this repo cannot redirect it without Simplecast
+cooperation. The replacement podcast feed must be a `djangochat.com` URL, likely
+`/episodes/feed/podcast/mp3/rss.xml` or a friendly same-domain alias that points
+there. `/episodes/feed/rss.xml` is the latest-entries feed, not the podcast
+client feed.
+
+Open production details:
+
+- the exact canonical feed URL under `djangochat.com`
+- whether old episode URLs must be preserved exactly or redirected to
+  django-cast route shapes
+- whether a non-Simplecast analytics or download-tracking layer is needed in
+  front of media
 - whether transcripts are owned/exportable and intended to be published on the
   self-hosted site
 - whether sponsor handling is only baked into audio/show notes or depends on
@@ -48,11 +65,10 @@ prove, with the live catalog loaded, that:
   enclosure metadata match Simplecast where they need to
 - artwork dimensions and podcast namespace fields are acceptable to major
   clients
-- any current Simplecast `itunes:new-feed-url` value is checked before using
-  Simplecast to announce or redirect a feed move
-- `itunes:new-feed-url` behavior is understood before enabling any redirect
-- Simplecast feed redirects and podcast directory updates are coordinated with
-  hosts
+- any current Simplecast `itunes:new-feed-url` value is checked before
+  retirement
+- `itunes:new-feed-url` behavior is understood before directory updates
+- podcast directory updates are coordinated with hosts
 - Apple Podcasts, Spotify, Pocket Casts, and a generic RSS client have been
   tested against the candidate feed before cutover
 
@@ -62,12 +78,12 @@ old catalog episodes as new downloads.
 ## Media And Analytics
 
 The current staging media setup uses Django Chat-specific S3-compatible storage
-and CloudFront. That proves isolation from Python Podcast, but production still
-needs explicit decisions for:
+and CloudFront. Production feed and media distribution will use the same class
+of S3/CDN-backed architecture. Production still needs explicit details for:
 
 - the final media bucket and CloudFront distribution
+- the final static RSS object path, headers, and cache/invalidation behavior
 - whether direct CloudFront MP3 URLs are acceptable for public enclosures
-- whether download analytics need to preserve Simplecast-style reporting
 - whether a different CDN, redirect service, or analytics layer should sit in
   front of media
 - cache invalidation and rollback behavior for feed artwork and MP3 files
@@ -89,13 +105,13 @@ origins, media URLs, and admin URLs under the production hostname.
 
 ## Rollback
 
-The safest rollback before feed/DNS cutover is to leave Simplecast unchanged.
-After any production cutover, rollback needs a written operator path covering:
+The safest rollback before feed/directory cutover is to leave Simplecast
+unchanged. After directory updates, rollback needs a written operator path
+covering:
 
-- who can change DNS and Simplecast feed redirect settings
-- how to disable or reverse any feed redirect
+- who can change DNS, S3/CDN feed objects, and podcast directory settings
 - how to return podcast directories to the previous feed if needed
-- how to preserve the last known-good django-cast feed output for comparison
+- how to preserve the last known-good CDN-served feed output for comparison
 - how to avoid changing GUIDs or enclosure URLs during rollback
 
 ## Pre-Cutover Checklist
@@ -104,11 +120,12 @@ Run this only after hosts approve a production migration:
 
 - import the intended full catalog in the production environment
 - copy production media to the final Django Chat media backend
+- publish the static production RSS XML to the final S3/CDN path
 - run `just compare-feed` and any expanded production feed parity checks
 - measure the catalog with `measure_django_chat_catalog --host=<production-host>`
 - smoke-test `/`, `/episodes/`, `/episodes/feed/`, a representative episode
   page, a transcript page, and `/cms/` over HTTPS
 - validate the podcast feed with the candidate production hostname
 - test playback from a browser and at least one podcast client
-- confirm host approval for feed redirect and directory timing
+- confirm host approval for directory timing and Simplecast retirement timing
 - record rollback owners and exact rollback steps

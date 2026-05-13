@@ -192,8 +192,7 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert ".feed-action {\n  display: inline-flex;" in css
     assert (
         ".feed-action--primary:hover,\n.feed-action--primary:focus-visible {\n"
-        "  background: var(--dc-django);"
-        in css
+        "  background: var(--dc-django);" in css
     )
     assert "#0e7c7b" not in normalized_css
     assert "#5d6673" not in normalized_css

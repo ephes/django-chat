@@ -81,7 +81,9 @@ Expected differences from Simplecast:
 ## Feed Status
 
 The staging feed is not canonical and must not be submitted to podcast
-directories or redirected from Simplecast.
+directories. The production feed cutover plan is tracked separately in
+[`feed-cutover-analysis.md`](feed-cutover-analysis.md); it assumes Simplecast
+will not redirect the old feed URL.
 
 The feed check remains a local smoke-level comparison for the fixture-backed
 sample with copied audio in place:
@@ -164,7 +166,7 @@ Staging does not mean production migration is complete.
 This slice does not:
 
 - change the canonical Django Chat DNS records
-- redirect the Simplecast feed
+- publish the production podcast feed URL
 - update Apple Podcasts, Spotify, Pocket Casts, or other directories
 - replace Simplecast analytics
 - decide long-term media CDN or analytics strategy
