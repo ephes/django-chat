@@ -1489,6 +1489,9 @@ html.is-stacked .show-hero-logo {
   }
 
   .episode-sidebar .show-artwork {
+    /* `display: block` so the `margin: auto` actually centers — an `<img>`
+       is inline by default and inline auto-margins resolve to zero. */
+    display: block;
     max-width: 200px;
     margin: 28px auto 0;
   }
@@ -1500,7 +1503,26 @@ html.is-stacked .show-hero-logo {
   }
 
   .episode-action-rail {
+    /* Flex row with content-sized items: items fit as many per row as
+       they naturally can, and `justify-content: center` keeps each row
+       (including a partial last one) centered on the page. The item
+       layout is tightened to a single inline flex so 3 short labels
+       still fit in a single row on iPhone-SE-sized viewports. */
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 18px;
     padding-top: 28px;
+  }
+
+  .rail-item {
+    display: inline-flex;
+    grid-template-columns: none;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    border-bottom: none;
+    padding: 10px 2px;
   }
 }
 
@@ -1839,6 +1861,18 @@ html.is-stacked .show-hero-logo {
   gap: 16px;
   padding: 24px 0;
   font-size: 0.9rem;
+}
+
+/* On mobile widths the Fosstodon button and the credit line stack
+   vertically; center both so the footer reads as a column rather than
+   a left/right split. */
+@media (max-width: 768px) {
+  .site-footer-inner {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 .footer-mastodon-button {
