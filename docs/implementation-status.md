@@ -214,14 +214,21 @@ with 202 items.
    production migration risks + pre-review UI polish in place, the staging site
    is ready for host review. Send hosts the URL + `host-review-admin`
    credential.
-2. **Live feed parity checker.** Add a command/script that compares the current
+2. **Transcript detail page design repair.** The transcript route is functional
+   and verified, but the dedicated `/episodes/<slug>/transcript/` page now
+   looks broken after the surrounding visual polish. Give it a dedicated design
+   pass before treating transcript handling as host-review/production-ready:
+   align it with the current episode-detail layout, make speaker/timestamp
+   segments readable, preserve useful navigation back to the episode, and check
+   mobile and desktop views.
+3. **Live feed parity checker.** Add a command/script that compares the current
    Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
    generated or S3/CDN-served Django Chat podcast feed. It should fail on item
    count, missing/extra GUIDs, GUID order, publication-date, title, enclosure
    type, latest-episode, and copied-media byte-size regressions, with explicit
    warnings for approved differences such as moved enclosure URLs or equivalent
    duration formatting.
-3. **Production VPS, DNS cutover, URL redirects, podcast directory
+4. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
    [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.
