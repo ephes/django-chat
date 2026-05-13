@@ -1214,23 +1214,39 @@ html.is-stacked .show-hero-logo {
   color: var(--dc-muted);
 }
 
+/* ---------- Card pattern ----------
+   Reusable container for grouped content. Pair `.card` with a content
+   layout class (e.g. `.feed-card`) on the same element when a card
+   wraps a vertical content stack. */
+.card {
+  padding: 24px clamp(20px, 3vw, 30px) 22px;
+  background: #fff;
+  border: 1px solid var(--dc-line);
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.02);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.card:hover,
+.card:focus-within {
+  border-color: rgb(77 165 83 / 0.45);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.06);
+  transform: translateY(-1px);
+}
+
+/* ---------- Subscribe page ---------- */
 .subscribe-page {
   width: min(var(--dc-container), 100% - 32px);
   margin: 0 auto;
   padding: 56px 0 72px;
   display: grid;
   gap: 40px;
+  container-type: inline-size;
+  container-name: subscribe;
 }
 
 .subscribe-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 32px;
-  align-items: center;
-}
-
-.subscribe-hero-body {
-  max-width: 560px;
+  max-width: 640px;
 }
 
 .subscribe-hero h1 {
@@ -1243,44 +1259,20 @@ html.is-stacked .show-hero-logo {
   margin: 0;
 }
 
-.subscribe-hero-mark {
-  width: clamp(72px, 12vw, 116px);
-  height: auto;
-  color: var(--dc-django);
-  opacity: 0.92;
-  filter: drop-shadow(0 6px 16px rgb(77 165 83 / 0.18));
-  flex-shrink: 0;
-}
-
-.feed-cards {
-  display: grid;
-  gap: 18px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
+/* Vertical content stack — works both inside a `.card` and as a flat
+   section item (audio-feed list). No container styling here. */
 .feed-card {
   display: grid;
   gap: 14px;
-  padding: 26px clamp(20px, 3vw, 32px) 22px;
-  background: #fff;
-  border: 1px solid var(--dc-line);
-  border-radius: 18px;
-  box-shadow: 0 1px 0 rgb(0 0 0 / 0.02);
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-}
-
-.feed-card:hover,
-.feed-card:focus-within {
-  border-color: rgb(77 165 83 / 0.45);
-  box-shadow: 0 8px 22px rgb(0 0 0 / 0.06);
-  transform: translateY(-1px);
 }
 
 .feed-card-title {
   font-size: 1.4rem;
   margin: 0;
+}
+
+.feed-card-title--compact {
+  font-size: 1.15rem;
 }
 
 .feed-card-desc {
@@ -1294,7 +1286,7 @@ html.is-stacked .show-hero-logo {
   padding: 12px 14px;
   background: #f4f7f3;
   border: 1px solid var(--dc-line);
-  border-radius: 12px;
+  border-radius: 10px;
   overflow-x: auto;
 }
 
@@ -1361,17 +1353,60 @@ html.is-stacked .show-hero-logo {
   flex-shrink: 0;
 }
 
+.subscribe-audio {
+  display: grid;
+  gap: 18px;
+}
+
+.subscribe-audio-heading {
+  margin: 0;
+}
+
+.subscribe-audio-intro {
+  color: var(--dc-muted);
+  margin: 0;
+  max-width: 60ch;
+}
+
+.audio-feeds {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 28px;
+}
+
+.audio-feed {
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--dc-line);
+}
+
+.audio-feeds .audio-feed:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
 .subscribe-why {
   margin: 8px 0 0;
-  padding: 22px clamp(20px, 3vw, 28px);
+  padding: 24px clamp(20px, 3vw, 28px);
   border-left: 3px solid var(--dc-django);
   background: rgb(77 165 83 / 0.06);
-  border-radius: 0 14px 14px 0;
+  border-radius: 0 12px 12px 0;
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.subscribe-why-mark {
+  width: 64px;
+  height: auto;
+  color: var(--dc-django);
+  filter: drop-shadow(0 4px 10px rgb(77 165 83 / 0.18));
 }
 
 .subscribe-why-title {
   font-size: 1.1rem;
-  margin: 0 0 8px;
+  margin: 4px 0 0;
 }
 
 .subscribe-why-list {
@@ -1384,17 +1419,33 @@ html.is-stacked .show-hero-logo {
   margin-top: 4px;
 }
 
-@media (max-width: 640px) {
-  .subscribe-hero {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 18px;
+/* Two-column layout: aside docks to the right and stays sticky like the
+   episode-detail sidebar. Container query so the layout reacts to the
+   subscribe-page's own width, not the viewport. The sidebar width mirrors
+   the episode-detail sidebar (`clamp(230px, 24cqi, 280px)`). */
+@container subscribe (min-width: 820px) {
+  .subscribe-page {
+    grid-template-columns: minmax(0, 1fr) clamp(230px, 24cqi, 280px);
+    column-gap: clamp(24px, 4cqi, 48px);
+    align-items: start;
   }
 
-  .subscribe-hero-mark {
-    order: -1;
-    width: 72px;
+  .subscribe-hero,
+  .subscribe-feature,
+  .subscribe-audio {
+    grid-column: 1;
+  }
+
+  .subscribe-why {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-self: start;
+    position: sticky;
+    top: calc(var(--site-header-height) + 28px);
+    margin-top: 0;
   }
 }
+
 
 /* Establish a containment context so `.episode-detail` can size itself
    against its own width via `@container` / `cqi`, instead of guessing
