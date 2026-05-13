@@ -1498,7 +1498,11 @@ html.is-stacked .show-hero-logo {
     align-items: start;
   }
 
-  .subscribe-feature,
+  .subscribe-feature {
+    grid-column: 1;
+    align-self: stretch;
+  }
+
   .subscribe-audio {
     grid-column: 1;
   }
