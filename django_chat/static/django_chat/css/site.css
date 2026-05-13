@@ -1387,26 +1387,29 @@ html.is-stacked .show-hero-logo {
 }
 
 .subscribe-why {
-  margin: 8px 0 0;
-  padding: 24px clamp(20px, 3vw, 28px);
-  border-left: 3px solid var(--dc-django);
-  background: rgb(77 165 83 / 0.06);
-  border-radius: 0 12px 12px 0;
+  margin: 0;
+  padding: 16px 18px;
+  border-left: 2px solid var(--dc-django);
+  background: rgb(77 165 83 / 0.05);
   display: grid;
-  gap: 10px;
+  gap: 8px;
   justify-items: start;
+  font-size: 0.92rem;
 }
 
 .subscribe-why-mark {
-  width: 64px;
+  width: 44px;
   height: auto;
   color: var(--dc-django);
-  filter: drop-shadow(0 4px 10px rgb(77 165 83 / 0.18));
 }
 
 .subscribe-why-title {
-  font-size: 1.1rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   margin: 4px 0 0;
+  color: var(--dc-ink);
 }
 
 .subscribe-why-list {
@@ -1416,7 +1419,7 @@ html.is-stacked .show-hero-logo {
 }
 
 .subscribe-why-list li + li {
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 /* Two-column layout: aside docks to the right and stays sticky like the
