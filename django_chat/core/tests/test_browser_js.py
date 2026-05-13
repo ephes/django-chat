@@ -141,8 +141,100 @@ def test_filter_navigation_keeps_replaced_form_enhanced(
     assert page.get_by_role("dialog", name="Choose start date").is_visible()
 
 
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_share_rail_button_opens_share_dialog_and_close_button_dismisses_it(
+    live_server: Any,
+    page: Page,
+) -> None:
+    page.goto(f"{live_server.url}{episode_detail_path()}")
+    dialog = page.locator("#share-dialog")
+    expect(dialog).not_to_have_attribute("open", "")
+
+    page.locator('.rail-item[data-action="share"]').click()
+    expect(dialog).to_have_attribute("open", "")
+    # The URL input is pre-populated with the canonical episode URL —
+    # the canonical host can differ from `live_server.url`, so just
+    # match the path suffix.
+    url_value = dialog.locator("[data-share-url-input]").input_value()
+    assert url_value.endswith(episode_detail_path())
+
+    dialog.locator("[data-share-close]").click()
+    expect(dialog).not_to_have_attribute("open", "")
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_share_dialog_closes_on_backdrop_click(
+    live_server: Any,
+    page: Page,
+) -> None:
+    page.goto(f"{live_server.url}{episode_detail_path()}")
+    dialog = page.locator("#share-dialog")
+
+    page.locator('.rail-item[data-action="share"]').click()
+    expect(dialog).to_have_attribute("open", "")
+
+    # The dialog's `click` handler closes when `event.target === dialog`
+    # itself. Backdrop clicks fire on the dialog element with that target;
+    # since `dialog.bounding_box()` returns the inner box, dispatch a
+    # synthetic click on the dialog directly to exercise the handler.
+    dialog.evaluate("(el) => el.dispatchEvent(new MouseEvent('click', {bubbles: true}))")
+    expect(dialog).not_to_have_attribute("open", "")
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_share_start_at_toggle_appends_t_param_to_share_url(
+    live_server: Any,
+    page: Page,
+) -> None:
+    page.goto(f"{live_server.url}{episode_detail_path()}")
+    page.locator('.rail-item[data-action="share"]').click()
+
+    dialog = page.locator("#share-dialog")
+    toggle = dialog.locator("[data-startat-toggle]")
+    time_input = dialog.locator("[data-startat-time]")
+    url_input = dialog.locator("[data-share-url-input]")
+
+    # Initially the time input is disabled and the URL has no `t` param.
+    expect(time_input).to_be_disabled()
+    initial = url_input.input_value()
+    assert initial.endswith(episode_detail_path())
+    assert "t=" not in initial
+
+    toggle.check()
+    expect(time_input).to_be_enabled()
+    time_input.fill("3:14")
+
+    expect(url_input).to_have_value(f"{initial}?t=194")
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_embed_rail_button_opens_dialog_with_iframe_snippet(
+    live_server: Any,
+    page: Page,
+) -> None:
+    page.goto(f"{live_server.url}{episode_detail_path()}")
+    dialog = page.locator("#embed-dialog")
+    expect(dialog).not_to_have_attribute("open", "")
+
+    page.locator('.rail-item[data-action="embed"]').click()
+    expect(dialog).to_have_attribute("open", "")
+
+    snippet = dialog.locator("[data-embed-snippet]")
+    value = snippet.input_value()
+    assert value.startswith("<iframe")
+    assert "/episodes/how-to-learn-django/embed/" in value
+    assert 'allow="autoplay"' in value
+
+    dialog.locator("[data-embed-close]").click()
+    expect(dialog).not_to_have_attribute("open", "")
+
+
 def episode_index_path() -> str:
     return reverse("django_chat_episode_index")
+
+
+def episode_detail_path(slug: str = "how-to-learn-django") -> str:
+    return f"/episodes/{slug}/"
 
 
 def expect_value(locator: Locator, value: str) -> None:
