@@ -67,6 +67,13 @@ html {
 
 body {
   margin: 0;
+  /* Sticky-footer pattern: body fills the viewport, main grows to take the
+     remaining space, footer is anchored to the bottom on short pages and
+     pushed below the fold on long ones (no position: sticky needed). */
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background-color: var(--dc-paper);
   background-image:
     linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
@@ -78,6 +85,10 @@ body {
   font-family: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 16px;
   line-height: 1.55;
+}
+
+body > main {
+  flex: 1 0 auto;
 }
 
 .audio-panel,
