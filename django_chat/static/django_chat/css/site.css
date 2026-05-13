@@ -1214,6 +1214,84 @@ html.is-stacked .show-hero-logo {
   color: var(--dc-muted);
 }
 
+/* ---------- Page header pattern ----------
+   Reusable subpage header (e.g. subscribe). An inline SVG renders the
+   speech bubble at a fixed pixel size; the horizontal offset tracks the
+   content-container's left edge so the tail stays anchored to the headline
+   and the cards below at every viewport. Per-breakpoint tweaks change the
+   five custom properties only — no property gets overridden twice. Not
+   used on episode-detail pages, which have their own hero. */
+.page-header {
+  --page-header-min-height: 350px;
+  --page-header-shape-width: 1470px;
+  --page-header-shape-height: 665px;
+  --page-header-shape-top: -315px;
+  --page-header-shape-offset: 350px;
+
+  position: relative;
+  width: 100%;
+  min-height: var(--page-header-min-height);
+  display: flex;
+  align-items: flex-start;
+  color: #fff;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+@media (max-width: 880px) {
+  .page-header {
+    --page-header-min-height: 290px;
+    --page-header-shape-width: 1130px;
+    --page-header-shape-height: 470px;
+    --page-header-shape-top: -180px;
+    --page-header-shape-offset: 266px;
+  }
+}
+
+@media (max-width: 450px) {
+  .page-header {
+    --page-header-shape-width: 900px;
+    --page-header-shape-offset: 216px;
+  }
+}
+
+.page-header-shape {
+  position: absolute;
+  width: var(--page-header-shape-width);
+  height: var(--page-header-shape-height);
+  top: var(--page-header-shape-top);
+  /* Anchored to var(--dc-container)'s left edge: centered with 1120 px
+     above the 1152 px viewport breakpoint, pinned to 16 px below. */
+  left: calc(max(16px, (100% - 1120px) / 2) - var(--page-header-shape-offset));
+  z-index: 0;
+  pointer-events: none;
+}
+
+.page-header-inner {
+  position: relative;
+  z-index: 2;
+  width: var(--dc-container);
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.page-header .eyebrow,
+.page-header h1,
+.page-header-tagline {
+  color: #fff;
+}
+
+.page-header h1 {
+  margin: 4px 0 14px;
+}
+
+.page-header-tagline {
+  max-width: 60ch;
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.5;
+}
+
 /* ---------- Card pattern ----------
    Reusable container for grouped content. Pair `.card` with a content
    layout class (e.g. `.feed-card`) on the same element when a card
@@ -1236,28 +1314,13 @@ html.is-stacked .show-hero-logo {
 
 /* ---------- Subscribe page ---------- */
 .subscribe-page {
-  width: min(var(--dc-container), 100% - 32px);
+  width: var(--dc-container);
   margin: 0 auto;
   padding: 56px 0 72px;
   display: grid;
   gap: 40px;
-  container-type: inline-size;
-  container-name: subscribe;
 }
 
-.subscribe-hero {
-  max-width: 640px;
-}
-
-.subscribe-hero h1 {
-  margin: 4px 0 14px;
-}
-
-.subscribe-tagline {
-  color: var(--dc-muted);
-  font-size: 1.08rem;
-  margin: 0;
-}
 
 /* Vertical content stack — works both inside a `.card` and as a flat
    section item (audio-feed list). No container styling here. */
@@ -1423,17 +1486,17 @@ html.is-stacked .show-hero-logo {
 }
 
 /* Two-column layout: aside docks to the right and stays sticky like the
-   episode-detail sidebar. Container query so the layout reacts to the
-   subscribe-page's own width, not the viewport. The sidebar width mirrors
-   the episode-detail sidebar (`clamp(230px, 24cqi, 280px)`). */
-@container subscribe (min-width: 820px) {
+   episode-detail sidebar. Plain @media query: .subscribe-page IS the page
+   container, so an @container rule targeting it would not apply to itself.
+   The sidebar width mirrors the episode-detail sidebar visually
+   (`clamp(230px, 24%, 280px)` → 24 % of the 1120 px page = 268.8 px). */
+@media (min-width: 880px) {
   .subscribe-page {
-    grid-template-columns: minmax(0, 1fr) clamp(230px, 24cqi, 280px);
-    column-gap: clamp(24px, 4cqi, 48px);
+    grid-template-columns: minmax(0, 1fr) clamp(230px, 24%, 280px);
+    column-gap: clamp(24px, 3vw, 48px);
     align-items: start;
   }
 
-  .subscribe-hero,
   .subscribe-feature,
   .subscribe-audio {
     grid-column: 1;
@@ -1441,7 +1504,7 @@ html.is-stacked .show-hero-logo {
 
   .subscribe-why {
     grid-column: 2;
-    grid-row: 2 / span 2;
+    grid-row: 1 / span 2;
     align-self: start;
     position: sticky;
     top: calc(var(--site-header-height) + 28px);

@@ -63,7 +63,7 @@
     </style>
     <script src="{% static 'django_chat/js/view-transitions.js' %}?v=vt-prototype-13"></script>
     {% block render_expect %}{% endblock render_expect %}
-    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=date-picker-1">
+    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=page-header-vars">
     {% block meta %}
       {% include "./_meta.html" %}
     {% endblock meta %}
@@ -88,6 +88,8 @@
         </div>
       </nav>
     </header>
+
+    {% block page_header %}{% endblock page_header %}
 
     {% block content %}{% endblock content %}
 

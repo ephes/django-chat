@@ -1,15 +1,13 @@
 {% extends "./base.html" %}
 {% load static %}
 
+{% block page_header %}
+  {% include "./_page_header.html" with eyebrow="Podcast RSS" heading="Subscribe via RSS" tagline="Bring Django Chat into your favorite podcast or feed reader — no account, no platform required." %}
+{% endblock page_header %}
+
 {% block content %}
   {% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' as podcast_mp3_path %}
   <main class="subscribe-page">
-    <section class="subscribe-hero">
-      <p class="eyebrow">Podcast RSS</p>
-      <h1>Subscribe via RSS</h1>
-      <p class="subscribe-tagline">Bring Django Chat into your favorite podcast or feed reader — no account, no platform required.</p>
-    </section>
-
     <article class="card feed-card subscribe-feature">
       <h2 class="feed-card-title">Latest entries</h2>
       <p class="feed-card-desc">Every new page or post on the site beyond episodes — drop this into your feed reader if you want to follow the project itself, not just listen.</p>

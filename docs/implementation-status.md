@@ -63,6 +63,16 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       `PodcastSourceMetadata.visible_distribution_links` live in the larger
       overview provider section instead of being duplicated on the subscribe
       page.
+      Polished (2026-05-13) with a reusable `.page-header` pattern (inline
+      SVG speech bubble with a top-dark / bottom-light gradient, horizontally
+      anchored to `var(--dc-container)` so the tail keeps a fixed position
+      relative to the cards on resize; new `{% block page_header %}` in the
+      base template + `_page_header.html` snippet, ready to drop onto further
+      subpages). The Subscribe content uses a generalised `.card` pattern for
+      the "Latest entries" feature, a flat "Podcast audio feeds" list ready
+      for additional audio formats, a sticky "Why RSS?" aside mirroring the
+      episode-detail sidebar width, and clipboard "Copy URL" plus
+      `podcast://`/`feed://` deep-link buttons next to each feed.
 - [x] **9c. Pre-host-review backlog cleanup** — production migration risks are
       documented in `docs/production-migration-notes.md`; episode pagination
       focuses and scrolls to the refreshed results container after same-page
