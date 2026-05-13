@@ -1215,74 +1215,185 @@ html.is-stacked .show-hero-logo {
 }
 
 .subscribe-page {
+  width: min(var(--dc-container), 100% - 32px);
+  margin: 0 auto;
   padding: 56px 0 72px;
+  display: grid;
+  gap: 40px;
 }
 
 .subscribe-hero {
-  max-width: 760px;
-  padding: 0 0 34px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 32px;
+  align-items: center;
+}
+
+.subscribe-hero-body {
+  max-width: 560px;
 }
 
 .subscribe-hero h1 {
   margin: 4px 0 14px;
 }
 
-.subscribe-hero p {
+.subscribe-tagline {
   color: var(--dc-muted);
   font-size: 1.08rem;
-  margin: 0 0 22px;
+  margin: 0;
 }
 
-.rss-primary-link {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  min-height: 48px;
-  padding: 0 18px;
-  border: 1px solid var(--dc-accent-dark);
-  border-radius: var(--dc-radius);
-  background: var(--dc-accent-dark);
-  color: #fff;
-  font-family: "Roboto Mono", ui-monospace, monospace;
-  font-size: 0.92rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-  text-decoration: none;
+.subscribe-hero-mark {
+  width: clamp(72px, 12vw, 116px);
+  height: auto;
+  color: var(--dc-django);
+  opacity: 0.92;
+  filter: drop-shadow(0 6px 16px rgb(77 165 83 / 0.18));
+  flex-shrink: 0;
 }
 
-.rss-primary-link:hover,
-.rss-primary-link:focus {
-  background: var(--dc-django);
-  border-color: var(--dc-django);
-  color: var(--dc-ink);
-}
-
-.subscribe-section {
-  padding: 28px 0;
-  border-top: 1px solid var(--dc-line);
-}
-
-.subscribe-section h2 {
-  margin: 0 0 16px;
-}
-
-.feed-list {
+.feed-cards {
   display: grid;
-  gap: 14px;
+  gap: 18px;
   padding: 0;
   margin: 0;
   list-style: none;
 }
 
-.feed-list li {
+.feed-card {
   display: grid;
-  gap: 4px;
+  gap: 14px;
+  padding: 26px clamp(20px, 3vw, 32px) 22px;
+  background: #fff;
+  border: 1px solid var(--dc-line);
+  border-radius: 18px;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.02);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
-.feed-list a {
+.feed-card:hover,
+.feed-card:focus-within {
+  border-color: rgb(77 165 83 / 0.45);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.06);
+  transform: translateY(-1px);
+}
+
+.feed-card-title {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.feed-card-desc {
+  color: var(--dc-muted);
+  margin: 0;
+  max-width: 60ch;
+}
+
+.feed-card-url {
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  background: #f4f7f3;
+  border: 1px solid var(--dc-line);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.feed-card-url code {
   font-family: "Roboto Mono", ui-monospace, monospace;
   font-size: 0.92rem;
-  overflow-wrap: anywhere;
+  color: var(--dc-ink);
+  white-space: nowrap;
+}
+
+.feed-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.feed-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--dc-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--dc-ink);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.feed-action:hover,
+.feed-action:focus-visible {
+  border-color: var(--dc-django);
+  color: var(--dc-accent-dark);
+}
+
+.feed-action--primary {
+  background: var(--dc-accent-dark);
+  border-color: var(--dc-accent-dark);
+  color: #fff;
+}
+
+.feed-action--primary:hover,
+.feed-action--primary:focus-visible {
+  background: var(--dc-django);
+  border-color: var(--dc-django);
+  color: var(--dc-ink);
+}
+
+.feed-action[data-copied] {
+  background: var(--dc-django);
+  border-color: var(--dc-django);
+  color: var(--dc-ink);
+}
+
+.feed-action-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.subscribe-why {
+  margin: 8px 0 0;
+  padding: 22px clamp(20px, 3vw, 28px);
+  border-left: 3px solid var(--dc-django);
+  background: rgb(77 165 83 / 0.06);
+  border-radius: 0 14px 14px 0;
+}
+
+.subscribe-why-title {
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+
+.subscribe-why-list {
+  margin: 0;
+  padding-left: 1.1em;
+  color: var(--dc-ink);
+}
+
+.subscribe-why-list li + li {
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .subscribe-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .subscribe-hero-mark {
+    order: -1;
+    width: 72px;
+  }
 }
 
 /* Establish a containment context so `.episode-detail` can size itself

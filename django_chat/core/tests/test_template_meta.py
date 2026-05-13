@@ -189,9 +189,10 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert all("opacity: 0;" not in block for block in ready_container_blocks)
     assert not re.search(r"(?<!min-)height: 112px !important;", css)
     assert not re.search(r"(?<!min-)height: 168px !important;", css)
-    assert ".rss-primary-link {\n  display: inline-flex;" in css
+    assert ".feed-action {\n  display: inline-flex;" in css
     assert (
-        ".rss-primary-link:hover,\n.rss-primary-link:focus {\n  background: var(--dc-django);"
+        ".feed-action--primary:hover,\n.feed-action--primary:focus-visible {\n"
+        "  background: var(--dc-django);"
         in css
     )
     assert "#0e7c7b" not in normalized_css

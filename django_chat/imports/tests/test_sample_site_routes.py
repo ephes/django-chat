@@ -123,17 +123,17 @@ def test_imported_sample_feed_detail_renders_rss_without_distribution_links(
         template.name for template in response.templates if template.name
     ]
     content = response.content.decode()
-    assert "Listen &amp; Subscribe" in content
+    assert "Subscribe via RSS" in content
     assert 'rel="alternate" type="application/rss+xml"' in content
     assert absolute_url(podcast_feed_path()) in content
-    assert "MP3 podcast RSS" in content
+    assert "MP3 podcast feed" in content
     assert podcast_feed_path() in content
     assert "/episodes/feed/podcast/m4a/rss.xml" not in content
     assert "/episodes/feed/podcast/oga/rss.xml" not in content
     assert "/episodes/feed/podcast/opus/rss.xml" not in content
-    assert "Latest entries RSS for site updates" in content
+    assert "Latest entries" in content
     assert "<strong>Latest entries RSS</strong>" not in content
-    assert "supports direct RSS subscriptions" in content
+    assert "no account, no platform required" in content
     assert "Apple Podcasts" not in content
     assert "https://itunes.apple.com/us/podcast/django-chat/id1451536459" not in content
     assert "Overcast" not in content

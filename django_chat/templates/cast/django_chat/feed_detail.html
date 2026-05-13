@@ -1,30 +1,96 @@
 {% extends "./base.html" %}
+{% load static %}
 
 {% block content %}
-  {% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' as primary_podcast_feed_url %}
+  {% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' as primary_podcast_feed_path %}
   <main class="subscribe-page">
     <section class="subscribe-hero">
-      <p class="eyebrow">Podcast RSS</p>
-      <h1>Listen &amp; Subscribe</h1>
-      <p>
-        Use the generated Django Chat podcast feed in any podcast app that
-        supports direct RSS subscriptions.
-      </p>
-      <a class="rss-primary-link" href="{{ primary_podcast_feed_url }}">{{ primary_podcast_feed_url }}</a>
+      <div class="subscribe-hero-body">
+        <p class="eyebrow">Podcast RSS</p>
+        <h1>Subscribe via RSS</h1>
+        <p class="subscribe-tagline">Bring Django Chat into your favorite podcast or feed reader — no account, no platform required.</p>
+      </div>
+      <svg class="subscribe-hero-mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="22" cy="78" r="10"/>
+        <path d="M14 50 A36 36 0 0 1 50 86" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+        <path d="M14 28 A58 58 0 0 1 72 86" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+      </svg>
     </section>
 
-    <section class="subscribe-section" aria-labelledby="subscribe-feeds">
-      <h2 id="subscribe-feeds">Generated feeds</h2>
-      <ul class="feed-list">
-        <li>
-          <strong>MP3 podcast RSS</strong>
-          <a href="{{ primary_podcast_feed_url }}">{{ primary_podcast_feed_url }}</a>
-        </li>
-        <li>
-          <strong>Latest entries RSS for site updates</strong>
-          <a href="{{ blog_feed_url }}">{{ blog_feed_url }}</a>
-        </li>
+    <ul class="feed-cards" role="list">
+      <li class="feed-card">
+        <h2 class="feed-card-title">MP3 podcast feed</h2>
+        <p class="feed-card-desc">
+          The main Django Chat episode feed. Drop this URL into a podcast
+          app to receive every new episode as soon as it's published.
+        </p>
+        <pre class="feed-card-url"><code id="feed-url-podcast">{{ request.scheme }}://{{ request.get_host }}{{ primary_podcast_feed_path }}</code></pre>
+        <div class="feed-card-actions">
+          <button type="button" class="feed-action feed-action--primary" data-copy-target="feed-url-podcast">
+            <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="8" y="4" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+              <rect x="4" y="8" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span class="feed-action-label" data-copy-default="Copy URL" data-copy-done="Copied!">Copy URL</span>
+          </button>
+          <a class="feed-action" href="podcast://{{ request.get_host }}{{ primary_podcast_feed_path }}">
+            <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M7 4.5v15l13-7.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+            <span>Open in player</span>
+          </a>
+          <a class="feed-action" href="{{ primary_podcast_feed_path }}">
+            <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 7 4 12l5 5M15 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>View XML</span>
+          </a>
+        </div>
+      </li>
+
+      <li class="feed-card">
+        <h2 class="feed-card-title">Latest entries</h2>
+        <p class="feed-card-desc">
+          Every new page or post on the site beyond episodes — handy if you
+          want to follow the project itself, not just listen.
+        </p>
+        <pre class="feed-card-url"><code id="feed-url-blog">{{ request.scheme }}://{{ request.get_host }}{{ blog_feed_url }}</code></pre>
+        <div class="feed-card-actions">
+          <button type="button" class="feed-action feed-action--primary" data-copy-target="feed-url-blog">
+            <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="8" y="4" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+              <rect x="4" y="8" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span class="feed-action-label" data-copy-default="Copy URL" data-copy-done="Copied!">Copy URL</span>
+          </button>
+          <a class="feed-action" href="feed://{{ request.get_host }}{{ blog_feed_url }}">
+            <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M7 4.5v15l13-7.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+            <span>Open in reader</span>
+          </a>
+          <a class="feed-action" href="{{ blog_feed_url }}">
+            <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 7 4 12l5 5M15 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>View XML</span>
+          </a>
+        </div>
+      </li>
+    </ul>
+
+    <aside class="subscribe-why">
+      <h2 class="subscribe-why-title">Why RSS?</h2>
+      <ul class="subscribe-why-list">
+        <li>No account, no tracking — just a URL your reader checks.</li>
+        <li>Works with any podcatcher or feed reader you already use.</li>
+        <li>You decide which episodes to download and when to listen.</li>
       </ul>
-    </section>
+    </aside>
   </main>
 {% endblock content %}
+
+{% block javascript %}
+  {{ block.super }}
+  <script defer src="{% static 'django_chat/js/subscribe-copy.js' %}?v=subscribe-1"></script>
+{% endblock javascript %}
