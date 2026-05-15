@@ -234,6 +234,7 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 12px;
+  min-height: 44px;
   color: #fff;
   font-weight: 700;
   text-decoration: none;
@@ -261,10 +262,16 @@ main {
   font-weight: 600;
 }
 
+.nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
 .show-hero {
   background-color: var(--dc-accent-dark);
   background-position: 40% 20%;
-  background-size: 130% 120%;
+  background-size: cover;
   background-attachment: fixed;
   color: #fff;
   height: auto;
@@ -448,7 +455,7 @@ html.is-stacked .show-hero-logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 18px;
   border-radius: 999px;
   font-weight: 600;
@@ -1259,7 +1266,14 @@ html.is-stacked .show-hero-logo {
   position: absolute;
   width: var(--page-header-shape-width);
   height: var(--page-header-shape-height);
-  top: var(--page-header-shape-top);
+  /* Bottom-anchored so the bubble's curve always sits at the section
+     seam below and the bubble follows downward whenever content makes
+     the page header taller than the shape's intrinsic height — at
+     standard widths this matches the prior `top: var(...)` look because
+     min-height equals the shape's intended position; at narrower
+     widths it ensures the bubble keeps backing the text instead of
+     leaving a tint-coloured gap under its curve. */
+  bottom: 0;
   /* Anchored to var(--dc-container)'s left edge: centered with 1120 px
      above the 1152 px viewport breakpoint, pinned to 16 px below. */
   left: calc(max(16px, (100% - 1120px) / 2) - var(--page-header-shape-offset));
@@ -1272,7 +1286,7 @@ html.is-stacked .show-hero-logo {
   z-index: 2;
   width: var(--dc-container);
   margin: 0 auto;
-  padding: 32px 0;
+  padding: 32px 0 100px;
 }
 
 .page-header .eyebrow,
@@ -1290,6 +1304,19 @@ html.is-stacked .show-hero-logo {
   margin: 0;
   font-size: 1.08rem;
   line-height: 1.5;
+}
+
+/* When the site-nav switches to its centered phone layout (≤ 540 px),
+   mirror that in the page header so the eyebrow, headline and tagline
+   read as a single centered column. */
+@media (max-width: 540px) {
+  .page-header-inner {
+    text-align: center;
+  }
+
+  .page-header-tagline {
+    margin-inline: auto;
+  }
 }
 
 /* ---------- Card pattern ----------
@@ -1518,6 +1545,557 @@ html.is-stacked .show-hero-logo {
 }
 
 
+/* ---------- Sponsor page ----------
+   Same outer container pattern as `.subscribe-page` but a single column —
+   the body of this page is a vertical stack of sections that read as a
+   pitch deck (intro → numbers → slots → pricing → bios → reviews → PDF).
+   Inner layout uses Every-Layout primitives: an auto-fit Grid for the
+   stat / slot / pricing strips, and a Reel for reviews so the four full-
+   length review cards survive the awkward 880-1200 px range without
+   towering over the rest of the page. */
+.sponsor-page {
+  width: var(--dc-container);
+  margin: 0 auto;
+  padding: 0 0 72px;
+  display: grid;
+  /* `minmax(0, ...)` so the implicit grid track can't grow past the page
+     container — required because the reviews Reel has `grid-auto-flow:
+     column` and its intrinsic width is the sum of its 5 review cards
+     (~1700 px). Without this, that intrinsic width would push the whole
+     `.sponsor-page` out and cause horizontal scroll on the body. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(32px, 4vw, 56px);
+}
+
+.sponsor-section-heading {
+  font-size: var(--dc-h2-size);
+  margin: 0 0 16px;
+}
+
+.sponsor-stats .sponsor-section-heading {
+  margin: 0;
+}
+
+.sponsor-stats-head {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
+.sponsor-stats-intro {
+  font-size: 1.1rem;
+  color: var(--dc-ink);
+  max-width: 70ch;
+  margin: 0;
+}
+
+.sponsor-stats-intro p {
+  margin: 0;
+}
+
+/* Stats — large numerals over short labels. Auto-fit grid degrades from
+   four columns down to two and finally one without media queries. */
+.sponsor-stats-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Full-bleed stats band. The pseudo-element extends a soft green tint
+   to viewport edges and adds a green underline; the section's own box
+   stays container-width, so no horizontal scroll on narrow viewports. */
+.sponsor-stats {
+  position: relative;
+  isolation: isolate;
+  padding: 0 0 clamp(24px, 3vw, 44px);
+  margin: 0;
+  color: var(--dc-ink);
+}
+
+/* Bleed the green tint up into the page header so the speech-bubble curve
+   merges seamlessly into the stats section background. Scoped via :has so
+   it only affects the sponsor page. */
+body:has(.sponsor-page) .page-header {
+  background: rgb(77 165 83 / 0.14);
+}
+
+/* Up to 700 px (phones): a dark-green gradient pseudo behind the bubble
+   ensures any text that overflows the bubble's path sits on a dark
+   backdrop instead of the lighter tint. Dark green at the top fades to
+   transparent so it blends invisibly into the bubble's top colour
+   (same #14513a). Z-index -1 keeps it behind the bubble. Disabled at
+   tablet+ where the bubble's path covers the visible area well enough
+   on its own. */
+@media (max-width: 699px) {
+  body:has(.sponsor-page) .page-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      to bottom,
+      #14513a 0%,
+      #14513a 25%,
+      rgb(20 81 58 / 0) 70%
+    );
+    pointer-events: none;
+  }
+}
+
+
+
+.sponsor-stats::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline: calc(50% - 50vw);
+  z-index: -1;
+  background: rgb(77 165 83 / 0.14);
+  border-bottom: 3px solid var(--dc-django);
+}
+
+.sponsor-stats-inner {
+  display: grid;
+  gap: clamp(12px, 1.8vw, 22px);
+}
+
+.sponsor-stats .sponsor-section-heading {
+  color: var(--dc-ink);
+}
+
+.sponsor-stats-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  /* Default: 2×2 on mobile and iPad Mini. Auto columns hug the ring
+     content and `justify-content: center` keeps the pair tight in the
+     middle of the section — visible middle gap = column-gap, side
+     margins come from the centering. Switch to symmetric 4-up at the
+     point where four rings comfortably fit (≥ 800 px). */
+  grid-template-columns: repeat(2, auto);
+  justify-content: center;
+  gap: clamp(14px, 2vw, 26px) clamp(40px, 6vw, 72px);
+}
+
+@media (min-width: 800px) {
+  .sponsor-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    justify-content: stretch;
+    column-gap: clamp(8px, 2vw, 24px);
+  }
+}
+
+.sponsor-stat {
+  display: grid;
+  gap: clamp(6px, 1vw, 14px);
+  align-content: start;
+  justify-items: center;
+  text-align: center;
+}
+
+.sponsor-stat-figure {
+  position: relative;
+  /* Viewport-linear: 115 px on phones → 180 px on desktop. */
+  width: clamp(115px, 6vw + 100px, 185px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  /* The figure is the container the value sizes itself against — cqi
+     on the value below makes the number track ring size 1:1, so it can
+     never overflow even if the ring shrinks for any reason. */
+  container-type: inline-size;
+}
+
+.sponsor-stat-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.sponsor-stat-ring-track {
+  fill: none;
+  stroke: rgb(20 81 58 / 0.12);
+  stroke-width: 6;
+}
+
+.sponsor-stat-ring-fill {
+  fill: none;
+  stroke: url(#sponsor-stat-ring-gradient);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 276.46;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sponsor-stat-value {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Ubuntu", "Roboto", system-ui, sans-serif;
+  font-weight: 700;
+  /* 17 % of ring width keeps "700,000+" (≈ 4.7 em wide) safely inside
+     the inner diameter — leaves at least 8 % of ring width as horizontal
+     slack on each side after the stroke. Clamp guards against extreme
+     sizes only. */
+  font-size: clamp(1rem, 17cqi, 2.2rem);
+  line-height: 1;
+  color: var(--dc-accent-dark);
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 600ms ease-out 200ms, transform 600ms ease-out 200ms;
+}
+
+.has-js-stats .sponsor-stat .sponsor-stat-ring-fill {
+  stroke-dashoffset: 276.46;
+}
+
+.has-js-stats .sponsor-stat .sponsor-stat-value {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+.has-js-stats .sponsor-stat.is-revealed .sponsor-stat-ring-fill {
+  stroke-dashoffset: 0;
+}
+
+.has-js-stats .sponsor-stat.is-revealed .sponsor-stat-value {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.sponsor-stat-label {
+  font-size: clamp(1rem, 0.4vw + 0.9rem, 1.1rem);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--dc-ink);
+  max-width: 26ch;
+}
+
+/* Slots — four uniform cards. Explicit breakpoint instead of auto-fit
+   so the layout snaps from 2×2 to 4-up without ever leaving a single
+   card stranded on its own row (which auto-fit produces between 728 and
+   ~960 px). */
+.sponsor-slots-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+@media (min-width: 960px) {
+  .sponsor-slots-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.sponsor-slot {
+  display: grid;
+  gap: 6px;
+}
+
+.sponsor-slot-name {
+  font-size: 1.1rem;
+  margin: 0;
+  color: var(--dc-accent-dark);
+}
+
+.sponsor-slot-desc {
+  margin: 0;
+  color: var(--dc-ink);
+}
+
+/* Premium callout — sits right under the four opportunity cards so it
+   reads as a footnote to them: there is only one sponsor per episode and
+   that sponsor gets all four slots. Worth shouting about. */
+.sponsor-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 26px 0 0;
+  padding: 20px 24px;
+  background: rgb(77 165 83 / 0.10);
+  border: 2px solid var(--dc-django);
+  border-radius: 14px;
+  color: var(--dc-ink);
+}
+
+.sponsor-callout-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+  color: var(--dc-accent-dark);
+}
+
+.sponsor-callout-text {
+  margin: 0;
+  font-size: clamp(1.05rem, 0.5vw + 0.95rem, 1.2rem);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* Pricing — two cards side by side, then CTA below. */
+.sponsor-pricing-grid {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.sponsor-tier {
+  display: grid;
+  gap: 4px;
+}
+
+.sponsor-tier-name {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--dc-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sponsor-tier-price {
+  margin: 0;
+  font-family: "Ubuntu", "Roboto", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.8rem, 2vw + 1rem, 2.4rem);
+  color: var(--dc-accent-dark);
+  line-height: 1.05;
+}
+
+.sponsor-tier-desc {
+  margin: 0;
+  color: var(--dc-muted);
+  font-size: 0.95rem;
+}
+
+.sponsor-cta {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 14px;
+  margin-top: clamp(20px, 3vw, 32px);
+}
+
+.sponsor-cta-lead {
+  margin: 0;
+  font-size: clamp(1.1rem, 0.6vw + 1rem, 1.3rem);
+  font-weight: 600;
+  color: var(--dc-ink);
+}
+
+.sponsor-cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 32px;
+  background: var(--dc-accent-dark);
+  color: #fff;
+  border: 2px solid var(--dc-accent-dark);
+  border-radius: 999px;
+  font-family: "Ubuntu", "Roboto", system-ui, sans-serif;
+  font-size: clamp(1.05rem, 0.5vw + 0.95rem, 1.2rem);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgb(20 81 58 / 0.25);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.sponsor-cta-button:hover,
+.sponsor-cta-button:focus-visible {
+  background: var(--dc-django);
+  border-color: var(--dc-django);
+  color: var(--dc-ink);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgb(20 81 58 / 0.32);
+}
+
+.sponsor-cta-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+
+.sponsor-hosts {
+  border-top: 1px solid var(--dc-line);
+  padding-top: clamp(20px, 2.5vw, 32px);
+}
+
+.sponsor-hosts-bio {
+  color: var(--dc-ink);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 66%;
+}
+
+.sponsor-hosts-bio p {
+  margin: 0 0 0.8em;
+}
+
+.sponsor-hosts-bio p:last-child {
+  margin-bottom: 0;
+}
+
+/* Reviews — Reel primitive. Horizontal scroll with snap so all five full-
+   text review cards stay legible at any viewport width without growing
+   the page height excessively. CSS-only (no JS): the browser handles
+   scroll, snap, and keyboard navigation. */
+.sponsor-reviews-intro {
+  margin: 0 0 16px;
+  color: var(--dc-muted);
+  max-width: 65ch;
+}
+
+/* Wrapper hosts the right-edge scroll-affordance bar; its pseudo sits
+   above the cards (z-index 2) so it isn't covered when cards scroll
+   under it. */
+.sponsor-reviews-reel {
+  position: relative;
+}
+
+.sponsor-reviews-reel::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 14px;
+  right: 0;
+  width: 6px;
+  background: var(--dc-django);
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sponsor-reviews-grid {
+  list-style: none;
+  margin: 0;
+  /* Top padding gives breathing room for the hover lift + drop shadow
+     so the card's top edge doesn't get clipped by the scroller's box.
+     Bottom padding leaves a gap between the cards and the scrollbar. */
+  padding: 18px 0 22px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(min(100%, 280px), 320px);
+  gap: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  /* Firefox: thin green scrollbar, no track tint. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--dc-django) transparent;
+}
+
+/* WebKit / Blink: thin green scrollbar, transparent track. Defined
+   explicitly so the scrollbar renders as a persistent (non-overlay)
+   bar on macOS Safari/Chrome instead of auto-hiding. */
+.sponsor-reviews-grid::-webkit-scrollbar {
+  height: 6px;
+}
+
+.sponsor-reviews-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sponsor-reviews-grid::-webkit-scrollbar-thumb {
+  background: var(--dc-django);
+  border-radius: 3px;
+}
+
+.sponsor-reviews-grid:focus-visible {
+  outline: 2px solid var(--dc-django);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.sponsor-review {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scroll-snap-align: start;
+}
+
+/* Decoration only appears on cards with short bodies (see template
+   threshold). `margin-top: auto` pulls it to the bottom of the
+   stretched card so it fills the empty space below the review text
+   instead of clinging to the body. */
+.sponsor-review-decoration {
+  margin-top: auto;
+  margin-left: auto;
+  margin-bottom: -8px;
+  margin-right: -8px;
+  width: clamp(120px, 70%, 200px);
+  height: auto;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.sponsor-review-stars {
+  margin: 0;
+  color: var(--dc-django);
+  letter-spacing: 0.15em;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.sponsor-review-title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--dc-accent-dark);
+}
+
+.sponsor-review-body {
+  margin: 0;
+  color: var(--dc-ink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* PDF download — visually distinct, full-width call-out on a tinted band. */
+.sponsor-pdf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px clamp(20px, 3vw, 28px);
+  background: rgb(77 165 83 / 0.08);
+  border: 1px solid rgb(77 165 83 / 0.35);
+  border-radius: 12px;
+}
+
+.sponsor-pdf-text {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.sponsor-pdf-heading {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+.sponsor-pdf-desc {
+  margin: 0;
+  color: var(--dc-muted);
+}
+
+.sponsor-pdf-button {
+  background: #fff;
+  border-color: var(--dc-django);
+  color: var(--dc-accent-dark);
+}
+
 /* Establish a containment context so `.episode-detail` can size itself
    against its own width via `@container` / `cqi`, instead of guessing
    the layout from the viewport. The container name lets the mobile
@@ -1604,6 +2182,7 @@ html.is-stacked .show-hero-logo {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 44px;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--dc-muted);
@@ -1639,6 +2218,7 @@ html.is-stacked .show-hero-logo {
   grid-template-columns: 22px 1fr;
   align-items: center;
   gap: 14px;
+  min-height: 44px;
   background: none;
   border: 0;
   border-bottom: 1px solid var(--dc-line);
@@ -2126,7 +2706,7 @@ html.is-stacked .show-hero-logo {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 18px;
   border: 1px solid rgb(255 255 255 / 0.35);
   border-radius: 999px;

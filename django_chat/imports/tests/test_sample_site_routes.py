@@ -46,7 +46,11 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     assert f'href="{feed_detail_path()}"' in content
     assert 'href="https://djangochat.com"' not in content
     assert "Sponsor Us" in content
-    assert "https://docs.google.com/document/" in content
+    # The Simplecast fixture still ships the Google-Doc URL in source data
+    # (must stay verbatim), but the base layout now renders the internal
+    # `/episodes/sponsor/` page instead.
+    assert "https://docs.google.com/document/" not in content
+    assert 'href="/episodes/sponsor/">Sponsor Us</a>' in content
     assert "Fosstodon" in content
     assert "Apple Podcasts" in content
     assert "https://itunes.apple.com/us/podcast/django-chat/id1451536459" in content

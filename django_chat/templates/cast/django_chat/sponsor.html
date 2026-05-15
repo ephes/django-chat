@@ -1,0 +1,150 @@
+{% extends "./base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block page_header %}
+  {% include "./_page_header.html" with eyebrow=page.eyebrow heading=page.heading tagline=page.tagline %}
+{% endblock page_header %}
+
+{% block content %}
+  <script>if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&'IntersectionObserver' in window){document.documentElement.classList.add('has-js-stats')}</script>
+  <main class="sponsor-page">
+    {% if stats %}
+      <section class="sponsor-stats" aria-labelledby="sponsor-stats-heading">
+        <div class="sponsor-stats-inner">
+          <div class="sponsor-stats-head">
+            <h2 class="sponsor-section-heading" id="sponsor-stats-heading">Django Chat in numbers</h2>
+            {% if page.stats_intro %}
+              <div class="sponsor-stats-intro">{{ page.stats_intro|richtext }}</div>
+            {% endif %}
+          </div>
+          <svg class="sponsor-stats-defs" aria-hidden="true" focusable="false" width="0" height="0">
+            <defs>
+              <linearGradient id="sponsor-stat-ring-gradient" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#a8dcad"/>
+                <stop offset="1" stop-color="#4da553"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <ul class="sponsor-stats-grid" role="list">
+            {% for stat in stats %}
+              <li class="sponsor-stat">
+                <div class="sponsor-stat-figure">
+                  <svg class="sponsor-stat-ring" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+                    <circle class="sponsor-stat-ring-track" cx="50" cy="50" r="44"/>
+                    <circle class="sponsor-stat-ring-fill" cx="50" cy="50" r="44"/>
+                  </svg>
+                  <span class="sponsor-stat-value" data-stat-value="{{ stat.value }}">{{ stat.value }}</span>
+                </div>
+                <span class="sponsor-stat-label">{{ stat.label|safe }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if slots %}
+      <section class="sponsor-slots" aria-labelledby="sponsor-slots-heading">
+        <h2 class="sponsor-section-heading" id="sponsor-slots-heading">Your Sponsorship Package</h2>
+        <ul class="sponsor-slots-grid" role="list">
+          {% for slot in slots %}
+            <li class="card sponsor-slot">
+              <h3 class="sponsor-slot-name">{{ slot.name }}</h3>
+              <p class="sponsor-slot-desc">{{ slot.description }}</p>
+            </li>
+          {% endfor %}
+        </ul>
+        {% if page.pricing_note %}
+          <aside class="sponsor-callout" role="note">
+            <svg class="sponsor-callout-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 2.5 14.6 9.4 22 12l-7.4 2.6L12 21.5 9.4 14.6 2 12l7.4-2.6z" fill="currentColor"/>
+            </svg>
+            <p class="sponsor-callout-text">{{ page.pricing_note }}</p>
+          </aside>
+        {% endif %}
+      </section>
+    {% endif %}
+
+    {% if pricing_tiers %}
+      <section class="sponsor-pricing" aria-labelledby="sponsor-pricing-heading">
+        <h2 class="sponsor-section-heading" id="sponsor-pricing-heading">Sponsorship pricing</h2>
+        <ul class="sponsor-pricing-grid" role="list">
+          {% for tier in pricing_tiers %}
+            <li class="card sponsor-tier">
+              <h3 class="sponsor-tier-name">{{ tier.name }}</h3>
+              <p class="sponsor-tier-price">{{ tier.price }}</p>
+              {% if tier.description %}<p class="sponsor-tier-desc">{{ tier.description }}</p>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+        <div class="sponsor-cta">
+          <p class="sponsor-cta-lead">Curious? — Get in touch</p>
+          <a class="sponsor-cta-button" href="mailto:{{ page.cta_email }}?subject=Sponsoring%20Django%20Chat">
+            <svg class="sponsor-cta-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M3 5.5h18c.55 0 1 .45 1 1V7l-10 6L2 7v-.5c0-.55.45-1 1-1zm19 4.2v8.3c0 .55-.45 1-1 1H3c-.55 0-1-.45-1-1V9.7l9.45 5.95c.34.22.76.22 1.1 0L22 9.7z"/>
+            </svg>
+            <span>Let's chat</span>
+          </a>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if page.hosts_bio %}
+      <section class="sponsor-hosts" aria-labelledby="sponsor-hosts-heading">
+        <h2 class="sponsor-section-heading" id="sponsor-hosts-heading">Why sponsor Django Chat?</h2>
+        <div class="sponsor-hosts-bio">
+          {{ page.hosts_bio|richtext }}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if reviews %}
+      <section class="sponsor-reviews" aria-labelledby="sponsor-reviews-heading">
+        <h2 class="sponsor-section-heading" id="sponsor-reviews-heading">Reviews</h2>
+        {% if page.reviews_intro %}
+          <p class="sponsor-reviews-intro">{{ page.reviews_intro }}</p>
+        {% endif %}
+        <div class="sponsor-reviews-reel">
+          <ul class="sponsor-reviews-grid"
+              role="list"
+              tabindex="0"
+              aria-label="Listener reviews — use arrow keys to scroll horizontally">
+            {% for review in reviews %}
+            <li class="card sponsor-review">
+              <p class="sponsor-review-stars" aria-label="{{ review.stars }} out of 5 stars">
+                {% for _ in ""|ljust:review.stars %}<span aria-hidden="true">&#9733;</span>{% endfor %}
+              </p>
+              <h3 class="sponsor-review-title">{{ review.title }}</h3>
+              <p class="sponsor-review-body">{{ review.body }}</p>
+              {% if review.body|length < 200 %}
+                <img class="sponsor-review-decoration" src="{% static 'django_chat/img/review-bubbles.svg' %}" alt="" aria-hidden="true" width="200" height="158">
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+    {% endif %}
+
+    <aside class="sponsor-pdf" aria-labelledby="sponsor-pdf-heading">
+      <div class="sponsor-pdf-text">
+        <h2 class="sponsor-pdf-heading" id="sponsor-pdf-heading">Prefer the original PDF?</h2>
+        <p class="sponsor-pdf-desc">Download the same one-pager you used to find on Google Docs.</p>
+      </div>
+      <a class="feed-action sponsor-pdf-button"
+         href="{% if page.pdf %}{% url 'wagtaildocs_serve' page.pdf.id page.pdf.filename %}{% else %}{% static 'django_chat/files/django-chat-sponsorship-kit.pdf' %}{% endif %}"
+         {% if page.pdf %}download="{{ page.pdf.filename }}"{% else %}download{% endif %}>
+        <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 4v12m0 0-4-4m4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>Download the one-pager (PDF)</span>
+      </a>
+    </aside>
+  </main>
+{% endblock content %}
+
+{% block javascript %}
+  {{ block.super }}
+  <script defer src="{% static 'django_chat/js/sponsor-stats.js' %}?v=sponsor-stats-1"></script>
+{% endblock javascript %}

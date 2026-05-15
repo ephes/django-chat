@@ -80,8 +80,10 @@
           <a href="{% url 'django_chat_episode_index' %}#all-episodes">Episodes</a>
           {% if source_metadata %}
             {% for link in source_metadata.visible_menu_links %}
-              {% if link.name != "YouTube" %}
-                <a href="{{ link.url }}"{% if link.new_window or link.name == "Fosstodon" or link.name == "Sponsor Us" %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.name }}</a>
+              {% if link.name == "Sponsor Us" %}
+                <a href="{% url 'django_chat_sponsor' %}">{{ link.name }}</a>
+              {% elif link.name != "YouTube" %}
+                <a href="{{ link.url }}"{% if link.new_window or link.name == "Fosstodon" %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.name }}</a>
               {% endif %}
             {% endfor %}
           {% endif %}

@@ -69,6 +69,7 @@ THIRD_PARTY_APPS = list(CAST_APPS_COMPAT)
 LOCAL_APPS = [
     "django_chat.core.apps.CoreConfig",
     "django_chat.imports.apps.ImportsConfig",
+    "django_chat.sponsor.apps.SponsorConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

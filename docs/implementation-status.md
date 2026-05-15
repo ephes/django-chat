@@ -241,7 +241,14 @@ deployed, staging catalog measurement confirms both RSS routes still return
 202 items, and the host-review public pages scored 98-100 in final mobile and
 desktop Lighthouse runs. The current cleanup adds production migration notes,
 pagination focus/scroll behavior, episode filter styling including custom
-date/select popovers, and Wagtail 7.4.
+date/select popovers, Wagtail 7.4, and an editable Wagtail `SponsorPage` at
+`/episodes/sponsor/` that replaces the upstream Google-Doc "Sponsor Us" link
+with an on-site pitch (stats, sponsorship slots, pricing, hosts bio, reviews
+reel, bundled PDF download). The page is a `max_count=1` singleton under the
+site root, surfaced via a thin proxy view so the URL stays parallel to
+`/episodes/feed/`; the menu link override in `base.html` swaps the imported
+Google-Doc URL for the internal route without touching the imported source
+fixture.
 
 Production migration (DNS, feed cutover, real production VPS) is
 explicitly deferred until host review (item 1) has happened and any
