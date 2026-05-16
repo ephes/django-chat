@@ -77,7 +77,7 @@
               <p>These links open Django Chat on third-party services such as podcast directories, podcast apps, and YouTube.</p>
             </div>
             <div class="platform-band-links">
-              {% for link in distribution_links|youtube_first %}
+              {% for link in distribution_links|split_amazon_audible|youtube_first %}
                 {% if link.name != "Google Podcasts" %}
                   <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">
                     {% with icon=link.name|platform_icon %}

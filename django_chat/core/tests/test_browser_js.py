@@ -208,6 +208,88 @@ def test_share_start_at_toggle_appends_t_param_to_share_url(
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_platform_band_links_layout_invariants_across_viewports(
+    live_server: Any,
+    page: Page,
+) -> None:
+    page.goto(f"{live_server.url}{episode_index_path()}")
+    page.locator(".platform-band-links a").first.wait_for()
+
+    def measure_rows() -> list[list[dict[str, float]]]:
+        return page.evaluate(
+            """() => {
+                const items = Array.from(document.querySelectorAll('.platform-band-links a'))
+                    .map((a) => {
+                        const r = a.getBoundingClientRect();
+                        return { name: a.textContent.trim(), width: r.width, top: r.top };
+                    });
+                const rows = new Map();
+                for (const item of items) {
+                    const key = Math.round(item.top);
+                    if (!rows.has(key)) rows.set(key, []);
+                    rows.get(key).push(item);
+                }
+                return [...rows.values()].sort((a, b) => a[0].top - b[0].top);
+            }"""
+        )
+
+    # Desktop: all seven buttons share one row.
+    for width in (1280, 1400):
+        page.set_viewport_size({"width": width, "height": 900})
+        rows = measure_rows()
+        assert len(rows) == 1, f"viewport {width}px expected 1 row, got {len(rows)}"
+        assert len(rows[0]) == 7
+
+    # Tablet/laptop / pre-trigger desktop: the last row must never be a
+    # single orphan button, including the viewports just below the 1120-px
+    # container-query trigger where a 6+1 layout would otherwise creep in.
+    for width in (640, 900, 1024, 1080, 1100, 1151):
+        page.set_viewport_size({"width": width, "height": 900})
+        rows = measure_rows()
+        assert len(rows) >= 2, f"viewport {width}px expected wrapping"
+        assert len(rows[-1]) >= 2, (
+            f"viewport {width}px last row has {len(rows[-1])} button(s); want >= 2"
+        )
+
+    # In the viewports where the min-width clamp exceeds every label's
+    # natural width, *all* buttons across all rows share one inline-size.
+    for width in (900, 1024, 1100, 1151):
+        page.set_viewport_size({"width": width, "height": 900})
+        rows = measure_rows()
+        all_widths = [item["width"] for row in rows for item in row]
+        spread = max(all_widths) - min(all_widths)
+        assert spread < 1.0, (
+            f"viewport {width}px button widths {all_widths} differ (spread {spread:.1f})"
+        )
+
+    # Wrapped-state hard cap: an unexpectedly long label must not widen its
+    # button beyond the shared clamp; the surplus text truncates via ellipsis.
+    page.set_viewport_size({"width": 900, "height": 900})
+    baseline = measure_rows()
+    baseline_widths: dict[str, float] = {
+        str(item["name"]): float(item["width"]) for row in baseline for item in row
+    }
+    page.evaluate(
+        """() => {
+            const target = document.querySelector('.platform-band-links a span:last-child');
+            target.dataset.originalText = target.textContent;
+            target.textContent = 'A Very Long Future Platform Name';
+        }"""
+    )
+    after = measure_rows()
+    after_widths = [item["width"] for row in after for item in row]
+    spread = max(after_widths) - min(after_widths)
+    assert spread < 1.0, (
+        f"long label broke equal inline-size: widths {after_widths} (spread {spread:.1f})"
+    )
+    long_label_width = next(item["width"] for row in after for item in row if item["width"] > 0)
+    assert long_label_width == pytest.approx(baseline_widths["YouTube"], abs=1.0), (
+        f"long label widened the button to {long_label_width}px; baseline was "
+        f"{baseline_widths['YouTube']}px"
+    )
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_embed_rail_button_opens_dialog_with_iframe_snippet(
     live_server: Any,
     page: Page,

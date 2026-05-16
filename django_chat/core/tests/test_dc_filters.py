@@ -7,6 +7,7 @@ import pytest
 from django_chat.core.templatetags.dc_filters import (
     duration_minutes,
     platform_icon,
+    split_amazon_audible,
     youtube_first,
 )
 
@@ -31,7 +32,9 @@ def test_duration_minutes_formats_or_returns_empty(seconds, expected):
         ("Apple Podcasts", "/apple-podcasts.svg"),
         ("apple podcasts", "/apple-podcasts.svg"),
         ("  Spotify  ", "/spotify.svg"),
-        ("Amazon Music and Audible", "/audible.svg"),
+        ("Amazon Music and Audible", "/amazon-music.svg"),
+        ("Amazon Music", "/amazon-music.svg"),
+        ("Audible", "/audible.svg"),
         ("Pocketcast", "/pocket-casts.svg"),
     ],
 )
@@ -62,3 +65,20 @@ def test_youtube_first_is_noop_when_youtube_already_first():
 def test_youtube_first_is_noop_when_youtube_absent():
     links = [_link("Apple Podcasts"), _link("Spotify")]
     assert [link.name for link in youtube_first(links)] == ["Apple Podcasts", "Spotify"]
+
+
+def test_split_amazon_audible_replaces_combined_entry_with_two_links():
+    combined = _link("Amazon Music and Audible")
+    spotify = _link("Spotify")
+    result = split_amazon_audible([combined, spotify])
+    names = [link.name for link in result]
+    assert names == ["Amazon Music", "Audible", "Spotify"]
+    amazon, audible = result[0], result[1]
+    assert amazon.url == combined.url
+    assert audible.url.startswith("https://www.audible.de/podcast/Django-Chat/")
+
+
+def test_split_amazon_audible_is_noop_when_combined_entry_absent():
+    spotify = _link("Spotify")
+    result = split_amazon_audible([spotify])
+    assert result == [spotify]

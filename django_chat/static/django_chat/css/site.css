@@ -72,6 +72,11 @@ body {
      pushed below the fold on long ones (no position: sticky needed). */
   min-height: 100vh;
   min-height: 100dvh;
+  /* Full-bleed sections (`.platform-band`, stats band, …) use `width: 100vw`,
+     which includes the vertical scrollbar's width and thus overflows the body
+     by ~1 px when a scrollbar is present. Clip on the inline axis so that
+     subpixel overshoot never produces a horizontal scrollbar. */
+  overflow-x: clip;
   display: flex;
   flex-direction: column;
   background-color: var(--dc-paper);
@@ -506,6 +511,7 @@ html.is-stacked .show-hero-logo {
 }
 
 .platform-band {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -542,23 +548,53 @@ html.is-stacked .show-hero-logo {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
+  gap: clamp(8px, 0.4vw + 6px, 12px);
+  width: 100%;
 }
 
 .platform-band-links a {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  min-height: 46px;
-  padding: 0 20px;
+  justify-content: center;
+  gap: clamp(6px, 0.3vw + 5px, 10px);
+  min-height: clamp(38px, 0.7vw + 34px, 46px);
+  /* min-width and max-inline-size share the same clamp so every wrapped
+     button has a fixed, identical inline-size; longer labels truncate
+     instead of widening the button and reshuffling the wrap. */
+  min-width: clamp(140px, 22vw, 180px);
+  max-inline-size: clamp(140px, 22vw, 180px);
+  padding-inline: clamp(14px, 0.6vw + 11px, 18px);
   border: 1px solid var(--dc-line);
   border-radius: 999px;
   color: var(--dc-ink);
-  font-size: 0.96rem;
+  font-size: clamp(0.82rem, 0.25vw + 0.78rem, 0.96rem);
   font-weight: 700;
   text-decoration: none;
   background-color: transparent;
+  white-space: nowrap;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.platform-band-links a > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Threshold matches the stable inner width of `.platform-band` once its
+   horizontal padding (`max(16px, calc(50vw - 560px))`) caps at 1120 px,
+   i.e. from a viewport of ~1152 px upward — the point where all 7 current
+   buttons fit content-sized in a single row (measured sum ≈ 1046 px). The
+   single-row layout is tuned for the present, stable platform-name list;
+   if a future label grows long enough that the row sum exceeds the inner
+   width, the buttons will wrap instead of preserving the single-row
+   layout. The long-label hard-cap lives in the wrapped state above, where
+   every button shares the same clamp. */
+@container (min-width: 1120px) {
+  .platform-band-links a {
+    min-width: 140px;
+    max-inline-size: none;
+  }
 }
 
 .platform-icon {
