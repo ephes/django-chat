@@ -356,7 +356,7 @@ main {
 }
 
 .show-tagline {
-  max-width: 60ch;
+  max-width: 40ch;
   color: var(--dc-muted);
   font-size: clamp(1.2rem, 1.5vw, 1.5rem);
   line-height: 1.45;
@@ -390,7 +390,7 @@ main {
 
 .show-hero-logo {
   height: auto;
-  width: clamp(170px, 30vw, 300px);
+  width: clamp(170px, 23vw, 280px);
   justify-self: end;
   margin-top: 30px;
   max-width: 100%;
@@ -544,9 +544,9 @@ html.is-stacked .show-hero-logo {
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  margin-top: -4px;
+  margin-top: -1px;
   margin-bottom: 40px;
-  padding: 0 max(16px, calc(50vw - 560px)) 40px;
+  padding: clamp(5px, 4vw - 10px, 40px) max(16px, calc(50vw - 560px)) clamp(32px, 4vw + 16px, 48px);
   background-color: #dfeede;
   background-image:
     linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
@@ -2993,15 +2993,7 @@ body:has(.sponsor-page) .page-header {
 
   .show-hero-logo {
     order: -1;
-    height: auto;
-    width: 60%;
-    max-width: 220px;
     justify-self: center;
-  }
-
-  .platform-band {
-    padding-top: 0;
-    padding-bottom: 48px;
   }
 
   .show-artwork {
