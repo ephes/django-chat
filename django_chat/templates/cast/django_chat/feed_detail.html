@@ -20,7 +20,7 @@
           </svg>
           <span class="feed-action-label" data-copy-default="Copy URL" data-copy-done="Copied!">Copy URL</span>
         </button>
-        <a class="feed-action" href="podcast://{{ request.get_host }}{{ podcast_mp3_path }}">
+        <a class="feed-action feed-action--app-link" href="podcast://{{ request.get_host }}{{ podcast_mp3_path }}">
           <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M7 4.5v15l13-7.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
           </svg>
@@ -51,7 +51,7 @@
               </svg>
               <span class="feed-action-label" data-copy-default="Copy URL" data-copy-done="Copied!">Copy URL</span>
             </button>
-            <a class="feed-action" href="feed://{{ request.get_host }}{{ blog_feed_url }}">
+            <a class="feed-action feed-action--app-link" href="feed://{{ request.get_host }}{{ blog_feed_url }}">
               <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M7 4.5v15l13-7.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
               </svg>
@@ -86,5 +86,5 @@
 
 {% block javascript %}
   {{ block.super }}
-  <script defer src="{% static 'django_chat/js/subscribe-copy.js' %}?v=subscribe-1"></script>
+  <script defer src="{% static 'django_chat/js/subscribe-copy.js' %}?v=subscribe-2"></script>
 {% endblock javascript %}

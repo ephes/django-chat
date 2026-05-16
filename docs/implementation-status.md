@@ -71,8 +71,14 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       subpages). The Subscribe content uses a generalised `.card` pattern for
       the "Latest entries" feature, a flat "Podcast audio feeds" list ready
       for additional audio formats, a sticky "Why RSS?" aside mirroring the
-      episode-detail sidebar width, and clipboard "Copy URL" plus
-      `podcast://`/`feed://` deep-link buttons next to each feed.
+      episode-detail sidebar width, and clipboard "Copy URL" plus a
+      "View XML" link next to each feed. `podcast://`/`feed://` deep-link
+      buttons are conditionally shown only on iOS (where the system reliably
+      hands off to Apple Podcasts / a registered reader); they are hidden by
+      default on macOS, Android, Windows, and Linux because Apple Podcasts
+      on macOS does not prefill the feed URL
+      (developer.apple.com/forums/thread/737234) and no system handler exists
+      on the other platforms.
 - [x] **9c. Pre-host-review backlog cleanup** — production migration risks are
       documented in `docs/production-migration-notes.md`; episode pagination
       focuses and scrolls to the refreshed results container after same-page

@@ -1524,6 +1524,19 @@ html.is-stacked .show-hero-logo {
   color: var(--dc-ink);
 }
 
+/* `podcast://` and `feed://` only have a reliable system handler on iOS.
+   On macOS Apple Podcasts opens with an empty URL field (Apple bug,
+   developer.apple.com/forums/thread/737234); on Android/Windows/Linux no
+   default handler exists. Hide by default, reveal via the platform-ios
+   class set by subscribe-copy.js. */
+.feed-action--app-link {
+  display: none;
+}
+
+.platform-ios .feed-action--app-link {
+  display: inline-flex;
+}
+
 .feed-action-icon {
   width: 18px;
   height: 18px;

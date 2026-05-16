@@ -1,6 +1,14 @@
 (() => {
   const RESET_MS = 1800;
 
+  // iPadOS 13+ reports `MacIntel` — distinguish it from real macs via touch.
+  const isIOS =
+    /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (isIOS) {
+    document.documentElement.classList.add("platform-ios");
+  }
+
   document.addEventListener("click", async (event) => {
     const trigger = event.target.closest("[data-copy-target]");
     if (!trigger || !navigator.clipboard) return;
