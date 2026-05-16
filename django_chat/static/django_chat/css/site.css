@@ -275,13 +275,37 @@ main {
 
 .show-hero {
   background-color: var(--dc-accent-dark);
-  background-position: 40% 20%;
-  background-size: cover;
+  /* JPEG fallback for browsers without image-set() support. */
+  background-image: url("../img/show-hero-bg.jpg");
+  /* DPI- and format-aware delivery: AVIF/WebP first, JPEG fallback;
+     1x source for non-retina, 2x for high-DPI screens. */
+  background-image: image-set(
+    url("../img/show-hero-bg.avif") type("image/avif") 1x,
+    url("../img/show-hero-bg@2x.avif") type("image/avif") 2x,
+    url("../img/show-hero-bg.webp") type("image/webp") 1x,
+    url("../img/show-hero-bg@2x.webp") type("image/webp") 2x,
+    url("../img/show-hero-bg.jpg") 1x,
+    url("../img/show-hero-bg@2x.jpg") 2x
+  );
+  background-position: 20% 0%;
+  background-repeat: no-repeat;
+  background-size: 120% auto;
   background-attachment: fixed;
   color: #fff;
   height: auto;
   width: 100%;
   position: relative;
+}
+
+/* On mobile/tablet the proportional 120% width would leave too little image
+   height to fill the taller stacked hero, so switch to cover. The jump at
+   the 900 px boundary is only visible when resizing a desktop browser; on
+   actual devices the viewport is fixed and either side of the boundary
+   renders cleanly on its own. */
+@media (max-width: 900px) {
+  .show-hero {
+    background-size: cover;
+  }
 }
 
 .show-hero-curve {
