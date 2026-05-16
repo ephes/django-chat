@@ -275,6 +275,41 @@ main {
 
 .show-hero {
   background-color: var(--dc-accent-dark);
+  color: #fff;
+  height: auto;
+  width: 100%;
+  position: relative;
+  /* Stacking context so the `::before` parallax layer below can sit at
+     `z-index: -1` — behind the hero's in-flow content but above the
+     background-color. */
+  isolation: isolate;
+  /* Geometric clip for the sticky pseudo below: when the hero is shorter
+     than 100 vh, the pseudo's box overflows; `overflow: clip` cuts that
+     overflow without establishing a new scroll container, so sticky still
+     uses the document scroll and the pseudo never bleeds past the hero. */
+  overflow: clip;
+}
+
+/* Cross-browser image layer: rather than `background-attachment: fixed`
+   (broken on iOS Safari) or `position: fixed` (escapes the parent's clipping
+   box entirely), use `position: sticky` on a pseudo-element. The sticky
+   containing-block constraint plus the `overflow: clip` above ensure the
+   pseudo's box is clipped to the hero so it never shows through to content
+   below. Because the hero itself is shorter than 100 vh, sticky's
+   containing-block constraint cannot satisfy `top: 0` and the pseudo
+   effectively scrolls with the hero — visually a stable backdrop while the
+   hero is in view, not a perfect viewport-locked parallax like the previous
+   fixed-attachment behaviour. `margin-bottom: -100vh` cancels the pseudo's
+   contribution to the hero's in-flow height. */
+.show-hero::before {
+  content: "";
+  display: block;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  margin-bottom: -100vh;
+  z-index: -1;
+  pointer-events: none;
   /* JPEG fallback for browsers without image-set() support. */
   background-image: url("../img/show-hero-bg.jpg");
   /* DPI- and format-aware delivery: AVIF/WebP first, JPEG fallback;
@@ -290,20 +325,12 @@ main {
   background-position: 20% 0%;
   background-repeat: no-repeat;
   background-size: 120% auto;
-  background-attachment: fixed;
-  color: #fff;
-  height: auto;
-  width: 100%;
-  position: relative;
 }
 
 /* On mobile/tablet the proportional 120% width would leave too little image
-   height to fill the taller stacked hero, so switch to cover. The jump at
-   the 900 px boundary is only visible when resizing a desktop browser; on
-   actual devices the viewport is fixed and either side of the boundary
-   renders cleanly on its own. */
+   height to fill the taller stacked hero, so switch to cover. */
 @media (max-width: 900px) {
-  .show-hero {
+  .show-hero::before {
     background-size: cover;
   }
 }
