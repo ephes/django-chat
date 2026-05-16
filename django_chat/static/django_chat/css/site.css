@@ -2274,7 +2274,7 @@ body:has(.sponsor-page) .page-header {
   font-weight: 600;
   color: var(--dc-muted);
   text-decoration: none;
-  margin-bottom: clamp(6px, 1.7vw, 20px);
+  margin-bottom: clamp(6px, 1.7vw, 10px);
   justify-self: start;
 }
 
@@ -2377,10 +2377,6 @@ body:has(.sponsor-page) .page-header {
   .episode-detail {
     grid-template-columns: 1fr;
     grid-template-rows: none;
-    /* Tight base gap so the back-link sits close to the hero badge; the
-       sidebar gets its own larger top margin below to preserve the visual
-       break before the service links. */
-    row-gap: 10px;
   }
 
   .episode-main,
@@ -2403,9 +2399,9 @@ body:has(.sponsor-page) .page-header {
        `height: calc(...)` clips the stacked rail + logo on mobile. */
     height: auto;
     min-height: 0;
-    /* Combined with the 10 px row-gap this gives ~30 px of breathing room
-       between the show notes and the service links. */
-    margin-top: 20px;
+    /* Visual break before the service links, since the .episode-detail
+       grid no longer adds a row-gap on mobile. */
+    margin-top: 30px;
   }
 
   .episode-sidebar .show-artwork {
