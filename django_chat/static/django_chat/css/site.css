@@ -262,7 +262,7 @@ main {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 14px 22px;
+  gap: 15px 35px;
   font-size: 0.92rem;
   font-weight: 600;
 }
@@ -270,7 +270,7 @@ main {
 .nav-links a {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: clamp(32px, 1.5vw + 28px, 44px);
 }
 
 .show-hero {
@@ -314,7 +314,7 @@ main {
   min-height: 14svh;
   width: min(clamp(800px, 66vw, 1000px), 100% - 32px);
   margin: 0 auto;
-  padding: 12px 0 8px;
+  padding: clamp(4px, 1vw, 12px) 0 clamp(2px, 0.8vw, 8px);
   position: relative;
   z-index: 2;
 }
@@ -366,7 +366,7 @@ main {
 
 .show-hero-logo {
   height: auto;
-  width: clamp(260px, 20vw, 320px);
+  width: clamp(170px, 30vw, 300px);
   justify-self: end;
   margin-top: 30px;
   max-width: 100%;
@@ -375,7 +375,7 @@ main {
 @media (max-width: 1024px) {
   html:not(.js-vt) .show-hero-inner {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: clamp(8px, 2vw, 24px);
     text-align: center;
   }
 
@@ -391,13 +391,13 @@ main {
   html:not(.js-vt) .show-hero-logo {
     order: -1;
     justify-self: center;
-    width: clamp(240px, 30vw, 320px);
+    margin-top: clamp(4px, 1.5vw, 30px);
   }
 }
 
 html.is-stacked .show-hero-inner {
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: clamp(8px, 2vw, 24px);
   text-align: center;
 }
 
@@ -413,7 +413,7 @@ html.is-stacked .show-actions {
 html.is-stacked .show-hero-logo {
   order: -1;
   justify-self: center;
-  width: clamp(240px, 30vw, 320px);
+  margin-top: clamp(4px, 1.5vw, 30px);
 }
 
 .show-hero-logo {
@@ -2923,14 +2923,13 @@ body:has(.sponsor-page) .page-header {
 @container site-header (max-width: 540px) {
   .site-nav {
     flex-wrap: wrap;
-    gap: 12px 18px;
+    gap: clamp(4px, 1.5vw, 12px) 18px;
     justify-content: center;
-    padding: clamp(2px, 1.5vw, 12px) 0 12px;
+    padding: clamp(2px, 1.5vw, 12px) 0;
   }
 
   .nav-links {
     flex: 1 1 100%;
-    gap: 10px 18px;
     line-height: 1.25;
     justify-content: center;
   }
