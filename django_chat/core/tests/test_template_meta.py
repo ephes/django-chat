@@ -272,7 +272,8 @@ def test_podlove_player_template_endpoint_renders_compact_template(client: Clien
     assert '<tab-trigger tab="chapters"' in body
     assert '<tab-trigger tab="transcripts">' in body
     assert "<tab-transcripts></tab-transcripts>" in body
-    assert '<tab-trigger tab="share">' in body
+    assert '<tab-trigger tab="share">' not in body
+    assert "<tab-share></tab-share>" not in body
     assert 'style="max-height:420px;"' in body
 
 
