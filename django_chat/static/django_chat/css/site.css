@@ -546,7 +546,7 @@ html.is-stacked .show-hero-logo {
   margin-right: calc(50% - 50vw);
   margin-top: -1px;
   margin-bottom: 40px;
-  padding: clamp(5px, 4vw - 10px, 40px) max(16px, calc(50vw - 560px)) clamp(32px, 4vw + 16px, 48px);
+  padding: clamp(10px, 4vw - 10px, 40px) max(16px, calc(50vw - 560px)) clamp(32px, 4vw + 16px, 48px);
   background-color: #dfeede;
   background-image:
     linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
@@ -2185,7 +2185,7 @@ body:has(.sponsor-page) .page-header {
      — otherwise the content (wrapped title + audio) becomes the taller
      side and the rail hairline drifts above the show-notes hairline. */
   --episode-cover-size: clamp(11.25rem, 18cqi, 13rem);
-  padding: 36px 0 64px;
+  padding: clamp(12px, 3vw, 36px) 0 64px;
   display: grid;
   /* Fluid column-gap and sidebar width so the two-column layout survives
      down to ~780 cqi before the mobile-stack container query trips. The
@@ -2247,7 +2247,7 @@ body:has(.sponsor-page) .page-header {
   font-weight: 600;
   color: var(--dc-muted);
   text-decoration: none;
-  margin-bottom: 20px;
+  margin-bottom: clamp(6px, 1.7vw, 20px);
   justify-self: start;
 }
 
@@ -2350,7 +2350,10 @@ body:has(.sponsor-page) .page-header {
   .episode-detail {
     grid-template-columns: 1fr;
     grid-template-rows: none;
-    row-gap: 32px;
+    /* Tight base gap so the back-link sits close to the hero badge; the
+       sidebar gets its own larger top margin below to preserve the visual
+       break before the service links. */
+    row-gap: 10px;
   }
 
   .episode-main,
@@ -2373,6 +2376,9 @@ body:has(.sponsor-page) .page-header {
        `height: calc(...)` clips the stacked rail + logo on mobile. */
     height: auto;
     min-height: 0;
+    /* Combined with the 10 px row-gap this gives ~30 px of breathing room
+       between the show notes and the service links. */
+    margin-top: 20px;
   }
 
   .episode-sidebar .show-artwork {
