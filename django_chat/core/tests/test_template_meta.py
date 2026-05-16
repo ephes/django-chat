@@ -112,10 +112,11 @@ def test_episode_detail_exposes_view_transition_episode_hooks(client: Client) ->
     assert '<link rel="expect" href="#episode-detail-main" blocking="render">' in body
     assert 'id="episode-detail-main" data-vt-page="episode-detail"' in body
     assert 'data-vt-episode-slug="django-tasks-jake-howard"' in body
-    assert (
-        'class="back-link" href="/episodes/" data-vt-episode-slug="django-tasks-jake-howard"'
-        in body
+    expected_back_link = (
+        'class="back-link" href="/episodes/#all-episodes" '
+        'data-vt-episode-slug="django-tasks-jake-howard"'
     )
+    assert expected_back_link in body
     assert 'class="episode-number-badge episode-detail-badge"' in body
     assert "data-vt-episode-badge" in body
     assert "<h1 data-vt-episode-title>Django Tasks - Jake Howard</h1>" in body

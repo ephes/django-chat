@@ -17,7 +17,7 @@
 {% block content %}
   <main id="episode-detail-main" data-vt-page="episode-detail" data-vt-episode-slug="{{ page.slug }}">
     <article class="episode-detail">
-      <a class="back-link" href="{% url 'django_chat_episode_index' %}" data-vt-episode-slug="{{ page.slug }}">← Back to Episodes</a>
+      <a class="back-link" href="{% url 'django_chat_episode_index' %}#all-episodes" data-vt-episode-slug="{{ page.slug }}">← Back to Episodes</a>
 
       <div class="episode-main">
         <header class="episode-hero">

@@ -147,26 +147,51 @@
     try {
       window.sessionStorage.setItem(
         storageKeys.episodeIndexUrl,
-        JSON.stringify({ episodeSlug, url: window.location.href }),
+        JSON.stringify({
+          episodeSlug,
+          url: window.location.href,
+          scrollY: window.scrollY,
+        }),
       );
     } catch {
       // Storage can be disabled; the static fallback link still works.
     }
   };
 
-  const rememberedEpisodeIndexUrl = () => {
+  const rememberedEpisodeIndexState = () => {
     try {
       const value = window.sessionStorage.getItem(storageKeys.episodeIndexUrl);
       if (!value) {
         return null;
       }
       const stored = JSON.parse(value);
-      if (!stored || stored.episodeSlug !== activeEpisodeSlug()) {
+      if (!stored || typeof stored !== "object") {
         return null;
       }
-      return new URL(stored.url);
+      if (typeof stored.episodeSlug !== "string" || !stored.episodeSlug) {
+        return null;
+      }
+      if (typeof stored.url !== "string") {
+        return null;
+      }
+      // Reject tampered or otherwise unparseable URLs at the storage
+      // boundary so downstream callers can rely on `new URL(state.url)`.
+      try {
+        new URL(stored.url);
+      } catch {
+        return null;
+      }
+      return stored;
     } catch {
       return null;
+    }
+  };
+
+  const clearEpisodeIndexState = () => {
+    try {
+      window.sessionStorage.removeItem(storageKeys.episodeIndexUrl);
+    } catch {
+      // ignore
     }
   };
 
@@ -176,17 +201,53 @@
     }
 
     const backLink = document.querySelector(".back-link[href]");
-    const indexUrl = rememberedEpisodeIndexUrl();
-    if (!(backLink instanceof HTMLAnchorElement) || !indexUrl) {
+    const state = rememberedEpisodeIndexState();
+    if (!(backLink instanceof HTMLAnchorElement) || !state) {
+      return;
+    }
+    if (state.episodeSlug !== activeEpisodeSlug()) {
       return;
     }
 
+    const indexUrl = new URL(state.url);
     const fallbackUrl = new URL(backLink.href, window.location.href);
     if (indexUrl.origin !== window.location.origin || indexUrl.pathname !== fallbackUrl.pathname) {
       return;
     }
 
-    backLink.href = `${indexUrl.pathname}${indexUrl.search}${indexUrl.hash}`;
+    // When we have a recorded scroll position, drop the hash so the browser
+    // doesn't anchor-scroll to #all-episodes on landing — the index-page
+    // `restoreEpisodeIndexScroll` below will jump straight to the recorded
+    // Y instead, putting the clicked episode row back at the same viewport
+    // spot the user clicked it from. Without a recorded scroll the link
+    // falls back to the #all-episodes anchor (the no-JS default).
+    const hash = typeof state.scrollY === "number" ? "" : "#all-episodes";
+    backLink.href = `${indexUrl.pathname}${indexUrl.search}${hash}`;
+  };
+
+  const restoreEpisodeIndexScroll = (fromUrl) => {
+    if (activePage() !== "episode-index" || !fromUrl) {
+      return;
+    }
+
+    const state = rememberedEpisodeIndexState();
+    if (!state || typeof state.scrollY !== "number") {
+      return;
+    }
+
+    // Only restore when the user is coming back from the matching episode
+    // detail (so a stale entry doesn't hijack an unrelated navigation).
+    if (state.episodeSlug !== slugFromUrl(fromUrl)) {
+      return;
+    }
+
+    // Instant scroll so the View Transition's new-state snapshot is taken
+    // at the recorded Y and the morph lands the episode row exactly where
+    // it was when the user clicked it.
+    window.scrollTo({ top: state.scrollY, left: 0, behavior: "instant" });
+
+    // One-shot: drop the saved state so a later reload doesn't re-jump.
+    clearEpisodeIndexState();
   };
 
   const initPage = () => {
@@ -621,6 +682,10 @@
     const currentUrl = new URL(window.location.href);
     if (activePage() === "episode-index" && fromUrl.pathname !== currentUrl.pathname) {
       suppressPaginationPopstateForCurrentPage();
+      // Restore the recorded scroll position before the view-transition
+      // captures the new-state snapshot, so the reverse morph lands the
+      // episode row at its original viewport spot.
+      restoreEpisodeIndexScroll(fromUrl);
     }
 
     applyTransitionHints(event.viewTransition, classifyAfterNavigation(fromUrl, currentUrl));
