@@ -27,9 +27,10 @@ In scope:
 
 - Restyle the tab panel chrome (background, border, radius, text color, close
   button, follow buttons) for all tabs.
-- Drop the in-player "share" tab.
-- Prefill the site share modal's "Start at" input with the player's current
-  time when the modal opens (toggle stays off).
+- Drop the in-player "share" tab; the site share modal becomes the sole
+  share entry point.
+- Update the click-to-load facade in `audio.html` to reflect five tabs
+  instead of six.
 
 Out of scope:
 
@@ -37,6 +38,12 @@ Out of scope:
   The strip keeps today's tokens (`brand`, `brandDark`, `brandDarkest`).
 - Restyling the outer iframe wrapper (no card around the whole player).
 - Forking or patching Podlove Web Player internals.
+- Prefilling the share modal's "Start at" input with the player's current
+  time. A spike against the Podlove v5 bundle confirmed there is no
+  parent-side message exposing playtime; making one work would require
+  injecting a script into the iframe to bridge Podlove's internal Redux
+  store, switching to a no-iframe embed mode, or forking `embed.5.js`.
+  Tracked as a separate follow-up spec.
 
 ## Design
 
@@ -66,71 +73,62 @@ structure; only colors and the button/close affordances are restyled.
 
 `django_chat/templates/cast/django_chat/player_template.html`:
 
-1. Add a `<style>` block at the top of the template. Every selector in it
-   is prefixed with `[data-test="player--m"]` so the rules only match inside
-   the player's `<root>`. (The block is global like any `<style>` tag; the
-   selector prefix is what prevents collisions with the surrounding page.)
-   This block holds:
-   - Tab panel wrapper rules (bg, border, radius, padding, color)
-   - Close (×) restyle
-   - Follow / Stop button restyle
-   - Followed-line highlight (`color: #14513a; font-weight: 600;`)
+1. Add a `<style>` block as the first child **inside** `<root>` (Podlove v5
+   templates must have a single top-level `<root>` node — keeping `<style>`
+   as a sibling before `<root>` would risk breaking the template parser
+   per <https://docs.podlove.org/podlove-web-player/v5/templating/components/root/>).
+   Every selector inside the block is prefixed with `[data-test="player--m"]`
+   so rules only match inside the player. **All visual styling for the tab
+   panel lives in this block** — bg, border, radius, padding, color,
+   close (×), Follow / Stop buttons, followed-line highlight. The wrapper
+   div itself gets only a structural class hook (see step 3); inline styles
+   on the wrapper stay limited to structural concerns only.
 2. Remove the share tab in three places:
    - `tab-trigger tab="share"` in the desktop tab bar (lines 29–31)
    - `tab-trigger tab="share"` in the mobile tab bar (lines 55–57)
    - `<tab name="share"><tab-share></tab-share></tab>` (lines 78–80)
-3. Apply inline style to the existing tab panel wrapper
+3. Modify the existing tab panel wrapper
    (`<div class="w-full relative overflow-auto" style="max-height:420px;">`,
-   line 62) for the bg / border / radius / margin. (Inline matches the
-   existing pattern on `<root>` at line 1.)
+   line 62):
+   - **Drop `w-full`** from the class list. With `width: 100%` plus the
+     12px horizontal margin we're about to apply, the box would be
+     `100% + 24px` wide and overflow horizontally. Letting it default to
+     `width: auto` makes the available width shrink to fit the margins.
+   - Keep `relative overflow-auto` and the inline `max-height:420px;`
+     (purely structural).
+   - Add a marker class (e.g. `class="dc-player-tabs"`) so the scoped
+     `<style>` block in step 1 can target the wrapper without relying on
+     the existing Tailwind utility classes.
+   - All visual properties (background, border, border-radius, padding,
+     margin, color) are applied to that marker class in the `<style>`
+     block, not inline.
 
-The scoped `<style>` block penetrates Podlove's tab content because the player
-uses Light DOM (existing `site.css:2450–3072` rules already cascade in this
-way). See "Risks" for the followed-line caveat.
+The selector-prefixed `<style>` block penetrates Podlove's tab content
+because the player uses Light DOM (existing `site.css:2450–3072` rules
+already cascade in this way). See "Risks" for the followed-line caveat.
 
-### Share modal time prefill
+### Click-to-load facade
 
-`django_chat/static/django_chat/js/share-modal.js`:
+`django_chat/templates/cast/django_chat/audio.html`:
 
-In the existing trigger click handler (currently `renderPills();
-closeMastodonPrompt(); updateMastodonStatus(); dialog.showModal();`), add a
-prefill step before `dialog.showModal()`:
-
-1. Read the latest known player time from a module-level accessor exposed by
-   `podlove-loader.js` (e.g. `window.djangoChatPlayerTime?.get?.()`).
-2. If it is a finite number `> 0`, format `Math.floor(value)` as `MM:SS` and
-   assign to `[data-startat-time].value`.
-3. Leave `[data-startat-toggle]` unchanged (its previous state persists).
-4. Call `renderPills()` again after the assignment so the URL preview /
-   pill hrefs pick up the new value if the toggle happens to be on.
-
-The accessor is populated by a `message` event listener added in
-`podlove-loader.js`. The listener:
-
-- Filters messages to those whose `source` is one of the player iframes.
-- Inspects `event.data` for a playtime payload. Exact message shape is
-  determined during implementation by logging Podlove's emissions for a real
-  episode and documenting the matched shape in a code comment.
-- Caches the most recent value at module scope; exposes a getter.
-
-If Podlove emits no usable playtime message, the cached value stays unset and
-the share modal opens with an empty input (today's behavior). The
-implementation comment near the listener mirrors the existing note at
-`podlove-loader.js:200–215` documenting which message shapes were tried.
+Drop one of the six `<span>` placeholder dots inside `.podlove-facade-tabs`
+(lines 33–40) so the facade renders five dots matching the new tab count
+(shownotes, chapters, transcripts, files, playlist).
 
 ## Files touched
 
-- `django_chat/templates/cast/django_chat/player_template.html` — add scoped
-  `<style>` block, remove share tab triggers and tab body, inline-style the
-  tab panel wrapper.
-- `django_chat/static/django_chat/js/podlove-loader.js` — add a `message`
-  listener that caches playtime and exposes a getter.
-- `django_chat/static/django_chat/js/share-modal.js` — read the getter on
-  dialog open and prefill `[data-startat-time]`.
-- `django_chat/core/tests/` — add a test (e.g. `test_player_template.py`)
-  asserting that the rendered player template no longer contains
-  `tab="share"` or `<tab name="share">`. Uses Django's test client or
-  `render_to_string` against the `django_chat_podlove_player_template` URL.
+- `django_chat/templates/cast/django_chat/player_template.html` — add
+  `<style>` block as first child inside `<root>`, remove share tab triggers
+  and tab body, drop `w-full` from the tab panel wrapper, add a
+  `dc-player-tabs` marker class, keep the existing inline `max-height`.
+- `django_chat/templates/cast/django_chat/audio.html` — drop one of the six
+  facade tab placeholder dots so the click-to-load facade matches the new
+  five-tab reality.
+- `django_chat/core/tests/test_template_meta.py` — update the existing
+  player template assertions (around line 272): replace
+  `assert '<tab-trigger tab="share">' in body` with an assertion that the
+  share trigger is absent. Optionally add an assertion that the facade in
+  `audio.html` renders five `.podlove-facade-tabs > span` children.
 
 ## Files not touched
 
@@ -140,31 +138,29 @@ implementation comment near the listener mirrors the existing note at
 - `episode_embed.html` — receives the new tab panel chrome automatically
   because it includes the same player template.
 - `transcript.html` — separate full-page transcript view, unaffected.
+- `django_chat/static/django_chat/js/share-modal.js`,
+  `django_chat/static/django_chat/js/podlove-loader.js` — the time-prefill
+  bridge is descoped (see Scope).
 
 ## Risks
 
-1. **Followed-line selector** — Podlove names the active transcript line
-   with some class (likely `.active` or `.current`). If the line is rendered
-   in Shadow DOM, the highlight rule silently no-ops. Mitigation: during
-   implementation, inspect transcripts in devtools to confirm the class and
-   DOM boundary. If Shadow DOM: ship the rest of the change and open a
-   follow-up note. The base panel (light bg, dark text) still ships and is
-   the main readability win.
-
-2. **Iframe playtime bridge** — `podlove-loader.js:200–215` already documents
-   that parent → player messaging via Podlove's internal Redux action shape
-   and via hash propagation both failed. The reverse direction (player →
-   parent message events) has not been verified yet. If the player emits no
-   usable playtime message in current builds, the prefill is a no-op and the
-   modal opens with an empty input (today's behavior). No user-visible
-   breakage; the work cost is bounded (~30 lines).
+**Followed-line selector** — Podlove names the active transcript line with
+some class (likely `.active` or `.current`). If the line is rendered in
+Shadow DOM, the highlight rule silently no-ops. Mitigation: during
+implementation, inspect transcripts in devtools to confirm the class and
+DOM boundary. If Shadow DOM: ship the rest of the change and open a
+follow-up note. The base panel (light bg, dark text) still ships and is the
+main readability win.
 
 ## Out of scope / future
 
 - Restyling the dark-green controls strip.
 - Custom theme tokens per tab.
 - Receiver-side auto-seek when the page is opened with `?t=` (existing
-  `podlove-loader.js` comment block already tracks this).
+  `podlove-loader.js:200–215` comment block already tracks this).
+- Share-modal time prefill — separate spec; requires either an in-iframe
+  script bridge to Podlove's Redux store, switching off iframe embedding,
+  or a patched `embed.5.js`. None fit the scope of this slice.
 
 ## Verification
 
@@ -175,6 +171,7 @@ Manual browser pass (dev server, real episode):
 - Cycle through shownotes / chapters / files / playlist — all share the new
   chrome.
 - Share tab absent from both desktop and mobile tab bars.
+- Click-to-load facade shows five tab dots (not six) before the player loads.
 - Play and scrub audio; the followed transcript line switches to `#14513a`,
   weight 600. If not, capture the actual class in devtools and decide
   ship-with-followup vs fix-now per "Risks".
@@ -184,15 +181,7 @@ Manual browser pass (dev server, real episode):
 - Mobile viewport (≤ 760px) — same checks.
 - Embed page in iframe — same checks.
 
-Share modal prefill:
-
-- Load page, play for ~30 s, open share modal → "Start at" input shows
-  ~`00:30`, toggle off. Toggle on → URL gains `?t=30`. Paste in incognito →
-  episode loads (existing `?t=` parser handles this).
-- With audio at 0 (or never played), share modal opens with empty input.
-- Devtools console clean.
-
 Quality gates:
 
-- `just test` green; new template test asserts share tab is gone.
+- `just test` green; updated template test asserts share tab is absent.
 - Configured hook runner passes.
