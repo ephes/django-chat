@@ -118,15 +118,40 @@
     }
   };
 
-  trigger?.addEventListener("click", (event) => {
-    event.preventDefault();
+  // Strip the dialog's URL fragment (e.g. `#share-dialog` from a no-JS click
+  // or a deep link) so the no-JS `:target` rule does not paint the overlay
+  // behind the native modal, and so the close link's `href="#"` doesn't
+  // leave a leftover fragment.
+  const clearFragment = () => {
+    if (location.hash === `#${dialog.id}`) {
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  };
+
+  const openDialog = () => {
     renderPills();
     closeMastodonPrompt();
     updateMastodonStatus();
-    dialog.showModal();
+    clearFragment();
+    if (!dialog.open) dialog.showModal();
+  };
+
+  trigger?.addEventListener("click", (event) => {
+    event.preventDefault();
+    openDialog();
   });
 
-  closeButton?.addEventListener("click", () => dialog.close());
+  // Deep link landed us on `#share-dialog` (no-JS path) — upgrade to a real
+  // modal so the user gets focus trap, ESC-to-close, and top-layer rendering.
+  if (location.hash === `#${dialog.id}`) {
+    openDialog();
+  }
+
+  closeButton?.addEventListener("click", (event) => {
+    event.preventDefault();
+    if (dialog.open) dialog.close();
+    clearFragment();
+  });
 
   // Close on backdrop click (click directly on dialog, not its inner content).
   dialog.addEventListener("click", (event) => {

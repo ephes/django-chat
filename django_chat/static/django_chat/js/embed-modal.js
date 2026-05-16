@@ -24,13 +24,32 @@
     }
   };
 
+  const clearFragment = () => {
+    if (location.hash === `#${dialog.id}`) {
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  };
+
+  const openDialog = () => {
+    render();
+    clearFragment();
+    if (!dialog.open) dialog.showModal();
+  };
+
   trigger?.addEventListener("click", (event) => {
     event.preventDefault();
-    render();
-    dialog.showModal();
+    openDialog();
   });
 
-  closeButton?.addEventListener("click", () => dialog.close());
+  if (location.hash === `#${dialog.id}`) {
+    openDialog();
+  }
+
+  closeButton?.addEventListener("click", (event) => {
+    event.preventDefault();
+    if (dialog.open) dialog.close();
+    clearFragment();
+  });
 
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) dialog.close();

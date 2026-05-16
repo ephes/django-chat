@@ -158,6 +158,14 @@ serving the polished site:
 - Episode detail heroes render the static Django Chat SVG logo; imported show
   artwork stays attached to `Podcast.cover_image` for django-cast metadata,
   feed, and player API image paths.
+- Episode-detail share and embed dialogs use a CSS `:target` fallback so they
+  work without JavaScript: triggers are `<a href="#share-dialog">` /
+  `<a href="#embed-dialog">`, share-pill hrefs and the embed iframe snippet
+  are server-rendered, and the close link is an `<a href="#">`. When JS is
+  available, it intercepts the trigger click and upgrades to a native
+  top-layer `<dialog>` with focus trap, ESC-to-close, and a `::backdrop`.
+  JS-only enhancements (clipboard copy, "Start at" timecode, Mastodon
+  instance picker) are hidden via a `<noscript>` style block.
 - Wagtail `Site` row pinned to `djangochat.staging.django-cast.com:443`
   with `TemplateBaseDirectory=django_chat`, via the new
   `ensure_default_site` post-deploy task.

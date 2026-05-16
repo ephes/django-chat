@@ -3191,20 +3191,137 @@ body:has(.sponsor-page) .page-header {
 
 /* ---------- Share Modal ---------- */
 
+/* The dialog has two visible modes:
+   - JS path: `dialog.showModal()` adds [open] and puts the dialog in the
+     top layer with a native ::backdrop.
+   - No-JS path: trigger is `<a href="#share-dialog">` which sets the URL
+     fragment, `:target` matches, and the dialog is rendered in normal flow.
+     We turn it into a fullscreen overlay container that centers the inner
+     card and provides its own backdrop (since ::backdrop only applies in
+     top-layer modal mode).
+   In both modes the inner card (`.share-modal-inner`) is the actual card
+   chrome and is what we slide+scale on enter/exit. */
 .share-modal {
   border: 0;
-  border-radius: 16px;
   padding: 0;
-  max-width: 480px;
-  width: min(480px, calc(100vw - 32px));
-  background: var(--dc-surface, #fff);
+  background: transparent;
   color: var(--dc-ink);
-  box-shadow: 0 24px 64px rgb(0 0 0 / 0.22);
+  max-width: none;
+  /* `fit-content` (not `auto`) so the dialog sizes to the inner card. With
+     `auto` and the UA default `inset-inline-start: 0; inset-inline-end: 0;
+     margin: auto`, the dialog stretches viewport-wide and the auto-margin
+     no longer centers it. */
+  width: fit-content;
+  /* `allow-discrete` lets us transition `display` and `overlay` so the
+     dialog stays painted through the exit animation. */
+  opacity: 0;
+  transition:
+    opacity 280ms ease,
+    display 320ms allow-discrete,
+    overlay 320ms allow-discrete;
 }
 
-.share-modal::backdrop {
-  background: rgb(0 0 0 / 0.45);
-  backdrop-filter: blur(2px);
+.share-modal[open],
+.share-modal:not([open]):target {
+  opacity: 1;
+}
+
+@starting-style {
+  .share-modal[open],
+  .share-modal:not([open]):target {
+    opacity: 0;
+  }
+}
+
+/* No-JS overlay mode: dialog becomes the fullscreen darkened container.
+   `:not([open])` keeps JS modal mode (which uses ::backdrop) from picking
+   up these rules if the URL fragment is also set. */
+.share-modal:not([open]):target {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  width: 100vw;
+  height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(6px);
+  /* Scroll the overlay, not the page, if the card is taller than the viewport. */
+  overflow: auto;
+  /* The site-wide click-on-backdrop-to-close behaviour relies on JS in the
+     modal mode. Without JS, the user closes via the close link. */
+}
+
+.share-modal[open]::backdrop {
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition:
+    opacity 280ms ease,
+    display 280ms allow-discrete,
+    overlay 280ms allow-discrete;
+}
+
+@starting-style {
+  .share-modal[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+.share-modal[open]::backdrop {
+  opacity: 1;
+}
+
+/* Inner card slides + scales in. Same animation for [open] and :target. */
+.share-modal-inner {
+  background: var(--dc-surface, #fff);
+  border-radius: 16px;
+  max-width: 480px;
+  width: min(480px, calc(100vw - 32px));
+  box-shadow: 0 24px 64px rgb(0 0 0 / 0.22);
+  opacity: 0;
+  transform: translateY(32px) scale(0.88);
+  transition:
+    opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.share-modal[open] .share-modal-inner,
+.share-modal:not([open]):target .share-modal-inner {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@starting-style {
+  .share-modal[open] .share-modal-inner,
+  .share-modal:not([open]):target .share-modal-inner {
+    opacity: 0;
+    transform: translateY(32px) scale(0.88);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-modal,
+  .share-modal-inner,
+  .share-modal::backdrop {
+    transition: none;
+  }
+}
+
+/* Lock background scrolling while either modal is open. `:has()` lets us
+   target the root element based on the open/targeted dialog deeper in the
+   tree, so this works for both the JS path (`[open]`) and the no-JS path
+   (`:target`) without any script.
+
+   `body` carries `overflow-x: clip`, which makes the viewport's scroll
+   container resolve to `body` (not `html`) per the CSS overflow propagation
+   rules. Setting `overflow: hidden` on both nodes covers both situations. */
+html:has(.share-modal[open]),
+html:has(.share-modal:not([open]):target),
+body:has(.share-modal[open]),
+body:has(.share-modal:not([open]):target) {
+  overflow: hidden;
 }
 
 .share-modal-inner {
@@ -3535,7 +3652,7 @@ body:has(.sponsor-page) .page-header {
 
 /* ---------- Embed Modal additions (extends .share-modal) ---------- */
 
-.embed-modal {
+.embed-modal .share-modal-inner {
   max-width: 560px;
   width: min(560px, calc(100vw - 32px));
 }
