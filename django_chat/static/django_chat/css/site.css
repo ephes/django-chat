@@ -425,7 +425,8 @@ main {
 .show-hero-inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--s3);
+  /* deliberate off-scale: 2.5rem (40 px) sits between --s2 and --s3. */
+  gap: 2.5rem;
   align-items: center;
   min-height: 14svh;
   width: min(clamp(800px, 66vw, 1000px), 100% - 32px);
@@ -1270,7 +1271,8 @@ main {
   --episode-badge-size: clamp(4.5rem, 9vw, 9rem);
   display: grid;
   gap: 0;
-  padding: 0 0 var(--s3);
+  /* deliberate off-scale: 3.5rem (56 px) bottom buffer before footer. */
+  padding: 0 0 3.5rem;
 }
 
 .episode-row {
@@ -1454,7 +1456,10 @@ main {
   z-index: 2;
   width: var(--dc-container);
   margin: 0 auto;
-  padding: var(--s2) 0 var(--s5);
+  /* `padding-bottom: 6.25rem` (100 px) is page-header chrome that
+     extends below the headline before content begins — deliberately
+     off-scale, much taller than any scale step. */
+  padding: var(--s2) 0 6.25rem;
 }
 
 .page-header .eyebrow,
@@ -1511,9 +1516,11 @@ main {
 .subscribe-page {
   width: var(--dc-container);
   margin: 0 auto;
-  padding: var(--s3) 0 var(--s4);
+  /* deliberate off-scale section padding: 3.5rem (56 px) / 4.5rem (72 px). */
+  padding: 3.5rem 0 4.5rem;
   display: grid;
-  gap: var(--s3);
+  /* deliberate off-scale: 2.5rem (40 px) sits between --s2 and --s3. */
+  gap: 2.5rem;
 }
 
 
@@ -1730,7 +1737,8 @@ main {
 .sponsor-page {
   width: var(--dc-container);
   margin: 0 auto;
-  padding: 0 0 var(--s4);
+  /* deliberate off-scale: 4.5rem (72 px) section padding-bottom. */
+  padding: 0 0 4.5rem;
   display: grid;
   /* `minmax(0, ...)` so the implicit grid track can't grow past the page
      container — required because the reviews Reel has `grid-auto-flow:
@@ -2826,7 +2834,8 @@ body:has(.sponsor-page) .page-header {
   align-items: center;
   justify-content: center;
   gap: var(--s-1);
-  padding: var(--s1) 0 var(--s3);
+  /* deliberate off-scale: 3.5rem (56 px) bottom buffer before footer. */
+  padding: var(--s1) 0 3.5rem;
   font-weight: 600;
 }
 
