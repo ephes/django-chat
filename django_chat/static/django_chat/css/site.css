@@ -2811,7 +2811,10 @@ body:has(.sponsor-page) .page-header {
 .show-notes p:has(+ ul),
 .show-notes p:has(+ ol) {
   font-family: var(--font-body);
-  font-size: var(--text-lg);
+  /* Deliberate off-scale: 1.3rem keeps show-notes section markers visibly
+     heavier than the global `h3` rule (1.2rem = --text-lg). Snapping to
+     --text-lg would collapse the visual hierarchy. */
+  font-size: 1.3rem;
   font-weight: 700;
   color: var(--dc-ink);
   letter-spacing: -0.005em;
