@@ -340,7 +340,7 @@ main {
 
 .nav-links {
   --cluster-space: 15px 35px;
-  font-size: 0.92rem;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
@@ -811,7 +811,7 @@ main {
   border-radius: var(--dc-radius-pill);
   color: var(--dc-ink);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   cursor: pointer;
   user-select: none;
 }
@@ -894,7 +894,7 @@ main {
   background: var(--dc-input-bg);
   color: var(--dc-ink);
   font: inherit;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 .filter-form select {
@@ -940,7 +940,7 @@ main {
   background: var(--dc-input-bg);
   color: var(--dc-ink);
   font: inherit;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   text-align: left;
   cursor: pointer;
 }
@@ -1068,6 +1068,7 @@ main {
   height: 38px;
   border-radius: var(--dc-radius-pill);
   color: var(--dc-accent-dark);
+  /* Icon glyph size — off-scale, tied to the 38 px button. */
   font-size: 1.6rem;
   line-height: 1;
 }
@@ -1094,7 +1095,7 @@ main {
 .filter-date-weekdays {
   margin-bottom: var(--s-3);
   color: var(--dc-muted);
-  font-size: 0.76rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   text-align: center;
 }
@@ -1270,7 +1271,7 @@ main {
   padding: 0 var(--s0);
   border: 1px solid var(--dc-line);
   color: var(--dc-muted);
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   font-weight: 700;
 }
 
@@ -1553,7 +1554,7 @@ main {
 }
 
 .feed-card-title--compact {
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
 }
 
 .feed-card-desc {
@@ -1573,7 +1574,7 @@ main {
 
 .feed-card-url code {
   font-family: var(--font-mono);
-  font-size: 0.92rem;
+  font-size: var(--text-sm);
   color: var(--dc-ink);
   white-space: nowrap;
 }
@@ -1591,7 +1592,7 @@ main {
   background: var(--dc-paper);
   color: var(--dc-ink);
   font: inherit;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
   /* Slightly slower than `--dc-transition-colors` so the copy-feedback flash
@@ -1683,7 +1684,7 @@ main {
   display: grid;
   gap: var(--s-2);
   justify-items: start;
-  font-size: 0.92rem;
+  font-size: var(--text-sm);
 }
 
 .subscribe-why-mark {
@@ -1693,7 +1694,7 @@ main {
 }
 
 .subscribe-why-title {
-  font-size: 0.92rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1783,7 +1784,7 @@ main {
 }
 
 .sponsor-stats-intro {
-  font-size: 1.1rem;
+  font-size: var(--text-md);
   color: var(--dc-ink);
   max-width: 70ch;
   margin: 0;
@@ -1995,7 +1996,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-slot-name {
-  font-size: 1.1rem;
+  font-size: var(--text-md);
   margin: 0;
   color: var(--dc-accent-dark);
 }
@@ -2050,7 +2051,7 @@ body:has(.sponsor-page) .page-header {
 
 .sponsor-tier-name {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--text-md);
   color: var(--dc-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2068,7 +2069,7 @@ body:has(.sponsor-page) .page-header {
 .sponsor-tier-desc {
   margin: 0;
   color: var(--dc-muted);
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 .sponsor-cta {
@@ -2128,7 +2129,7 @@ body:has(.sponsor-page) .page-header {
 
 .sponsor-hosts-bio {
   color: var(--dc-ink);
-  font-size: 1.05rem;
+  font-size: var(--text-md);
   line-height: 1.6;
   max-width: 66%;
 }
@@ -2242,14 +2243,14 @@ body:has(.sponsor-page) .page-header {
 
 .sponsor-review-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--text-md);
   color: var(--dc-accent-dark);
 }
 
 .sponsor-review-body {
   margin: 0;
   color: var(--dc-ink);
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   line-height: 1.5;
 }
 
@@ -2273,7 +2274,7 @@ body:has(.sponsor-page) .page-header {
 
 .sponsor-pdf-heading {
   margin: 0 0 var(--s-3);
-  font-size: 1.1rem;
+  font-size: var(--text-md);
 }
 
 .sponsor-pdf-desc {
@@ -2664,7 +2665,7 @@ body:has(.sponsor-page) .page-header {
 .podlove-facade-duration {
   color: var(--dc-muted);
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -2772,6 +2773,9 @@ body:has(.sponsor-page) .page-header {
 
 .show-notes-title {
   font-family: var(--font-body);
+  /* Sits just above --text-xl (1.4) and at the lower bound of --text-h2
+     (clamp 1.6–2.2). Kept fixed because the heading is decorative, not
+     part of the fluid title hierarchy. */
   font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.015em;
@@ -2780,7 +2784,7 @@ body:has(.sponsor-page) .page-header {
 
 .show-notes {
   max-width: 720px;
-  font-size: 1.02rem;
+  font-size: var(--text-base);
 }
 
 .show-notes h2,
@@ -2791,7 +2795,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .show-notes h2 {
-  font-size: 1.3rem;
+  font-size: var(--text-lg);
   margin: var(--s3) 0 var(--s-1);
 }
 
@@ -2807,7 +2811,7 @@ body:has(.sponsor-page) .page-header {
 .show-notes p:has(+ ul),
 .show-notes p:has(+ ol) {
   font-family: var(--font-body);
-  font-size: 1.3rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--dc-ink);
   letter-spacing: -0.005em;
@@ -3450,7 +3454,7 @@ body:has(.share-modal:not([open]):target) {
   color: var(--dc-ink);
   background: transparent;
   font: inherit;
-  font-size: 0.92rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
   transition: var(--dc-transition-colors);
@@ -3486,7 +3490,7 @@ body:has(.share-modal:not([open]):target) {
   justify-content: space-between;
   gap: var(--s-1);
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--dc-muted);
 }
 
@@ -3504,7 +3508,7 @@ body:has(.share-modal:not([open]):target) {
   border: 0;
   padding: 0;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--dc-accent-dark);
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -3519,7 +3523,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-mastodon-prompt label {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--dc-muted);
 }
@@ -3532,7 +3536,7 @@ body:has(.share-modal:not([open]):target) {
 
 .share-mastodon-prefix {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--dc-muted);
 }
 
@@ -3584,7 +3588,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-mastodon-hint {
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   color: var(--dc-muted);
   margin: 0;
 }
@@ -3618,7 +3622,7 @@ body:has(.share-modal:not([open]):target) {
   border-radius: var(--dc-radius-pill);
   padding: var(--s-2) var(--s-1);
   font-family: var(--font-mono);
-  font-size: 0.92rem;
+  font-size: var(--text-sm);
   background: var(--dc-input-bg);
   text-align: center;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -3655,7 +3659,7 @@ body:has(.share-modal:not([open]):target) {
   padding: 0 var(--s0);
   min-height: 42px;
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   background: var(--dc-input-bg);
   color: var(--dc-ink);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -3679,7 +3683,7 @@ body:has(.share-modal:not([open]):target) {
 
   .share-pill {
     padding: 0 var(--s-1);
-    font-size: 0.88rem;
+    font-size: var(--text-sm);
   }
 }
 
@@ -3729,13 +3733,13 @@ body:has(.share-modal:not([open]):target) {
 
 .embed-info-hint {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   line-height: 1.45;
   color: var(--dc-accent-dark);
 }
 
 .embed-snippet-label {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--dc-muted);
   margin: 0;
