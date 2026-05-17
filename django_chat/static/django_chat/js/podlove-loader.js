@@ -4,6 +4,166 @@
   const loadStartedAttribute = "data-django-chat-player-load-started";
   const hoverLoadAttribute = "data-django-chat-load-on-hover";
   const hoverLoadArmedAttribute = "data-django-chat-hover-load-armed";
+  const playerPanelStyleId = "django-chat-player-panel-style";
+  const playerPanelStyles = `
+[data-test="tab"] {
+  background: #e6f0dc !important;
+  border: 1px solid #cdddc1 !important;
+  border-radius: 16px !important;
+  box-sizing: border-box;
+  color: #14513a !important;
+  margin: 12px !important;
+}
+
+[data-test="tab"] .tab-content {
+  background-color: #e6f0dc !important;
+  color: #14513a !important;
+  line-height: 1.55;
+}
+
+[data-test="tab"] a,
+[data-test="tab"] button,
+[data-test="tab"] h1,
+[data-test="tab"] h2,
+[data-test="tab"] h3,
+[data-test="tab"] h4,
+[data-test="tab"] input,
+[data-test="tab"] li,
+[data-test="tab"] p,
+[data-test="tab"] span {
+  color: #14513a !important;
+}
+
+[data-test="tab-title"] {
+  margin-bottom: 20px !important;
+}
+
+[data-test="tab-title--close"] {
+  align-items: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  cursor: pointer;
+  display: inline-flex !important;
+  height: 42px !important;
+  justify-content: center !important;
+  margin-top: -8px !important;
+  padding: 0 !important;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  width: 42px !important;
+}
+
+[data-test="tab"] [data-test="tab-title--close"] {
+  color: #0d0d0d !important;
+}
+
+[data-test="tab-title--close"] svg {
+  height: 22px !important;
+  stroke-width: 3 !important;
+  width: 22px !important;
+}
+
+[data-test="tab-title--close"] svg * {
+  stroke: currentColor !important;
+  stroke-width: 3 !important;
+}
+
+[data-test="tab-title--close"]:hover,
+[data-test="tab-title--close"]:focus-visible {
+  background: rgb(77 165 83 / 0.10) !important;
+  color: #14513a !important;
+  outline: none;
+}
+
+[data-test="tab-title--close"]:focus-visible {
+  outline: 2px solid #4da553 !important;
+  outline-offset: 2px !important;
+}
+
+[data-test="tab-transcripts--follow"] {
+  align-items: center !important;
+  background: transparent !important;
+  border: 1px solid #d8ded4 !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+  justify-content: center !important;
+  min-height: 40px !important;
+  padding: 0 16px !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  width: auto !important;
+}
+
+[data-test="tab"] [data-test="tab-transcripts--follow"] {
+  color: #0d0d0d !important;
+}
+
+[data-test="tab-transcripts--follow"]:hover,
+[data-test="tab-transcripts--follow"]:focus-visible {
+  background: rgb(77 165 83 / 0.10) !important;
+  border-color: #4da553 !important;
+  color: #14513a !important;
+  outline: none;
+}
+
+[data-test="tab-transcripts--follow"]:focus-visible {
+  outline: 2px solid #4da553 !important;
+  outline-offset: 2px !important;
+}
+
+[data-test="play-button"]:focus-visible {
+  border-color: #4da553 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 0 2px #4da553 !important;
+  outline: none !important;
+}
+
+[data-test="play-button"]:focus:not(:focus-visible) {
+  border-color: #4da553 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 0 2px #4da553 !important;
+  outline: none !important;
+}
+
+[data-test^="tab-trigger--"] {
+  border-radius: 8px !important;
+  outline-color: #4da553 !important;
+}
+
+[data-test^="tab-trigger--"]:focus-visible,
+[data-test^="tab-trigger--"][aria-selected="true"] {
+  border-color: #4da553 !important;
+  box-shadow: 0 0 0 2px #4da553 !important;
+  outline: none !important;
+}
+
+[data-test^="tab-trigger--"]:focus:not(:focus-visible) {
+  border-color: #4da553 !important;
+  border-radius: 8px !important;
+  outline: none !important;
+}
+
+[data-test^="tab-trigger--"][aria-selected="true"] * {
+  border-color: #4da553 !important;
+}
+
+/* Podlove renders the selected-tab marker as the final direct span child. */
+[data-test^="tab-trigger--"][aria-selected="true"] > span:last-child,
+[data-test^="tab-trigger--"][aria-selected="true"] > span:last-child svg,
+[data-test^="tab-trigger--"][aria-selected="true"] > span:last-child path {
+  color: #4da553 !important;
+  fill: #4da553 !important;
+  stroke: #4da553 !important;
+}
+
+[data-test="tab-transcripts--results"] .active-transcript {
+  background: linear-gradient(to top, rgb(77 165 83 / 0.28) 0 42%, transparent 42%) !important;
+  border-radius: 2px;
+  color: #0d0d0d !important;
+}
+`;
 
   // Parse ?t=<seconds | MM:SS | HH:MM:SS> from the page URL. Returns whole seconds or null.
   // Each segment must be digits only; minutes and seconds are clamped to 0..59 in colon forms.
@@ -26,6 +186,18 @@
     return h * 3600 + m * 60 + s;
   };
   const startAtSeconds = parseStartAt(window.location.search);
+
+  const installPlayerPanelStyles = (iframeDocument) => {
+    if (!iframeDocument || iframeDocument.getElementById(playerPanelStyleId)) {
+      return;
+    }
+
+    const style = iframeDocument.createElement("style");
+    style.id = playerPanelStyleId;
+    style.setAttribute("data-django-chat-player-style", "");
+    style.textContent = playerPanelStyles;
+    (iframeDocument.head || iframeDocument.documentElement).appendChild(style);
+  };
 
   const markReady = (player) => {
     player.removeAttribute(loadingAttribute);
@@ -132,6 +304,7 @@
     revealWhenLoaded = () => {
       try {
         const iframeDocument = iframe.contentDocument;
+        installPlayerPanelStyles(iframeDocument);
         const app = iframeDocument?.getElementById("app");
         if (!app) {
           if (iframeDocument && !appLookupObserver) {

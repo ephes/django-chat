@@ -1,5 +1,11 @@
 # Player design cleanup implementation plan
 
+> Architecture update, 2026-05-17: this original plan's template-side
+> `<style>` / `dc-player-tabs` approach was superseded after it broke Podlove
+> rendering. The implementation should keep `player_template.html` visually
+> neutral and inject tab-panel CSS into the same-origin Podlove iframe from
+> `django_chat/static/django_chat/js/podlove-loader.js`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the dark-green Podlove tab panel with a light leaf-tint panel that has rounded corners, dark text, share-pill-styled Follow/Stop buttons, and a share-modal-style close (×); remove the redundant in-player share tab; align the click-to-load facade.

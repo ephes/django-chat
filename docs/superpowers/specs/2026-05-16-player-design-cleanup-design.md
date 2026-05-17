@@ -2,6 +2,13 @@
 
 Date: 2026-05-16
 
+> Architecture update, 2026-05-17: the template-side `<style>` /
+> `dc-player-tabs` approach described below was superseded after it broke
+> Podlove rendering. The shipped implementation keeps
+> `player_template.html` visually neutral and injects tab-panel CSS into the
+> same-origin Podlove iframe from
+> `django_chat/static/django_chat/js/podlove-loader.js`.
+
 ## Background
 
 The Podlove Web Player is embedded on the episode detail page and the

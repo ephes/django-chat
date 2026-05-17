@@ -1,33 +1,4 @@
 <root data-test="player--m" style="max-width:600px;min-width:260px;background:transparent;">
-  <style>
-    /* Tab panel wrapper — replaces the dark-green chrome with a leaf-tint
-       card. Selectors are prefixed with [data-test="player--m"] so rules
-       only match inside the player; the player's <root> always carries
-       data-test="player--m" (see line 1). */
-    [data-test="player--m"] .dc-player-tabs {
-      margin: 12px;
-      padding: 18px 20px;
-      background: #e6f0dc;
-      color: #0d0d0d;
-      border: 1px solid #cdddc1;
-      border-radius: 16px;
-      line-height: 1.55;
-    }
-
-    [data-test="player--m"] .dc-player-tabs a {
-      color: #14513a;
-      text-decoration-thickness: 0.08em;
-      text-underline-offset: 0.18em;
-    }
-
-    /* Speaker / timestamp eyebrows render via Podlove's own typography;
-       keep them muted instead of inheriting the new dark body colour. */
-    [data-test="player--m"] .dc-player-tabs time,
-    [data-test="player--m"] .dc-player-tabs .speaker,
-    [data-test="player--m"] .dc-player-tabs [class*="timestamp"] {
-      color: #5f635d;
-    }
-  </style>
   <div class="p-4 flex flex-col">
     <div class="flex w-12/12">
       <div class="flex w-8/12 mobile:w-full">
@@ -82,7 +53,7 @@
       </div>
     </div>
   </div>
-  <div class="dc-player-tabs relative overflow-auto" style="max-height:420px;">
+  <div class="w-full relative overflow-auto" style="max-height:420px;">
     <tab name="shownotes">
       <tab-shownotes></tab-shownotes>
     </tab>
