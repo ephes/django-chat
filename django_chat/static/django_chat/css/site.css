@@ -82,8 +82,25 @@
      clamp variance. */
   --site-header-height: 72px;
 
-  /* ---------- Typography tokens ---------- */
-  --dc-h2-size: clamp(1.6rem, 1.6vw + 0.8rem, 2.2rem);
+  /* ---------- Typography tokens ----------
+     Font-family tokens use the long fallback chain so a missing primary
+     face still resolves through `system-ui`, the Apple system stack, and
+     the Windows fallback before hitting the generic `sans-serif`. */
+  --font-body: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: "Ubuntu", "Roboto", system-ui, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, monospace;
+
+  /* Size scale — six static steps plus the responsive h2 clamp. Sites
+     whose font-size does not exact-match a token (e.g. 0.85rem, 0.92rem,
+     0.95rem, 1.05rem, 1.1rem, 1.3rem, 1.6rem) intentionally stay literal
+     until a future "snap-to-text-scale" pass. */
+  --text-xs: 0.78rem;
+  --text-sm: 0.9rem;
+  --text-base: 1rem;
+  --text-md: 1.08rem;
+  --text-lg: 1.2rem;
+  --text-xl: 1.4rem;
+  --text-h2: clamp(1.6rem, 1.6vw + 0.8rem, 2.2rem);
   --dc-measure: 60ch;
 
   /* ---------- Motion / focus tokens ---------- */
@@ -139,8 +156,8 @@ body {
   flex-direction: column;
   background-color: var(--dc-ink);
   color: var(--dc-ink);
-  font-family: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
   line-height: 1.55;
 }
 
@@ -187,7 +204,7 @@ a:focus-visible {
 h1,
 h2,
 h3 {
-  font-family: "Ubuntu", "Roboto Flex", "Roboto", system-ui, sans-serif;
+  font-family: var(--font-heading);
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
@@ -200,19 +217,19 @@ h1 {
 }
 
 h2 {
-  font-size: var(--dc-h2-size);
+  font-size: var(--text-h2);
   font-weight: 700;
   letter-spacing: -0.015em;
 }
 
 h3 {
-  font-size: 1.2rem;
+  font-size: var(--text-lg);
   font-weight: 700;
 }
 
 .eyebrow {
-  font-family: "Roboto Mono", ui-monospace, monospace;
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -315,8 +332,8 @@ main {
 }
 
 .brand-name {
-  font-family: "Ubuntu", "Roboto Flex", "Roboto", system-ui, sans-serif;
-  font-size: 1rem;
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
   font-weight: 900;
   white-space: nowrap;
 }
@@ -437,7 +454,7 @@ main {
 }
 
 .show-hero h1 {
-  font-family: "Ubuntu", "Roboto Flex", "Roboto", system-ui, sans-serif;
+  font-family: var(--font-heading);
   font-size: clamp(3.5rem, 6vw, 6rem);
   font-weight: 700;
   margin: var(--s-3) 0 var(--s-1);
@@ -1090,7 +1107,7 @@ main {
   min-width: 0;
   border-radius: var(--dc-radius-pill);
   color: var(--dc-ink);
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   line-height: 1;
 }
 
@@ -1163,7 +1180,7 @@ main {
   border-radius: 50%;
   color: var(--dc-muted);
   display: flex;
-  font-size: 1.4rem;
+  font-size: var(--text-xl);
   font-weight: 400;
   height: 28px;
   justify-content: center;
@@ -1311,7 +1328,7 @@ main {
   background: var(--dc-accent-dark);
   border-radius: 5px;
   display: grid;
-  font-family: "Roboto", system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: clamp(2.25rem, 4.5vw, 4.5rem);
   font-weight: 900;
   height: var(--episode-badge-size);
@@ -1475,7 +1492,7 @@ main {
 .page-header-tagline {
   max-width: var(--dc-measure);
   margin: 0;
-  font-size: 1.08rem;
+  font-size: var(--text-md);
   line-height: 1.5;
 }
 
@@ -1531,7 +1548,7 @@ main {
 }
 
 .feed-card-title {
-  font-size: 1.4rem;
+  font-size: var(--text-xl);
   margin: 0;
 }
 
@@ -1555,7 +1572,7 @@ main {
 }
 
 .feed-card-url code {
-  font-family: "Roboto Mono", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.92rem;
   color: var(--dc-ink);
   white-space: nowrap;
@@ -1750,7 +1767,7 @@ main {
 }
 
 .sponsor-section-heading {
-  font-size: var(--dc-h2-size);
+  font-size: var(--text-h2);
   margin: 0 0 var(--s0);
 }
 
@@ -1914,7 +1931,7 @@ body:has(.sponsor-page) .page-header {
   inset: 0;
   display: grid;
   place-items: center;
-  font-family: "Ubuntu", "Roboto", system-ui, sans-serif;
+  font-family: var(--font-heading);
   font-weight: 700;
   /* 17 % of ring width keeps "700,000+" (≈ 4.7 em wide) safely inside
      the inner diameter — leaves at least 8 % of ring width as horizontal
@@ -2041,7 +2058,7 @@ body:has(.sponsor-page) .page-header {
 
 .sponsor-tier-price {
   margin: 0;
-  font-family: "Ubuntu", "Roboto", system-ui, sans-serif;
+  font-family: var(--font-heading);
   font-weight: 700;
   font-size: clamp(1.8rem, 2vw + 1rem, 2.4rem);
   color: var(--dc-accent-dark);
@@ -2080,7 +2097,7 @@ body:has(.sponsor-page) .page-header {
   color: var(--dc-on-ink);
   border: 2px solid var(--dc-accent-dark);
   border-radius: var(--dc-radius-pill);
-  font-family: "Ubuntu", "Roboto", system-ui, sans-serif;
+  font-family: var(--font-heading);
   font-size: clamp(1.05rem, 0.5vw + 0.95rem, 1.2rem);
   font-weight: 700;
   text-decoration: none;
@@ -2219,7 +2236,7 @@ body:has(.sponsor-page) .page-header {
   margin: 0;
   color: var(--dc-django);
   letter-spacing: 0.15em;
-  font-size: 1rem;
+  font-size: var(--text-base);
   line-height: 1;
 }
 
@@ -2357,7 +2374,7 @@ body:has(.sponsor-page) .page-header {
   align-items: center;
   gap: var(--s-2);
   min-height: var(--dc-tap);
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--dc-muted);
   text-decoration: none;
@@ -2378,8 +2395,8 @@ body:has(.sponsor-page) .page-header {
 .episode-action-rail {
   display: flex;
   flex-direction: column;
-  font-family: "Roboto Mono", ui-monospace, monospace;
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--dc-muted);
@@ -2646,7 +2663,7 @@ body:has(.sponsor-page) .page-header {
 .podlove-facade-time,
 .podlove-facade-duration {
   color: var(--dc-muted);
-  font-family: "Roboto Mono", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
@@ -2754,7 +2771,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .show-notes-title {
-  font-family: "Roboto", system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.015em;
@@ -2768,7 +2785,7 @@ body:has(.sponsor-page) .page-header {
 
 .show-notes h2,
 .show-notes h3 {
-  font-family: "Roboto", system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -2789,7 +2806,7 @@ body:has(.sponsor-page) .page-header {
 .show-notes h3,
 .show-notes p:has(+ ul),
 .show-notes p:has(+ ol) {
-  font-family: "Roboto", system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--dc-ink);
@@ -2853,7 +2870,7 @@ body:has(.sponsor-page) .page-header {
   --cluster-space: var(--s0);
   --cluster-justify: space-between;
   padding: var(--s1) 0;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
 }
 
 /* On mobile widths the Fosstodon button and the credit line stack
@@ -3389,7 +3406,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-modal-header h2 {
-  font-size: 1.2rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   letter-spacing: -0.01em;
   margin: 0;
@@ -3514,7 +3531,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-mastodon-prefix {
-  font-family: "Roboto Mono", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--dc-muted);
 }
@@ -3591,7 +3608,7 @@ body:has(.share-modal:not([open]):target) {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   cursor: pointer;
 }
 
@@ -3600,7 +3617,7 @@ body:has(.share-modal:not([open]):target) {
   border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
   padding: var(--s-2) var(--s-1);
-  font-family: "Roboto Mono", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.92rem;
   background: var(--dc-input-bg);
   text-align: center;
@@ -3637,7 +3654,7 @@ body:has(.share-modal:not([open]):target) {
   border-radius: var(--dc-radius-pill);
   padding: 0 var(--s0);
   min-height: 42px;
-  font-family: "Roboto Mono", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   background: var(--dc-input-bg);
   color: var(--dc-ink);
@@ -3704,7 +3721,7 @@ body:has(.share-modal:not([open]):target) {
 
 .embed-info-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--text-base);
   font-weight: 700;
   color: var(--dc-ink);
   letter-spacing: -0.005em;
@@ -3740,8 +3757,8 @@ body:has(.share-modal:not([open]):target) {
   border: 1px solid var(--dc-line);
   border-radius: 12px;
   padding: var(--s-1);
-  font-family: "Roboto Mono", ui-monospace, monospace;
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   line-height: 1.4;
   background: var(--dc-input-bg);
   color: var(--dc-ink);
