@@ -294,14 +294,14 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: var(--s1);
   padding: clamp(4px, 0.8vw, 8px) 0;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-1);
   min-height: var(--dc-tap);
   color: var(--dc-on-ink);
   font-weight: 700;
@@ -439,7 +439,7 @@ main {
   font-family: "Ubuntu", "Roboto Flex", "Roboto", system-ui, sans-serif;
   font-size: clamp(3.5rem, 6vw, 6rem);
   font-weight: 700;
-  margin: 4px 0 12px;
+  margin: var(--s-3) 0 var(--s-1);
 }
 
 .show-hero .eyebrow,
@@ -499,7 +499,7 @@ main {
   }
 
   .show-tagline {
-    margin: 0 auto 16px;
+    margin: 0 auto var(--s0);
     text-align: center;
   }
 
@@ -649,7 +649,7 @@ main {
 .button-icon {
   width: 18px;
   height: 18px;
-  margin-right: 8px;
+  margin-right: var(--s-2);
   fill: none;
   flex: 0 0 auto;
   stroke: currentcolor;
@@ -771,11 +771,11 @@ main {
 .filter-form {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: var(--s-1);
   width: 100vw;
   margin: 0 calc(50% - 50vw) 28px;
   padding: 0 max(16px, calc(50vw - 560px));
-  scroll-margin-top: 80px;
+  scroll-margin-top: var(--s5);
 }
 
 /* `.filter-extras-toggle` is the no-JS accordion trigger checkbox — hidden
@@ -786,7 +786,7 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--s-2);
   min-height: var(--dc-tap);
   padding: 0 18px;
   border: 1px solid var(--dc-line);
@@ -816,7 +816,7 @@ main {
 .filter-extras {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: var(--s-1);
   align-items: center;
 }
 
@@ -839,7 +839,7 @@ main {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
+    gap: var(--s-1);
   }
 
   .filter-extras > .filter-date {
@@ -1023,8 +1023,8 @@ main {
   display: grid;
   grid-template-columns: 38px 1fr 38px;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
 }
 
 .filter-date-popover-header strong {
@@ -1070,11 +1070,11 @@ main {
 .filter-date-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: var(--s-3);
 }
 
 .filter-date-weekdays {
-  margin-bottom: 4px;
+  margin-bottom: var(--s-3);
   color: var(--dc-muted);
   font-size: 0.76rem;
   font-weight: 700;
@@ -1136,7 +1136,7 @@ main {
   align-items: center;
   width: 100%;
   min-height: 38px;
-  padding: 0 12px;
+  padding: 0 var(--s-1);
   border-radius: 9px;
   text-align: left;
   white-space: nowrap;
@@ -1249,7 +1249,7 @@ main {
 .filter-clear-all {
   justify-content: center;
   min-height: var(--dc-tap);
-  padding: 0 16px;
+  padding: 0 var(--s0);
   border: 1px solid var(--dc-line);
   color: var(--dc-muted);
   font-size: 0.95rem;
@@ -1384,7 +1384,7 @@ main {
 }
 
 .no-results {
-  padding: 48px 0;
+  padding: var(--s3) 0;
   text-align: center;
   color: var(--dc-muted);
 }
@@ -1539,7 +1539,7 @@ main {
 }
 
 .feed-card-url {
-  margin: 4px 0 0;
+  margin: var(--s-3) 0 0;
   padding: 12px 14px;
   background: #f4f7f3;
   border: 1px solid var(--dc-line);
@@ -1556,13 +1556,13 @@ main {
 
 .feed-card-actions {
   --cluster-space: 10px;
-  margin-top: 4px;
+  margin-top: var(--s-3);
 }
 
 .feed-action {
-  gap: 8px;
+  gap: var(--s-2);
   min-height: var(--dc-tap);
-  padding: 0 16px;
+  padding: 0 var(--s0);
   border: 1px solid var(--dc-line);
   background: var(--dc-paper);
   color: var(--dc-ink);
@@ -1636,7 +1636,7 @@ main {
 .audio-feeds {
   --stack-space: 28px;
   list-style: none;
-  margin: 4px 0 0;
+  margin: var(--s-3) 0 0;
   padding: 0;
 }
 
@@ -1657,7 +1657,7 @@ main {
   background: rgb(77 165 83 / 0.05);
   border-radius: 0 12px 12px 0;
   display: grid;
-  gap: 8px;
+  gap: var(--s-2);
   justify-items: start;
   font-size: 0.92rem;
 }
@@ -1673,7 +1673,7 @@ main {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin: 4px 0 0;
+  margin: var(--s-3) 0 0;
   color: var(--dc-ink);
 }
 
@@ -1743,7 +1743,7 @@ main {
 
 .sponsor-section-heading {
   font-size: var(--dc-h2-size);
-  margin: 0 0 16px;
+  margin: 0 0 var(--s0);
 }
 
 .sponsor-stats .sponsor-section-heading {
@@ -1752,7 +1752,7 @@ main {
 
 .sponsor-stats-head {
   display: grid;
-  gap: 8px;
+  gap: var(--s-2);
   justify-items: center;
   text-align: center;
 }
@@ -1986,7 +1986,7 @@ body:has(.sponsor-page) .page-header {
 .sponsor-callout {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
+  gap: var(--s0);
   margin: 26px 0 0;
   padding: 20px 24px;
   background: var(--dc-django-tint);
@@ -2020,7 +2020,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-tier {
-  --stack-space: 4px;
+  --stack-space: var(--s-3);
 }
 
 .sponsor-tier-name {
@@ -2065,7 +2065,7 @@ body:has(.sponsor-page) .page-header {
      to full width without this. Pin to content size + horizontal centre. */
   align-self: center;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-1);
   min-height: 56px;
   padding: 0 32px;
   background: var(--dc-accent-dark);
@@ -2121,7 +2121,7 @@ body:has(.sponsor-page) .page-header {
    the page height excessively. CSS-only (no JS): the browser handles
    scroll, snap, and keyboard navigation. */
 .sponsor-reviews-intro {
-  margin: 0 0 16px;
+  margin: 0 0 var(--s0);
   color: var(--dc-muted);
   max-width: 65ch;
 }
@@ -2188,7 +2188,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-review {
-  --stack-space: 8px;
+  --stack-space: var(--s-2);
   scroll-snap-align: start;
 }
 
@@ -2247,7 +2247,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-pdf-heading {
-  margin: 0 0 4px;
+  margin: 0 0 var(--s-3);
   font-size: 1.1rem;
 }
 
@@ -2272,7 +2272,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .episode-detail {
-  --episode-sticky-gap: 32px;
+  --episode-sticky-gap: var(--s2);
   /* Vertical distance from the menu bar bottom to the sidebar's natural top:
      `.episode-detail` padding-top (36) + back-link line height (~22) +
      back-link margin-bottom (20). The sidebar's height is sized so the
@@ -2358,7 +2358,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .episode-sidebar {
-  padding-left: 32px;
+  padding-left: var(--s2);
   border-left: 1px solid var(--dc-line);
 }
 
@@ -2514,7 +2514,7 @@ body:has(.sponsor-page) .page-header {
     display: inline-flex;
     grid-template-columns: none;
     align-items: center;
-    gap: 8px;
+    gap: var(--s-2);
     width: auto;
     border-bottom: none;
     padding: 10px 2px;
@@ -2523,7 +2523,7 @@ body:has(.sponsor-page) .page-header {
 
 .audio-panel {
   width: min(600px, 100%);
-  margin: 24px 0 0;
+  margin: var(--s1) 0 0;
 }
 
 .audio-panel podlove-player[data-template] {
@@ -2573,10 +2573,10 @@ body:has(.sponsor-page) .page-header {
   box-shadow: none;
   color: var(--dc-ink);
   display: grid;
-  gap: 24px;
+  gap: var(--s1);
   grid-template-columns: minmax(0, 1fr) auto;
   min-height: 112px;
-  padding: 16px;
+  padding: var(--s0);
   text-align: left;
   transition: opacity 160ms ease;
   width: 100%;
@@ -2799,12 +2799,12 @@ body:has(.sponsor-page) .page-header {
 
 .show-notes ul,
 .show-notes ol {
-  margin: 4px 0 16px;
+  margin: var(--s-3) 0 var(--s0);
   padding-left: 22px;
 }
 
 .show-notes li {
-  margin-bottom: 4px;
+  margin-bottom: var(--s-3);
 }
 
 .show-notes li:last-child {
@@ -2832,7 +2832,7 @@ body:has(.sponsor-page) .page-header {
 
 .pagination-nav a {
   min-height: 40px;
-  padding: 0 16px;
+  padding: 0 var(--s0);
   border: 1px solid var(--dc-line);
   color: var(--dc-ink);
 }
@@ -2841,9 +2841,9 @@ body:has(.sponsor-page) .page-header {
    `.button-primary, .platform-band-links a, …` block at the top. */
 
 .site-footer-inner {
-  --cluster-space: 16px;
+  --cluster-space: var(--s0);
   --cluster-justify: space-between;
-  padding: 24px 0;
+  padding: var(--s1) 0;
   font-size: 0.9rem;
 }
 
@@ -2893,12 +2893,12 @@ body:has(.sponsor-page) .page-header {
 }
 
 .status-page {
-  padding: 80px 0;
+  padding: var(--s5) 0;
   text-align: center;
 }
 
 .status-page h1 {
-  margin-bottom: 12px;
+  margin-bottom: var(--s-1);
 }
 
 .status-page p {
@@ -3060,7 +3060,7 @@ body:has(.sponsor-page) .page-header {
 @container show-hero (max-width: 47.5rem) {
   .show-hero-inner {
     gap: 20px;
-    padding: 24px 0;
+    padding: var(--s1) 0;
   }
 
   .show-hero h1 {
@@ -3092,7 +3092,7 @@ body:has(.sponsor-page) .page-header {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
     min-height: 168px;
-    padding: 16px;
+    padding: var(--s0);
   }
 
   .audio-panel podlove-player[data-template] iframe {
@@ -3364,8 +3364,8 @@ body:has(.share-modal:not([open]):target) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 16px;
+  gap: var(--s0);
+  padding-bottom: var(--s0);
   border-bottom: 1px solid var(--dc-line);
 }
 
@@ -3417,9 +3417,9 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-pill {
-  gap: 8px;
+  gap: var(--s-2);
   min-height: 40px;
-  padding: 0 16px;
+  padding: 0 var(--s0);
   border: 1px solid var(--dc-line);
   color: var(--dc-ink);
   background: transparent;
@@ -3444,7 +3444,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-mastodon-prompt {
-  --stack-space: 8px;
+  --stack-space: var(--s-2);
   background: rgb(0 0 0 / 0.04);
   padding: 14px 16px;
   border-radius: 10px;
@@ -3458,7 +3458,7 @@ body:has(.share-modal:not([open]):target) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--s-1);
   margin: 0;
   font-size: 0.85rem;
   color: var(--dc-muted);
@@ -3501,7 +3501,7 @@ body:has(.share-modal:not([open]):target) {
 .share-mastodon-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .share-mastodon-prefix {
@@ -3538,7 +3538,7 @@ body:has(.share-modal:not([open]):target) {
   align-items: center;
   justify-content: center;
   min-height: 38px;
-  padding: 0 16px;
+  padding: 0 var(--s0);
   border: 1px solid var(--dc-accent-dark);
   border-radius: var(--dc-radius-pill);
   background: var(--dc-accent-dark);
@@ -3569,7 +3569,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-startat {
-  --cluster-space: 16px;
+  --cluster-space: var(--s0);
   border: 0;
   padding: 0;
   margin: 0;
@@ -3581,7 +3581,7 @@ body:has(.share-modal:not([open]):target) {
 .share-startat-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
   font-size: 0.9rem;
   cursor: pointer;
 }
@@ -3618,7 +3618,7 @@ body:has(.share-modal:not([open]):target) {
 .share-copy {
   display: flex;
   align-items: stretch;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .share-copy input {
@@ -3626,7 +3626,7 @@ body:has(.share-modal:not([open]):target) {
   min-width: 0;
   border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
-  padding: 0 16px;
+  padding: 0 var(--s0);
   min-height: 42px;
   font-family: "Roboto Mono", ui-monospace, monospace;
   font-size: 0.85rem;
@@ -3642,17 +3642,17 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-copy .share-copy-button {
-  gap: 8px;
+  gap: var(--s-2);
   padding: 0 18px;
 }
 
 @media (max-width: 480px) {
   .share-pills {
-    --cluster-space: 8px;
+    --cluster-space: var(--s-2);
   }
 
   .share-pill {
-    padding: 0 12px;
+    padding: 0 var(--s-1);
     font-size: 0.88rem;
   }
 }
@@ -3673,7 +3673,7 @@ body:has(.share-modal:not([open]):target) {
 .embed-info-body {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--s0);
   padding: 16px 18px;
   border-radius: 12px;
   background: var(--dc-django-soft);
@@ -3689,7 +3689,7 @@ body:has(.share-modal:not([open]):target) {
 .embed-info-text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--s-3);
   min-width: 0;
 }
 
