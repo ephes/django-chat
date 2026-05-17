@@ -68,7 +68,7 @@
     {% if pricing_tiers %}
       <section class="sponsor-pricing" aria-labelledby="sponsor-pricing-heading">
         <h2 class="sponsor-section-heading" id="sponsor-pricing-heading">Sponsorship pricing</h2>
-        <ul class="sponsor-pricing-grid" role="list">
+        <ul class="sponsor-pricing-grid grid-auto" role="list">
           {% for tier in pricing_tiers %}
             <li class="card sponsor-tier stack">
               <h3 class="sponsor-tier-name">{{ tier.name }}</h3>

@@ -2012,12 +2012,11 @@ body:has(.sponsor-page) .page-header {
 
 /* Pricing — two cards side by side, then CTA below. */
 .sponsor-pricing-grid {
+  --grid-min: 240px;
+  --grid-space: 18px;
   list-style: none;
   margin: 0 0 22px;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 18px;
 }
 
 .sponsor-tier {
