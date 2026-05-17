@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, cast
 
@@ -13,6 +14,7 @@ from wagtail.models import Site
 from django_chat.imports.import_sample import (
     DownloadedAudio,
     import_django_chat_sample,
+    import_django_chat_source_data,
     load_sample_source_data,
 )
 from django_chat.imports.models import (
@@ -107,6 +109,90 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
     assert result.audio_created == 0
     assert result.audio_copied == 0
     assert result.audio_metadata == ()
+
+
+@pytest.mark.django_db
+def test_sample_import_normalizes_detail_show_note_section_headings() -> None:
+    import_django_chat_sample()
+
+    latest_metadata = EpisodeSourceMetadata.objects.get(episode_number=200)
+    latest_detail = _body_block_html(latest_metadata.episode, "detail")
+
+    assert "<h3>🔗 Links</h3>" in latest_detail
+    assert "<h3>📦 Projects</h3>" in latest_detail
+    assert "<h3>📚 Books</h3>" in latest_detail
+    assert "<h3>🎥 YouTube</h3>" in latest_detail
+    assert "<h3>🤝 Sponsor</h3>" in latest_detail
+    assert "<p>🔗 Links</p>" not in latest_detail
+    assert "<p>📦 Projects</p>" not in latest_detail
+    assert "<p>📚 Books</p>" not in latest_detail
+    assert "<p>🎥 YouTube</p>" not in latest_detail
+    assert "<p>🤝 Sponsor</p>" not in latest_detail
+    assert (
+        '<a href="https://github.com/RealOrangeOne/django-tasks" '
+        'rel="noopener noreferrer">django-tasks</a>'
+    ) in latest_detail
+    assert (
+        "<p>This episode was brought to you by "
+        '<a href="https://buttondown.com/django" rel="noopener noreferrer">Buttondown</a>'
+    ) in latest_detail
+    assert "<p>🔗 Links</p>" in latest_metadata.simplecast_long_description_html
+    assert "<p>🤝 Sponsor</p>" in latest_metadata.simplecast_long_description_html
+
+    first_metadata = EpisodeSourceMetadata.objects.get(episode_number=1)
+    first_detail = _body_block_html(first_metadata.episode, "detail")
+    assert "<h3>SHAMELESS PLUGS</h3>" in first_detail
+    assert "<h4>SHAMELESS PLUGS</h4>" not in first_detail
+    assert "<h4>SHAMELESS PLUGS</h4>" in first_metadata.simplecast_long_description_html
+
+    second_metadata = EpisodeSourceMetadata.objects.get(episode_number=2)
+    second_detail = _body_block_html(second_metadata.episode, "detail")
+    assert "<h3>Groups</h3>" in second_detail
+    assert "<h3>SHAMELESS PLUGS</h3>" in second_detail
+    assert "<h4>Groups</h4>" not in second_detail
+    assert "<h4>SHAMELESS PLUGS</h4>" not in second_detail
+    assert "<h4>Groups</h4>" in second_metadata.simplecast_long_description_html
+
+
+@pytest.mark.django_db
+def test_show_note_normalization_preserves_existing_h3_and_ordinary_paragraphs() -> None:
+    sample = load_sample_source_data()
+    episode_source = sample.episodes[0]
+    assert episode_source.simplecast is not None
+    source_detail_html = (
+        "<p>Intro copy stays an ordinary paragraph.</p>"
+        "<h3>Sponsor</h3>"
+        '<p>This episode was brought to you by <a href="https://example.com" '
+        'rel="noopener noreferrer"><strong>Example</strong></a>.</p>'
+        '<p>A normal paragraph with <a href="https://example.com/link" '
+        'rel="nofollow">a link</a> stays a paragraph.</p>'
+    )
+    customized_episode = replace(
+        episode_source,
+        simplecast=replace(
+            episode_source.simplecast,
+            long_description_html=source_detail_html,
+        ),
+    )
+    source_data = replace(sample, episodes=(customized_episode,))
+
+    result = import_django_chat_source_data(source_data)
+
+    metadata = result.episode_metadata[0]
+    detail = _body_block_html(metadata.episode, "detail")
+    overview = _body_block_html(metadata.episode, "overview")
+    assert detail.count("<h3>Sponsor</h3>") == 1
+    assert "<p>Intro copy stays an ordinary paragraph.</p>" in detail
+    assert (
+        '<p>This episode was brought to you by <a href="https://example.com" '
+        'rel="noopener noreferrer"><strong>Example</strong></a>.</p>'
+    ) in detail
+    assert (
+        '<p>A normal paragraph with <a href="https://example.com/link" '
+        'rel="nofollow">a link</a> stays a paragraph.</p>'
+    ) in detail
+    assert metadata.simplecast_long_description_html == source_detail_html
+    assert overview == episode_source.simplecast.description
 
 
 @pytest.mark.django_db
@@ -346,6 +432,17 @@ def test_sample_import_skips_cover_download_when_already_set(tmp_path: Path) -> 
 def _transcript_count() -> int:
     transcript = cast(Any, apps.get_model("cast", "Transcript"))
     return transcript.objects.count()
+
+
+def _body_block_html(episode: Any, block_type: str) -> str:
+    body_data = episode.body.get_prep_value()
+    for block in body_data:
+        if block["type"] == block_type:
+            return "".join(
+                child["value"] for child in block["value"] if child["type"] == "paragraph"
+            )
+    msg = f"Episode body does not contain a {block_type!r} block."
+    raise AssertionError(msg)
 
 
 class FakeAudioDownloader:

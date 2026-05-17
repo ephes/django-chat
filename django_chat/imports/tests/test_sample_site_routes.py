@@ -179,9 +179,32 @@ def test_imported_sample_episode_detail_renders_without_copied_audio(
     content = response.content.decode()
     assert "Django Tasks - Jake Howard" in content
     assert "Django-Mantle" in content
+    assert '<h2 class="show-notes-title">Show notes</h2>' in content
+    assert "<h3>🔗 Links</h3>" in content
+    assert "<h3>📦 Projects</h3>" in content
+    assert "<h3>📚 Books</h3>" in content
+    assert "<h3>🎥 YouTube</h3>" in content
+    assert "<p>🔗 Links</p>" not in content
     assert "Audio copy pending." in content
     assert "<audio" not in content
     assert _transcript_count() == 0
+
+
+@pytest.mark.django_db
+def test_imported_sample_episode_detail_renders_normalized_legacy_h4_headings(
+    client: Client,
+) -> None:
+    import_django_chat_sample()
+
+    response = client.get(episode_detail_path("how-to-learn-django"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert '<h2 class="show-notes-title">Show notes</h2>' in content
+    assert "<h3>Groups</h3>" in content
+    assert "<h3>SHAMELESS PLUGS</h3>" in content
+    assert "<h4>Groups</h4>" not in content
+    assert "<h4>SHAMELESS PLUGS</h4>" not in content
 
 
 @pytest.mark.django_db

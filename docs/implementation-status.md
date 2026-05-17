@@ -90,6 +90,12 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       break subscribers, compares the 2026-05-13 Simplecast and staging feed
       state, records the fixed no-Simplecast-redirect/S3-CDN-served-feed
       constraints, and proposes a phased cutover plan.
+- [x] **9e. Show-notes heading normalization during import** — imported
+      episode detail show-note labels now normalize into semantic `h3` markup
+      before assignment to `page.body`; legacy imported `h4` headings are also
+      normalized to `h3`. Raw source HTML in `EpisodeSourceMetadata` remains
+      unchanged, and rerunning the idempotent importer backfills existing
+      episode bodies.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.

@@ -2808,17 +2808,8 @@ body:has(.sponsor-page) .page-header {
   margin: var(--s3) 0 var(--s-1);
 }
 
-/*
- * Section-marker styling. Imported show-notes use both real <h3> ("Sponsor") and
- * paragraph-as-heading patterns like `<p>🔗 Links</p><ul>...</ul>`. Until the import
- * layer normalises those into structured blocks (see backlog), this CSS-only rule
- * lifts both shapes to a heading appearance. `:has(+ ul/ol)` targets only paragraphs
- * that introduce a list directly, which matches the actual content shape; ordinary
- * body paragraphs are followed by other paragraphs and stay regular.
- */
-.show-notes h3,
-.show-notes p:has(+ ul),
-.show-notes p:has(+ ol) {
+/* Imported show-note section labels are normalized to semantic h3 blocks. */
+.show-notes h3 {
   font-family: var(--font-body);
   /* Deliberate off-scale: 1.3rem keeps show-notes section markers visibly
      heavier than the global `h3` rule (1.2rem = --text-lg). Snapping to
