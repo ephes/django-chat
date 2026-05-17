@@ -60,6 +60,11 @@ html {
   text-size-adjust: 100%;
   /* iOS Safari paints overscroll and URL-bar gaps with the root background. */
   background-color: var(--dc-ink);
+  /* Mobile Safari does not reliably propagate `overflow-x: clip` from body to
+     the viewport, which lets full-bleed sections (`.platform-band`, …) cause
+     horizontal rubber-band scroll. Clip on the root too so the viewport itself
+     is clipped on the inline axis. */
+  overflow-x: clip;
   /* Sticky `.site-header` covers the top `--site-header-height` of the
      viewport. Reserve that space for any element scrolled into view
      (anchor links, scrollIntoView, focus-driven scrolls) so the target
@@ -69,11 +74,15 @@ html {
 
 body {
   margin: 0;
-  /* Sticky-footer pattern: body fills the viewport, main grows to take the
-     remaining space, footer is anchored to the bottom on short pages and
-     pushed below the fold on long ones (no position: sticky needed). */
+  /* Sticky-footer pattern: body fills the viewport, `.site-content` grows to
+     take the remaining space, footer is anchored to the bottom on short pages
+     and pushed below the fold on long ones (no position: sticky needed).
+     `100svh` (small viewport) is used instead of `100dvh` so the body does
+     not extend behind the iOS Safari bottom toolbar/home-indicator zone —
+     the area below the body shows the dark `<html>` background instead of
+     the white paper-textured `.site-content`. */
   min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100svh;
   /* Full-bleed sections (`.platform-band`, stats band, …) use `width: 100vw`,
      which includes the vertical scrollbar's width and thus overflows the body
      by ~1 px when a scrollbar is present. Clip on the inline axis so that
@@ -81,6 +90,19 @@ body {
   overflow-x: clip;
   display: flex;
   flex-direction: column;
+  background-color: var(--dc-ink);
+  color: var(--dc-ink);
+  font-family: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+body > .site-content {
+  flex: 1 0 auto;
+  /* Paper-textured surface scoped to the content area (between header and
+     footer). Kept off `body` so iOS Safari's overscroll/toolbar zone shows
+     the dark `<html>` background instead of bleeding white via the fixed
+     attachment. */
   background-color: var(--dc-paper);
   background-image:
     linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
@@ -88,14 +110,6 @@ body {
   background-repeat: repeat;
   background-size: auto;
   background-attachment: fixed;
-  color: var(--dc-ink);
-  font-family: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 16px;
-  line-height: 1.55;
-}
-
-body > main {
-  flex: 1 0 auto;
 }
 
 .audio-panel,

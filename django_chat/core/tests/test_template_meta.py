@@ -141,6 +141,7 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert ".audio-panel,\n.audio-panel *,\npodlove-player,\npodlove-player * {" in css
     assert "--dc-link: #14513a;" in css
     assert "background-color: var(--dc-ink);" in _css_blocks(css, "html")[0]
+    assert "overflow-x: clip;" in _css_blocks(css, "html")[0]
     assert "--dc-muted: #5f635d;" in css
     assert "--dc-accent: #2d8260;" in css
     assert "--dc-accent-dark: #14513a;" in css
