@@ -10,7 +10,7 @@
   <main class="sponsor-page">
     {% if stats %}
       <section class="sponsor-stats" aria-labelledby="sponsor-stats-heading">
-        <div class="sponsor-stats-inner">
+        <div class="sponsor-stats-inner stack">
           <div class="sponsor-stats-head">
             <h2 class="sponsor-section-heading" id="sponsor-stats-heading">Django Chat in numbers</h2>
             {% if page.stats_intro %}
@@ -48,7 +48,7 @@
         <h2 class="sponsor-section-heading" id="sponsor-slots-heading">Your Sponsorship Package</h2>
         <ul class="sponsor-slots-grid" role="list">
           {% for slot in slots %}
-            <li class="card sponsor-slot">
+            <li class="card sponsor-slot stack">
               <h3 class="sponsor-slot-name">{{ slot.name }}</h3>
               <p class="sponsor-slot-desc">{{ slot.description }}</p>
             </li>
@@ -70,14 +70,14 @@
         <h2 class="sponsor-section-heading" id="sponsor-pricing-heading">Sponsorship pricing</h2>
         <ul class="sponsor-pricing-grid" role="list">
           {% for tier in pricing_tiers %}
-            <li class="card sponsor-tier">
+            <li class="card sponsor-tier stack">
               <h3 class="sponsor-tier-name">{{ tier.name }}</h3>
               <p class="sponsor-tier-price">{{ tier.price }}</p>
               {% if tier.description %}<p class="sponsor-tier-desc">{{ tier.description }}</p>{% endif %}
             </li>
           {% endfor %}
         </ul>
-        <div class="sponsor-cta">
+        <div class="sponsor-cta stack">
           <p class="sponsor-cta-lead">Curious? — Get in touch</p>
           <a class="sponsor-cta-button" href="mailto:{{ page.cta_email }}?subject=Sponsoring%20Django%20Chat">
             <svg class="sponsor-cta-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -110,7 +110,7 @@
               tabindex="0"
               aria-label="Listener reviews — use arrow keys to scroll horizontally">
             {% for review in reviews %}
-            <li class="card sponsor-review">
+            <li class="card sponsor-review stack">
               <p class="sponsor-review-stars" aria-label="{{ review.stars }} out of 5 stars">
                 {% for _ in ""|ljust:review.stars %}<span aria-hidden="true">&#9733;</span>{% endfor %}
               </p>

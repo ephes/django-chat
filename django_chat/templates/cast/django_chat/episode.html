@@ -58,7 +58,7 @@
         <dialog id="share-dialog" class="share-modal" aria-labelledby="share-dialog-title"
                 data-share-url="{{ resolved_canonical_url }}"
                 data-share-title="{{ page.title }}">
-          <div class="share-modal-inner">
+          <div class="share-modal-inner stack">
             <header class="share-modal-header">
               <h2 id="share-dialog-title">Share this episode</h2>
               <a class="share-modal-close" href="#" data-share-close aria-label="Close share dialog">
@@ -68,7 +68,7 @@
               </a>
             </header>
 
-            <section class="share-channels" aria-label="Share channels">
+            <section class="share-channels stack" aria-label="Share channels">
               <div class="share-pills cluster">
               <a class="share-pill" data-share-net="twitter"
                  href="https://twitter.com/intent/tweet?url={{ resolved_canonical_url|urlencode }}&text={{ page.title|urlencode }}"
@@ -114,7 +114,7 @@
                 <button type="button" class="share-mastodon-change" data-mastodon-forget>Change instance</button>
               </p>
 
-              <div class="share-mastodon-prompt" hidden data-mastodon-prompt>
+              <div class="share-mastodon-prompt stack" hidden data-mastodon-prompt>
                 <label for="share-mastodon-instance">Your Mastodon instance</label>
                 <div class="share-mastodon-row">
                   <span class="share-mastodon-prefix">https://</span>
@@ -125,7 +125,7 @@
               </div>
             </section>
 
-            <section class="share-controls">
+            <section class="share-controls stack">
               <fieldset class="share-startat cluster js-only">
                 <legend>Start at a specific time</legend>
                 <label class="share-startat-toggle">
@@ -158,7 +158,7 @@
                 data-embed-url="{{ request.scheme }}://{{ request.get_host }}{{ episode_embed_path }}"
                 data-embed-title="{{ page.title }}"
                 data-has-audio="{% if episode.podcast_audio and episode.podcast_audio.mp3 %}1{% else %}0{% endif %}">
-          <div class="share-modal-inner">
+          <div class="share-modal-inner stack">
             <header class="share-modal-header">
               <h2 id="embed-dialog-title">Embed this episode</h2>
               <a class="share-modal-close" href="#" data-embed-close aria-label="Close embed dialog">
@@ -168,7 +168,7 @@
               </a>
             </header>
 
-            <section class="embed-info" aria-label="Embed preview">
+            <section class="embed-info stack" aria-label="Embed preview">
               <div class="embed-info-body">
                 <img class="embed-info-logo" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="64" height="59" alt="">
                 <div class="embed-info-text">
@@ -182,7 +182,7 @@
               </div>
             </section>
 
-            <section class="share-controls">
+            <section class="share-controls stack">
               <label class="embed-snippet-label" for="embed-snippet-input">Embed code</label>
               <div class="share-copy embed-snippet">
                 {% comment %}

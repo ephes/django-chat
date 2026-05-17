@@ -8,7 +8,7 @@
 {% block content %}
   {% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' as podcast_mp3_path %}
   <main class="subscribe-page">
-    <article class="card feed-card subscribe-feature">
+    <article class="card feed-card stack subscribe-feature">
       <h2 class="feed-card-title">MP3 podcast feed</h2>
       <p class="feed-card-desc">The main Django Chat episode feed. Best compatibility with podcast apps.</p>
       <pre class="feed-card-url"><code id="feed-url-podcast-mp3">{{ request.scheme }}://{{ request.get_host }}{{ podcast_mp3_path }}</code></pre>
@@ -35,11 +35,11 @@
       </div>
     </article>
 
-    <section class="subscribe-audio" aria-labelledby="audio-feeds-heading">
+    <section class="subscribe-audio stack" aria-labelledby="audio-feeds-heading">
       <h2 class="subscribe-audio-heading" id="audio-feeds-heading">Site feed</h2>
       <p class="subscribe-audio-intro">RSS for site updates beyond the podcast episode feed.</p>
-      <ul class="audio-feeds" role="list">
-        <li class="audio-feed feed-card">
+      <ul class="audio-feeds stack" role="list">
+        <li class="audio-feed feed-card stack">
           <h3 class="feed-card-title feed-card-title--compact">Latest entries</h3>
           <p class="feed-card-desc">Every new page or post on the site beyond episodes — use this if you want to follow the project itself, not just listen.</p>
           <pre class="feed-card-url"><code id="feed-url-blog">{{ request.scheme }}://{{ request.get_host }}{{ blog_feed_url }}</code></pre>

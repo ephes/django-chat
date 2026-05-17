@@ -578,11 +578,16 @@ html.is-stacked .show-hero-logo {
    component class via the `--*-space` / `--*-threshold` / `--*-side-width`
    custom properties, never inline in the markup. */
 
-/* `.stack` — vertical rhythm between siblings. Every child gets a top
-   margin equal to `--stack-space` except the first. No flex, so it
-   composes cleanly with text-flow components (prose, lists, fieldsets). */
-.stack > * + * {
-  margin-block-start: var(--stack-space, var(--s1));
+/* `.stack` — vertical rhythm between siblings using flexbox + gap. Chosen
+   over the classic `* + * { margin-block-start }` variant so child
+   intrinsic margins do not interfere with the configured rhythm, and so
+   flex-only tricks (`margin-block-start: auto` to bottom-pin a single
+   child) keep working on the children of stacked components. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: var(--stack-space, var(--s1));
 }
 
 /* `.cluster` — horizontal group that wraps when it runs out of room.
@@ -1552,8 +1557,7 @@ html.is-stacked .show-hero-logo {
 /* Vertical content stack — works both inside a `.card` and as a flat
    section item (audio-feed list). No container styling here. */
 .feed-card {
-  display: grid;
-  gap: 14px;
+  --stack-space: 14px;
 }
 
 .feed-card-title {
@@ -1653,8 +1657,7 @@ html.is-stacked .show-hero-logo {
 }
 
 .subscribe-audio {
-  display: grid;
-  gap: 18px;
+  --stack-space: 18px;
 }
 
 .subscribe-audio-heading {
@@ -1668,11 +1671,10 @@ html.is-stacked .show-hero-logo {
 }
 
 .audio-feeds {
+  --stack-space: 28px;
   list-style: none;
   margin: 4px 0 0;
   padding: 0;
-  display: grid;
-  gap: 28px;
 }
 
 .audio-feed {
@@ -1863,8 +1865,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-stats-inner {
-  display: grid;
-  gap: clamp(12px, 1.8vw, 22px);
+  --stack-space: clamp(12px, 1.8vw, 22px);
 }
 
 .sponsor-stats .sponsor-section-heading {
@@ -2002,8 +2003,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-slot {
-  display: grid;
-  gap: 6px;
+  --stack-space: 6px;
 }
 
 .sponsor-slot-name {
@@ -2058,8 +2058,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-tier {
-  display: grid;
-  gap: 4px;
+  --stack-space: 4px;
 }
 
 .sponsor-tier-name {
@@ -2086,11 +2085,9 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-cta {
-  display: grid;
-  justify-items: center;
-  text-align: center;
-  gap: 14px;
+  --stack-space: 14px;
   margin-top: clamp(20px, 3vw, 32px);
+  text-align: center;
 }
 
 .sponsor-cta-lead {
@@ -2226,9 +2223,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-review {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  --stack-space: 8px;
   scroll-snap-align: start;
 }
 
@@ -3411,10 +3406,8 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-modal-inner {
+  --stack-space: 20px;
   padding: 24px 28px 26px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
 
 .share-modal-header {
@@ -3427,17 +3420,13 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-channels {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  --stack-space: 14px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--dc-line);
 }
 
 .share-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  --stack-space: 18px;
 }
 
 .share-modal-header h2 {
@@ -3505,12 +3494,10 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-mastodon-prompt {
+  --stack-space: 8px;
   background: rgb(0 0 0 / 0.04);
   padding: 14px 16px;
   border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .share-mastodon-prompt[hidden] {
@@ -3728,9 +3715,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .embed-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  --stack-space: 6px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--dc-line);
 }
