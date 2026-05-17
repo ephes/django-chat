@@ -2099,6 +2099,9 @@ body:has(.sponsor-page) .page-header {
 
 .sponsor-cta-button {
   display: inline-flex;
+  /* `.sponsor-cta` is a flex column via `.stack`; children would stretch
+     to full width without this. Pin to content size + horizontal centre. */
+  align-self: center;
   align-items: center;
   gap: 12px;
   min-height: 56px;
