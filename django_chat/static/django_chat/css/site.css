@@ -50,6 +50,27 @@
   --dc-django-soft: color-mix(in srgb, var(--dc-django) 8%, transparent);
   --dc-django-tint: color-mix(in srgb, var(--dc-django) 10%, transparent);
 
+  /* ---------- Spacing scale ----------
+     Single-source scale for paddings, margins and gaps. All values in rem
+     so they react to the user's root font size; pixel hints in comments
+     are approximate (assuming 1rem = 16px). Picked to match the most
+     common existing values in the file rather than a strict modular
+     ratio — closer to a tape measure than a musical scale. Where a step
+     should react to viewport width, prefer one of the `--s-fluid-*`
+     variants below over a per-site ad-hoc `clamp()`. */
+  --s-3: 0.25rem;   /*  ~4px */
+  --s-2: 0.5rem;    /*  ~8px */
+  --s-1: 0.75rem;   /* ~12px */
+  --s0:  1rem;      /* ~16px — anchor */
+  --s1:  1.5rem;    /* ~24px */
+  --s2:  2rem;      /* ~32px */
+  --s3:  3rem;      /* ~48px */
+  --s4:  4rem;      /* ~64px */
+  --s5:  5rem;      /* ~80px */
+  --s-fluid-sm: clamp(var(--s-1), 1vw + 0.25rem, var(--s0));
+  --s-fluid-md: clamp(var(--s0),  2vw + 0.5rem,  var(--s1));
+  --s-fluid-lg: clamp(var(--s1),  3vw + 1rem,    var(--s3));
+
   /* ---------- Geometry tokens ---------- */
   --dc-radius: 4px;
   --dc-radius-pill: 999px;
@@ -553,6 +574,60 @@ html.is-stacked .show-hero-logo {
     animation-duration: 0.01ms;
   }
 }
+
+/* ---------- Layout primitives ----------
+   Small, single-purpose layout classes with custom-property APIs.
+   Components compose with them as combo classes — the primitive
+   handles layout (axis, wrap, spacing); the component handles skin
+   (colour, type, border). Layout *values* are configured in CSS on the
+   component class via the `--*-space` / `--*-threshold` / `--*-side-width`
+   custom properties, never inline in the markup. */
+
+/* `.stack` — vertical rhythm between siblings. Every child gets a top
+   margin equal to `--stack-space` except the first. No flex, so it
+   composes cleanly with text-flow components (prose, lists, fieldsets). */
+.stack > * + * {
+  margin-block-start: var(--stack-space, var(--s1));
+}
+
+/* `.cluster` — horizontal group that wraps when it runs out of room.
+   `--cluster-justify` and `--cluster-align` let consumers pin the row
+   without overriding the entire shorthand. */
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cluster-space, var(--s0));
+  justify-content: var(--cluster-justify, flex-start);
+  align-items: var(--cluster-align, center);
+}
+
+/* `.switcher` — children render in a single row when the container is at
+   least `--switcher-threshold` wide; otherwise they stack. The
+   `flex-basis: calc((threshold - 100%) * 999)` trick is the Every-Layout
+   classic: it resolves to a huge positive number (row) below the
+   threshold and a huge negative number (stack) above, both clamped by
+   `flex-wrap: wrap`. No media query needed. */
+.switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--switcher-space, var(--s1));
+}
+
+.switcher > * {
+  flex-grow: 1;
+  flex-basis: calc((var(--switcher-threshold, 30rem) - 100%) * 999);
+}
+
+/* `.grid-auto` — auto-fit grid that fills available width with as many
+   `--grid-min`-wide tracks as fit, then collapses gracefully. The
+   `min(--grid-min, 100%)` guard prevents single-track overflow when the
+   container is narrower than `--grid-min`. */
+.grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--grid-min, 16rem), 100%), 1fr));
+  gap: var(--grid-space, var(--s1));
+}
+
 
 /* ---------- Pill-button anatomy ----------
    Shared structural traits across every pill-shaped button on the site:
