@@ -12,32 +12,6 @@
 {% block content %}
   {% load static %}
   {% firstof podcast blog as show %}
-  <script>
-    (function () {
-      var html = document.documentElement;
-      html.classList.add('js-vt');
-      if (window.innerWidth <= 1024) {
-        html.classList.add('is-stacked');
-      }
-      var isStacked = html.classList.contains('is-stacked');
-      var resizeTimer = null;
-      window.addEventListener('resize', function () {
-        if (resizeTimer) clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function () {
-          resizeTimer = null;
-          var desired = window.innerWidth <= 1024;
-          if (desired === isStacked) return;
-          isStacked = desired;
-          var apply = function () { html.classList.toggle('is-stacked', desired); };
-          if (document.startViewTransition) {
-            document.startViewTransition(apply);
-          } else {
-            apply();
-          }
-        }, 120);
-      });
-    })();
-  </script>
   <section class="show-hero" aria-labelledby="show-hero-title">
     <svg class="show-hero-shape" aria-hidden="true" focusable="false" width="0" height="0">
       <defs>

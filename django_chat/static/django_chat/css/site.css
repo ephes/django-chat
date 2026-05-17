@@ -348,6 +348,11 @@ main {
      overflow without establishing a new scroll container, so sticky still
      uses the document scroll and the pseudo never bleeds past the hero. */
   overflow: clip;
+  /* Drives the stacked-state container queries below — the hero rearranges
+     itself based on its own width rather than the viewport, so the same
+     rules trigger in narrow embeds, narrow columns, or zoomed-in views. */
+  container-type: inline-size;
+  container-name: show-hero;
 }
 
 /* Cross-browser image layer: rather than `background-attachment: fixed`
@@ -481,54 +486,32 @@ main {
   max-width: 100%;
 }
 
-/* Stack rules apply in two situations and currently live in two blocks:
-   - JS path: `html.is-stacked` (set by view-transitions.js) — any viewport.
-   - No-JS path: viewports ≤ 1024 px without the `js-vt` class.
-   The two blocks below carry the same rule bodies. They can be deduped
-   cleanly only via a custom-property toggle or a Switcher primitive — see
-   Step 4 of the CSS cleanup plan. Until then: edit both blocks together. */
-@media (max-width: 1024px) {
-  html:not(.js-vt) .show-hero-inner {
+/* Hero stacked state — gated on the `.show-hero` container's own width
+   (see `container-name: show-hero` above). Single block replaces the
+   former JS path (`html.is-stacked`, set by an inline script) plus the
+   no-JS media-query fallback (`html:not(.js-vt)` at ≤ 1024 px). The
+   intrinsic CQ trigger means we no longer need either class. */
+@container show-hero (max-width: 64rem) {
+  .show-hero-inner {
     grid-template-columns: 1fr;
     gap: clamp(8px, 2vw, 24px);
     text-align: center;
   }
 
-  html:not(.js-vt) .show-tagline {
+  .show-tagline {
     margin: 0 auto 16px;
     text-align: center;
   }
 
-  html:not(.js-vt) .show-actions {
+  .show-actions {
     --cluster-justify: center;
   }
 
-  html:not(.js-vt) .show-hero-logo {
+  .show-hero-logo {
     order: -1;
     justify-self: center;
     margin-top: clamp(4px, 1.5vw, 30px);
   }
-}
-
-html.is-stacked .show-hero-inner {
-  grid-template-columns: 1fr;
-  gap: clamp(8px, 2vw, 24px);
-  text-align: center;
-}
-
-html.is-stacked .show-tagline {
-  margin: 0 auto 16px;
-  text-align: center;
-}
-
-html.is-stacked .show-actions {
-  --cluster-justify: center;
-}
-
-html.is-stacked .show-hero-logo {
-  order: -1;
-  justify-self: center;
-  margin-top: clamp(4px, 1.5vw, 30px);
 }
 
 .show-hero-logo {
@@ -599,26 +582,6 @@ html.is-stacked .show-hero-logo {
   gap: var(--cluster-space, var(--s0));
   justify-content: var(--cluster-justify, flex-start);
   align-items: var(--cluster-align, center);
-}
-
-/* `.switcher` — children render in a single row when the container is at
-   least `--switcher-threshold` wide; otherwise they stack. The
-   `flex-basis: calc((threshold - 100%) * 999)` trick is the Every-Layout
-   classic: above the threshold `100%` is the larger value, so the
-   expression is negative — `flex-basis` clamps to 0 and `flex-grow: 1`
-   lays the children out side by side. Below the threshold the expression
-   is positive and multiplied to a huge value, so each child demands far
-   more inline-size than the container can offer and `flex-wrap: wrap`
-   bumps every item onto its own line. No media query needed. */
-.switcher {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--switcher-space, var(--s1));
-}
-
-.switcher > * {
-  flex-grow: 1;
-  flex-basis: calc((var(--switcher-threshold, 30rem) - 100%) * 999);
 }
 
 /* `.grid-auto` — auto-fit grid that fills available width with as many
@@ -3093,18 +3056,11 @@ body:has(.sponsor-page) .page-header {
   }
 }
 
-@media (max-width: 760px) {
-  .show-hero,
-  .filter-form {
-    grid-template-columns: 1fr;
-    align-items: flex-start;
-  }
-
+/* Hero refinements at the second stack stage — tighter gap, smaller hero
+   chrome, beefier title. Builds on top of the wider stack block above. */
+@container show-hero (max-width: 47.5rem) {
   .show-hero-inner {
-    grid-template-columns: 1fr;
     gap: 20px;
-    align-items: center;
-    text-align: center;
     padding: 24px 0;
   }
 
@@ -3112,20 +3068,12 @@ body:has(.sponsor-page) .page-header {
     font-size: clamp(2.5rem, 9vw, 3.5rem);
   }
 
-  .show-tagline {
-    margin: 0 auto 16px;
-    text-align: center;
-  }
-
-  .show-actions {
-    --cluster-justify: center;
-  }
-
   .show-hero-logo {
-    order: -1;
-    justify-self: center;
+    margin-top: 0;
   }
+}
 
+@media (max-width: 760px) {
   .show-artwork {
     justify-self: start;
     max-width: 220px;
