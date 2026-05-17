@@ -110,6 +110,15 @@
   --text-lg: 1.2rem;
   --text-xl: 1.4rem;
   --text-h2: clamp(1.6rem, 1.6vw + 0.8rem, 2.2rem);
+  /* Component-scoped fluid sizes that previously lived as one-off clamps
+     at the component rule. Tokenised so the formula sits next to its
+     siblings; the consumer still owns the choice of token vs literal. */
+  --text-h1: clamp(2.4rem, 4vw + 1rem, 3.5rem);
+  --text-show-hero: clamp(2.5rem, 5vw + 1rem, 6rem);
+  --text-episode-hero: clamp(1.8rem, 4cqi, 2.4rem);
+  --text-tagline: clamp(1.2rem, 1.5vw, 1.5rem);
+  --text-platform-link: clamp(0.82rem, 0.25vw + 0.78rem, 0.96rem);
+  --text-callout: clamp(1.05rem, 0.5vw + 0.95rem, 1.2rem);
   /* Weight scale — three common steps. 900 (episode-badge numerals) and
      400 (one explicit override) stay literal, documented at the use
      site. The `@font-face` `font-weight: 100 700|900` ranges describe
@@ -228,7 +237,7 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(2.4rem, 4vw + 1rem, 3.5rem);
+  font-size: var(--text-h1);
   letter-spacing: -0.025em;
 }
 
@@ -471,7 +480,7 @@ main {
 
 .show-hero h1 {
   font-family: var(--font-heading);
-  font-size: clamp(3.5rem, 6vw, 6rem);
+  font-size: var(--text-show-hero);
   font-weight: var(--weight-bold);
   margin: var(--s-3) 0 var(--s-1);
 }
@@ -484,7 +493,7 @@ main {
 .show-tagline {
   max-width: 40ch;
   color: var(--dc-muted);
-  font-size: clamp(1.2rem, 1.5vw, 1.5rem);
+  font-size: var(--text-tagline);
   line-height: 1.45;
   margin: 0 0 var(--s1);
 }
@@ -749,7 +758,7 @@ main {
   padding-inline: clamp(14px, 0.6vw + 11px, 18px);
   border: 1px solid var(--dc-line);
   color: var(--dc-ink);
-  font-size: clamp(0.82rem, 0.25vw + 0.78rem, 0.96rem);
+  font-size: var(--text-platform-link);
   font-weight: var(--weight-bold);
   background-color: transparent;
   white-space: nowrap;
@@ -2047,7 +2056,7 @@ body:has(.sponsor-page) .page-header {
 
 .sponsor-callout-text {
   margin: 0;
-  font-size: clamp(1.05rem, 0.5vw + 0.95rem, 1.2rem);
+  font-size: var(--text-callout);
   font-weight: var(--weight-semibold);
   line-height: 1.5;
 }
@@ -2115,7 +2124,7 @@ body:has(.sponsor-page) .page-header {
   border: 2px solid var(--dc-accent-dark);
   border-radius: var(--dc-radius-pill);
   font-family: var(--font-heading);
-  font-size: clamp(1.05rem, 0.5vw + 0.95rem, 1.2rem);
+  font-size: var(--text-callout);
   font-weight: var(--weight-bold);
   text-decoration: none;
   box-shadow: 0 8px 22px rgb(20 81 58 / 0.25);
@@ -2483,7 +2492,7 @@ body:has(.sponsor-page) .page-header {
   /* Container-driven (cqi) so the title shrinks with `.episode-detail`'s
      width — keeps the title from wrapping onto a third line and bloating
      the hero row past the cover height in the narrow 2-column band. */
-  font-size: clamp(1.8rem, 4cqi, 2.4rem);
+  font-size: var(--text-episode-hero);
   letter-spacing: -0.02em;
 }
 
@@ -3095,16 +3104,14 @@ body:has(.sponsor-page) .page-header {
   }
 }
 
-/* Hero refinements at the second stack stage — tighter gap, smaller hero
-   chrome, beefier title. Builds on top of the wider stack block above. */
+/* Hero refinements at the second stack stage. The previous narrow-stage
+   `font-size` override on `.show-hero h1` was folded into the single
+   `--text-show-hero` clamp at the top of the file; the narrow stage now
+   only adjusts surrounding spacing. */
 @container show-hero (max-width: 47.5rem) {
   .show-hero-inner {
     gap: 20px;
     padding: var(--s1) 0;
-  }
-
-  .show-hero h1 {
-    font-size: clamp(2.5rem, 9vw, 3.5rem);
   }
 
   .show-hero-logo {
