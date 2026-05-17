@@ -312,6 +312,9 @@ def test_podlove_loader_injects_iframe_panel_styles() -> None:
     assert "stroke-width: 3 !important;" in loader
     assert '[data-test="tab-transcripts--follow"] {' in loader
     assert '[data-test="tab"] [data-test="tab-transcripts--follow"] {' in loader
+    assert '[data-test="divider"] {' in loader
+    assert "background: #d8d8d8 !important;" in loader
+    assert "background-image: none !important;" in loader
     assert '[data-test="play-button"]:focus-visible {' in loader
     assert '[data-test="play-button"]:focus:not(:focus-visible) {' in loader
     assert '[data-test^="tab-trigger--"]:focus-visible,' in loader

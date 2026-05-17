@@ -113,6 +113,12 @@
   outline-offset: 2px !important;
 }
 
+[data-test="divider"] {
+  background: #d8d8d8 !important;
+  background-image: none !important;
+  background-size: auto !important;
+}
+
 [data-test="play-button"]:focus-visible {
   border-color: #4da553 !important;
   border-radius: 999px !important;
