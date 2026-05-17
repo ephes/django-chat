@@ -58,6 +58,8 @@
 html {
   -webkit-font-smoothing: antialiased;
   text-size-adjust: 100%;
+  /* iOS Safari paints overscroll and URL-bar gaps with the root background. */
+  background-color: var(--dc-ink);
   /* Sticky `.site-header` covers the top `--site-header-height` of the
      viewport. Reserve that space for any element scrolled into view
      (anchor links, scrollIntoView, focus-driven scrolls) so the target

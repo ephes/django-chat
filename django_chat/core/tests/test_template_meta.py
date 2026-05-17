@@ -22,6 +22,7 @@ def test_episode_index_emits_favicon_links(client: Client) -> None:
 
     body = response.content.decode()
     assert '<html lang="en" data-theme="light">' in body
+    assert '<meta name="theme-color" content="#0d0d0d">' in body
     assert 'rel="icon"' in body
     assert "favicon.svg" in body
     assert "favicon.ico" in body
@@ -139,6 +140,7 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert ".episode-detail-badge {" in css
     assert ".audio-panel,\n.audio-panel *,\npodlove-player,\npodlove-player * {" in css
     assert "--dc-link: #14513a;" in css
+    assert "background-color: var(--dc-ink);" in _css_blocks(css, "html")[0]
     assert "--dc-muted: #5f635d;" in css
     assert "--dc-accent: #2d8260;" in css
     assert "--dc-accent-dark: #14513a;" in css

@@ -7,6 +7,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0d0d0d">
     <meta name="description" content="{% block meta_description %}{% firstof meta_description page.search_description %}{% endblock meta_description %}">
     <title>{% block title %}{% firstof meta_title page.seo_title page.title %}{% endblock title %} | Django Chat</title>
     {% firstof canonical_url absolute_page_url page_url as resolved_canonical_url %}
@@ -63,7 +64,7 @@
     </style>
     <script src="{% static 'django_chat/js/view-transitions.js' %}?v=vt-prototype-13"></script>
     {% block render_expect %}{% endblock render_expect %}
-    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=modal-fit-content">
+    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=ios-overscroll">
     {% comment %}
       Hide JS-only modal enhancements (Copy-to-clipboard, "Start at" timecode,
       Mastodon instance prompt) when scripting is disabled, leaving the
