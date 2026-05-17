@@ -126,6 +126,14 @@
   --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
+  /* Line-height scale — five steps. The two badge ultra-tights
+     (0.64 and 0.78) stay literal because they implement specific
+     number-overlap visual stacking, not text rhythm. */
+  --leading-flat: 1;
+  --leading-heading: 1.1;
+  --leading-snug: 1.25;
+  --leading-tagline: 1.45;
+  --leading-body: 1.55;
   --dc-measure: 60ch;
 
   /* ---------- Motion / focus tokens ---------- */
@@ -183,7 +191,7 @@ body {
   color: var(--dc-ink);
   font-family: var(--font-body);
   font-size: var(--text-base);
-  line-height: 1.55;
+  line-height: var(--leading-body);
 }
 
 body > .site-content {
@@ -232,7 +240,7 @@ h3 {
   font-family: var(--font-heading);
   font-weight: var(--weight-bold);
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: var(--leading-heading);
   margin: 0;
 }
 
@@ -494,7 +502,7 @@ main {
   max-width: 40ch;
   color: var(--dc-muted);
   font-size: var(--text-tagline);
-  line-height: 1.45;
+  line-height: var(--leading-tagline);
   margin: 0 0 var(--s1);
 }
 
@@ -1095,7 +1103,7 @@ main {
   color: var(--dc-accent-dark);
   /* Icon glyph size — off-scale, tied to the 38 px button. */
   font-size: 1.6rem;
-  line-height: 1;
+  line-height: var(--leading-flat);
 }
 
 .filter-popover-icon-button:hover,
@@ -1134,7 +1142,7 @@ main {
   border-radius: var(--dc-radius-pill);
   color: var(--dc-ink);
   font-size: var(--text-sm);
-  line-height: 1;
+  line-height: var(--leading-flat);
 }
 
 .filter-date-day.is-outside-month {
@@ -1210,7 +1218,7 @@ main {
   font-weight: 400;
   height: 28px;
   justify-content: center;
-  line-height: 1;
+  line-height: var(--leading-flat);
   position: absolute;
   right: 8px;
   text-decoration: none;
@@ -1360,6 +1368,8 @@ main {
   height: var(--episode-badge-size);
   justify-items: center;
   letter-spacing: 0;
+  /* Off-scale ultra-tight leading so the episode number visually stacks
+     onto the `#` glyph behind it; not a typographic line-height choice. */
   line-height: 0.64;
   margin-top: 0;
   overflow: hidden;
@@ -1395,6 +1405,8 @@ main {
   --episode-badge-size: var(--episode-cover-size);
   display: inline-grid;
   font-size: clamp(4rem, 9vw, 6.5rem);
+  /* Off-scale ultra-tight leading paired with the same number-overlap
+     stacking trick — visual effect, not text rhythm. */
   line-height: 0.78;
   margin: 0;
 }
@@ -1519,7 +1531,7 @@ main {
   max-width: var(--dc-measure);
   margin: 0;
   font-size: var(--text-md);
-  line-height: 1.5;
+  line-height: var(--leading-body);
 }
 
 /* When the site-nav switches to its centered phone layout (≤ 540 px),
@@ -1964,7 +1976,7 @@ body:has(.sponsor-page) .page-header {
      slack on each side after the stroke. Clamp guards against extreme
      sizes only. */
   font-size: clamp(1rem, 17cqi, 2.2rem);
-  line-height: 1;
+  line-height: var(--leading-flat);
   color: var(--dc-accent-dark);
   opacity: 1;
   transform: scale(1);
@@ -1992,7 +2004,7 @@ body:has(.sponsor-page) .page-header {
 .sponsor-stat-label {
   font-size: clamp(1rem, 0.4vw + 0.9rem, 1.1rem);
   font-weight: var(--weight-semibold);
-  line-height: 1.35;
+  line-height: var(--leading-snug);
   color: var(--dc-ink);
   max-width: 26ch;
 }
@@ -2058,7 +2070,7 @@ body:has(.sponsor-page) .page-header {
   margin: 0;
   font-size: var(--text-callout);
   font-weight: var(--weight-semibold);
-  line-height: 1.5;
+  line-height: var(--leading-body);
 }
 
 /* Pricing — two cards side by side, then CTA below. */
@@ -2088,7 +2100,7 @@ body:has(.sponsor-page) .page-header {
   font-weight: var(--weight-bold);
   font-size: clamp(1.8rem, 2vw + 1rem, 2.4rem);
   color: var(--dc-accent-dark);
-  line-height: 1.05;
+  line-height: var(--leading-flat);
 }
 
 .sponsor-tier-desc {
@@ -2155,7 +2167,7 @@ body:has(.sponsor-page) .page-header {
 .sponsor-hosts-bio {
   color: var(--dc-ink);
   font-size: var(--text-md);
-  line-height: 1.6;
+  line-height: var(--leading-body);
   max-width: 66%;
 }
 
@@ -2263,7 +2275,7 @@ body:has(.sponsor-page) .page-header {
   color: var(--dc-django);
   letter-spacing: 0.15em;
   font-size: var(--text-base);
-  line-height: 1;
+  line-height: var(--leading-flat);
 }
 
 .sponsor-review-title {
@@ -2276,7 +2288,7 @@ body:has(.sponsor-page) .page-header {
   margin: 0;
   color: var(--dc-ink);
   font-size: var(--text-base);
-  line-height: 1.5;
+  line-height: var(--leading-body);
 }
 
 /* PDF download — visually distinct, full-width call-out on a tinted band. */
@@ -3096,7 +3108,7 @@ body:has(.sponsor-page) .page-header {
   .nav-links {
     --cluster-justify: center;
     flex: 1 1 100%;
-    line-height: 1.25;
+    line-height: var(--leading-snug);
   }
 
   .nav-links a {
@@ -3751,7 +3763,7 @@ body:has(.share-modal:not([open]):target) {
 .embed-info-hint {
   margin: 0;
   font-size: var(--text-sm);
-  line-height: 1.45;
+  line-height: var(--leading-tagline);
   color: var(--dc-accent-dark);
 }
 
@@ -3780,7 +3792,7 @@ body:has(.share-modal:not([open]):target) {
   padding: var(--s-1);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  line-height: 1.4;
+  line-height: var(--leading-tagline);
   background: var(--dc-input-bg);
   color: var(--dc-ink);
   resize: vertical;
