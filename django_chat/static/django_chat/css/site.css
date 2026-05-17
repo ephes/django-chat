@@ -217,7 +217,7 @@ h3 {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--dc-muted);
-  margin: 0 0 6px;
+  margin: 0 0 var(--s-2);
 }
 
 .site-header,
@@ -425,7 +425,7 @@ main {
 .show-hero-inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 40px;
+  gap: var(--s3);
   align-items: center;
   min-height: 14svh;
   width: min(clamp(800px, 66vw, 1000px), 100% - 32px);
@@ -452,11 +452,11 @@ main {
   color: var(--dc-muted);
   font-size: clamp(1.2rem, 1.5vw, 1.5rem);
   line-height: 1.45;
-  margin: 0 0 20px;
+  margin: 0 0 var(--s1);
 }
 
 .show-actions {
-  --cluster-space: 10px;
+  --cluster-space: var(--s-2);
 }
 
 .show-artwork {
@@ -482,7 +482,7 @@ main {
   height: auto;
   width: clamp(170px, 23vw, 280px);
   justify-self: end;
-  margin-top: 30px;
+  margin-top: var(--s2);
   max-width: 100%;
 }
 
@@ -632,7 +632,7 @@ main {
 .button-primary {
   justify-content: center;
   min-height: var(--dc-tap);
-  padding: 0 18px;
+  padding: 0 var(--s0);
   border: 1px solid var(--dc-accent-dark);
   background: var(--dc-accent-dark);
   color: var(--dc-on-ink);
@@ -669,12 +669,12 @@ main {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 28px;
+  gap: var(--s1);
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   margin-top: -1px;
-  margin-bottom: 40px;
+  margin-bottom: var(--s3);
   padding: clamp(10px, 4vw - 10px, 40px) max(16px, calc(50vw - 560px)) clamp(32px, 4vw + 16px, 48px);
   background-color: #dfeede;
   background-image:
@@ -688,7 +688,7 @@ main {
 }
 
 .platform-band h2 {
-  margin: 6px 0 12px;
+  margin: var(--s-2) 0 var(--s-1);
   text-wrap: balance;
 }
 
@@ -765,7 +765,7 @@ main {
    `.button-primary, .platform-band-links a, …` block at the top. */
 
 .episode-section-title {
-  margin: 8px 0 18px;
+  margin: var(--s-2) 0 var(--s0);
 }
 
 .filter-form {
@@ -773,7 +773,7 @@ main {
   grid-template-columns: 1fr;
   gap: var(--s-1);
   width: 100vw;
-  margin: 0 calc(50% - 50vw) 28px;
+  margin: 0 calc(50% - 50vw) var(--s1);
   padding: 0 max(16px, calc(50vw - 560px));
   scroll-margin-top: var(--s5);
 }
@@ -788,7 +788,7 @@ main {
   justify-content: center;
   gap: var(--s-2);
   min-height: var(--dc-tap);
-  padding: 0 18px;
+  padding: 0 var(--s0);
   border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
   color: var(--dc-ink);
@@ -870,7 +870,7 @@ main {
 .filter-form select {
   width: 100%;
   min-height: var(--dc-tap);
-  padding: 0 14px;
+  padding: 0 var(--s-1);
   border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
   background: var(--dc-input-bg);
@@ -915,8 +915,8 @@ main {
   justify-content: space-between;
   width: 100%;
   min-height: var(--dc-tap);
-  gap: 10px;
-  padding: 0 14px;
+  gap: var(--s-2);
+  padding: 0 var(--s-1);
   border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
   background: var(--dc-input-bg);
@@ -1016,7 +1016,7 @@ main {
 
 .filter-date-popover {
   width: min(300px, calc(100vw - 40px));
-  padding: 14px;
+  padding: var(--s-1);
 }
 
 .filter-date-popover-header {
@@ -1110,15 +1110,15 @@ main {
 .filter-date-actions {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
-  margin-top: 10px;
-  padding-top: 10px;
+  gap: var(--s-2);
+  margin-top: var(--s-1);
+  padding-top: var(--s-1);
   border-top: 1px solid var(--dc-line);
 }
 
 .filter-date-actions button {
   min-height: 34px;
-  padding: 0 10px;
+  padding: 0 var(--s-2);
   border-radius: var(--dc-radius-pill);
   color: var(--dc-accent-dark);
   font-weight: 700;
@@ -1128,7 +1128,7 @@ main {
   min-width: 100%;
   max-width: calc(100vw - 40px);
   overflow: hidden;
-  padding: 6px;
+  padding: var(--s-2);
 }
 
 .filter-select-option {
@@ -1197,7 +1197,7 @@ main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 6px;
+  gap: var(--s-2);
   min-width: 0;
 }
 
@@ -1231,7 +1231,7 @@ main {
 .filter-form button[type="submit"] {
   justify-content: center;
   min-height: var(--dc-tap);
-  padding: 0 18px;
+  padding: 0 var(--s0);
   border: 1px solid var(--dc-accent-dark);
   background: var(--dc-accent-dark);
   color: var(--dc-on-ink);
@@ -1270,7 +1270,7 @@ main {
   --episode-badge-size: clamp(4.5rem, 9vw, 9rem);
   display: grid;
   gap: 0;
-  padding: 0 0 56px;
+  padding: 0 0 var(--s3);
 }
 
 .episode-row {
@@ -1278,7 +1278,7 @@ main {
   grid-template-columns: var(--episode-badge-size) 1fr;
   gap: clamp(12px, 2.5vw, 24px);
   align-items: center;
-  padding: 28px 0;
+  padding: var(--s1) 0;
   border-top: 1px solid var(--dc-line);
   text-decoration: none;
   color: inherit;
@@ -1318,7 +1318,7 @@ main {
   line-height: 0.64;
   margin-top: 0;
   overflow: hidden;
-  padding: 5px;
+  padding: var(--s-3);
   place-content: center;
   position: relative;
   text-transform: uppercase;
@@ -1355,7 +1355,7 @@ main {
 }
 
 .episode-row h2 {
-  margin: 2px 0 6px;
+  margin: 2px 0 var(--s-2);
 }
 
 .episode-summary {
@@ -1375,7 +1375,7 @@ main {
   }
 
   .episode-number-badge {
-    margin-top: 5px;
+    margin-top: var(--s-3);
   }
 
   .episode-summary {
@@ -1454,7 +1454,7 @@ main {
   z-index: 2;
   width: var(--dc-container);
   margin: 0 auto;
-  padding: 32px 0 100px;
+  padding: var(--s2) 0 var(--s5);
 }
 
 .page-header .eyebrow,
@@ -1464,7 +1464,7 @@ main {
 }
 
 .page-header h1 {
-  margin: 4px 0 14px;
+  margin: var(--s-3) 0 var(--s-1);
 }
 
 .page-header-tagline {
@@ -1492,7 +1492,7 @@ main {
    layout class (e.g. `.feed-card`) on the same element when a card
    wraps a vertical content stack. */
 .card {
-  padding: 24px clamp(20px, 3vw, 30px) 22px;
+  padding: var(--s1) clamp(20px, 3vw, 30px) var(--s1);
   background: var(--dc-paper);
   border: 1px solid var(--dc-line);
   border-radius: 12px;
@@ -1511,16 +1511,16 @@ main {
 .subscribe-page {
   width: var(--dc-container);
   margin: 0 auto;
-  padding: 56px 0 72px;
+  padding: var(--s3) 0 var(--s4);
   display: grid;
-  gap: 40px;
+  gap: var(--s3);
 }
 
 
 /* Vertical content stack — works both inside a `.card` and as a flat
    section item (audio-feed list). No container styling here. */
 .feed-card {
-  --stack-space: 14px;
+  --stack-space: var(--s-1);
 }
 
 .feed-card-title {
@@ -1540,7 +1540,7 @@ main {
 
 .feed-card-url {
   margin: var(--s-3) 0 0;
-  padding: 12px 14px;
+  padding: var(--s-1);
   background: #f4f7f3;
   border: 1px solid var(--dc-line);
   border-radius: 10px;
@@ -1555,7 +1555,7 @@ main {
 }
 
 .feed-card-actions {
-  --cluster-space: 10px;
+  --cluster-space: var(--s-2);
   margin-top: var(--s-3);
 }
 
@@ -1620,7 +1620,7 @@ main {
 }
 
 .subscribe-audio {
-  --stack-space: 18px;
+  --stack-space: var(--s0);
 }
 
 .subscribe-audio-heading {
@@ -1634,14 +1634,14 @@ main {
 }
 
 .audio-feeds {
-  --stack-space: 28px;
+  --stack-space: var(--s1);
   list-style: none;
   margin: var(--s-3) 0 0;
   padding: 0;
 }
 
 .audio-feed {
-  padding-bottom: 28px;
+  padding-bottom: var(--s1);
   border-bottom: 1px solid var(--dc-line);
 }
 
@@ -1652,7 +1652,7 @@ main {
 
 .subscribe-why {
   margin: 0;
-  padding: 16px 18px;
+  padding: var(--s0);
   border-left: 2px solid var(--dc-django);
   background: rgb(77 165 83 / 0.05);
   border-radius: 0 12px 12px 0;
@@ -1684,7 +1684,7 @@ main {
 }
 
 .subscribe-why-list li + li {
-  margin-top: 6px;
+  margin-top: var(--s-2);
 }
 
 /* Two-column layout: aside docks to the right and stays sticky like the
@@ -1730,7 +1730,7 @@ main {
 .sponsor-page {
   width: var(--dc-container);
   margin: 0 auto;
-  padding: 0 0 72px;
+  padding: 0 0 var(--s4);
   display: grid;
   /* `minmax(0, ...)` so the implicit grid track can't grow past the page
      container — required because the reviews Reel has `grid-auto-flow:
@@ -1956,7 +1956,7 @@ body:has(.sponsor-page) .page-header {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
+  gap: var(--s0);
 }
 
 @media (min-width: 960px) {
@@ -1966,7 +1966,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-slot {
-  --stack-space: 6px;
+  --stack-space: var(--s-2);
 }
 
 .sponsor-slot-name {
@@ -1987,8 +1987,8 @@ body:has(.sponsor-page) .page-header {
   display: flex;
   align-items: flex-start;
   gap: var(--s0);
-  margin: 26px 0 0;
-  padding: 20px 24px;
+  margin: var(--s1) 0 0;
+  padding: var(--s1);
   background: var(--dc-django-tint);
   border: 2px solid var(--dc-django);
   border-radius: 14px;
@@ -2013,9 +2013,9 @@ body:has(.sponsor-page) .page-header {
 /* Pricing — two cards side by side, then CTA below. */
 .sponsor-pricing-grid {
   --grid-min: 240px;
-  --grid-space: 18px;
+  --grid-space: var(--s0);
   list-style: none;
-  margin: 0 0 22px;
+  margin: 0 0 var(--s1);
   padding: 0;
 }
 
@@ -2047,7 +2047,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-cta {
-  --stack-space: 14px;
+  --stack-space: var(--s-1);
   margin-top: clamp(20px, 3vw, 32px);
   text-align: center;
 }
@@ -2067,7 +2067,7 @@ body:has(.sponsor-page) .page-header {
   align-items: center;
   gap: var(--s-1);
   min-height: 56px;
-  padding: 0 32px;
+  padding: 0 var(--s2);
   background: var(--dc-accent-dark);
   color: var(--dc-on-ink);
   border: 2px solid var(--dc-accent-dark);
@@ -2152,11 +2152,11 @@ body:has(.sponsor-page) .page-header {
   /* Top padding gives breathing room for the hover lift + drop shadow
      so the card's top edge doesn't get clipped by the scroller's box.
      Bottom padding leaves a gap between the cards and the scrollbar. */
-  padding: 18px 0 22px;
+  padding: var(--s0) 0 var(--s1);
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(min(100%, 280px), 320px);
-  gap: 18px;
+  gap: var(--s0);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
@@ -2234,8 +2234,8 @@ body:has(.sponsor-page) .page-header {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  padding: 22px clamp(20px, 3vw, 28px);
+  gap: var(--s0);
+  padding: var(--s1) clamp(20px, 3vw, 28px);
   background: var(--dc-django-soft);
   border: 1px solid rgb(77 165 83 / 0.35);
   border-radius: 12px;
@@ -2318,7 +2318,7 @@ body:has(.sponsor-page) .page-header {
      logo's `max-height: var(--episode-cover-size)` below, this lands the
      rail's top hairline on the same baseline as the show-notes hairline
      at any desktop viewport width. */
-  gap: 28px;
+  gap: var(--s1);
   /* Stretch the column (and its border-left divider) so the bottom of the
      line mirrors the natural top gap to the menu — symmetric breath at
      scroll=0. The user accepted the small "anschmiegen" slide as the page
@@ -2347,7 +2347,7 @@ body:has(.sponsor-page) .page-header {
   grid-column: 1 / -1;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-2);
   min-height: var(--dc-tap);
   font-size: 0.9rem;
   font-weight: 600;
@@ -2375,7 +2375,7 @@ body:has(.sponsor-page) .page-header {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--dc-muted);
-  padding-top: 36px;
+  padding-top: var(--s2);
   border-top: 1px solid var(--dc-line);
 }
 
@@ -2383,7 +2383,7 @@ body:has(.sponsor-page) .page-header {
   display: grid;
   grid-template-columns: 22px 1fr;
   align-items: center;
-  gap: 14px;
+  gap: var(--s-1);
   min-height: var(--dc-tap);
   background: none;
   border: 0;
@@ -2392,7 +2392,7 @@ body:has(.sponsor-page) .page-header {
   cursor: pointer;
   font: inherit;
   letter-spacing: inherit;
-  padding: 14px 0;
+  padding: var(--s-1) 0;
   text-align: left;
   text-decoration: none;
   text-transform: inherit;
@@ -2421,9 +2421,9 @@ body:has(.sponsor-page) .page-header {
 .episode-hero {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 28px;
+  column-gap: var(--s1);
   align-items: start;
-  margin-bottom: 28px;
+  margin-bottom: var(--s1);
 }
 
 .episode-hero .visually-hidden {
@@ -2437,7 +2437,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .episode-hero h1 {
-  margin: 0 0 18px;
+  margin: 0 0 var(--s0);
   /* Container-driven (cqi) so the title shrinks with `.episode-detail`'s
      width — keeps the title from wrapping onto a third line and bloating
      the hero row past the cover height in the narrow 2-column band. */
@@ -2467,7 +2467,7 @@ body:has(.sponsor-page) .page-header {
 
   .episode-hero {
     grid-template-columns: 1fr;
-    row-gap: 20px;
+    row-gap: var(--s1);
   }
 
   .episode-sidebar {
@@ -2480,7 +2480,7 @@ body:has(.sponsor-page) .page-header {
     min-height: 0;
     /* Visual break before the service links, since the .episode-detail
        grid no longer adds a row-gap on mobile. */
-    margin-top: 30px;
+    margin-top: var(--s2);
   }
 
   .episode-sidebar .show-artwork {
@@ -2488,7 +2488,7 @@ body:has(.sponsor-page) .page-header {
        is inline by default and inline auto-margins resolve to zero. */
     display: block;
     max-width: 200px;
-    margin: 28px auto 0;
+    margin: var(--s1) auto 0;
   }
 
   .episode-body {
@@ -2506,8 +2506,8 @@ body:has(.sponsor-page) .page-header {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 4px 18px;
-    padding-top: 28px;
+    gap: var(--s-3) var(--s0);
+    padding-top: var(--s1);
   }
 
   .rail-item {
@@ -2517,7 +2517,7 @@ body:has(.sponsor-page) .page-header {
     gap: var(--s-2);
     width: auto;
     border-bottom: none;
-    padding: 10px 2px;
+    padding: var(--s-1) 2px;
   }
 }
 
@@ -2665,7 +2665,7 @@ body:has(.sponsor-page) .page-header {
 .podlove-facade-tabs {
   align-items: center;
   display: flex;
-  gap: 13px;
+  gap: var(--s-1);
   height: 56px;
   justify-content: flex-end;
 }
@@ -2741,7 +2741,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .episode-body {
-  padding-top: 36px;
+  padding-top: var(--s2);
   border-top: 1px solid var(--dc-line);
 }
 
@@ -2750,7 +2750,7 @@ body:has(.sponsor-page) .page-header {
   font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.015em;
-  margin: 0 0 20px;
+  margin: 0 0 var(--s1);
 }
 
 .show-notes {
@@ -2767,7 +2767,7 @@ body:has(.sponsor-page) .page-header {
 
 .show-notes h2 {
   font-size: 1.3rem;
-  margin: 40px 0 10px;
+  margin: var(--s3) 0 var(--s-1);
 }
 
 /*
@@ -2786,11 +2786,11 @@ body:has(.sponsor-page) .page-header {
   font-weight: 700;
   color: var(--dc-ink);
   letter-spacing: -0.005em;
-  margin: 32px 0 10px;
+  margin: var(--s2) 0 var(--s-1);
 }
 
 .show-notes p {
-  margin: 0 0 14px;
+  margin: 0 0 var(--s-1);
 }
 
 .show-notes p:last-child {
@@ -2800,7 +2800,7 @@ body:has(.sponsor-page) .page-header {
 .show-notes ul,
 .show-notes ol {
   margin: var(--s-3) 0 var(--s0);
-  padding-left: 22px;
+  padding-left: var(--s1);
 }
 
 .show-notes li {
@@ -2814,7 +2814,7 @@ body:has(.sponsor-page) .page-header {
 .show-notes ul + h3,
 .show-notes ol + h3,
 .show-notes p + h3 {
-  margin-top: 44px;
+  margin-top: var(--s3);
 }
 
 .show-notes a {
@@ -2825,8 +2825,8 @@ body:has(.sponsor-page) .page-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 24px 0 56px;
+  gap: var(--s-1);
+  padding: var(--s1) 0 var(--s3);
   font-weight: 600;
 }
 
@@ -2859,9 +2859,9 @@ body:has(.sponsor-page) .page-header {
 }
 
 .footer-mastodon-button {
-  gap: 10px;
+  gap: var(--s-2);
   min-height: var(--dc-tap);
-  padding: 0 18px;
+  padding: 0 var(--s0);
   border: 1px solid color-mix(in srgb, var(--dc-on-ink) 35%, transparent);
   color: var(--dc-on-ink);
   font-weight: 600;
@@ -3039,7 +3039,7 @@ body:has(.sponsor-page) .page-header {
 @container site-header (max-width: 540px) {
   .site-nav {
     flex-wrap: wrap;
-    gap: clamp(4px, 1.5vw, 12px) 18px;
+    gap: clamp(4px, 1.5vw, 12px) var(--s0);
     justify-content: center;
     padding: clamp(2px, 1.5vw, 12px) 0;
   }
@@ -3088,7 +3088,7 @@ body:has(.sponsor-page) .page-header {
   }
 
   .audio-panel podlove-player[data-template] .podlove-hover-placeholder {
-    gap: 22px;
+    gap: var(--s1);
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
     min-height: 168px;
@@ -3121,7 +3121,7 @@ body:has(.sponsor-page) .page-header {
     border-top: 1px solid var(--dc-line);
     height: auto;
     justify-content: space-between;
-    padding-top: 18px;
+    padding-top: var(--s0);
   }
 
   .episode-sidebar .show-artwork {
@@ -3356,8 +3356,8 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-modal-inner {
-  --stack-space: 20px;
-  padding: 24px 28px 26px;
+  --stack-space: var(--s1);
+  padding: var(--s1);
 }
 
 .share-modal-header {
@@ -3370,13 +3370,13 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-channels {
-  --stack-space: 14px;
-  padding-bottom: 20px;
+  --stack-space: var(--s-1);
+  padding-bottom: var(--s1);
   border-bottom: 1px solid var(--dc-line);
 }
 
 .share-controls {
-  --stack-space: 18px;
+  --stack-space: var(--s0);
 }
 
 .share-modal-header h2 {
@@ -3413,7 +3413,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-pills {
-  --cluster-space: 10px;
+  --cluster-space: var(--s-2);
 }
 
 .share-pill {
@@ -3446,7 +3446,7 @@ body:has(.share-modal:not([open]):target) {
 .share-mastodon-prompt {
   --stack-space: var(--s-2);
   background: rgb(0 0 0 / 0.04);
-  padding: 14px 16px;
+  padding: var(--s-1) var(--s0);
   border-radius: 10px;
 }
 
@@ -3515,7 +3515,7 @@ body:has(.share-modal:not([open]):target) {
   min-width: 0;
   border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
-  padding: 0 14px;
+  padding: 0 var(--s-1);
   min-height: 38px;
   background: var(--dc-input-bg);
   color: var(--dc-ink);
@@ -3590,7 +3590,7 @@ body:has(.share-modal:not([open]):target) {
   width: 88px;
   border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
-  padding: 6px 14px;
+  padding: var(--s-2) var(--s-1);
   font-family: "Roboto Mono", ui-monospace, monospace;
   font-size: 0.92rem;
   background: var(--dc-input-bg);
@@ -3643,7 +3643,7 @@ body:has(.share-modal:not([open]):target) {
 
 .share-copy .share-copy-button {
   gap: var(--s-2);
-  padding: 0 18px;
+  padding: 0 var(--s0);
 }
 
 @media (max-width: 480px) {
@@ -3665,8 +3665,8 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .embed-info {
-  --stack-space: 6px;
-  padding-bottom: 20px;
+  --stack-space: var(--s-2);
+  padding-bottom: var(--s1);
   border-bottom: 1px solid var(--dc-line);
 }
 
@@ -3674,7 +3674,7 @@ body:has(.share-modal:not([open]):target) {
   display: flex;
   align-items: center;
   gap: var(--s0);
-  padding: 16px 18px;
+  padding: var(--s0);
   border-radius: 12px;
   background: var(--dc-django-soft);
 }
@@ -3730,7 +3730,7 @@ body:has(.share-modal:not([open]):target) {
   min-width: 0;
   border: 1px solid var(--dc-line);
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: var(--s-1);
   font-family: "Roboto Mono", ui-monospace, monospace;
   font-size: 0.78rem;
   line-height: 1.4;
