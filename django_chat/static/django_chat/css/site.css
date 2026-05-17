@@ -599,9 +599,12 @@ html.is-stacked .show-hero-logo {
 /* `.switcher` — children render in a single row when the container is at
    least `--switcher-threshold` wide; otherwise they stack. The
    `flex-basis: calc((threshold - 100%) * 999)` trick is the Every-Layout
-   classic: it resolves to a huge positive number (row) below the
-   threshold and a huge negative number (stack) above, both clamped by
-   `flex-wrap: wrap`. No media query needed. */
+   classic: above the threshold `100%` is the larger value, so the
+   expression is negative — `flex-basis` clamps to 0 and `flex-grow: 1`
+   lays the children out side by side. Below the threshold the expression
+   is positive and multiplied to a huge value, so each child demands far
+   more inline-size than the container can offer and `flex-wrap: wrap`
+   bumps every item onto its own line. No media query needed. */
 .switcher {
   display: flex;
   flex-wrap: wrap;
