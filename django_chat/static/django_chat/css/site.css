@@ -90,10 +90,19 @@
   --font-heading: "Ubuntu", "Roboto", system-ui, sans-serif;
   --font-mono: "Roboto Mono", ui-monospace, monospace;
 
-  /* Size scale — six static steps plus the responsive h2 clamp. Sites
-     whose font-size does not exact-match a token (e.g. 0.85rem, 0.92rem,
-     0.95rem, 1.05rem, 1.1rem, 1.3rem, 1.6rem) intentionally stay literal
-     until a future "snap-to-text-scale" pass. */
+  /* Size scale — six static steps plus the responsive h2 clamp. Every
+     static `font-size` in the file resolves through these tokens with
+     three documented exceptions, each carrying an inline justification
+     at the use site:
+     - `.show-notes h3 / p:has(+ ul/ol)` keeps `1.3rem` so its section
+       markers read heavier than the global `h3` rule (1.2rem).
+     - `.show-notes-title` keeps `1.6rem` as a decorative heading
+       distinct from the responsive `--text-h2` clamp.
+     - `.filter-popover-icon-button` keeps `1.6rem` to size its `+/−`
+       glyphs against the 38 px button geometry.
+     The responsive `clamp(...)` font-sizes used for hero h1, episode
+     badge, sponsor stats / pricing / CTA, and the audio-panel facade
+     also stay literal — they are intentionally fluid. */
   --text-xs: 0.78rem;
   --text-sm: 0.9rem;
   --text-base: 1rem;
