@@ -322,10 +322,7 @@ main {
 }
 
 .nav-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 15px 35px;
+  --cluster-space: 15px 35px;
   font-size: 0.92rem;
   font-weight: 600;
 }
@@ -454,9 +451,7 @@ main {
 }
 
 .show-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  --cluster-space: 10px;
 }
 
 .show-artwork {
@@ -505,7 +500,7 @@ main {
   }
 
   html:not(.js-vt) .show-actions {
-    justify-content: center;
+    --cluster-justify: center;
   }
 
   html:not(.js-vt) .show-hero-logo {
@@ -527,7 +522,7 @@ html.is-stacked .show-tagline {
 }
 
 html.is-stacked .show-actions {
-  justify-content: center;
+  --cluster-justify: center;
 }
 
 html.is-stacked .show-hero-logo {
@@ -732,10 +727,8 @@ html.is-stacked .show-hero-logo {
 }
 
 .platform-band-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: clamp(8px, 0.4vw + 6px, 12px);
+  --cluster-space: clamp(8px, 0.4vw + 6px, 12px);
+  --cluster-justify: center;
   width: 100%;
 }
 
@@ -1592,9 +1585,7 @@ html.is-stacked .show-hero-logo {
 }
 
 .feed-card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  --cluster-space: 10px;
   margin-top: 4px;
 }
 
@@ -2887,11 +2878,8 @@ body:has(.sponsor-page) .page-header {
    `.button-primary, .platform-band-links a, …` block at the top. */
 
 .site-footer-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  --cluster-space: 16px;
+  --cluster-justify: space-between;
   padding: 24px 0;
   font-size: 0.9rem;
 }
@@ -2902,8 +2890,7 @@ body:has(.sponsor-page) .page-header {
 @media (max-width: 768px) {
   .site-footer-inner {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    --cluster-justify: center;
     text-align: center;
   }
 }
@@ -3095,9 +3082,9 @@ body:has(.sponsor-page) .page-header {
   }
 
   .nav-links {
+    --cluster-justify: center;
     flex: 1 1 100%;
     line-height: 1.25;
-    justify-content: center;
   }
 
   .nav-links a {
@@ -3130,7 +3117,7 @@ body:has(.sponsor-page) .page-header {
   }
 
   .show-actions {
-    justify-content: center;
+    --cluster-justify: center;
   }
 
   .show-hero-logo {
@@ -3484,9 +3471,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  --cluster-space: 10px;
 }
 
 .share-pill {
@@ -3644,13 +3629,10 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-startat {
+  --cluster-space: 16px;
   border: 0;
   padding: 0;
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
 }
 
 /* `.share-startat legend` is the fieldset's a11y label — hidden via the
@@ -3726,7 +3708,7 @@ body:has(.share-modal:not([open]):target) {
 
 @media (max-width: 480px) {
   .share-pills {
-    gap: 8px;
+    --cluster-space: 8px;
   }
 
   .share-pill {

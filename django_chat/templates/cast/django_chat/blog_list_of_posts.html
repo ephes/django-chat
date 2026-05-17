@@ -50,7 +50,7 @@
       <div class="show-copy">
         <h1 id="show-hero-title">{{ page.title }}</h1>
         <p class="show-tagline">A biweekly podcast on the Django Web Framework by Will&nbsp;Vincent and Carlton&nbsp;Gibson.</p>
-        <div class="show-actions">
+        <div class="show-actions cluster">
           <a class="button-primary" href="{% url 'cast:feed_detail' slug=podcast.slug %}">
             <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M4 11a9 9 0 0 1 9 9"/>
@@ -76,7 +76,7 @@
               <h2 id="platform-band-title">Listen on podcast apps and video platforms</h2>
               <p>These links open Django Chat on third-party services such as podcast directories, podcast apps, and YouTube.</p>
             </div>
-            <div class="platform-band-links">
+            <div class="platform-band-links cluster">
               {% for link in distribution_links|split_amazon_audible|youtube_first %}
                 {% if link.name != "Google Podcasts" %}
                   <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">

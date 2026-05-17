@@ -12,7 +12,7 @@
       <h2 class="feed-card-title">MP3 podcast feed</h2>
       <p class="feed-card-desc">The main Django Chat episode feed. Best compatibility with podcast apps.</p>
       <pre class="feed-card-url"><code id="feed-url-podcast-mp3">{{ request.scheme }}://{{ request.get_host }}{{ podcast_mp3_path }}</code></pre>
-      <div class="feed-card-actions">
+      <div class="feed-card-actions cluster">
         <button type="button" class="feed-action feed-action--primary" data-copy-target="feed-url-podcast-mp3">
           <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <rect x="8" y="4" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -43,7 +43,7 @@
           <h3 class="feed-card-title feed-card-title--compact">Latest entries</h3>
           <p class="feed-card-desc">Every new page or post on the site beyond episodes — use this if you want to follow the project itself, not just listen.</p>
           <pre class="feed-card-url"><code id="feed-url-blog">{{ request.scheme }}://{{ request.get_host }}{{ blog_feed_url }}</code></pre>
-          <div class="feed-card-actions">
+          <div class="feed-card-actions cluster">
             <button type="button" class="feed-action feed-action--primary" data-copy-target="feed-url-blog">
               <svg class="feed-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <rect x="8" y="4" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>

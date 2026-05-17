@@ -85,7 +85,7 @@
           <img class="brand-mark" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="39" height="36" alt="">
           <span class="brand-name">Django Chat</span>
         </a>
-        <div class="nav-links">
+        <div class="nav-links cluster">
           <a href="{% url 'django_chat_episode_index' %}#all-episodes">Episodes</a>
           {% if source_metadata %}
             {% for link in source_metadata.visible_menu_links %}
@@ -107,7 +107,7 @@
     </div>
 
     <footer class="site-footer">
-      <div class="site-footer-inner">
+      <div class="site-footer-inner cluster">
         {% if source_metadata %}
           {% for link in source_metadata.visible_social_links %}
             {% if link.name == "Fosstodon" %}
