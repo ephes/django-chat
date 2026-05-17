@@ -29,24 +29,51 @@
 }
 
 :root {
+  /* ---------- Color tokens ---------- */
   --dc-ink: #0d0d0d;
   --dc-paper: #ffffff;
+  --dc-on-ink: #fff;
   --dc-player-surface: transparent;
   --dc-muted: #5f635d;
   --dc-line: #d8d8d8;
+  --dc-input-bg: #fbfdfb;
   --dc-link: #14513a;
   --dc-accent: #2d8260;
   --dc-accent-dark: #14513a;
   --dc-player-play: #1f6647;
   --dc-django: #4da553;
+  /* Translucent django-green tints used for hover/focus surfaces. Derived
+     via `color-mix` so changing `--dc-django` flows through automatically.
+     Other percentages (12 %, 15 %, 35 %, …) appear inline at single-use
+     sites; promote to a token only once a second consumer needs the same
+     value. */
+  --dc-django-soft: color-mix(in srgb, var(--dc-django) 8%, transparent);
+  --dc-django-tint: color-mix(in srgb, var(--dc-django) 10%, transparent);
+
+  /* ---------- Geometry tokens ---------- */
   --dc-radius: 4px;
+  --dc-radius-pill: 999px;
+  --dc-tap: 44px;
   --dc-container: min(1120px, 100% - 32px);
-  --dc-h2-size: clamp(1.6rem, 1.6vw + 0.8rem, 2.2rem);
   /* Approximate height of `.site-header` on desktop. Used by fixed-positioned
      surfaces (e.g. the episode sidebar) that need to sit below the menu bar
      at scroll-y = 0. Slightly larger than the measured 69px to absorb minor
      clamp variance. */
   --site-header-height: 72px;
+
+  /* ---------- Typography tokens ---------- */
+  --dc-h2-size: clamp(1.6rem, 1.6vw + 0.8rem, 2.2rem);
+  --dc-measure: 60ch;
+
+  /* ---------- Motion / focus tokens ---------- */
+  --dc-transition-colors: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  --dc-focus-ring-soft: 0 0 0 3px color-mix(in srgb, var(--dc-django) 18%, transparent);
+
+  /* ---------- Shadow tokens ---------- */
+  --dc-shadow-sm: 0 1px 0 rgb(0 0 0 / 0.02);
+  --dc-shadow-md: 0 8px 22px rgb(0 0 0 / 0.06);
+  --dc-shadow-lg: 0 18px 36px rgb(0 0 0 / 0.10);
+  --dc-shadow-xl: 0 24px 64px rgb(0 0 0 / 0.22);
 }
 
 *,
@@ -81,7 +108,6 @@ body {
      not extend behind the iOS Safari bottom toolbar/home-indicator zone —
      the area below the body shows the dark `<html>` background instead of
      the white paper-textured `.site-content`. */
-  min-height: 100vh;
   min-height: 100svh;
   /* Full-bleed sections (`.platform-band`, stats band, …) use `width: 100vw`,
      which includes the vertical scrollbar's width and thus overflows the body
@@ -132,7 +158,7 @@ a:focus {
 }
 
 a:focus-visible {
-  outline: 3px solid rgb(77 165 83 / 0.35);
+  outline: 3px solid color-mix(in srgb, var(--dc-django) 35%, transparent);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -176,12 +202,12 @@ h3 {
 .site-header,
 .site-footer {
   background: var(--dc-ink);
-  color: #fff;
+  color: var(--dc-on-ink);
 }
 
 .site-header a,
 .site-footer a {
-  color: #fff;
+  color: var(--dc-on-ink);
   text-decoration: none;
 }
 
@@ -255,8 +281,8 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  min-height: 44px;
-  color: #fff;
+  min-height: var(--dc-tap);
+  color: var(--dc-on-ink);
   font-weight: 700;
   text-decoration: none;
 }
@@ -291,7 +317,7 @@ main {
 
 .show-hero {
   background-color: var(--dc-accent-dark);
-  color: #fff;
+  color: var(--dc-on-ink);
   height: auto;
   width: 100%;
   position: relative;
@@ -395,7 +421,7 @@ main {
 
 .show-hero .eyebrow,
 .show-hero .show-tagline {
-  color: #fff;
+  color: var(--dc-on-ink);
 }
 
 .show-tagline {
@@ -420,7 +446,7 @@ main {
   justify-self: end;
   object-fit: cover;
   border-radius: var(--dc-radius);
-  box-shadow: 0 18px 36px rgb(0 0 0 / 0.10);
+  box-shadow: var(--dc-shadow-lg);
 }
 
 .show-artwork--default {
@@ -439,6 +465,12 @@ main {
   max-width: 100%;
 }
 
+/* Stack rules apply in two situations and currently live in two blocks:
+   - JS path: `html.is-stacked` (set by view-transitions.js) — any viewport.
+   - No-JS path: viewports ≤ 1024 px without the `js-vt` class.
+   The two blocks below carry the same rule bodies. They can be deduped
+   cleanly only via a custom-property toggle or a Switcher primitive — see
+   Step 4 of the CSS cleanup plan. Until then: edit both blocks together. */
 @media (max-width: 1024px) {
   html:not(.js-vt) .show-hero-inner {
     grid-template-columns: 1fr;
@@ -522,39 +554,52 @@ html.is-stacked .show-hero-logo {
   }
 }
 
+/* ---------- Pill-button anatomy ----------
+   Shared structural traits across every pill-shaped button on the site:
+   the rounded shape, inline-flex alignment, and "no underline" link
+   appearance. Per-class rules elsewhere supply colour / padding / font
+   variants and per-class hover/focus surfaces. */
 .button-primary,
-.button-secondary {
+.platform-band-links a,
+.feed-action,
+.filter-form button[type="submit"],
+.filter-clear-all,
+.footer-mastodon-button,
+.share-pill,
+.pagination-nav a {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 999px;
-  font-weight: 600;
+  border-radius: var(--dc-radius-pill);
   text-decoration: none;
 }
 
+/* Light-tint hover/focus shared by the "ghost" pill buttons (transparent
+   or paper-coloured by default, then green-tinted on hover). */
+.platform-band-links a:hover,
+.platform-band-links a:focus,
+.filter-clear-all:hover,
+.filter-clear-all:focus,
+.share-pill:hover,
+.share-pill:focus-visible,
+.pagination-nav a:hover,
+.pagination-nav a:focus {
+  background: var(--dc-django-tint);
+  border-color: var(--dc-django);
+  color: var(--dc-accent-dark);
+}
+
 .button-primary {
-  background: var(--dc-accent-dark);
-  color: #fff;
+  justify-content: center;
+  min-height: var(--dc-tap);
+  padding: 0 18px;
   border: 1px solid var(--dc-accent-dark);
+  background: var(--dc-accent-dark);
+  color: var(--dc-on-ink);
+  font-weight: 600;
 }
 
 .button-primary:hover,
 .button-primary:focus {
-  background: var(--dc-django);
-  border-color: var(--dc-django);
-  color: var(--dc-ink);
-}
-
-.button-secondary {
-  background: var(--dc-accent-dark);
-  color: #fff;
-  border: 1px solid var(--dc-accent-dark);
-}
-
-.button-secondary:hover,
-.button-secondary:focus {
   background: var(--dc-django);
   border-color: var(--dc-django);
   color: var(--dc-ink);
@@ -620,8 +665,6 @@ html.is-stacked .show-hero-logo {
 }
 
 .platform-band-links a {
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
   gap: clamp(6px, 0.3vw + 5px, 10px);
   min-height: clamp(38px, 0.7vw + 34px, 46px);
@@ -632,14 +675,12 @@ html.is-stacked .show-hero-logo {
   max-inline-size: clamp(140px, 22vw, 180px);
   padding-inline: clamp(14px, 0.6vw + 11px, 18px);
   border: 1px solid var(--dc-line);
-  border-radius: 999px;
   color: var(--dc-ink);
   font-size: clamp(0.82rem, 0.25vw + 0.78rem, 0.96rem);
   font-weight: 700;
-  text-decoration: none;
   background-color: transparent;
   white-space: nowrap;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: var(--dc-transition-colors);
 }
 
 .platform-band-links a > span:last-child {
@@ -681,12 +722,8 @@ html.is-stacked .show-hero-logo {
   transition: background-color 0.15s ease;
 }
 
-.platform-band-links a:hover,
-.platform-band-links a:focus {
-  background: rgb(77 165 83 / 0.10);
-  border-color: var(--dc-django);
-  color: var(--dc-accent-dark);
-}
+/* Hover/focus surface shared with other ghost-style pills — see the
+   `.button-primary, .platform-band-links a, …` block at the top. */
 
 .episode-section-title {
   margin: 8px 0 18px;
@@ -702,27 +739,19 @@ html.is-stacked .show-hero-logo {
   scroll-margin-top: 80px;
 }
 
-.filter-extras-toggle {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
+/* `.filter-extras-toggle` is the no-JS accordion trigger checkbox — hidden
+   visually but still receives focus. Shares the `.visually-hidden` recipe
+   defined further below. */
 
 .filter-more-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 44px;
+  min-height: var(--dc-tap);
   padding: 0 18px;
   border: 1px solid var(--dc-line);
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   color: var(--dc-ink);
   font-weight: 600;
   font-size: 0.95rem;
@@ -801,11 +830,11 @@ html.is-stacked .show-hero-logo {
 .filter-form input:not([type="checkbox"]),
 .filter-form select {
   width: 100%;
-  min-height: 44px;
+  min-height: var(--dc-tap);
   padding: 0 14px;
-  border: 1px solid #d6ddd4;
-  border-radius: 999px;
-  background: #fbfdfb;
+  border: 1px solid var(--dc-line);
+  border-radius: var(--dc-radius-pill);
+  background: var(--dc-input-bg);
   color: var(--dc-ink);
   font: inherit;
   font-size: 0.95rem;
@@ -846,12 +875,12 @@ html.is-stacked .show-hero-logo {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 44px;
+  min-height: var(--dc-tap);
   gap: 10px;
   padding: 0 14px;
-  border: 1px solid #d6ddd4;
-  border-radius: 999px;
-  background: #fbfdfb;
+  border: 1px solid var(--dc-line);
+  border-radius: var(--dc-radius-pill);
+  background: var(--dc-input-bg);
   color: var(--dc-ink);
   font: inherit;
   font-size: 0.95rem;
@@ -866,7 +895,7 @@ html.is-stacked .show-hero-logo {
 }
 
 .filter-control-button:focus-visible {
-  box-shadow: 0 0 0 3px rgb(77 165 83 / 0.18);
+  box-shadow: var(--dc-focus-ring-soft);
   outline: 0;
 }
 
@@ -932,7 +961,7 @@ html.is-stacked .show-hero-logo {
   display: none;
   border: 1px solid #cfd8ce;
   border-radius: 14px;
-  background: #fff;
+  background: var(--dc-paper);
   box-shadow: 0 16px 34px rgb(13 13 13 / 0.18);
   color: var(--dc-ink);
 }
@@ -980,7 +1009,7 @@ html.is-stacked .show-hero-logo {
   justify-content: center;
   width: 38px;
   height: 38px;
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   color: var(--dc-accent-dark);
   font-size: 1.6rem;
   line-height: 1;
@@ -994,7 +1023,7 @@ html.is-stacked .show-hero-logo {
 .filter-date-actions button:focus,
 .filter-select-option:hover,
 .filter-select-option:focus {
-  background: rgb(77 165 83 / 0.12);
+  background: color-mix(in srgb, var(--dc-django) 12%, transparent);
   outline: 0;
 }
 
@@ -1019,7 +1048,7 @@ html.is-stacked .show-hero-logo {
   justify-content: center;
   aspect-ratio: 1;
   min-width: 0;
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   color: var(--dc-ink);
   font-size: 0.9rem;
   line-height: 1;
@@ -1035,7 +1064,7 @@ html.is-stacked .show-hero-logo {
 
 .filter-date-day.is-selected {
   background: var(--dc-accent-dark);
-  color: #fff;
+  color: var(--dc-on-ink);
   font-weight: 700;
 }
 
@@ -1051,7 +1080,7 @@ html.is-stacked .show-hero-logo {
 .filter-date-actions button {
   min-height: 34px;
   padding: 0 10px;
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   color: var(--dc-accent-dark);
   font-weight: 700;
 }
@@ -1076,7 +1105,7 @@ html.is-stacked .show-hero-logo {
 
 .filter-select-option.is-selected {
   background: var(--dc-accent-dark);
-  color: #fff;
+  color: var(--dc-on-ink);
   font-weight: 700;
 }
 
@@ -1109,19 +1138,19 @@ html.is-stacked .show-hero-logo {
 
 .filter-search-clear:hover,
 .filter-search-clear:focus {
-  background: rgb(77 165 83 / 0.12);
+  background: color-mix(in srgb, var(--dc-django) 12%, transparent);
   color: var(--dc-accent-dark);
 }
 
 .filter-search-clear:focus-visible {
-  outline: 3px solid rgb(77 165 83 / 0.35);
+  outline: 3px solid color-mix(in srgb, var(--dc-django) 35%, transparent);
   outline-offset: 2px;
 }
 
 .filter-form input:focus,
 .filter-form select:focus {
   border-color: var(--dc-django);
-  box-shadow: 0 0 0 3px rgb(77 165 83 / 0.18);
+  box-shadow: var(--dc-focus-ring-soft);
   outline: 0;
 }
 
@@ -1143,7 +1172,10 @@ html.is-stacked .show-hero-logo {
   min-width: 0;
 }
 
-.visually-hidden {
+.visually-hidden,
+.filter-extras-toggle,
+.sponsor-stats-defs,
+.share-startat legend {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -1155,13 +1187,15 @@ html.is-stacked .show-hero-logo {
   border: 0;
 }
 
+/* Visually identical to `.button-primary` but reached as a bare button
+   inside `.filter-form`. */
 .filter-form button[type="submit"] {
-  min-height: 44px;
+  justify-content: center;
+  min-height: var(--dc-tap);
   padding: 0 18px;
-  background: var(--dc-accent-dark);
-  color: #fff;
   border: 1px solid var(--dc-accent-dark);
-  border-radius: 999px;
+  background: var(--dc-accent-dark);
+  color: var(--dc-on-ink);
   font-weight: 600;
   cursor: pointer;
 }
@@ -1174,25 +1208,17 @@ html.is-stacked .show-hero-logo {
 }
 
 .filter-clear-all {
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  min-height: 44px;
+  min-height: var(--dc-tap);
   padding: 0 16px;
   border: 1px solid var(--dc-line);
-  border-radius: 999px;
   color: var(--dc-muted);
   font-size: 0.95rem;
   font-weight: 700;
-  text-decoration: none;
 }
 
-.filter-clear-all:hover,
-.filter-clear-all:focus {
-  background: rgb(77 165 83 / 0.10);
-  border-color: var(--dc-django);
-  color: var(--dc-accent-dark);
-}
+/* Hover/focus surface shared with other ghost-style pills — see the
+   `.button-primary, .platform-band-links a, …` block at the top. */
 
 @media (max-width: 599px) {
   .filter-extras > button[type="submit"],
@@ -1237,7 +1263,7 @@ html.is-stacked .show-hero-logo {
 }
 
 .episode-row:hover::before {
-  background: rgb(77 165 83 / 0.08);
+  background: var(--dc-django-soft);
 }
 
 .episode-number-badge {
@@ -1343,7 +1369,7 @@ html.is-stacked .show-hero-logo {
   min-height: var(--page-header-min-height);
   display: flex;
   align-items: flex-start;
-  color: #fff;
+  color: var(--dc-on-ink);
   overflow: hidden;
   isolation: isolate;
 }
@@ -1395,7 +1421,7 @@ html.is-stacked .show-hero-logo {
 .page-header .eyebrow,
 .page-header h1,
 .page-header-tagline {
-  color: #fff;
+  color: var(--dc-on-ink);
 }
 
 .page-header h1 {
@@ -1403,7 +1429,7 @@ html.is-stacked .show-hero-logo {
 }
 
 .page-header-tagline {
-  max-width: 60ch;
+  max-width: var(--dc-measure);
   margin: 0;
   font-size: 1.08rem;
   line-height: 1.5;
@@ -1428,17 +1454,17 @@ html.is-stacked .show-hero-logo {
    wraps a vertical content stack. */
 .card {
   padding: 24px clamp(20px, 3vw, 30px) 22px;
-  background: #fff;
+  background: var(--dc-paper);
   border: 1px solid var(--dc-line);
   border-radius: 12px;
-  box-shadow: 0 1px 0 rgb(0 0 0 / 0.02);
+  box-shadow: var(--dc-shadow-sm);
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .card:hover,
 .card:focus-within {
   border-color: rgb(77 165 83 / 0.45);
-  box-shadow: 0 8px 22px rgb(0 0 0 / 0.06);
+  box-shadow: var(--dc-shadow-md);
   transform: translateY(-1px);
 }
 
@@ -1471,7 +1497,7 @@ html.is-stacked .show-hero-logo {
 .feed-card-desc {
   color: var(--dc-muted);
   margin: 0;
-  max-width: 60ch;
+  max-width: var(--dc-measure);
 }
 
 .feed-card-url {
@@ -1498,20 +1524,18 @@ html.is-stacked .show-hero-logo {
 }
 
 .feed-action {
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
-  min-height: 44px;
+  min-height: var(--dc-tap);
   padding: 0 16px;
   border: 1px solid var(--dc-line);
-  border-radius: 999px;
-  background: #fff;
+  background: var(--dc-paper);
   color: var(--dc-ink);
   font: inherit;
   font-size: 0.95rem;
   font-weight: 600;
-  text-decoration: none;
   cursor: pointer;
+  /* Slightly slower than `--dc-transition-colors` so the copy-feedback flash
+     reads as deliberate; opted out of the shared token on purpose. */
   transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
@@ -1524,7 +1548,7 @@ html.is-stacked .show-hero-logo {
 .feed-action--primary {
   background: var(--dc-accent-dark);
   border-color: var(--dc-accent-dark);
-  color: #fff;
+  color: var(--dc-on-ink);
 }
 
 .feed-action--primary:hover,
@@ -1571,7 +1595,7 @@ html.is-stacked .show-hero-logo {
 .subscribe-audio-intro {
   color: var(--dc-muted);
   margin: 0;
-  max-width: 60ch;
+  max-width: var(--dc-measure);
 }
 
 .audio-feeds {
@@ -1712,12 +1736,9 @@ html.is-stacked .show-hero-logo {
 
 /* Stats — large numerals over short labels. Auto-fit grid degrades from
    four columns down to two and finally one without media queries. */
-.sponsor-stats-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
+/* `.sponsor-stats-defs` is the inline-SVG `<defs>` carrier for the gradient
+   referenced by `.sponsor-stat-ring-fill`. Hidden via the `.visually-hidden`
+   selector list above. */
 
 /* Full-bleed stats band. The pseudo-element extends a soft green tint
    to viewport edges and adds a green underline; the section's own box
@@ -1936,7 +1957,7 @@ body:has(.sponsor-page) .page-header {
   gap: 16px;
   margin: 26px 0 0;
   padding: 20px 24px;
-  background: rgb(77 165 83 / 0.10);
+  background: var(--dc-django-tint);
   border: 2px solid var(--dc-django);
   border-radius: 14px;
   color: var(--dc-ink);
@@ -2017,9 +2038,9 @@ body:has(.sponsor-page) .page-header {
   min-height: 56px;
   padding: 0 32px;
   background: var(--dc-accent-dark);
-  color: #fff;
+  color: var(--dc-on-ink);
   border: 2px solid var(--dc-accent-dark);
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   font-family: "Ubuntu", "Roboto", system-ui, sans-serif;
   font-size: clamp(1.05rem, 0.5vw + 0.95rem, 1.2rem);
   font-weight: 700;
@@ -2089,7 +2110,7 @@ body:has(.sponsor-page) .page-header {
   right: 0;
   width: 6px;
   background: var(--dc-django);
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   pointer-events: none;
   z-index: 2;
 }
@@ -2186,7 +2207,7 @@ body:has(.sponsor-page) .page-header {
   justify-content: space-between;
   gap: 18px;
   padding: 22px clamp(20px, 3vw, 28px);
-  background: rgb(77 165 83 / 0.08);
+  background: var(--dc-django-soft);
   border: 1px solid rgb(77 165 83 / 0.35);
   border-radius: 12px;
 }
@@ -2207,7 +2228,7 @@ body:has(.sponsor-page) .page-header {
 }
 
 .sponsor-pdf-button {
-  background: #fff;
+  background: var(--dc-paper);
   border-color: var(--dc-django);
   color: var(--dc-accent-dark);
 }
@@ -2298,7 +2319,7 @@ body:has(.sponsor-page) .page-header {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
+  min-height: var(--dc-tap);
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--dc-muted);
@@ -2334,7 +2355,7 @@ body:has(.sponsor-page) .page-header {
   grid-template-columns: 22px 1fr;
   align-items: center;
   gap: 14px;
-  min-height: 44px;
+  min-height: var(--dc-tap);
   background: none;
   border: 0;
   border-bottom: 1px solid var(--dc-line);
@@ -2556,7 +2577,7 @@ body:has(.sponsor-page) .page-header {
 .podlove-facade-play {
   align-items: center;
   background: var(--dc-player-play);
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   display: inline-flex;
   height: 50px;
   justify-content: center;
@@ -2578,7 +2599,7 @@ body:has(.sponsor-page) .page-header {
   animation: podlove-facade-spin 780ms linear infinite;
   border: 3px solid rgb(255 255 255 / 0.38);
   border-top-color: #fff;
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   display: none;
   height: 20px;
   position: absolute;
@@ -2596,7 +2617,7 @@ body:has(.sponsor-page) .page-header {
 
 .podlove-facade-progress {
   background: rgb(13 13 13 / 0.13);
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   display: block;
   height: 4px;
   min-width: 0;
@@ -2622,7 +2643,7 @@ body:has(.sponsor-page) .page-header {
 
 .podlove-facade-tabs span {
   background: rgb(95 99 93 / 0.22);
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   display: block;
   height: 18px;
   width: 18px;
@@ -2781,22 +2802,14 @@ body:has(.sponsor-page) .page-header {
 }
 
 .pagination-nav a {
-  display: inline-flex;
-  align-items: center;
   min-height: 40px;
   padding: 0 16px;
   border: 1px solid var(--dc-line);
-  border-radius: 999px;
   color: var(--dc-ink);
-  text-decoration: none;
 }
 
-.pagination-nav a:hover,
-.pagination-nav a:focus {
-  background: rgb(77 165 83 / 0.10);
-  border-color: var(--dc-django);
-  color: var(--dc-accent-dark);
-}
+/* Hover/focus surface shared with other ghost-style pills — see the
+   `.button-primary, .platform-band-links a, …` block at the top. */
 
 .site-footer-inner {
   display: flex;
@@ -2821,22 +2834,18 @@ body:has(.sponsor-page) .page-header {
 }
 
 .footer-mastodon-button {
-  display: inline-flex;
-  align-items: center;
   gap: 10px;
-  min-height: 44px;
+  min-height: var(--dc-tap);
   padding: 0 18px;
-  border: 1px solid rgb(255 255 255 / 0.35);
-  border-radius: 999px;
-  color: #fff;
+  border: 1px solid color-mix(in srgb, var(--dc-on-ink) 35%, transparent);
+  color: var(--dc-on-ink);
   font-weight: 600;
-  text-decoration: none;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: var(--dc-transition-colors);
 }
 
 .footer-mastodon-button:hover,
 .footer-mastodon-button:focus {
-  background-color: rgb(77 165 83 / 0.15);
+  background-color: color-mix(in srgb, var(--dc-django) 15%, transparent);
   border-color: var(--dc-django);
   color: var(--dc-django);
 }
@@ -2855,7 +2864,7 @@ body:has(.sponsor-page) .page-header {
 
 .site-footer .footer-cast-link:hover,
 .site-footer .footer-cast-link:focus {
-  color: #fff;
+  color: var(--dc-on-ink);
 }
 
 .status-page {
@@ -3121,17 +3130,15 @@ body:has(.sponsor-page) .page-header {
 }
 
 .button-primary,
-.button-secondary,
 .platform-band-links a,
 .footer-mastodon-button,
 .filter-form button,
 .filter-clear-all,
 .pagination-nav a {
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+  transition: var(--dc-transition-colors), transform 0.12s ease;
 }
 
 .button-primary:hover,
-.button-secondary:hover,
 .platform-band-links a:hover,
 .footer-mastodon-button:hover,
 .filter-form button:hover,
@@ -3141,7 +3148,6 @@ body:has(.sponsor-page) .page-header {
 }
 
 .button-primary:active,
-.button-secondary:active,
 .platform-band-links a:active,
 .footer-mastodon-button:active,
 .filter-form button:active,
@@ -3152,13 +3158,12 @@ body:has(.sponsor-page) .page-header {
 
 @media (prefers-reduced-motion: reduce) {
   .button-primary,
-  .button-secondary,
   .platform-band-links a,
   .footer-mastodon-button,
   .filter-form button,
   .filter-clear-all,
   .pagination-nav a {
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    transition: var(--dc-transition-colors);
     transform: none;
   }
 }
@@ -3295,7 +3300,7 @@ body:has(.sponsor-page) .page-header {
   border-radius: 16px;
   max-width: 480px;
   width: min(480px, calc(100vw - 32px));
-  box-shadow: 0 24px 64px rgb(0 0 0 / 0.22);
+  box-shadow: var(--dc-shadow-xl);
   opacity: 0;
   transform: translateY(32px) scale(0.88);
   transition:
@@ -3382,7 +3387,7 @@ body:has(.share-modal:not([open]):target) {
   border: 0;
   width: 42px;
   height: 42px;
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3392,15 +3397,15 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-modal-close:hover {
-  background: rgb(77 165 83 / 0.10);
+  background: var(--dc-django-tint);
   color: var(--dc-accent-dark);
 }
 
 .share-modal-close:focus-visible {
   outline: none;
-  background: rgb(77 165 83 / 0.10);
+  background: var(--dc-django-tint);
   color: var(--dc-accent-dark);
-  box-shadow: 0 0 0 3px rgb(77 165 83 / 0.18);
+  box-shadow: var(--dc-focus-ring-soft);
 }
 
 .share-pills {
@@ -3410,28 +3415,23 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-pill {
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
   min-height: 40px;
   padding: 0 16px;
   border: 1px solid var(--dc-line);
-  border-radius: 999px;
   color: var(--dc-ink);
   background: transparent;
   font: inherit;
   font-size: 0.92rem;
   font-weight: 600;
-  text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: var(--dc-transition-colors);
 }
 
+/* Background/border/color hover surface shared with other ghost-style pills
+   at the top of the file. Only `outline: none` is share-pill-specific. */
 .share-pill:hover,
 .share-pill:focus-visible {
-  background: rgb(77 165 83 / 0.10);
-  border-color: var(--dc-django);
-  color: var(--dc-accent-dark);
   outline: none;
 }
 
@@ -3513,11 +3513,11 @@ body:has(.share-modal:not([open]):target) {
 .share-mastodon-row input {
   flex: 1;
   min-width: 0;
-  border: 1px solid #d6ddd4;
-  border-radius: 999px;
+  border: 1px solid var(--dc-line);
+  border-radius: var(--dc-radius-pill);
   padding: 0 14px;
   min-height: 38px;
-  background: #fbfdfb;
+  background: var(--dc-input-bg);
   color: var(--dc-ink);
   font: inherit;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -3525,7 +3525,7 @@ body:has(.share-modal:not([open]):target) {
 
 .share-mastodon-row input:focus {
   border-color: var(--dc-django);
-  box-shadow: 0 0 0 3px rgb(77 165 83 / 0.18);
+  box-shadow: var(--dc-focus-ring-soft);
   outline: 0;
 }
 
@@ -3540,13 +3540,13 @@ body:has(.share-modal:not([open]):target) {
   min-height: 38px;
   padding: 0 16px;
   border: 1px solid var(--dc-accent-dark);
-  border-radius: 999px;
+  border-radius: var(--dc-radius-pill);
   background: var(--dc-accent-dark);
-  color: #fff;
+  color: var(--dc-on-ink);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: var(--dc-transition-colors);
 }
 
 .share-mastodon-row button:hover,
@@ -3578,14 +3578,8 @@ body:has(.share-modal:not([open]):target) {
   flex-wrap: wrap;
 }
 
-.share-startat legend {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-}
+/* `.share-startat legend` is the fieldset's a11y label — hidden via the
+   `.visually-hidden` selector list further up. */
 
 .share-startat-toggle {
   display: inline-flex;
@@ -3597,19 +3591,19 @@ body:has(.share-modal:not([open]):target) {
 
 .share-startat-time input {
   width: 88px;
-  border: 1px solid #d6ddd4;
-  border-radius: 999px;
+  border: 1px solid var(--dc-line);
+  border-radius: var(--dc-radius-pill);
   padding: 6px 14px;
   font-family: "Roboto Mono", ui-monospace, monospace;
   font-size: 0.92rem;
-  background: #fbfdfb;
+  background: var(--dc-input-bg);
   text-align: center;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .share-startat-time input:focus {
   border-color: var(--dc-django);
-  box-shadow: 0 0 0 3px rgb(77 165 83 / 0.18);
+  box-shadow: var(--dc-focus-ring-soft);
   outline: 0;
 }
 
@@ -3633,20 +3627,20 @@ body:has(.share-modal:not([open]):target) {
 .share-copy input {
   flex: 1;
   min-width: 0;
-  border: 1px solid #d6ddd4;
-  border-radius: 999px;
+  border: 1px solid var(--dc-line);
+  border-radius: var(--dc-radius-pill);
   padding: 0 16px;
   min-height: 42px;
   font-family: "Roboto Mono", ui-monospace, monospace;
   font-size: 0.85rem;
-  background: #fbfdfb;
+  background: var(--dc-input-bg);
   color: var(--dc-ink);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .share-copy input:focus {
   border-color: var(--dc-django);
-  box-shadow: 0 0 0 3px rgb(77 165 83 / 0.18);
+  box-shadow: var(--dc-focus-ring-soft);
   outline: 0;
 }
 
@@ -3687,7 +3681,7 @@ body:has(.share-modal:not([open]):target) {
   gap: 16px;
   padding: 16px 18px;
   border-radius: 12px;
-  background: rgb(77 165 83 / 0.08);
+  background: var(--dc-django-soft);
 }
 
 .embed-info-logo {
@@ -3739,13 +3733,13 @@ body:has(.share-modal:not([open]):target) {
 .embed-snippet textarea {
   flex: 1;
   min-width: 0;
-  border: 1px solid #d6ddd4;
+  border: 1px solid var(--dc-line);
   border-radius: 12px;
   padding: 10px 14px;
   font-family: "Roboto Mono", ui-monospace, monospace;
   font-size: 0.78rem;
   line-height: 1.4;
-  background: #fbfdfb;
+  background: var(--dc-input-bg);
   color: var(--dc-ink);
   resize: vertical;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -3753,6 +3747,6 @@ body:has(.share-modal:not([open]):target) {
 
 .embed-snippet textarea:focus {
   border-color: var(--dc-django);
-  box-shadow: 0 0 0 3px rgb(77 165 83 / 0.18);
+  box-shadow: var(--dc-focus-ring-soft);
   outline: 0;
 }

@@ -159,9 +159,8 @@ def test_site_css_pins_django_chat_palette() -> None:
     ) in css
     assert "RobotoFlex-Variable.woff2" not in css
     assert 'font-family: "Roboto", system-ui, sans-serif;' in css
-    assert ".button-primary {\n  background: var(--dc-accent-dark);" in css
-    assert ".button-secondary {\n  background: var(--dc-accent-dark);" in css
-    assert '.filter-form button[type="submit"] {\n  min-height: 44px;' in css
+    assert "background: var(--dc-accent-dark);" in _css_blocks(css, ".button-primary")[0]
+    assert "min-height: var(--dc-tap);" in _css_blocks(css, '.filter-form button[type="submit"]')[0]
     assert ".filter-clear-all {" in css
     assert "background: var(--dc-accent-dark);" in css
     assert '.filter-form button[type="submit"]:hover,' in css
@@ -193,7 +192,21 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert all("opacity: 0;" not in block for block in ready_container_blocks)
     assert not re.search(r"(?<!min-)height: 112px !important;", css)
     assert not re.search(r"(?<!min-)height: 168px !important;", css)
-    assert ".feed-action {\n  display: inline-flex;" in css
+    assert (
+        ".button-primary,\n"
+        ".platform-band-links a,\n"
+        ".feed-action,\n"
+        '.filter-form button[type="submit"],\n'
+        ".filter-clear-all,\n"
+        ".footer-mastodon-button,\n"
+        ".share-pill,\n"
+        ".pagination-nav a {\n"
+        "  display: inline-flex;\n"
+        "  align-items: center;\n"
+        "  border-radius: var(--dc-radius-pill);\n"
+        "  text-decoration: none;\n"
+        "}"
+    ) in css
     assert (
         ".feed-action--primary:hover,\n.feed-action--primary:focus-visible {\n"
         "  background: var(--dc-django);" in css
