@@ -92,12 +92,10 @@
 
   /* Size scale — six static steps plus the responsive h2 clamp. Every
      static `font-size` in the file resolves through these tokens with
-     three documented exceptions, each carrying an inline justification
+     two documented exceptions, each carrying an inline justification
      at the use site:
      - `.show-notes h3 / p:has(+ ul/ol)` keeps `1.3rem` so its section
        markers read heavier than the global `h3` rule (1.2rem).
-     - `.show-notes-title` keeps `1.6rem` as a decorative heading
-       distinct from the responsive `--text-h2` clamp.
      - `.filter-popover-icon-button` keeps `1.6rem` to size its `+/−`
        glyphs against the 38 px button geometry.
      The responsive `clamp(...)` font-sizes used for hero h1, episode
@@ -2808,10 +2806,6 @@ body:has(.sponsor-page) .page-header {
 
 .show-notes-title {
   font-family: var(--font-body);
-  /* Sits just above --text-xl (1.4) and at the lower bound of --text-h2
-     (clamp 1.6–2.2). Kept fixed because the heading is decorative, not
-     part of the fluid title hierarchy. */
-  font-size: 1.6rem;
   font-weight: var(--weight-bold);
   margin: 0 0 var(--s1);
 }
