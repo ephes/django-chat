@@ -1673,8 +1673,23 @@ main {
      feed-card content as the user scrolls. */
   padding: 2.75rem 0 4.5rem;
   display: grid;
+  /* Explicit single-column grid track with a 0-min so a nowrap child
+     (the `.feed-card-url <pre>` with the feed URL string) can't force
+     the track wider than the container and bleed past the viewport.
+     The 2-column @container block below overrides this for the main
+     column with the same `minmax(0, 1fr)` lower bound. */
+  grid-template-columns: minmax(0, 1fr);
   /* deliberate off-scale: 2.5rem (40 px) sits between --s2 and --s3. */
   gap: 2.5rem;
+}
+
+/* Pair the track's 0-min above with the item's own 0-min so nowrap
+   content (the feed URL pre) is constrained to its grid track and
+   falls back on its own `overflow-x: auto` scroller, instead of
+   pushing the card past the viewport. Mirrors `.episode-main`'s
+   `min-width: 0` defensive rule. */
+.subscribe-page > * {
+  min-width: 0;
 }
 
 
