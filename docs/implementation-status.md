@@ -94,8 +94,8 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       episode detail show-note labels now normalize into semantic `h3` markup
       before assignment to `page.body`; legacy imported `h4` headings are also
       normalized to `h3`. Raw source HTML in `EpisodeSourceMetadata` remains
-      unchanged, and rerunning the idempotent importer backfills existing
-      episode bodies.
+      unchanged, and migration `imports.0004` backfills already-imported
+      episode bodies without requiring a catalog reimport.
 - [x] **9f. Episode keyword import from RSS item metadata** — RSS item-level
       `<itunes:keywords>` values now parse into `RssEpisode.keywords`, import
       idempotently into `Episode.keywords` through the shared sample/catalog

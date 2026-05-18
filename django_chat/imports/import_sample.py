@@ -14,8 +14,6 @@ from urllib.parse import unquote, urlparse
 from urllib.request import Request, urlopen
 from uuid import UUID
 
-from bs4 import BeautifulSoup
-from bs4.element import Comment, NavigableString
 from cast.models import Audio, Episode, Podcast
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -36,6 +34,7 @@ from django_chat.imports.models import (
     PodcastSourceLink,
     PodcastSourceMetadata,
 )
+from django_chat.imports.show_notes import normalize_show_notes_html
 from django_chat.imports.source_data import (
     EpisodeSourceData,
     RssPodcast,
@@ -63,18 +62,6 @@ DETAIL_FIXTURE_FILENAMES = (
 IMPORT_AUDIO_USERNAME = "django-chat-importer"
 SAMPLE_AUDIO_STORAGE_PREFIX = "django-chat-sample"
 CATALOG_AUDIO_STORAGE_PREFIX = "django-chat-catalog"
-LIST_SECTION_HEADING_LABELS = frozenset(
-    {
-        "books",
-        "groups",
-        "links",
-        "projects",
-        "shameless plugs",
-        "youtube",
-    }
-)
-COPY_SECTION_HEADING_LABELS = frozenset({"sponsor", "support the show"})
-
 AudioDownloader = Callable[[str], "DownloadedAudio"]
 StreamingAudioDownloader = Callable[[str, Path], "DownloadedAudioFile"]
 ImageDownloader = Callable[[str], bytes]
@@ -1069,68 +1056,11 @@ def _episode_body(episode_source: EpisodeSourceData) -> list[tuple[str, list[tup
     if overview:
         body.append(("overview", [("paragraph", overview)]))
     if raw_detail and raw_detail != overview:
-        detail = _normalize_show_notes_html(raw_detail)
+        detail = normalize_show_notes_html(raw_detail)
         body.append(("detail", [("paragraph", detail)]))
     if not body and episode_source.title:
         body.append(("overview", [("paragraph", episode_source.title)]))
     return body
-
-
-def _normalize_show_notes_html(html: str) -> str:
-    if not html:
-        return html
-
-    soup = BeautifulSoup(html, "html.parser")
-    for heading in soup.find_all("h4"):
-        heading.name = "h3"
-    for paragraph in soup.find_all("p"):
-        if _is_show_note_heading_paragraph(paragraph):
-            paragraph.name = "h3"
-    return str(soup)
-
-
-def _is_show_note_heading_paragraph(paragraph: Any) -> bool:
-    if not _is_plain_text_tag(paragraph):
-        return False
-
-    label = _section_label(paragraph.get_text(" ", strip=True))
-    if not label or len(label) > 80:
-        return False
-
-    next_tag_name = _next_meaningful_tag_name(paragraph)
-    label_key = _section_label_key(label)
-    if next_tag_name in {"ul", "ol"}:
-        return label_key in LIST_SECTION_HEADING_LABELS | COPY_SECTION_HEADING_LABELS
-    if next_tag_name == "p":
-        return label_key in COPY_SECTION_HEADING_LABELS
-    return False
-
-
-def _is_plain_text_tag(tag: Any) -> bool:
-    return all(isinstance(child, NavigableString) for child in tag.contents)
-
-
-def _next_meaningful_tag_name(tag: Any) -> str | None:
-    for sibling in tag.next_siblings:
-        if isinstance(sibling, Comment):
-            continue
-        if isinstance(sibling, NavigableString):
-            if str(sibling).strip():
-                return None
-            continue
-        return cast(str | None, getattr(sibling, "name", None))
-    return None
-
-
-def _section_label(value: str) -> str:
-    return " ".join(value.split())
-
-
-def _section_label_key(value: str) -> str:
-    label = _section_label(value).removesuffix(":").casefold()
-    while label and not label[0].isalnum():
-        label = label[1:].lstrip()
-    return label
 
 
 def _episode_summary(episode_source: EpisodeSourceData) -> str:

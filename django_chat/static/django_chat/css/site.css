@@ -99,7 +99,7 @@
      Every other static `font-size` in the file resolves through these
      tokens with two documented exceptions, each carrying an inline
      justification at the use site:
-     - `.show-notes h3 / p:has(+ ul/ol)` keeps `1.3rem` so its section
+     - `.show-notes h3` keeps `1.3rem` so its section
        markers read heavier than the global `h3` rule (1.2rem).
      - `.filter-popover-icon-button` keeps `1.6rem` to size its `+/−`
        glyphs against the 38 px button geometry.
