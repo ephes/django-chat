@@ -19,7 +19,9 @@
 @font-face {
   font-family: "Ubuntu";
   src: url("/static/fonts/Ubuntu-Bold.woff2") format("woff2");
-  font-weight: var(--weight-bold);
+  /* `@font-face` descriptors must use literal values — `var()` is
+     dropped, leaving the face registered without a weight. */
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
@@ -90,17 +92,21 @@
   --font-heading: "Ubuntu", "Roboto", system-ui, sans-serif;
   --font-mono: "Roboto Mono", ui-monospace, monospace;
 
-  /* Size scale — six static steps plus the responsive h2 clamp. Every
-     static `font-size` in the file resolves through these tokens with
-     two documented exceptions, each carrying an inline justification
-     at the use site:
+  /* Size scale — six static steps plus the responsive h2 clamp.
+     Component-scoped fluid sizes that are tokenised live in the
+     `--text-h1 / -show-hero / -episode-hero / -tagline / -platform-link
+     / -callout` block below.
+     Every other static `font-size` in the file resolves through these
+     tokens with two documented exceptions, each carrying an inline
+     justification at the use site:
      - `.show-notes h3 / p:has(+ ul/ol)` keeps `1.3rem` so its section
        markers read heavier than the global `h3` rule (1.2rem).
      - `.filter-popover-icon-button` keeps `1.6rem` to size its `+/−`
        glyphs against the 38 px button geometry.
-     The responsive `clamp(...)` font-sizes used for hero h1, episode
-     badge, sponsor stats / pricing / CTA, and the audio-panel facade
-     also stay literal — they are intentionally fluid. */
+     The remaining responsive `clamp(...)` font-sizes — episode-number
+     badge, episode-detail badge, sponsor stats / pricing / CTA, and the
+     audio-panel facade — stay literal at the consumer because each is a
+     one-off design value tied to a specific figure or card. */
   --text-xs: 0.78rem;
   --text-sm: 0.9rem;
   --text-base: 1rem;
@@ -365,6 +371,8 @@ main {
 .brand-name {
   font-family: var(--font-heading);
   font-size: var(--text-base);
+  /* Off-scale heavy weight for the wordmark — distinct from the
+     `--weight-bold` (700) used for ordinary headings. */
   font-weight: 900;
   white-space: nowrap;
 }
@@ -1213,6 +1221,8 @@ main {
   color: var(--dc-muted);
   display: flex;
   font-size: var(--text-xl);
+  /* Regular weight — the `×` glyph reads heavier than other muted UI
+     copy if it inherits semibold from the form context. */
   font-weight: 400;
   height: 28px;
   justify-content: center;
@@ -1362,6 +1372,8 @@ main {
   display: grid;
   font-family: var(--font-body);
   font-size: clamp(2.25rem, 4.5vw, 4.5rem);
+  /* Heavy display weight for the badge numerals — off-scale, paired
+     with the number-overlap stacking below. */
   font-weight: 900;
   height: var(--episode-badge-size);
   justify-items: center;
