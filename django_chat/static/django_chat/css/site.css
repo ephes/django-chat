@@ -2694,12 +2694,25 @@ main {
   margin: var(--s1) 0 0;
 }
 
+/* Reserve the player's vertical space on the wrapper, not on
+   <podlove-player> itself. Podlove injects styles on the player
+   element after this stylesheet (see iframe background comment
+   below) — keeping the size constraint on `.audio-panel` (which
+   Podlove doesn't touch) avoids that `!important` arms race.
+   `position: relative` makes this the containing block for the
+   absolute children that fill it (.podlove-player-container /
+   -host below); since <podlove-player> is `position: static`,
+   those `inset: 0` rules now resolve against `.audio-panel`.
+   Gated with `:has(podlove-player)` so episodes without audio
+   ("Audio copy pending" fallback) don't get a hollow reserve. */
+.audio-panel:has(podlove-player) {
+  min-height: 112px;
+  position: relative;
+}
+
 .audio-panel podlove-player[data-template] {
   display: block;
-  height: auto !important;
-  min-height: 112px !important;
   max-width: 600px;
-  position: relative;
 }
 
 .audio-panel podlove-player[data-template] .podlove-player-container {
@@ -2869,7 +2882,7 @@ main {
 
 .audio-panel podlove-player[data-template] .podlove-player-host {
   inset: 0;
-  min-height: 112px !important;
+  min-height: 112px;
   opacity: 1;
   position: absolute;
   transition: opacity 160ms ease;
@@ -2882,12 +2895,20 @@ main {
   background: var(--dc-player-surface) !important;
   border: 0;
   display: block;
-  min-height: 112px !important;
-  width: 100% !important;
+  /* `min-height` and `width` are plain values: after load Podlove's
+     iframe-resizer sets `height` inline on the iframe (e.g.
+     `height: 159px; overflow: hidden`), so neither our `min-height` nor
+     a !important would win against that. We keep the values as
+     documentation / pre-load defaults; the visible geometry is
+     guaranteed by the wrapper's `.audio-panel { min-height }` reserve
+     and the host's `position: absolute; inset: 0`, which together
+     prevent visual collapse even when the iframe ends up shorter. */
+  min-height: 112px;
+  width: 100%;
 }
 
 .audio-panel podlove-player[data-django-chat-player-ready="true"] .podlove-player-container {
-  min-height: 0 !important;
+  min-height: 0;
   position: relative;
   z-index: auto;
 }
@@ -3241,9 +3262,16 @@ main {
     max-width: 220px;
   }
 
-  .audio-panel podlove-player[data-template],
-  .audio-panel podlove-player[data-template] .podlove-player-container {
-    min-height: 168px !important;
+  /* Mobile player reserve: bump the wrapper to 168 px (was 112 px from
+     the base rule). Mirrors the desktop pattern — sizing lives on the
+     wrapper, not on <podlove-player>, so we don't need `!important`
+     here. Same `:has(podlove-player)` gate as the desktop rule so
+     audio-pending episodes don't get a hollow reserve. The
+     critical-CSS in base.html still keeps podlove-player at
+     `min-height: 168px !important` so the pre-CSS-load reserve also
+     matches. */
+  .audio-panel:has(podlove-player) {
+    min-height: 168px;
   }
 
   .audio-panel podlove-player[data-template] .podlove-player-click-to-load {
@@ -3259,15 +3287,15 @@ main {
   }
 
   .audio-panel podlove-player[data-template] iframe {
-    min-height: 168px !important;
+    min-height: 168px;
   }
 
   .audio-panel podlove-player[data-template] .podlove-player-host {
-    min-height: 168px !important;
+    min-height: 168px;
   }
 
   .audio-panel podlove-player[data-django-chat-player-ready="true"] .podlove-player-container {
-    min-height: 0 !important;
+    min-height: 0;
   }
 
   .podlove-facade-controls {

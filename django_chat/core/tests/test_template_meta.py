@@ -188,11 +188,17 @@ def test_site_css_pins_django_chat_palette() -> None:
         ".podlove-player-container",
     )
     assert len(ready_container_blocks) == 2
-    assert all("min-height: 0 !important;" in block for block in ready_container_blocks)
+    assert all("min-height: 0;" in block for block in ready_container_blocks)
     assert "position: relative;" in ready_container_blocks[0]
     assert all("opacity: 0;" not in block for block in ready_container_blocks)
     assert not re.search(r"(?<!min-)height: 112px !important;", css)
     assert not re.search(r"(?<!min-)height: 168px !important;", css)
+    # Player sizing now reserves on the .audio-panel wrapper, not on
+    # <podlove-player>. Make sure the wrapper picks up the reserve only
+    # when a player actually exists (no hollow reserve for the
+    # "Audio copy pending" fallback).
+    assert ".audio-panel:has(podlove-player) {\n  min-height: 112px;" in css
+    assert ".audio-panel:has(podlove-player) {\n    min-height: 168px;" in css
     assert (
         ".button-primary,\n"
         ".platform-band-links a,\n"
