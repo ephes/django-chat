@@ -84,6 +84,30 @@ def test_catalog_import_can_import_more_than_fixture_sample() -> None:
     assert Episode.objects.count() == 10
     assert EpisodeSourceMetadata.objects.count() == 10
     assert EpisodeAudioImportMetadata.objects.count() == 0
+    extra_metadata = EpisodeSourceMetadata.objects.get(episode_number=10_000)
+    assert extra_metadata.episode.keywords == "extra keyword 10000, django"
+
+
+@pytest.mark.django_db
+def test_catalog_import_backfills_episode_keywords_on_reimport() -> None:
+    catalog = _fake_catalog_source(extra_episode_count=1)
+    import_django_chat_catalog(catalog)
+    extra_metadata = EpisodeSourceMetadata.objects.get(episode_number=10_000)
+    extra_episode = extra_metadata.episode
+    episode_ids = set(Episode.objects.values_list("id", flat=True))
+    metadata_ids = set(EpisodeSourceMetadata.objects.values_list("id", flat=True))
+
+    assert extra_episode.keywords == "extra keyword 10000, django"
+    extra_episode.keywords = ""
+    extra_episode.save(update_fields=["keywords"])
+
+    result = import_django_chat_catalog(catalog)
+
+    assert result.import_result.episodes_created == 0
+    assert set(Episode.objects.values_list("id", flat=True)) == episode_ids
+    assert set(EpisodeSourceMetadata.objects.values_list("id", flat=True)) == metadata_ids
+    extra_episode.refresh_from_db()
+    assert extra_episode.keywords == "extra keyword 10000, django"
 
 
 def test_catalog_import_plan_mixes_simplecast_and_rss_audio_sizes() -> None:
@@ -332,6 +356,7 @@ def _extra_rss_episode(index: int) -> RssEpisode:
         episode_number=number,
         episode_type="full",
         explicit=False,
+        keywords=(f"extra keyword {number}", "django"),
         enclosure=RssEnclosure(
             url=f"https://media.example.com/extra-{number}.mp3",
             media_type="audio/mpeg",

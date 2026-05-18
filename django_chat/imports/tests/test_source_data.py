@@ -54,11 +54,17 @@ def test_rss_fixture_parses_podcast_metadata_and_episode_items() -> None:
     assert latest.enclosure.url.startswith("https://dts.podtrac.com/redirect.mp3/")
     assert "django-tasks" in (latest.description_html or "")
     assert latest.content_html == latest.description_html
+    assert latest.keywords == ()
+
+    first = feed.episodes[-2]
+    assert first.episode_number == 1
+    assert first.keywords == ("technology", "web", "programming", "python", "django")
 
     oldest = feed.episodes[-1]
     assert oldest.guid == "697f5867-15e8-414f-b837-4faee703b5cc"
     assert oldest.episode_number == 0
     assert oldest.title == "Preview"
+    assert oldest.keywords == ("django web framework", "web", "programming", "python", "django")
 
 
 def test_simplecast_podcast_fixture_parses_endpoint_metadata() -> None:

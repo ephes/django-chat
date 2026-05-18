@@ -579,7 +579,10 @@ def _update_episode_page_fields(episode: Episode, episode_source: EpisodeSourceD
     page.body = _episode_body(episode_source)
     page.search_description = strip_tags(description)
     page.comments_enabled = False
-    page.keywords = ""
+    page.keywords = _truncate(
+        _join_text(episode_source.rss.keywords if episode_source.rss else ()),
+        255,
+    )
     page.explicit = _episode_explicit_choice(episode_source)
     page.block = False
 

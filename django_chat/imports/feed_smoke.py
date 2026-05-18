@@ -43,6 +43,7 @@ class GeneratedFeedItem:
     title: str
     published_at: datetime | None
     duration_seconds: int | None
+    keywords: str | None
     enclosure: FeedSmokeEnclosure | None
 
 
@@ -406,6 +407,7 @@ def _parse_generated_item(item: ElementTree.Element) -> GeneratedFeedItem:
         title=_required_child_text(item, "title"),
         published_at=_parse_rss_datetime(_child_text(item, "pubDate")),
         duration_seconds=_parse_duration(_child_text(item, "itunes:duration")),
+        keywords=_child_text(item, "itunes:keywords"),
         enclosure=_parse_enclosure(enclosure) if enclosure is not None else None,
     )
 

@@ -29,6 +29,8 @@ from django_chat.imports.source_data import (
     SIMPLECAST_PODCAST_URL,
 )
 
+EPISODE_ONE_KEYWORDS = "technology, web, programming, python, django"
+
 
 def test_sample_source_matching_keys_are_stable() -> None:
     first_load = load_sample_source_data()
@@ -104,6 +106,9 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
     assert latest_metadata.episode.podcast_audio is None
     assert latest_metadata.episode.comments_enabled is False
     assert latest_metadata.episode.owner.username == "django-chat-importer"
+    first_metadata = EpisodeSourceMetadata.objects.get(episode_number=1)
+    assert first_metadata.episode.keywords == EPISODE_ONE_KEYWORDS
+    assert cast(Any, first_metadata.episode).tags.count() == 0
     assert Audio.objects.count() == 0
     assert _transcript_count() == 0
     assert result.audio_created == 0
@@ -223,6 +228,26 @@ def test_sample_import_is_idempotent_on_second_run() -> None:
     assert EpisodeAudioImportMetadata.objects.count() == 0
     assert Audio.objects.count() == 0
     assert _transcript_count() == 0
+
+
+@pytest.mark.django_db
+def test_sample_import_backfills_episode_keywords_on_reimport() -> None:
+    import_django_chat_sample()
+    first_metadata = EpisodeSourceMetadata.objects.get(episode_number=1)
+    first_episode = first_metadata.episode
+    episode_ids = set(Episode.objects.values_list("id", flat=True))
+
+    assert first_episode.keywords == EPISODE_ONE_KEYWORDS
+    first_episode.keywords = ""
+    first_episode.save(update_fields=["keywords"])
+
+    result = import_django_chat_sample()
+
+    assert result.episodes_created == 0
+    assert set(Episode.objects.values_list("id", flat=True)) == episode_ids
+    first_episode.refresh_from_db()
+    assert first_episode.keywords == EPISODE_ONE_KEYWORDS
+    assert cast(Any, first_episode).tags.count() == 0
 
 
 @pytest.mark.django_db

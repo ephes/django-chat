@@ -96,6 +96,12 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       normalized to `h3`. Raw source HTML in `EpisodeSourceMetadata` remains
       unchanged, and rerunning the idempotent importer backfills existing
       episode bodies.
+- [x] **9f. Episode keyword import from RSS item metadata** — RSS item-level
+      `<itunes:keywords>` values now parse into `RssEpisode.keywords`, import
+      idempotently into `Episode.keywords` through the shared sample/catalog
+      path, and are covered by generated podcast feed assertions. Wagtail/taggit
+      episode tags remain deliberately deferred to the separate taxonomy
+      decision item.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -241,14 +247,19 @@ with 202 items.
    align it with the current episode-detail layout, make speaker/timestamp
    segments readable, preserve useful navigation back to the episode, and check
    mobile and desktop views.
-3. **Live feed parity checker.** Add a command/script that compares the current
+3. **Episode tags/taxonomy import decision.** Decide whether source keywords
+   should also become Wagtail/taggit episode tags. Do not blindly mirror generic
+   RSS keywords into public tags without a UI/editor use case and a preservation
+   policy for manual Wagtail tags; if implemented later, prefer a filtered
+   source-managed tag strategy that does not wipe editor-curated tags.
+4. **Live feed parity checker.** Add a command/script that compares the current
    Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
    generated or S3/CDN-served Django Chat podcast feed. It should fail on item
    count, missing/extra GUIDs, GUID order, publication-date, title, enclosure
    type, latest-episode, and copied-media byte-size regressions, with explicit
    warnings for approved differences such as moved enclosure URLs or equivalent
    duration formatting.
-4. **Production VPS, DNS cutover, URL redirects, podcast directory
+5. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
    [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.

@@ -50,6 +50,7 @@ class RssEpisode:
     episode_number: int | None
     episode_type: str | None
     explicit: bool | None
+    keywords: tuple[str, ...]
     enclosure: RssEnclosure | None
 
 
@@ -428,6 +429,7 @@ def _parse_rss_episode(item: ElementTree.Element, *, source_url: str) -> RssEpis
         episode_number=_parse_int(_text(item, "itunes:episode")),
         episode_type=_text(item, "itunes:episodeType"),
         explicit=_parse_bool(_text(item, "itunes:explicit")),
+        keywords=_parse_keywords(_text(item, "itunes:keywords")),
         enclosure=(
             RssEnclosure(
                 url=enclosure.attrib["url"],

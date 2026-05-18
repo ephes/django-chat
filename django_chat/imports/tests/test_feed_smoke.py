@@ -7,10 +7,12 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
+from django.urls import reverse
 
 from django_chat.imports.feed_smoke import (
     compare_django_chat_sample_feed,
     compare_source_to_generated_feed,
+    fetch_generated_feed,
     format_feed_smoke_result,
     load_source_feed,
     parse_generated_podcast_feed,
@@ -36,6 +38,7 @@ def test_generated_feed_parser_reads_smoke_fields() -> None:
               <pubDate>Wed, 15 Apr 2026 08:00:00 +0000</pubDate>
               <enclosure url="/media/sample.mp3" type="audio/mpeg" length="123" />
               <itunes:duration>01:17:43</itunes:duration>
+              <itunes:keywords>technology, web, programming</itunes:keywords>
             </item>
           </channel>
         </rss>"""
@@ -50,6 +53,7 @@ def test_generated_feed_parser_reads_smoke_fields() -> None:
     assert item.published_at is not None
     assert item.published_at.isoformat() == "2026-04-15T08:00:00+00:00"
     assert item.duration_seconds == 4663
+    assert item.keywords == "technology, web, programming"
     assert item.enclosure is not None
     assert item.enclosure.length == 123
 
@@ -69,6 +73,23 @@ def test_feed_smoke_passes_for_copied_audio_and_reports_known_warnings(
     warning_text = "\n".join(message.text for message in result.warnings)
     assert "Generated enclosure URLs differ from the Simplecast fixture" in warning_text
     assert "Strict length checking uses copied bytes" in warning_text
+
+
+@pytest.mark.django_db
+def test_generated_feed_emits_imported_episode_keywords(tmp_path: Path) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
+        response = fetch_generated_feed(
+            reverse("cast:podcast_feed_rss", args=["episodes", "mp3"]),
+            host="testserver",
+        )
+
+    assert response.status_code == 200
+    generated = parse_generated_podcast_feed(response.content)
+    by_guid = {item.guid: item for item in generated.items}
+    assert by_guid["608e4ca7-a6b0-4e07-b138-97ad41ef17b1"].keywords == (
+        "technology, web, programming, python, django"
+    )
 
 
 @pytest.mark.django_db
