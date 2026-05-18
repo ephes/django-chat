@@ -1712,7 +1712,6 @@ main {
 }
 
 .subscribe-why {
-  margin: 0;
   padding: var(--s0);
   border-left: 2px solid var(--dc-django);
   background: rgb(77 165 83 / 0.05);
@@ -1843,7 +1842,6 @@ main {
   position: relative;
   isolation: isolate;
   padding: 0 0 clamp(24px, 3vw, 44px);
-  margin: 0;
   color: var(--dc-ink);
 }
 
@@ -3749,7 +3747,6 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .embed-info-title {
-  margin: 0;
   font-size: var(--text-base);
   font-weight: var(--weight-bold);
   color: var(--dc-ink);
