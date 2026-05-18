@@ -295,7 +295,9 @@ def test_podlove_player_template_endpoint_renders_compact_template(client: Clien
     assert "<tab-transcripts></tab-transcripts>" in body
     assert '<tab-trigger tab="share">' not in body
     assert "<tab-share></tab-share>" not in body
-    assert "max-height:420px" in body
+    assert '<div class="w-full relative">' in body
+    assert "overflow-auto" not in body
+    assert "max-height:420px" not in body
     # The wrapper must stay visually neutral when no tab is open. Panel chrome
     # is injected into Podlove's same-origin iframe after the player loads.
     assert "<style" not in body
@@ -313,12 +315,19 @@ def test_podlove_loader_injects_iframe_panel_styles() -> None:
     assert "installPlayerPanelStyles(iframeDocument);" in loader
     assert '[data-test="tab"] {' in loader
     assert "background: #e6f0dc !important;" in loader
+    assert '[data-test="tab"]:not(#tab-transcripts) {' in loader
+    assert "max-height: 420px !important;" in loader
+    assert "#tab-transcripts {" in loader
+    assert "max-height: none !important;" in loader
     assert '[data-test="tab-title--close"] {' in loader
     assert '[data-test="tab"] [data-test="tab-title--close"] {' in loader
     assert '[data-test="tab-title--close"] svg {' in loader
     assert "stroke-width: 3 !important;" in loader
     assert '[data-test="tab-transcripts--follow"] {' in loader
     assert '[data-test="tab"] [data-test="tab-transcripts--follow"] {' in loader
+    assert '[data-test="tab-transcripts--results"] {' in loader
+    assert "overflow-x: hidden !important;" in loader
+    assert "overflow-y: auto !important;" in loader
     assert '[data-test="divider"] {' in loader
     assert "background: #d8d8d8 !important;" in loader
     assert "background-image: none !important;" in loader

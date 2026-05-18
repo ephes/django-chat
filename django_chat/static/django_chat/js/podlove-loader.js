@@ -15,6 +15,16 @@
   margin: 12px !important;
 }
 
+[data-test="tab"]:not(#tab-transcripts) {
+  max-height: 420px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+#tab-transcripts {
+  max-height: none !important;
+}
+
 [data-test="tab"] .tab-content {
   background-color: #e6f0dc !important;
   color: #14513a !important;
@@ -111,6 +121,11 @@
 [data-test="tab-transcripts--follow"]:focus-visible {
   outline: 2px solid #4da553 !important;
   outline-offset: 2px !important;
+}
+
+[data-test="tab-transcripts--results"] {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
 }
 
 [data-test="divider"] {

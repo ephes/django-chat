@@ -5,6 +5,12 @@
 > rendering. The implementation should keep `player_template.html` visually
 > neutral and inject tab-panel CSS into the same-origin Podlove iframe from
 > `django_chat/static/django_chat/js/podlove-loader.js`.
+>
+> 2026-05-18 follow-up: the neutral template wrapper no longer carries
+> `overflow-auto` or `max-height:420px`; the transcript tab scrolls only through
+> Podlove's `[data-test="tab-transcripts--results"]` element. Non-transcript tab
+> bodies keep a 420px internal panel cap through the same iframe CSS injection
+> path.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

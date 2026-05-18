@@ -168,10 +168,11 @@ serving the polished site:
 - Compact Podlove player on episode detail (no facade), themed with the
   Django-green brand tokens via `CAST_PODLOVE_PLAYER_THEMES` and a local
   `data-template` endpoint. The compact template keeps the transcript tab
-  available and constrains expanded Podlove panels so transcript content cannot
-  stretch the episode hero logo; episodes with an attached django-cast
-  `Transcript` expose transcript data through the Podlove API and link to the
-  themed transcript route.
+  available; the transcript tab uses Podlove's transcript-results list as the
+  only vertical scroller, avoiding a redundant outer panel scrollbar, while
+  non-transcript tabs retain a 420px internal panel cap. Episodes with an
+  attached django-cast `Transcript` expose transcript data through the Podlove
+  API and link to the themed transcript route.
 - Episode detail heroes render the static Django Chat SVG logo; imported show
   artwork stays attached to `Podcast.cover_image` for django-cast metadata,
   feed, and player API image paths.

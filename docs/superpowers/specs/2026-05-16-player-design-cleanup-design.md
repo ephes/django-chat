@@ -8,6 +8,12 @@ Date: 2026-05-16
 > `player_template.html` visually neutral and injects tab-panel CSS into the
 > same-origin Podlove iframe from
 > `django_chat/static/django_chat/js/podlove-loader.js`.
+>
+> Follow-up, 2026-05-18: the neutral template wrapper no longer carries
+> `overflow-auto` or `max-height:420px`; Podlove's
+> `[data-test="tab-transcripts--results"]` element is the transcript tab's only
+> vertical scroller. Non-transcript tab bodies keep a 420px internal panel cap
+> through the same iframe CSS injection path.
 
 ## Background
 

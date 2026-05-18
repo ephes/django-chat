@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
+from cast.models import Audio, Episode
+from django.apps import apps
+from django.core.files.base import ContentFile
+from django.test import override_settings
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect, sync_playwright
 
-from django_chat.imports.import_sample import import_django_chat_sample
+from django_chat.imports.import_sample import DownloadedAudio, import_django_chat_sample
 
 pytestmark = [
     pytest.mark.browser,
@@ -26,6 +32,26 @@ def sample_site() -> None:
 
 @pytest.fixture
 def page(sample_site: None) -> Iterator[Page]:
+    yield from _playwright_page()
+
+
+@pytest.fixture
+def long_transcript_site(tmp_path: Path) -> Iterator[None]:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
+        episode = Episode.objects.get(slug="django-tasks-jake-howard")
+        assert episode.podcast_audio is not None
+        _create_generated_transcript(episode.podcast_audio)
+        yield
+
+
+@pytest.fixture
+def page_with_long_transcript(long_transcript_site: None) -> Iterator[Page]:
+    yield from _playwright_page()
+
+
+def _playwright_page() -> Iterator[Page]:
+    """Create a Playwright page for fixtures with different Django data setup."""
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page()
@@ -311,6 +337,107 @@ def test_embed_rail_button_opens_dialog_with_iframe_snippet(
     expect(dialog).not_to_have_attribute("open", "")
 
 
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_player_transcript_tab_uses_single_scroll_container(
+    live_server: Any,
+    page_with_long_transcript: Page,
+) -> None:
+    page_with_long_transcript.goto(
+        f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}"
+    )
+    page_with_long_transcript.locator("[data-django-chat-player-placeholder]").click()
+    iframe = page_with_long_transcript.locator("podlove-player iframe").first
+    iframe.wait_for(state="attached", timeout=10_000)
+    frame = iframe.element_handle().content_frame()
+    assert frame is not None
+    frame.wait_for_selector("#app.loaded", timeout=15_000)
+    frame.evaluate(
+        """() => {
+            const trigger = Array.from(
+                document.querySelectorAll('[data-test="tab-trigger--shownotes"]')
+            ).find((node) => {
+                const rect = node.getBoundingClientRect();
+                return rect.width > 0 && rect.height > 0;
+            });
+            trigger.click();
+        }"""
+    )
+    frame.wait_for_selector("#tab-shownotes", timeout=10_000)
+    frame.evaluate(
+        """() => {
+            const tab = document.querySelector("#tab-shownotes");
+            const spacer = document.createElement("div");
+            spacer.textContent = "Long shownotes content";
+            spacer.style.height = "900px";
+            tab.appendChild(spacer);
+        }"""
+    )
+    frame.wait_for_selector("#tab-shownotes.active", timeout=10_000)
+
+    shownotes_metrics = frame.evaluate(
+        """() => {
+            const shownotes = document.querySelector("#tab-shownotes");
+            const styles = getComputedStyle(shownotes);
+            return {
+                maxHeight: styles.maxHeight,
+                overflowX: styles.overflowX,
+                overflowY: styles.overflowY,
+                clientHeight: shownotes.clientHeight,
+                scrollHeight: shownotes.scrollHeight,
+            };
+        }"""
+    )
+
+    assert shownotes_metrics["maxHeight"] == "420px"
+    assert shownotes_metrics["overflowX"] == "hidden"
+    assert shownotes_metrics["overflowY"] == "auto"
+    assert shownotes_metrics["clientHeight"] <= 420
+    assert shownotes_metrics["scrollHeight"] > shownotes_metrics["clientHeight"] + 1
+
+    frame.evaluate(
+        """() => {
+            const trigger = Array.from(
+                document.querySelectorAll('[data-test="tab-trigger--transcripts"]')
+            ).find((node) => {
+                const rect = node.getBoundingClientRect();
+                return rect.width > 0 && rect.height > 0;
+            });
+            trigger.click();
+        }"""
+    )
+    frame.wait_for_selector('[data-test="tab-transcripts--results"]', timeout=10_000)
+
+    metrics = frame.evaluate(
+        """() => {
+            const results = document.querySelector('[data-test="tab-transcripts--results"]');
+            const transcriptTab = document.querySelector("#tab-transcripts");
+            const outer = Array.from(document.querySelectorAll('.w-full.relative')).find(
+                (node) => node.querySelector('[data-test="tab-transcripts--results"]')
+            );
+            const outerStyles = getComputedStyle(outer);
+            const resultsStyles = getComputedStyle(results);
+            const transcriptTabStyles = getComputedStyle(transcriptTab);
+            return {
+                outerOverflowY: outerStyles.overflowY,
+                outerClientHeight: outer.clientHeight,
+                outerScrollHeight: outer.scrollHeight,
+                transcriptTabMaxHeight: transcriptTabStyles.maxHeight,
+                resultsOverflowX: resultsStyles.overflowX,
+                resultsOverflowY: resultsStyles.overflowY,
+                resultsClientHeight: results.clientHeight,
+                resultsScrollHeight: results.scrollHeight,
+            };
+        }"""
+    )
+
+    assert metrics["outerOverflowY"] == "visible"
+    assert metrics["outerScrollHeight"] <= metrics["outerClientHeight"] + 1
+    assert metrics["transcriptTabMaxHeight"] == "none"
+    assert metrics["resultsOverflowX"] == "hidden"
+    assert metrics["resultsOverflowY"] == "auto"
+    assert metrics["resultsScrollHeight"] > metrics["resultsClientHeight"] + 1
+
+
 def episode_index_path() -> str:
     return reverse("django_chat_episode_index")
 
@@ -321,3 +448,40 @@ def episode_detail_path(slug: str = "how-to-learn-django") -> str:
 
 def expect_value(locator: Locator, value: str) -> None:
     expect(locator).to_have_value(value)
+
+
+class FakeAudioDownloader:
+    def __call__(self, source_url: str) -> DownloadedAudio:
+        content = f"fake audio bytes for {source_url}".encode()
+        return DownloadedAudio(
+            content=content,
+            content_type="audio/mpeg",
+            content_length=len(content),
+            filename="sample.mp3",
+        )
+
+
+def _create_generated_transcript(audio: Audio) -> Any:
+    transcript_model = apps.get_model("cast", "Transcript")
+    transcript = transcript_model.objects.create(audio=audio)
+    segments = [
+        {
+            "start": _podlove_time(index * 2_000),
+            "start_ms": index * 2_000,
+            "end": _podlove_time((index + 1) * 2_000),
+            "end_ms": (index + 1) * 2_000,
+            "speaker": "Host",
+            "voice": "",
+            "text": f"Generated transcript segment {index + 1} for scroll testing.",
+        }
+        for index in range(80)
+    ]
+    transcript.podlove.save("podlove.json", ContentFile(json.dumps({"transcripts": segments})))
+    return transcript
+
+
+def _podlove_time(milliseconds: int) -> str:
+    total_seconds, ms = divmod(milliseconds, 1000)
+    minutes, seconds = divmod(total_seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{ms:03d}"
