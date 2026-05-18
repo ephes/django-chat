@@ -156,6 +156,16 @@
   --dc-shadow-md: 0 8px 22px rgb(0 0 0 / 0.06);
   --dc-shadow-lg: 0 18px 36px rgb(0 0 0 / 0.10);
   --dc-shadow-xl: 0 24px 64px rgb(0 0 0 / 0.22);
+
+  /* ---------- Sidebar-pair layout tokens ----------
+     Shared between the two "main + sticky aside" page layouts —
+     `.episode-detail` / `.episode-sidebar` and `.subscribe-page` /
+     `.subscribe-why`. The aside-column width and main↔aside gap are
+     identical by design so the two layouts read as the same pattern.
+     Values use `cqi` so they track the layout's own container width
+     (centered `<main>`), independent of viewport zoom or embeds. */
+  --aside-width: clamp(230px, 24cqi, 280px);
+  --aside-column-gap: clamp(24px, 4cqi, 48px);
 }
 
 *,
@@ -1647,15 +1657,21 @@ main {
 /* ---------- Subscribe page ----------
    Mirrors the #episode-detail-main / .episode-detail pattern: <main>
    supplies the container scope, the inner .subscribe-page does the
-   grid. Width and centering are inherited from the global `main` rule. */
+   grid. Width and centering are inherited from the global `main` rule.
+   Aside-column width / gap / mobile-stack threshold are shared with
+   `.episode-detail` via `--aside-*` tokens — the two page layouts
+   read as variations of one "main + sticky aside" pattern. */
 #subscribe-main {
   container-type: inline-size;
   container-name: subscribe-page;
 }
 
 .subscribe-page {
-  /* deliberate off-scale section padding: 3.5rem (56 px) / 4.5rem (72 px). */
-  padding: 3.5rem 0 4.5rem;
+  /* deliberate off-scale section padding: 2.75rem (44 px) / 4.5rem
+     (72 px). The 44 px top-gap is tuned together with `.subscribe-why`'s
+     sticky `top` so the aside's pinned content lines up with the
+     feed-card content as the user scrolls. */
+  padding: 2.75rem 0 4.5rem;
   display: grid;
   /* deliberate off-scale: 2.5rem (40 px) sits between --s2 and --s3. */
   gap: 2.5rem;
@@ -1832,18 +1848,24 @@ main {
 }
 
 /* Two-column layout: aside docks to the right and stays sticky like the
-   episode-detail sidebar. The sidebar width mirrors the episode-detail
-   sidebar visually (`clamp(230px, 24%, 280px)` → 24 % of the 1120 px
-   page = 268.8 px). */
-@container subscribe-page (min-width: 880px) {
+   episode-detail sidebar. Same width/gap tokens and mobile-stack
+   threshold (778 px = +1 of episode-detail's 777 max) as
+   `.episode-detail`, so the two layouts feel like a pair. */
+@container subscribe-page (min-width: 778px) {
   .subscribe-page {
-    grid-template-columns: minmax(0, 1fr) clamp(230px, 24%, 280px);
-    column-gap: clamp(24px, 3vw, 48px);
+    grid-template-columns: minmax(0, 1fr) var(--aside-width);
+    column-gap: var(--aside-column-gap);
     align-items: start;
   }
 
   .subscribe-feature {
     grid-column: 1;
+    /* Design decision (deliberately different from `.episode-sidebar`):
+       the feature card stretches to match the row-1 height set by the
+       aside, so the card and the aside-callout read as a pair of
+       equal-height blocks. `.episode-sidebar` uses a viewport-calculated
+       `height: calc(...)` for symmetric breath instead — different
+       intent per layout. */
     align-self: stretch;
   }
 
@@ -1854,9 +1876,14 @@ main {
   .subscribe-why {
     grid-column: 2;
     grid-row: 1;
+    /* Design decision: `align-self: stretch` ties the aside height to the
+       row-1 content height (feature card on the left). Contrast with
+       `.episode-sidebar`, which uses a viewport-calculated `height`
+       with `min-height: max-content` floor for symmetric vertical
+       breath around its rail content. Different intent — keep both. */
     align-self: stretch;
     position: sticky;
-    top: calc(var(--site-header-height) + 28px);
+    top: calc(var(--site-header-height) + var(--s2));
     margin-top: 0;
   }
 }
@@ -2413,10 +2440,11 @@ main {
   display: grid;
   /* Fluid column-gap and sidebar width so the two-column layout survives
      down to ~780 cqi before the mobile-stack container query trips. The
-     sidebar min (230 px) is sized so the logo at its lower-bound cover-size
-     (180 × 1.094 ≈ 197 px wide) still fits inside the 32 px padding-left. */
-  grid-template-columns: minmax(0, 1fr) clamp(230px, 24cqi, 280px);
-  column-gap: clamp(24px, 4cqi, 48px);
+     sidebar min (230 px = `--aside-width` lower bound) is sized so the
+     logo at its lower-bound cover-size (180 × 1.094 ≈ 197 px wide) still
+     fits inside the 32 px padding-left. Shared with `.subscribe-page`. */
+  grid-template-columns: minmax(0, 1fr) var(--aside-width);
+  column-gap: var(--aside-column-gap);
   align-items: start;
 }
 
@@ -2425,6 +2453,11 @@ main {
   min-width: 0;
 }
 
+/* Sticky aside in the second grid column. Anatomy (logo + action rail,
+   border-left divider) is deliberately different from `.subscribe-why`'s
+   callout pair — episode-detail wants a tools/identity rail, subscribe
+   wants a "why?" callout card. Both layouts share `--aside-width`,
+   `--aside-column-gap`, and the same mobile-stack threshold (777 px). */
 .episode-sidebar {
   grid-column: 2;
   position: sticky;
@@ -2437,10 +2470,13 @@ main {
      rail's top hairline on the same baseline as the show-notes hairline
      at any desktop viewport width. */
   gap: var(--s1);
-  /* Stretch the column (and its border-left divider) so the bottom of the
-     line mirrors the natural top gap to the menu — symmetric breath at
-     scroll=0. The user accepted the small "anschmiegen" slide as the page
-     starts to scroll, so we don't try to match the sticky-pinned position
+  /* Design decision (deliberately different from `.subscribe-why`):
+     stretch the column (and its border-left divider) so the bottom of
+     the line mirrors the natural top gap to the menu — symmetric breath
+     at scroll=0. `.subscribe-why` uses `align-self: stretch` to match
+     the feature card height instead; different intent per layout.
+     The user accepted the small "anschmiegen" slide as the page starts
+     to scroll, so we don't try to match the sticky-pinned position
      for symmetry here. */
   height: calc(100dvh - var(--site-header-height) - 2 * var(--episode-natural-top-gap));
   /* Floor at the rail's intrinsic content height: if the viewport is too
