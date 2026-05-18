@@ -2,7 +2,9 @@
 {% load static wagtailcore_tags %}
 
 {% block page_header %}
-  {% include "./_page_header.html" with eyebrow=page.eyebrow heading=page.heading tagline=page.tagline %}
+  <div class="page-header-tint">
+    {% include "./_page_header.html" with eyebrow=page.eyebrow heading=page.heading tagline=page.tagline %}
+  </div>
 {% endblock page_header %}
 
 {% block content %}

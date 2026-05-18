@@ -1490,6 +1490,15 @@ main {
    and the cards below at every viewport. Per-breakpoint tweaks change the
    five custom properties only — no property gets overridden twice. Not
    used on episode-detail pages, which have their own hero. */
+.page-header-wrap {
+  /* CQ host for the page-header below — gates the responsive var changes
+     on its own width rather than viewport. The wrap is unsized and lives
+     in `.site-content` (full viewport width), so thresholds are
+     pixel-identical to the prior viewport @media values. */
+  container-type: inline-size;
+  container-name: page-header;
+}
+
 .page-header {
   --page-header-min-height: 350px;
   --page-header-shape-width: 1470px;
@@ -1507,7 +1516,38 @@ main {
   isolation: isolate;
 }
 
-@media (max-width: 880px) {
+/* Opt-in tinted backdrop. Pages that follow the page-header with a green
+   section (currently `.sponsor-page`) wrap the include in this element so
+   the bubble curve bleeds seamlessly into the section below. Default
+   page-header has a transparent background; consumers add the tint where
+   it makes sense. */
+.page-header-tint {
+  background: rgb(77 165 83 / 0.14);
+}
+
+/* Narrow viewports: a dark-green gradient pseudo behind the bubble ensures
+   any text that overflows the bubble's path sits on a dark backdrop instead
+   of the light tint. Dark green at the top fades to transparent so it
+   blends invisibly into the bubble's top colour (same #14513a). Z-index
+   -1 keeps it behind the bubble. Disabled at tablet+ where the bubble's
+   path covers the visible area well enough on its own. */
+@container page-header (max-width: 699px) {
+  .page-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      to bottom,
+      #14513a 0%,
+      #14513a 25%,
+      rgb(20 81 58 / 0) 70%
+    );
+    pointer-events: none;
+  }
+}
+
+@container page-header (max-width: 880px) {
   .page-header {
     --page-header-min-height: 290px;
     --page-header-shape-width: 1130px;
@@ -1517,7 +1557,7 @@ main {
   }
 }
 
-@media (max-width: 450px) {
+@container page-header (max-width: 450px) {
   .page-header {
     --page-header-shape-width: 900px;
     --page-header-shape-offset: 216px;
@@ -1574,7 +1614,7 @@ main {
 /* When the site-nav switches to its centered phone layout (≤ 540 px),
    mirror that in the page header so the eyebrow, headline and tagline
    read as a single centered column. */
-@media (max-width: 540px) {
+@container page-header (max-width: 540px) {
   .page-header-inner {
     text-align: center;
   }
@@ -1885,38 +1925,6 @@ main {
   container-type: inline-size;
   container-name: sponsor-stats;
 }
-
-/* Bleed the green tint up into the page header so the speech-bubble curve
-   merges seamlessly into the stats section background. Scoped via :has so
-   it only affects the sponsor page. */
-body:has(.sponsor-page) .page-header {
-  background: rgb(77 165 83 / 0.14);
-}
-
-/* Up to 700 px (phones): a dark-green gradient pseudo behind the bubble
-   ensures any text that overflows the bubble's path sits on a dark
-   backdrop instead of the lighter tint. Dark green at the top fades to
-   transparent so it blends invisibly into the bubble's top colour
-   (same #14513a). Z-index -1 keeps it behind the bubble. Disabled at
-   tablet+ where the bubble's path covers the visible area well enough
-   on its own. */
-@media (max-width: 699px) {
-  body:has(.sponsor-page) .page-header::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: linear-gradient(
-      to bottom,
-      #14513a 0%,
-      #14513a 25%,
-      rgb(20 81 58 / 0) 70%
-    );
-    pointer-events: none;
-  }
-}
-
-
 
 .sponsor-stats::before {
   content: "";
