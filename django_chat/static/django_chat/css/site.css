@@ -833,7 +833,7 @@ main {
 /* Hover/focus surface shared with other ghost-style pills — see the
    `.button-primary, .platform-band-links a, …` block at the top. */
 
-.episode-section-title {
+.episode-section-heading {
   margin: var(--s-2) 0 var(--s0);
 }
 
@@ -1871,8 +1871,7 @@ main {
    length review cards survive the awkward 880-1200 px range without
    towering over the rest of the page. */
 .sponsor-page {
-  width: var(--dc-container);
-  margin: 0 auto;
+  /* width and centering come from the global `main {}` rule. */
   /* deliberate off-scale: 4.5rem (72 px) section padding-bottom. */
   padding: 0 0 4.5rem;
   display: grid;
@@ -1886,12 +1885,12 @@ main {
 }
 
 .sponsor-section-heading {
-  font-size: var(--text-h2);
   margin: 0 0 var(--s0);
 }
 
 .sponsor-stats .sponsor-section-heading {
   margin: 0;
+  color: var(--dc-ink);
 }
 
 .sponsor-stats-head {
@@ -1943,10 +1942,6 @@ main {
 
 .sponsor-stats-inner {
   --stack-space: clamp(12px, 1.8vw, 22px);
-}
-
-.sponsor-stats .sponsor-section-heading {
-  color: var(--dc-ink);
 }
 
 .sponsor-stats-grid {
