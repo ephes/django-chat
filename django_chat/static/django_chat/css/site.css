@@ -109,7 +109,11 @@
      one-off design value tied to a specific figure or card. */
   --text-xs: 0.78rem;
   --text-sm: 0.9rem;
-  --text-base: 1rem;
+  /* `--text-base` sits a hair above 1rem so the default body copy lands
+     around 17 px at the user's default root font size — slightly more
+     comfortable than the browser default of 16 px without breaking the
+     `1rem`-as-base-unit mental model elsewhere. */
+  --text-base: 1.06rem;
   --text-md: 1.08rem;
   --text-lg: 1.2rem;
   --text-xl: 1.4rem;
