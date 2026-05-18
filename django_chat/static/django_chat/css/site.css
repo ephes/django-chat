@@ -1881,6 +1881,9 @@ main {
   isolation: isolate;
   padding: 0 0 clamp(24px, 3vw, 44px);
   color: var(--dc-ink);
+  /* Drives the 4-up container query for .sponsor-stats-grid below. */
+  container-type: inline-size;
+  container-name: sponsor-stats;
 }
 
 /* Bleed the green tint up into the page header so the speech-bubble curve
@@ -1948,7 +1951,7 @@ body:has(.sponsor-page) .page-header {
   gap: clamp(14px, 2vw, 26px) clamp(40px, 6vw, 72px);
 }
 
-@media (min-width: 800px) {
+@container sponsor-stats (min-width: 800px) {
   .sponsor-stats-grid {
     grid-template-columns: repeat(4, 1fr);
     justify-content: stretch;
@@ -2048,6 +2051,13 @@ body:has(.sponsor-page) .page-header {
    so the layout snaps from 2×2 to 4-up without ever leaving a single
    card stranded on its own row (which auto-fit produces between 728 and
    ~960 px). */
+/* CQ host for the 4-up switch on .sponsor-slots-grid below — the grid is
+   the styled element, so the container scope sits on its <section> parent. */
+.sponsor-slots {
+  container-type: inline-size;
+  container-name: sponsor-slots;
+}
+
 .sponsor-slots-grid {
   list-style: none;
   margin: 0;
@@ -2057,7 +2067,7 @@ body:has(.sponsor-page) .page-header {
   gap: var(--s0);
 }
 
-@media (min-width: 960px) {
+@container sponsor-slots (min-width: 960px) {
   .sponsor-slots-grid {
     grid-template-columns: repeat(4, 1fr);
   }
