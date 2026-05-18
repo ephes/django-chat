@@ -3183,7 +3183,13 @@ main {
   }
 }
 
-@media (max-width: 760px) {
+/* Phone-sized episode pages: shrink the sidebar artwork and switch the
+   Podlove player + facade into their compact mobile layouts. All targets
+   live inside `.episode-detail`, so the rule is gated on that container.
+   The `.episode-sidebar .show-artwork { max-width: 200px }` override that
+   used to sit here was redundant with the 777 CQ block above, which
+   already sets that on the stacked sidebar — dropped. */
+@container episode-detail (max-width: 760px) {
   .show-artwork {
     justify-self: start;
     max-width: 220px;
@@ -3233,10 +3239,6 @@ main {
     height: auto;
     justify-content: space-between;
     padding-top: var(--s0);
-  }
-
-  .episode-sidebar .show-artwork {
-    max-width: 200px;
   }
 }
 
