@@ -282,6 +282,12 @@ h3 {
 .site-footer {
   background: var(--dc-ink);
   color: var(--dc-on-ink);
+  /* Drives the stacked-state container query for `.site-footer-inner`
+     below — the footer rearranges based on its own width rather than the
+     viewport, which is identical to the viewport at full-page width but
+     lets the rule fire correctly in narrow embeds / zoom. */
+  container-type: inline-size;
+  container-name: site-footer;
 }
 
 .site-header a,
@@ -2918,7 +2924,7 @@ body:has(.sponsor-page) .page-header {
 /* On mobile widths the Fosstodon button and the credit line stack
    vertically; center both so the footer reads as a column rather than
    a left/right split. */
-@media (max-width: 768px) {
+@container site-footer (max-width: 768px) {
   .site-footer-inner {
     flex-direction: column;
     --cluster-justify: center;
