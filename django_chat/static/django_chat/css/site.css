@@ -3414,6 +3414,11 @@ body:has(.sponsor-page) .page-header {
   transition:
     opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
     transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* CQ host for the narrow-pill state below — gates on the modal card's
+     own width rather than viewport width so it fires correctly when the
+     modal is sized down for any reason (zoom, narrow embeds). */
+  container-type: inline-size;
+  container-name: share-modal;
 }
 
 .share-modal[open] .share-modal-inner,
@@ -3743,7 +3748,7 @@ body:has(.share-modal:not([open]):target) {
   padding: 0 var(--s0);
 }
 
-@media (max-width: 480px) {
+@container share-modal (max-width: 480px) {
   .share-pills {
     --cluster-space: var(--s-2);
   }
