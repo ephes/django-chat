@@ -134,6 +134,9 @@
   --leading-snug: 1.25;
   --leading-tagline: 1.45;
   --leading-body: 1.55;
+  /* Uppercase / mono caps tracking. The decorative star spacing on
+     `.sponsor-review-stars` (0.15em) stays inline as a one-off. */
+  --tracking-caps: 0.06em;
   --dc-measure: 60ch;
 
   /* ---------- Motion / focus tokens ---------- */
@@ -239,20 +242,17 @@ h2,
 h3 {
   font-family: var(--font-heading);
   font-weight: var(--weight-bold);
-  letter-spacing: -0.02em;
   line-height: var(--leading-heading);
   margin: 0;
 }
 
 h1 {
   font-size: var(--text-h1);
-  letter-spacing: -0.025em;
 }
 
 h2 {
   font-size: var(--text-h2);
   font-weight: var(--weight-bold);
-  letter-spacing: -0.015em;
 }
 
 h3 {
@@ -264,7 +264,7 @@ h3 {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--dc-muted);
   margin: 0 0 var(--s-2);
@@ -1367,7 +1367,6 @@ main {
   font-weight: 900;
   height: var(--episode-badge-size);
   justify-items: center;
-  letter-spacing: 0;
   /* Off-scale ultra-tight leading so the episode number visually stacks
      onto the `#` glyph behind it; not a typographic line-height choice. */
   line-height: 0.64;
@@ -1734,7 +1733,7 @@ main {
   font-size: var(--text-sm);
   font-weight: var(--weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-caps);
   margin: var(--s-3) 0 0;
   color: var(--dc-ink);
 }
@@ -2091,7 +2090,7 @@ body:has(.sponsor-page) .page-header {
   font-size: var(--text-md);
   color: var(--dc-muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-caps);
 }
 
 .sponsor-tier-price {
@@ -2273,6 +2272,8 @@ body:has(.sponsor-page) .page-header {
 .sponsor-review-stars {
   margin: 0;
   color: var(--dc-django);
+  /* Wide decorative spacing between star characters — pure visual,
+     unrelated to the caps tracking used elsewhere. */
   letter-spacing: 0.15em;
   font-size: var(--text-base);
   line-height: var(--leading-flat);
@@ -2436,7 +2437,7 @@ body:has(.sponsor-page) .page-header {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-caps);
   color: var(--dc-muted);
   padding-top: var(--s2);
   border-top: 1px solid var(--dc-line);
@@ -2505,7 +2506,6 @@ body:has(.sponsor-page) .page-header {
      width — keeps the title from wrapping onto a third line and bloating
      the hero row past the cover height in the narrow 2-column band. */
   font-size: var(--text-episode-hero);
-  letter-spacing: -0.02em;
 }
 
 /* Mobile-stack switch is now tied to the article's own container width
@@ -2815,7 +2815,6 @@ body:has(.sponsor-page) .page-header {
      part of the fluid title hierarchy. */
   font-size: 1.6rem;
   font-weight: var(--weight-bold);
-  letter-spacing: -0.015em;
   margin: 0 0 var(--s1);
 }
 
@@ -2828,7 +2827,6 @@ body:has(.sponsor-page) .page-header {
 .show-notes h3 {
   font-family: var(--font-body);
   font-weight: var(--weight-bold);
-  letter-spacing: -0.01em;
 }
 
 .show-notes h2 {
@@ -2845,7 +2843,6 @@ body:has(.sponsor-page) .page-header {
   font-size: 1.3rem;
   font-weight: var(--weight-bold);
   color: var(--dc-ink);
-  letter-spacing: -0.005em;
   margin: var(--s2) 0 var(--s-1);
 }
 
@@ -3441,7 +3438,6 @@ body:has(.share-modal:not([open]):target) {
 .share-modal-header h2 {
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
-  letter-spacing: -0.01em;
   margin: 0;
 }
 
@@ -3757,7 +3753,6 @@ body:has(.share-modal:not([open]):target) {
   font-size: var(--text-base);
   font-weight: var(--weight-bold);
   color: var(--dc-ink);
-  letter-spacing: -0.005em;
 }
 
 .embed-info-hint {
