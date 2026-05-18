@@ -1355,6 +1355,11 @@ main {
   gap: 0;
   /* deliberate off-scale: 3.5rem (56 px) bottom buffer before footer. */
   padding: 0 0 3.5rem;
+  /* Drives the narrow-row container query for .episode-row below — the
+     row layout switches off the list's own width rather than viewport
+     width, so the rule fires correctly in narrow embeds / zoom. */
+  container-type: inline-size;
+  container-name: episode-list;
 }
 
 .episode-row {
@@ -1458,7 +1463,7 @@ main {
   text-wrap: balance;
 }
 
-@media (max-width: 768px) {
+@container episode-list (max-width: 768px) {
   .episode-row {
     align-items: start;
   }
