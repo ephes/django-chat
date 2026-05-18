@@ -7,7 +7,8 @@
 
 {% block content %}
   {% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' as podcast_mp3_path %}
-  <main class="subscribe-page">
+  <main id="subscribe-main">
+    <div class="subscribe-page">
     <article class="card feed-card stack subscribe-feature">
       <h2 class="feed-card-title">MP3 podcast feed</h2>
       <p class="feed-card-desc">The main Django Chat episode feed. Best compatibility with podcast apps.</p>
@@ -81,6 +82,7 @@
         <li>You decide which episodes to download and when to listen.</li>
       </ul>
     </aside>
+    </div>
   </main>
 {% endblock content %}
 

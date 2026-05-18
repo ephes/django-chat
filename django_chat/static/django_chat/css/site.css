@@ -1644,10 +1644,16 @@ main {
   transform: translateY(-1px);
 }
 
-/* ---------- Subscribe page ---------- */
+/* ---------- Subscribe page ----------
+   Mirrors the #episode-detail-main / .episode-detail pattern: <main>
+   supplies the container scope, the inner .subscribe-page does the
+   grid. Width and centering are inherited from the global `main` rule. */
+#subscribe-main {
+  container-type: inline-size;
+  container-name: subscribe-page;
+}
+
 .subscribe-page {
-  width: var(--dc-container);
-  margin: 0 auto;
   /* deliberate off-scale section padding: 3.5rem (56 px) / 4.5rem (72 px). */
   padding: 3.5rem 0 4.5rem;
   display: grid;
@@ -1826,11 +1832,10 @@ main {
 }
 
 /* Two-column layout: aside docks to the right and stays sticky like the
-   episode-detail sidebar. Plain @media query: .subscribe-page IS the page
-   container, so an @container rule targeting it would not apply to itself.
-   The sidebar width mirrors the episode-detail sidebar visually
-   (`clamp(230px, 24%, 280px)` → 24 % of the 1120 px page = 268.8 px). */
-@media (min-width: 880px) {
+   episode-detail sidebar. The sidebar width mirrors the episode-detail
+   sidebar visually (`clamp(230px, 24%, 280px)` → 24 % of the 1120 px
+   page = 268.8 px). */
+@container subscribe-page (min-width: 880px) {
   .subscribe-page {
     grid-template-columns: minmax(0, 1fr) clamp(230px, 24%, 280px);
     column-gap: clamp(24px, 3vw, 48px);
