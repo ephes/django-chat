@@ -837,6 +837,17 @@ main {
   margin: var(--s-2) 0 var(--s0);
 }
 
+/* CQ host for .filter-form. The form itself breaks out of the centered
+   <main> with `width: 100vw`, so it can't act as its own container — the
+   wrap stays inside the centered flow and supplies the container scope
+   for the form's responsive states. Container width tracks the centered
+   container width (= viewport − 32 px on narrow screens), so the
+   breakpoints below are ~32 px earlier than the prior @media values. */
+.filter-form-wrap {
+  container-type: inline-size;
+  container-name: filter-form;
+}
+
 .filter-form {
   display: grid;
   grid-template-columns: 1fr;
@@ -898,7 +909,7 @@ main {
    Threshold chosen so the extras always fit on a single row (measured wrap point
    ~720–725px with Clear visible) — below this we keep the accordion to avoid a
    three-row glitch between two-row and collapsed layouts. */
-@media (min-width: 740px) {
+@container filter-form (min-width: 740px) {
   .filter-more-toggle {
     display: none;
   }
@@ -928,7 +939,7 @@ main {
 }
 
 /* Wide: search and extras share a single row. */
-@media (min-width: 1000px) {
+@container filter-form (min-width: 1000px) {
   .filter-form {
     grid-template-columns: minmax(220px, 2fr) auto;
     align-items: center;
@@ -1331,7 +1342,7 @@ main {
 /* Hover/focus surface shared with other ghost-style pills — see the
    `.button-primary, .platform-band-links a, …` block at the top. */
 
-@media (max-width: 599px) {
+@container filter-form (max-width: 599px) {
   .filter-extras > button[type="submit"],
   .filter-extras > .filter-clear-all {
     width: 100%;
@@ -3201,7 +3212,7 @@ body:has(.sponsor-page) .page-header {
   }
 }
 
-@media (max-width: 480px) {
+@container filter-form (max-width: 480px) {
   .filter-date {
     grid-template-columns: 1fr;
   }
