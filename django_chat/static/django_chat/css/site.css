@@ -453,8 +453,10 @@ main {
 }
 
 /* On mobile/tablet the proportional 120% width would leave too little image
-   height to fill the taller stacked hero, so switch to cover. */
-@media (max-width: 900px) {
+   height to fill the taller stacked hero, so switch to cover.
+   Container-driven: gated on the `.show-hero` container's own width so the
+   rule also fires for narrow embeds / zoomed-in views. */
+@container show-hero (max-width: 900px) {
   .show-hero::before {
     background-size: cover;
   }
