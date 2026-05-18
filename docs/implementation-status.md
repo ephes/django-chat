@@ -102,6 +102,11 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       path, and are covered by generated podcast feed assertions. Wagtail/taggit
       episode tags remain deliberately deferred to the separate taxonomy
       decision item.
+- [x] **9g. Wagtail admin episode ordering fix** — the Podcast page's Wagtail
+      child listing now defaults to imported episode `visible_date` descending,
+      matching the public episode index so recent episodes do not sink below
+      older pages just because import or edit timestamps differ from publish
+      dates.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
