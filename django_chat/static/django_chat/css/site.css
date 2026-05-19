@@ -2934,6 +2934,85 @@ main {
   border-top: 1px solid var(--dc-line);
 }
 
+/* ---------- Transcript page ----------
+   Reuses `.episode-detail` (same grid, same sidebar via partials) but
+   replaces the show-notes block with a vertical list of speech
+   segments. `.transcript-detail` is a marker class so future page-
+   specific tweaks have a hook; currently it carries no rules of its
+   own — the layout is the episode-detail's, the segments below add
+   their own rhythm. */
+.transcript-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding-top: var(--s1);
+  /* Inner scrollbar so the long segment list can be flown through
+     without page-scrolling. Heights match the sticky sidebar's
+     `height: calc(100dvh - header - 2 * natural-top-gap)` so the two
+     columns settle on the same vertical band in the 2-column layout.
+     Mobile-stack (max-width: 777px) overrides this back to natural
+     page scroll. */
+  max-height: calc(100dvh - var(--site-header-height) - 2 * var(--episode-natural-top-gap));
+  overflow-y: auto;
+  /* Thin green scrollbar matching the `.sponsor-reviews-grid` reel —
+     consistent scroll-affordance across the site. Firefox + WebKit
+     declarations are listed separately because they don't share a
+     spec yet. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--dc-django) transparent;
+}
+
+.transcript-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.transcript-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.transcript-content::-webkit-scrollbar-thumb {
+  background: var(--dc-django);
+  border-radius: 3px;
+}
+
+/* Per-segment: time on the left in its own narrow column, text on the
+   right, both baseline-aligned so the timestamp sits on the first
+   text line. The grid spans the full available column-1 width so the
+   scrollbar sits at the right edge of the content area, not against
+   the text. The text-paragraph caps at the reading measure so prose
+   stays readable — the extra space between text-right-edge and
+   scrollbar is the breathing room around the scroller. */
+.transcript-segment {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--s1);
+  align-items: baseline;
+  margin: 0;
+}
+
+.transcript-segment-time {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  /* Matches the scrollbar's `--dc-django` so the navigation-aiding
+     elements (timestamp column + scrollbar) read as the same accent. */
+  color: var(--dc-django);
+  white-space: nowrap;
+}
+
+.transcript-segment-text {
+  margin: 0;
+  max-width: var(--dc-measure);
+}
+
+@container episode-detail (max-width: 777px) {
+  .transcript-content {
+    /* Mobile-stack: let the page scroll naturally — no inner scroller
+       that would compete with the page's overall scroll affordance. */
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
 .show-notes-title {
   font-family: var(--font-body);
   font-weight: var(--weight-bold);

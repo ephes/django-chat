@@ -1,5 +1,5 @@
 {% extends "./base.html" %}
-{% load i18n %}
+{% load static i18n dc_filters %}
 
 {% block title %}
   {% if episode %}
@@ -9,49 +9,70 @@
   {% endif %}
 {% endblock title %}
 
+{% block render_expect %}
+  <link rel="expect" href="#episode-detail-main" blocking="render">
+{% endblock render_expect %}
+
 {% block content %}
-  <main>
+  <main id="episode-detail-main" data-vt-page="transcript-detail">
     <article class="episode-detail transcript-detail">
       {% if episode %}
-        <a class="back-link" href="{{ episode_url|default:episode.url }}">{% translate "Back to episode" %}</a>
+        <a class="back-link" href="{{ episode_url|default:episode.url }}">← {% translate "Back to Show Notes" %}</a>
       {% endif %}
 
-      <header class="episode-hero">
-        <div>
-          {% if episode %}
-            <p class="eyebrow">
-              <time datetime="{{ episode.visible_date|date:'c' }}">{{ episode.visible_date|date:'F j, Y' }}</time>
-            </p>
-          {% endif %}
-          <h1>
+      <div class="episode-main">
+        <header class="episode-hero">
+          <div class="episode-hero-content">
             {% if episode %}
-              {% blocktrans with title=episode.title %}Transcript: {{ title }}{% endblocktrans %}
-            {% else %}
-              {% translate "Transcript" %}
-            {% endif %}
-          </h1>
-        </div>
-      </header>
-
-      <div class="show-notes transcript-content">
-        {% if transcript.transcripts %}
-          {% for segment in transcript.transcripts %}
-            <section class="transcript-segment">
               <p class="eyebrow">
-                {% if segment.speaker %}
-                  <strong>{{ segment.speaker }}</strong>
-                {% endif %}
-                {% if segment.start %}
-                  <time datetime="{{ segment.start }}">{{ segment.start }}</time>
-                {% endif %}
+                <time datetime="{{ episode.visible_date|date:'c' }}">{{ episode.visible_date|date:'M j, Y' }}</time>
               </p>
-              <p>{{ segment.text }}</p>
-            </section>
-          {% endfor %}
-        {% else %}
-          <p>{% translate "No transcript segments available." %}</p>
-        {% endif %}
+            {% endif %}
+            <h1>
+              {% if episode %}
+                {% blocktrans with title=episode.title %}Transcript: {{ title }}{% endblocktrans %}
+              {% else %}
+                {% translate "Transcript" %}
+              {% endif %}
+            </h1>
+          </div>
+        </header>
+
+        <div class="episode-body">
+          {% if episode %}
+            {% include "./_episode_share_dialogs.html" %}
+          {% endif %}
+
+          <div class="transcript-content">
+            {% if transcript.transcripts %}
+              {% for segment in transcript.transcripts %}
+                <section class="transcript-segment">
+                  {% if segment.start %}
+                    <time class="transcript-segment-time" datetime="{{ segment.start }}">{{ segment.start|transcript_timestamp }}</time>
+                  {% endif %}
+                  <p class="transcript-segment-text">
+                    {% if segment.speaker %}<strong>{{ segment.speaker }}:</strong> {% endif %}{{ segment.text }}
+                  </p>
+                </section>
+              {% endfor %}
+            {% else %}
+              <p>{% translate "No transcript segments available." %}</p>
+            {% endif %}
+          </div>
+        </div>
       </div>
+
+      {% if episode %}
+        {% include "./_episode_sidebar.html" with on_transcript_page=True %}
+      {% endif %}
     </article>
   </main>
 {% endblock content %}
+
+{% block javascript %}
+  {{ block.super }}
+  {% if episode %}
+    <script defer src="{% static 'django_chat/js/share-modal.js' %}?v=share-2"></script>
+    <script defer src="{% static 'django_chat/js/embed-modal.js' %}?v=embed-2"></script>
+  {% endif %}
+{% endblock javascript %}

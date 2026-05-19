@@ -40,6 +40,36 @@ def duration_minutes(seconds: int | None) -> str:
 
 
 @register.filter
+def transcript_timestamp(value) -> str:
+    """Trim a podlove transcript `HH:MM:SS.mmm` (or `MM:SS.mmm`) timestamp
+    string to `MM:SS.D` — minute precision plus a tenth of a second.
+    Hours fold into the minute count, so an episode running past one hour
+    reads as `78:00.0`, not `1:18:00.0`. Returns the input untouched if
+    the value isn't a recognisable timestamp."""
+    if not value:
+        return ""
+    parts = str(value).strip().split(":")
+    if len(parts) == 3:
+        try:
+            hours = int(parts[0])
+            minutes = int(parts[1])
+            secs = float(parts[2])
+        except ValueError:
+            return str(value)
+    elif len(parts) == 2:
+        hours = 0
+        try:
+            minutes = int(parts[0])
+            secs = float(parts[1])
+        except ValueError:
+            return str(value)
+    else:
+        return str(value)
+    total_minutes = hours * 60 + minutes
+    return f"{total_minutes:02d}:{secs:04.1f}"
+
+
+@register.filter
 def platform_icon(name) -> str:
     """Return the static URL of the platform-icon SVG for the given name, or empty string."""
     if not isinstance(name, str):

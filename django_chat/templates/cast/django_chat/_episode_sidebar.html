@@ -1,0 +1,75 @@
+{% comment %}
+  Reusable `.episode-sidebar`: action rail + show artwork.
+  Required context: `episode` (Episode model), `episode_url` (URL string).
+  Optional context: `podcast_feed_url`, `episode_transcript_url`.
+  Optional `with` flag: `on_transcript_page=True` swaps the Transcript
+  rail item for a Show-Notes link that points back to the episode page.
+  Pair with `_episode_share_dialogs.html` on the same page so the
+  share / embed rail items can open their dialogs via anchor link.
+{% endcomment %}
+{% load static %}
+
+<aside class="episode-sidebar" aria-label="Episode tools">
+  <nav class="episode-action-rail" aria-label="Episode actions">
+    <a class="rail-item" href="#share-dialog" data-action="share" aria-haspopup="dialog">
+      <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 4v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        <path d="M7 9l5-5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      </svg>
+      <span>Share</span>
+    </a>
+
+    <a class="rail-item" href="#embed-dialog" data-action="embed" aria-haspopup="dialog">
+      <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M9 8l-5 4 5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M15 8l5 4-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <span>Embed</span>
+    </a>
+
+    {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
+      <a class="rail-item" href="{{ episode.podcast_audio.mp3.url }}" download>
+        <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 4v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <path d="M7 12l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M5 20h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span>Download MP3</span>
+      </a>
+    {% endif %}
+
+    {% if episode.podcast %}
+      <a class="rail-item" href="{% url 'cast:feed_detail' slug=episode.podcast.slug %}">
+        <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M5 4a14 14 0 0 1 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <path d="M5 10a8 8 0 0 1 8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <circle cx="6" cy="17" r="1.8" fill="currentColor"/>
+        </svg>
+        <span>Subscribe</span>
+      </a>
+    {% endif %}
+
+    {% if on_transcript_page %}
+      <a class="rail-item" href="{{ episode_url|default:episode.url }}">
+        <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 4h9l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+          <path d="M15 4v4h4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+          <path d="M9 12h6M9 15h6M9 18h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span>Show Notes</span>
+      </a>
+    {% elif episode_transcript_url %}
+      <a class="rail-item" href="{{ episode_transcript_url }}">
+        <svg class="rail-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 4h9l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+          <path d="M15 4v4h4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+          <path d="M8 13h8M8 16h8M8 19h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span>Transcript</span>
+      </a>
+    {% endif %}
+  </nav>
+
+  <img class="show-artwork show-artwork--default" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="280" height="256" alt="" fetchpriority="high" decoding="async">
+</aside>
