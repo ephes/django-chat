@@ -53,14 +53,20 @@
   --dc-surface-django-tint: #dfeede;
   --error-red: #c0392b;
 
+  /* Paper-stock background image: a 20% white softener layered over the
+     horizontal-grain texture PNG. Used by the main content area and a
+     couple of section bleeds. Consumers compose this with their own
+     `background-color` and `background-attachment: fixed`. */
+  --paper-texture:
+    linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
+    url("../img/simple-horizontal-light.png");
+
   /* ---------- Spacing scale ----------
      Single-source scale for paddings, margins and gaps. All values in rem
      so they react to the user's root font size; pixel hints in comments
      are approximate (assuming 1rem = 16px). Picked to match the most
      common existing values in the file rather than a strict modular
-     ratio — closer to a tape measure than a musical scale. Where a step
-     should react to viewport width, prefer one of the `--s-fluid-*`
-     variants below over a per-site ad-hoc `clamp()`. */
+     ratio — closer to a tape measure than a musical scale. */
   --s-3: 0.25rem;   /*  ~4px */
   --s-2: 0.5rem;    /*  ~8px */
   --s-1: 0.75rem;   /* ~12px */
@@ -70,9 +76,6 @@
   --s3:  3rem;      /* ~48px */
   --s4:  4rem;      /* ~64px */
   --s5:  5rem;      /* ~80px */
-  --s-fluid-sm: clamp(var(--s-1), 1vw + 0.25rem, var(--s0));
-  --s-fluid-md: clamp(var(--s0),  2vw + 0.5rem,  var(--s1));
-  --s-fluid-lg: clamp(var(--s1),  3vw + 1rem,    var(--s3));
 
   /* ---------- Geometry tokens ---------- */
   --dc-radius: 4px;
@@ -223,11 +226,7 @@ body > .site-content {
      the dark `<html>` background instead of bleeding white via the fixed
      attachment. */
   background-color: var(--dc-paper);
-  background-image:
-    linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
-    url("../img/simple-horizontal-light.png");
-  background-repeat: repeat;
-  background-size: auto;
+  background-image: var(--paper-texture);
   background-attachment: fixed;
 }
 
@@ -291,12 +290,6 @@ h3 {
 .site-footer {
   background: var(--dc-ink);
   color: var(--dc-paper);
-  /* Drives the stacked-state container query for `.site-footer-inner`
-     below — the footer rearranges based on its own width rather than the
-     viewport, which is identical to the viewport at full-page width but
-     lets the rule fire correctly in narrow embeds / zoom. */
-  container-type: inline-size;
-  container-name: site-footer;
 }
 
 .site-header a,
@@ -312,6 +305,11 @@ h3 {
   color: var(--dc-django);
 }
 
+/* Auto-hide on scroll-down, reveal on scroll-up. A tiny script in
+   `header-autohide.js` toggles `.site-header--hidden` based on scroll
+   direction; the actual slide-and-fade is this CSS transition. When JS
+   is disabled the class is never added, so the header simply stays
+   sticky-visible (progressive enhancement, core functionality intact). */
 .site-header {
   border-bottom: 1px solid var(--dc-ink);
   container-type: inline-size;
@@ -321,16 +319,17 @@ h3 {
   /* Above the sticky episode sidebar, which would otherwise paint on top
      by virtue of appearing later in the DOM. */
   z-index: 10;
-}
-
-/* Auto-hide on scroll-down, reveal on scroll-up. A tiny script in
-   `header-autohide.js` toggles `.site-header--hidden` based on scroll
-   direction; the actual slide-and-fade is this CSS transition. When JS
-   is disabled the class is never added, so the header simply stays
-   sticky-visible (progressive enhancement, core functionality intact). */
-.site-header {
   transition: transform 220ms ease, opacity 220ms ease;
   will-change: transform;
+}
+
+/* Drives the stacked-state container query for `.site-footer-inner` —
+   the footer rearranges based on its own width rather than the viewport,
+   which is identical to the viewport at full-page width but lets the
+   rule fire correctly in narrow embeds / zoom. */
+.site-footer {
+  container-type: inline-size;
+  container-name: site-footer;
 }
 
 .site-header--hidden {
@@ -479,10 +478,7 @@ main {
 
 .show-hero-curve {
   background-color: var(--dc-surface-django-tint);
-  background-image:
-    linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
-    url("../img/simple-horizontal-light.png");
-  background-repeat: repeat;
+  background-image: var(--paper-texture);
   background-attachment: fixed;
   clip-path: url(#show-hero-curve-clip);
   height: clamp(60px, 15vw, 220px);
@@ -753,10 +749,7 @@ main {
   margin-bottom: var(--s3);
   padding: clamp(10px, 4vw - 10px, 40px) max(16px, calc(50vw - 560px)) clamp(32px, 4vw + 16px, 48px);
   background-color: var(--dc-surface-django-tint);
-  background-image:
-    linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
-    url("../img/simple-horizontal-light.png");
-  background-repeat: repeat;
+  background-image: var(--paper-texture);
   background-attachment: fixed;
   border-bottom: 1px solid var(--dc-line);
   position: relative;
@@ -907,8 +900,10 @@ main {
   align-items: center;
 }
 
-/* Narrowest: hide extras until toggle is checked. */
-.filter-form:not(:has(.filter-extras-toggle:checked)) .filter-extras {
+/* Narrowest: hide extras until toggle is checked. `:where()` zeros the
+   `:not(:has(...))` specificity so the wider-CQ show-rule below wins
+   with a plain `.filter-form .filter-extras` selector. */
+.filter-form:where(:not(:has(.filter-extras-toggle:checked))) .filter-extras {
   display: none;
 }
 
@@ -921,8 +916,7 @@ main {
     display: none;
   }
 
-  .filter-form .filter-extras,
-  .filter-form:not(:has(.filter-extras-toggle:checked)) .filter-extras {
+  .filter-form .filter-extras {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -3516,6 +3510,14 @@ main {
   }
 }
 
+/* Veil shared by both modes — JS modal mode paints it on `::backdrop`,
+   no-JS mode on the dialog itself. */
+.share-modal:not([open]):target,
+.share-modal[open]::backdrop {
+  background: color-mix(in srgb, var(--dc-ink), transparent 45%);
+  backdrop-filter: blur(6px);
+}
+
 /* No-JS overlay mode: dialog becomes the fullscreen darkened container.
    `:not([open])` keeps JS modal mode (which uses ::backdrop) from picking
    up these rules if the URL fragment is also set. */
@@ -3528,8 +3530,6 @@ main {
   height: 100dvh;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--dc-ink), transparent 45%);
-  backdrop-filter: blur(6px);
   /* Scroll the overlay, not the page, if the card is taller than the viewport. */
   overflow: auto;
   /* The site-wide click-on-backdrop-to-close behaviour relies on JS in the
@@ -3537,8 +3537,6 @@ main {
 }
 
 .share-modal[open]::backdrop {
-  background: color-mix(in srgb, var(--dc-ink), transparent 45%);
-  backdrop-filter: blur(6px);
   transition:
     opacity 280ms ease,
     display 280ms allow-discrete,
