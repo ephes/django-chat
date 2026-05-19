@@ -54,7 +54,7 @@ def test_ops_library_dependency_is_pinned() -> None:
     requirements = (ROOT_DIR / "deploy/requirements.yml").read_text()
 
     assert "https://github.com/ephes/ops-library.git" in requirements
-    assert "39aaa0e3de8a99e07f4ac6642cae01518e8a043e" in requirements
+    assert "5faa07767dc83aa06501a09d2ed59a199b6d8ed5" in requirements
     for collection, version in [
         ("community.postgresql", "4.2.0"),
         ("community.general", "12.6.0"),
