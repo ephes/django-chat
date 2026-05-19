@@ -271,12 +271,10 @@ h1 {
 
 h2 {
   font-size: var(--text-h2);
-  font-weight: var(--weight-bold);
 }
 
 h3 {
   font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
 }
 
 .eyebrow {
@@ -516,9 +514,7 @@ main {
 }
 
 .show-hero h1 {
-  font-family: var(--font-heading);
   font-size: var(--text-show-hero);
-  font-weight: var(--weight-bold);
   margin: var(--s-3) 0 var(--s-1);
 }
 
@@ -2622,7 +2618,6 @@ main {
 @container episode-detail (max-width: 777px) {
   .episode-detail {
     grid-template-columns: 1fr;
-    grid-template-rows: none;
   }
 
   .episode-main,
@@ -2679,7 +2674,6 @@ main {
 
   .rail-item {
     display: inline-flex;
-    grid-template-columns: none;
     align-items: center;
     gap: var(--s-2);
     width: auto;
@@ -3040,7 +3034,6 @@ main {
      heavier than the global `h3` rule (1.2rem = --text-lg). Snapping to
      --text-lg would collapse the visual hierarchy. */
   font-size: 1.3rem;
-  font-weight: var(--weight-bold);
   color: var(--dc-ink);
   margin: var(--s2) 0 var(--s-1);
 }
@@ -3371,12 +3364,7 @@ main {
     min-height: 168px;
   }
 
-  .audio-panel podlove-player[data-django-chat-player-ready="true"] .podlove-player-container {
-    min-height: 0;
-  }
-
   .podlove-facade-controls {
-    gap: 20px;
     grid-template-columns: 50px minmax(70px, 1fr) auto;
     height: 50px;
   }
@@ -3551,7 +3539,6 @@ main {
 .share-modal[open]::backdrop {
   background: color-mix(in srgb, var(--dc-ink), transparent 45%);
   backdrop-filter: blur(6px);
-  opacity: 0;
   transition:
     opacity 280ms ease,
     display 280ms allow-discrete,
@@ -3915,10 +3902,6 @@ body:has(.share-modal:not([open]):target) {
 }
 
 @container share-modal (max-width: 480px) {
-  .share-pills {
-    --cluster-space: var(--s-2);
-  }
-
   .share-pill {
     padding: 0 var(--s-1);
     font-size: var(--text-sm);

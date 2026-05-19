@@ -188,10 +188,10 @@ def test_site_css_pins_django_chat_palette() -> None:
         '.audio-panel podlove-player[data-django-chat-player-ready="true"] '
         ".podlove-player-container",
     )
-    assert len(ready_container_blocks) == 2
-    assert all("min-height: 0;" in block for block in ready_container_blocks)
+    assert len(ready_container_blocks) == 1
+    assert "min-height: 0;" in ready_container_blocks[0]
     assert "position: relative;" in ready_container_blocks[0]
-    assert all("opacity: 0;" not in block for block in ready_container_blocks)
+    assert "opacity: 0;" not in ready_container_blocks[0]
     assert not re.search(r"(?<!min-)height: 112px !important;", css)
     assert not re.search(r"(?<!min-)height: 168px !important;", css)
     # Player sizing now reserves on the .audio-panel wrapper, not on
