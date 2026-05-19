@@ -34,15 +34,11 @@
   /* ---------- Color tokens ---------- */
   --dc-ink: #0d0d0d;
   --dc-paper: #ffffff;
-  --dc-on-ink: #fff;
   --dc-player-surface: transparent;
   --dc-muted: #5f635d;
   --dc-line: #d8d8d8;
-  --dc-input-bg: #fbfdfb;
-  --dc-link: #14513a;
   --dc-accent: #2d8260;
   --dc-accent-dark: #14513a;
-  --dc-player-play: #1f6647;
   --dc-django: #4da553;
   /* Translucent django-green tints used for hover/focus surfaces. Derived
      via `color-mix` so changing `--dc-django` flows through automatically.
@@ -51,6 +47,11 @@
      value. */
   --dc-django-soft: color-mix(in srgb, var(--dc-django) 8%, transparent);
   --dc-django-tint: color-mix(in srgb, var(--dc-django) 10%, transparent);
+  /* Opaque pale-green surface tint. Distinct from the translucent
+     `--dc-django-soft/-tint` because consumers paint it on a base that
+     is not always `--dc-paper` (hero curve, wide bleed sections). */
+  --dc-surface-django-tint: #dfeede;
+  --error-red: #c0392b;
 
   /* ---------- Spacing scale ----------
      Single-source scale for paddings, margins and gaps. All values in rem
@@ -152,10 +153,10 @@
   --dc-focus-ring-soft: 0 0 0 3px color-mix(in srgb, var(--dc-django) 18%, transparent);
 
   /* ---------- Shadow tokens ---------- */
-  --dc-shadow-sm: 0 1px 0 rgb(0 0 0 / 0.02);
-  --dc-shadow-md: 0 8px 22px rgb(0 0 0 / 0.06);
-  --dc-shadow-lg: 0 18px 36px rgb(0 0 0 / 0.10);
-  --dc-shadow-xl: 0 24px 64px rgb(0 0 0 / 0.22);
+  --dc-shadow-sm: 0 1px 0 color-mix(in srgb, var(--dc-ink), transparent 98%);
+  --dc-shadow-md: 0 8px 22px color-mix(in srgb, var(--dc-ink), transparent 94%);
+  --dc-shadow-lg: 0 18px 36px color-mix(in srgb, var(--dc-ink), transparent 90%);
+  --dc-shadow-xl: 0 24px 64px color-mix(in srgb, var(--dc-ink), transparent 78%);
 
   /* ---------- Sidebar-pair layout tokens ----------
      Shared between the two "main + sticky aside" page layouts —
@@ -238,7 +239,7 @@ podlove-player * {
 }
 
 a {
-  color: var(--dc-link);
+  color: var(--dc-accent-dark);
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.18em;
 }
@@ -291,7 +292,7 @@ h3 {
 .site-header,
 .site-footer {
   background: var(--dc-ink);
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   /* Drives the stacked-state container query for `.site-footer-inner`
      below — the footer rearranges based on its own width rather than the
      viewport, which is identical to the viewport at full-page width but
@@ -302,7 +303,7 @@ h3 {
 
 .site-header a,
 .site-footer a {
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   text-decoration: none;
 }
 
@@ -314,7 +315,7 @@ h3 {
 }
 
 .site-header {
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid var(--dc-ink);
   container-type: inline-size;
   container-name: site-header;
   position: sticky;
@@ -377,7 +378,7 @@ main {
   align-items: center;
   gap: var(--s-1);
   min-height: var(--dc-tap);
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   font-weight: var(--weight-bold);
   text-decoration: none;
 }
@@ -411,7 +412,7 @@ main {
 
 .show-hero {
   background-color: var(--dc-accent-dark);
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   height: auto;
   width: 100%;
   position: relative;
@@ -479,7 +480,7 @@ main {
 }
 
 .show-hero-curve {
-  background-color: #dfeede;
+  background-color: var(--dc-surface-django-tint);
   background-image:
     linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
     url("../img/simple-horizontal-light.png");
@@ -523,7 +524,7 @@ main {
 
 .show-hero .eyebrow,
 .show-hero .show-tagline {
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
 }
 
 .show-tagline {
@@ -554,7 +555,7 @@ main {
   object-fit: contain;
   border-radius: 0;
   box-shadow: none;
-  filter: drop-shadow(5px 6px 3px rgb(0 0 0 / 0.45));
+  filter: drop-shadow(5px 6px 3px color-mix(in srgb, var(--dc-ink), transparent 55%));
 }
 
 .show-hero-logo {
@@ -714,7 +715,7 @@ main {
   padding: 0 var(--s0);
   border: 1px solid var(--dc-accent-dark);
   background: var(--dc-accent-dark);
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   font-weight: var(--weight-semibold);
 }
 
@@ -755,7 +756,7 @@ main {
   margin-top: -1px;
   margin-bottom: var(--s3);
   padding: clamp(10px, 4vw - 10px, 40px) max(16px, calc(50vw - 560px)) clamp(32px, 4vw + 16px, 48px);
-  background-color: #dfeede;
+  background-color: var(--dc-surface-django-tint);
   background-image:
     linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
     url("../img/simple-horizontal-light.png");
@@ -963,7 +964,7 @@ main {
   padding: 0 var(--s-1);
   border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
-  background: var(--dc-input-bg);
+  background: var(--dc-paper);
   color: var(--dc-ink);
   font: inherit;
   font-size: var(--text-base);
@@ -1009,7 +1010,7 @@ main {
   padding: 0 var(--s-1);
   border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
-  background: var(--dc-input-bg);
+  background: var(--dc-paper);
   color: var(--dc-ink);
   font: inherit;
   font-size: var(--text-base);
@@ -1088,10 +1089,10 @@ main {
   left: 0;
   z-index: 20;
   display: none;
-  border: 1px solid #cfd8ce;
+  border: 1px solid var(--dc-surface-django-tint);
   border-radius: 14px;
   background: var(--dc-paper);
-  box-shadow: 0 16px 34px rgb(13 13 13 / 0.18);
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--dc-ink), transparent 82%);
   color: var(--dc-ink);
 }
 
@@ -1185,7 +1186,7 @@ main {
 }
 
 .filter-date-day.is-outside-month {
-  color: #8b9089;
+  color: var(--dc-muted);
 }
 
 .filter-date-day.is-today {
@@ -1194,7 +1195,7 @@ main {
 
 .filter-date-day.is-selected {
   background: var(--dc-accent-dark);
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   font-weight: var(--weight-bold);
 }
 
@@ -1235,7 +1236,7 @@ main {
 
 .filter-select-option.is-selected {
   background: var(--dc-accent-dark);
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   font-weight: var(--weight-bold);
 }
 
@@ -1327,7 +1328,7 @@ main {
   padding: 0 var(--s0);
   border: 1px solid var(--dc-accent-dark);
   background: var(--dc-accent-dark);
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   font-weight: var(--weight-semibold);
   cursor: pointer;
 }
@@ -1520,7 +1521,7 @@ main {
   min-height: var(--page-header-min-height);
   display: flex;
   align-items: flex-start;
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   overflow: hidden;
   isolation: isolate;
 }
@@ -1548,8 +1549,8 @@ main {
     z-index: -1;
     background: linear-gradient(
       to bottom,
-      #14513a 0%,
-      #14513a 25%,
+      var(--dc-accent-dark) 0%,
+      var(--dc-accent-dark) 25%,
       rgb(20 81 58 / 0) 70%
     );
     pointer-events: none;
@@ -1606,7 +1607,7 @@ main {
 .page-header .eyebrow,
 .page-header h1,
 .page-header-tagline {
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
 }
 
 .page-header h1 {
@@ -1716,7 +1717,7 @@ main {
 .feed-card-url {
   margin: var(--s-3) 0 0;
   padding: var(--s-1);
-  background: #f4f7f3;
+  background: var(--dc-surface-django-tint);
   border: 1px solid var(--dc-line);
   border-radius: 10px;
   overflow-x: auto;
@@ -1759,7 +1760,7 @@ main {
 .feed-action--primary {
   background: var(--dc-accent-dark);
   border-color: var(--dc-accent-dark);
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
 }
 
 .feed-action--primary:hover,
@@ -2225,7 +2226,7 @@ main {
   min-height: 56px;
   padding: 0 var(--s2);
   background: var(--dc-accent-dark);
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   border: 2px solid var(--dc-accent-dark);
   border-radius: var(--dc-radius-pill);
   font-family: var(--font-heading);
@@ -2784,7 +2785,7 @@ main {
 
 .podlove-facade-play {
   align-items: center;
-  background: var(--dc-player-play);
+  background: var(--dc-accent-dark);
   border-radius: var(--dc-radius-pill);
   display: inline-flex;
   height: 50px;
@@ -2795,7 +2796,7 @@ main {
 
 .podlove-facade-play-icon {
   border-bottom: 8px solid transparent;
-  border-left: 12px solid #fff;
+  border-left: 12px solid var(--dc-paper);
   border-top: 8px solid transparent;
   display: block;
   height: 0;
@@ -2806,7 +2807,7 @@ main {
 .podlove-facade-spinner {
   animation: podlove-facade-spin 780ms linear infinite;
   border: 3px solid rgb(255 255 255 / 0.38);
-  border-top-color: #fff;
+  border-top-color: var(--dc-paper);
   border-radius: var(--dc-radius-pill);
   display: none;
   height: 20px;
@@ -2824,7 +2825,7 @@ main {
 }
 
 .podlove-facade-progress {
-  background: rgb(13 13 13 / 0.13);
+  background: color-mix(in srgb, var(--dc-ink), transparent 87%);
   border-radius: var(--dc-radius-pill);
   display: block;
   height: 4px;
@@ -3073,7 +3074,7 @@ main {
 }
 
 .show-notes a {
-  color: var(--dc-link);
+  color: var(--dc-accent-dark);
 }
 
 .pagination-nav {
@@ -3118,8 +3119,8 @@ main {
   gap: var(--s-2);
   min-height: var(--dc-tap);
   padding: 0 var(--s0);
-  border: 1px solid color-mix(in srgb, var(--dc-on-ink) 35%, transparent);
-  color: var(--dc-on-ink);
+  border: 1px solid color-mix(in srgb, var(--dc-paper) 35%, transparent);
+  color: var(--dc-paper);
   font-weight: var(--weight-semibold);
   transition: var(--dc-transition-colors);
 }
@@ -3145,7 +3146,7 @@ main {
 
 .site-footer .footer-cast-link:hover,
 .site-footer .footer-cast-link:focus {
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
 }
 
 .status-page {
@@ -3539,7 +3540,7 @@ main {
   height: 100dvh;
   align-items: center;
   justify-content: center;
-  background: rgb(0 0 0 / 0.55);
+  background: color-mix(in srgb, var(--dc-ink), transparent 45%);
   backdrop-filter: blur(6px);
   /* Scroll the overlay, not the page, if the card is taller than the viewport. */
   overflow: auto;
@@ -3548,7 +3549,7 @@ main {
 }
 
 .share-modal[open]::backdrop {
-  background: rgb(0 0 0 / 0.55);
+  background: color-mix(in srgb, var(--dc-ink), transparent 45%);
   backdrop-filter: blur(6px);
   opacity: 0;
   transition:
@@ -3569,7 +3570,7 @@ main {
 
 /* Inner card slides + scales in. Same animation for [open] and :target. */
 .share-modal-inner {
-  background: var(--dc-surface, #fff);
+  background: var(--dc-surface, var(--dc-paper));
   border-radius: 16px;
   max-width: 480px;
   width: min(480px, calc(100vw - 32px));
@@ -3712,7 +3713,7 @@ body:has(.share-modal:not([open]):target) {
 
 .share-mastodon-prompt {
   --stack-space: var(--s-2);
-  background: rgb(0 0 0 / 0.04);
+  background: color-mix(in srgb, var(--dc-ink), transparent 96%);
   padding: var(--s-1) var(--s0);
   border-radius: 10px;
 }
@@ -3784,7 +3785,7 @@ body:has(.share-modal:not([open]):target) {
   border-radius: var(--dc-radius-pill);
   padding: 0 var(--s-1);
   min-height: 38px;
-  background: var(--dc-input-bg);
+  background: var(--dc-paper);
   color: var(--dc-ink);
   font: inherit;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -3797,7 +3798,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-mastodon-row input[aria-invalid="true"] {
-  border-color: #c0392b;
+  border-color: var(--error-red);
 }
 
 .share-mastodon-row button {
@@ -3809,7 +3810,7 @@ body:has(.share-modal:not([open]):target) {
   border: 1px solid var(--dc-accent-dark);
   border-radius: var(--dc-radius-pill);
   background: var(--dc-accent-dark);
-  color: var(--dc-on-ink);
+  color: var(--dc-paper);
   font: inherit;
   font-weight: var(--weight-semibold);
   cursor: pointer;
@@ -3860,7 +3861,7 @@ body:has(.share-modal:not([open]):target) {
   padding: var(--s-2) var(--s-1);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  background: var(--dc-input-bg);
+  background: var(--dc-paper);
   text-align: center;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -3872,7 +3873,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-startat-time input:disabled {
-  background: rgb(0 0 0 / 0.03);
+  background: color-mix(in srgb, var(--dc-ink), transparent 97%);
   color: var(--dc-muted);
 }
 
@@ -3897,7 +3898,7 @@ body:has(.share-modal:not([open]):target) {
   min-height: 42px;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  background: var(--dc-input-bg);
+  background: var(--dc-paper);
   color: var(--dc-ink);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -3950,7 +3951,7 @@ body:has(.share-modal:not([open]):target) {
   width: 64px;
   height: auto;
   flex-shrink: 0;
-  filter: drop-shadow(2px 3px 1px rgb(0 0 0 / 0.18));
+  filter: drop-shadow(2px 3px 1px color-mix(in srgb, var(--dc-ink), transparent 82%));
 }
 
 .embed-info-text {
@@ -3999,7 +4000,7 @@ body:has(.share-modal:not([open]):target) {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   line-height: var(--leading-tagline);
-  background: var(--dc-input-bg);
+  background: var(--dc-paper);
   color: var(--dc-ink);
   resize: vertical;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
