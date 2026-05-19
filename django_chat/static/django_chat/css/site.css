@@ -90,16 +90,38 @@
   --s4:  4rem;      /* ~64px */
   --s5:  5rem;      /* ~80px */
 
-  /* ---------- Geometry tokens ---------- */
-  --dc-radius: 4px;
+  /* ---------- Geometry tokens ----------
+     Layout-meaningful sizes use `rem` so they scale with the user's
+     root font-size; pixel hints in comments are approximate (1rem ≈
+     1rem). `--dc-radius-pill` stays in pixels by design — it is the
+     "infinite radius" sentinel that pill-shaped controls clamp against
+     their own height, not a size that should scale with text. */
+  --dc-radius: 0.25rem;        /*  ~4px */
   --dc-radius-pill: 999px;
-  --dc-tap: 44px;
-  --dc-container: min(1120px, 100% - 32px);
+  --dc-tap: 2.75rem;           /* ~44px — Apple tap-target floor */
+  /* Horizontal page gutter between content and the viewport edge below
+     the container max-width. 1rem on phones; bumped to 2rem from 48em
+     upward (≈768 px, see media query below) so tablets and narrow
+     laptops sit a touch further off the edge. The `--dc-container`
+     formula and every site-wide breakout pattern (`.platform-band`,
+     `.filter-form`, `.page-header-shape`, share/embed modal cards) read
+     from this token — adjust the breakpoint or the values here, not at
+     the call sites. */
+  --dc-gutter: 1rem;
+  /* Max inline-size of the centered content column. Used by
+     `--dc-container` itself, by full-bleed breakout bands that align
+     their interior to the centered column (`calc(50vw - max/2)`), and
+     by the page-header bubble anchor. The `@container (min-width: …)`
+     query in the `.platform-band-links` block must keep the literal
+     pixel value because CSS container-queries do not accept `var()`
+     in the threshold. */
+  --dc-container-max: 70rem;   /* ~70rem */
+  --dc-container: min(var(--dc-container-max), 100% - 2 * var(--dc-gutter));
   /* Approximate height of `.site-header` on desktop. Used by fixed-positioned
      surfaces (e.g. the episode sidebar) that need to sit below the menu bar
-     at scroll-y = 0. Slightly larger than the measured 69px to absorb minor
+     at scroll-y = 0. Slightly larger than the measured ~4.3125rem to absorb minor
      clamp variance. */
-  --dc-site-header-height: 72px;
+  --dc-site-header-height: 4.5rem;  /* ~72px */
 
   /* ---------- Typography tokens ----------
      Font-family tokens use the long fallback chain so a missing primary
@@ -178,8 +200,21 @@
      identical by design so the two layouts read as the same pattern.
      Values use `cqi` so they track the layout's own container width
      (centered `<main>`), independent of viewport zoom or embeds. */
-  --dc-aside-width: clamp(230px, 24cqi, 280px);
-  --dc-aside-column-gap: clamp(24px, 4cqi, 48px);
+  --dc-aside-width: clamp(14.375rem, 24cqi, 17.5rem);  /* ~230–280px */
+  --dc-aside-column-gap: clamp(1.5rem, 4cqi, 3rem);    /* ~24–48px */
+}
+
+/* Tablet-and-up gutter bump. Single global breakpoint that re-tokens
+   `--dc-gutter`; every consumer reads `var(--dc-gutter)` so the change
+   flows through `--dc-container`, the platform-band/filter-form bleed
+   padding, the page-header-shape anchor, and the share/embed modal
+   widths automatically. 48em ≈ 768 px at the browser default — the iPad
+   portrait floor. Using `em` so the breakpoint zooms with the user's
+   root font size. */
+@media (min-width: 48em) {
+  :root {
+    --dc-gutter: 2rem;
+  }
 }
 
 *,
@@ -452,7 +487,7 @@ button.share-pill,
   align-items: center;
   justify-content: space-between;
   gap: var(--s1);
-  padding: clamp(4px, 0.8vw, 8px) 0;
+  padding: clamp(0.25rem, 0.8vw, 0.5rem) 0;
 }
 
 .brand {
@@ -466,7 +501,7 @@ button.share-pill,
 }
 
 .brand-mark {
-  height: clamp(36px, 5vw, 52px);
+  height: clamp(2.25rem, 5vw, 3.25rem);
   width: auto;
   display: block;
 }
@@ -481,7 +516,7 @@ button.share-pill,
 }
 
 .nav-links {
-  --cluster-space: 15px 35px;
+  --cluster-space: 0.9375rem 2.1875rem;
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
 }
@@ -489,7 +524,7 @@ button.share-pill,
 .nav-links a {
   display: inline-flex;
   align-items: center;
-  min-height: clamp(32px, 1.5vw + 28px, 44px);
+  min-height: clamp(2rem, 1.5vw + 1.75rem, 2.75rem);
 }
 
 }  /* end @layer base */
@@ -541,7 +576,7 @@ button.share-pill,
    height to fill the taller stacked hero, so switch to cover.
    Container-driven: gated on the `.show-hero` container's own width so the
    rule also fires for narrow embeds / zoomed-in views. */
-@container show-hero (max-width: 900px) {
+@container show-hero (max-width: 56.25em) {
   .show-hero-media img {
     width: 100%;
     height: 100%;
@@ -556,7 +591,7 @@ button.share-pill,
   background-image: var(--dc-paper-texture);
   background-attachment: fixed;
   clip-path: url(#show-hero-curve-clip);
-  height: clamp(60px, 15vw, 220px);
+  height: clamp(3.75rem, 15vw, 13.75rem);
   margin-top: clamp(-80px, -5vw, -15px);
   position: relative;
   z-index: 1;
@@ -577,9 +612,9 @@ button.share-pill,
   gap: 2.5rem;
   align-items: center;
   min-height: 14svh;
-  width: min(clamp(800px, 66vw, 1000px), 100% - 32px);
+  width: min(clamp(50rem, 66vw, 62.5rem), 100% - 2 * var(--dc-gutter));
   margin: 0 auto;
-  padding: clamp(4px, 1vw, 12px) 0 clamp(2px, 0.8vw, 8px);
+  padding: clamp(0.25rem, 1vw, 0.75rem) 0 clamp(2px, 0.8vw, 0.5rem);
   position: relative;
   z-index: 2;
 }
@@ -608,7 +643,7 @@ button.share-pill,
 
 .show-artwork {
   width: 100%;
-  max-width: 280px;
+  max-width: 17.5rem;
   height: auto;
   aspect-ratio: 1 / 1;
   justify-self: end;
@@ -622,12 +657,12 @@ button.share-pill,
   object-fit: contain;
   border-radius: 0;
   box-shadow: none;
-  filter: drop-shadow(5px 6px 3px color-mix(in srgb, var(--dc-ink), transparent 55%));
+  filter: drop-shadow(0.3125rem 0.375rem 3px color-mix(in srgb, var(--dc-ink), transparent 55%));
 }
 
 .show-hero-logo {
   height: auto;
-  width: clamp(170px, 23vw, 280px);
+  width: clamp(10.625rem, 23vw, 17.5rem);
   justify-self: end;
   margin-top: var(--s2);
   max-width: 100%;
@@ -638,7 +673,7 @@ button.share-pill,
 @container show-hero (max-width: 64rem) {
   .show-hero-inner {
     grid-template-columns: 1fr;
-    gap: clamp(8px, 2vw, 24px);
+    gap: clamp(0.5rem, 2vw, 1.5rem);
     text-align: center;
   }
 
@@ -654,7 +689,7 @@ button.share-pill,
   .show-hero-logo {
     order: -1;
     justify-self: center;
-    margin-top: clamp(4px, 1.5vw, 30px);
+    margin-top: clamp(0.25rem, 1.5vw, 1.875rem);
   }
 }
 
@@ -763,8 +798,8 @@ button.share-pill,
 }
 
 .button-icon {
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   margin-right: var(--s-2);
   fill: none;
   flex: 0 0 auto;
@@ -791,7 +826,7 @@ button.share-pill,
   margin-right: calc(50% - 50vw);
   margin-top: -1px;
   margin-bottom: var(--s3);
-  padding: clamp(10px, 4vw - 10px, 40px) max(16px, calc(50vw - 560px)) clamp(32px, 4vw + 16px, 48px);
+  padding: clamp(0.625rem, 4vw - 0.625rem, 2.5rem) max(var(--dc-gutter), calc(50vw - var(--dc-container-max) / 2)) clamp(2rem, 4vw + 1rem, 3rem);
   background-color: var(--dc-surface-django-tint);
   background-image: var(--dc-paper-texture);
   background-attachment: fixed;
@@ -811,21 +846,21 @@ button.share-pill,
 }
 
 .platform-band-links {
-  --cluster-space: clamp(8px, 0.4vw + 6px, 12px);
+  --cluster-space: clamp(0.5rem, 0.4vw + 0.375rem, 0.75rem);
   --cluster-justify: center;
   width: 100%;
 }
 
 .platform-band-links a {
   justify-content: center;
-  gap: clamp(6px, 0.3vw + 5px, 10px);
-  min-height: clamp(38px, 0.7vw + 34px, 46px);
+  gap: clamp(0.375rem, 0.3vw + 0.3125rem, 0.625rem);
+  min-height: clamp(2.375rem, 0.7vw + 2.125rem, 2.875rem);
   /* min-width and max-inline-size share the same clamp so every wrapped
      button has a fixed, identical inline-size; longer labels truncate
      instead of widening the button and reshuffling the wrap. */
-  min-width: clamp(140px, 22vw, 180px);
-  max-inline-size: clamp(140px, 22vw, 180px);
-  padding-inline: clamp(14px, 0.6vw + 11px, 18px);
+  min-width: clamp(8.75rem, 22vw, 11.25rem);
+  max-inline-size: clamp(8.75rem, 22vw, 11.25rem);
+  padding-inline: clamp(0.875rem, 0.6vw + 0.6875rem, 1.125rem);
   border: 1px solid var(--dc-line);
   color: var(--dc-ink);
   font-size: var(--text-platform-link);
@@ -841,12 +876,15 @@ button.share-pill,
   text-overflow: ellipsis;
 }
 
-/* Threshold matches `.platform-band`'s stable 1120 px inner width
-   (viewport ≥ ~1152 px), where the current 7 buttons fit content-sized
-   in a single row (measured sum ≈ 1046 px). */
+/* Threshold matches `--dc-container-max` (1120 px); keep the literal in
+   sync with the token. Two CSS-level constraints make this the one
+   remaining px call site: container-queries cannot read `var()` in the
+   threshold, and converting to `em` would shift the trigger because
+   `.platform-band` inherits body's `1.06rem` font-size (so `70em` would
+   resolve to ~1187 px content-box, not 1120). */
 @container (min-width: 1120px) {
   .platform-band-links a {
-    min-width: 140px;
+    min-width: 8.75rem;
     max-inline-size: none;
   }
 }
@@ -857,8 +895,8 @@ button.share-pill,
 .feed-action-icon,
 .footer-mastodon-icon,
 .share-pill-icon {
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   flex-shrink: 0;
 }
 
@@ -897,7 +935,7 @@ button.share-pill,
   gap: var(--s-1);
   width: 100vw;
   margin: 0 calc(50% - 50vw) var(--s1);
-  padding: 0 max(16px, calc(50vw - 560px));
+  padding: 0 max(var(--dc-gutter), calc(50vw - var(--dc-container-max) / 2));
   scroll-margin-top: var(--s5);
 }
 
@@ -952,9 +990,9 @@ button.share-pill,
 
 /* Medium and up: extras always visible as a wrapping flex row, toggle hidden.
    Threshold chosen so the extras always fit on a single row (measured wrap point
-   ~720–725px with Clear visible) — below this we keep the accordion to avoid a
+   ~720–45.3125rem with Clear visible) — below this we keep the accordion to avoid a
    three-row glitch between two-row and collapsed layouts. */
-@container filter-form (min-width: 740px) {
+@container filter-form (min-width: 46.25em) {
   .filter-more-toggle {
     display: none;
   }
@@ -967,12 +1005,12 @@ button.share-pill,
   }
 
   .filter-extras > .filter-date {
-    flex: 1 1 260px;
+    flex: 1 1 16.25rem;
     min-width: 0;
   }
 
   .filter-extras > select {
-    flex: 1 1 160px;
+    flex: 1 1 10rem;
     min-width: 0;
   }
 
@@ -983,9 +1021,9 @@ button.share-pill,
 }
 
 /* Wide: search and extras share a single row. */
-@container filter-form (min-width: 1000px) {
+@container filter-form (min-width: 62.5em) {
   .filter-form {
-    grid-template-columns: minmax(220px, 2fr) auto;
+    grid-template-columns: minmax(13.75rem, 2fr) auto;
     align-items: center;
   }
 }
@@ -1005,11 +1043,11 @@ button.share-pill,
     linear-gradient(45deg, transparent 50%, var(--dc-accent-dark) 50%),
     linear-gradient(135deg, var(--dc-accent-dark) 50%, transparent 50%);
   background-position:
-    calc(100% - 18px) 50%,
-    calc(100% - 12px) 50%;
+    calc(100% - 1.125rem) 50%,
+    calc(100% - 0.75rem) 50%;
   background-repeat: no-repeat;
-  background-size: 6px 6px, 6px 6px;
-  padding-right: 34px;
+  background-size: 0.375rem 0.375rem, 0.375rem 0.375rem;
+  padding-right: 2.125rem;
 }
 
 .filter-control {
@@ -1076,8 +1114,8 @@ button.share-pill,
 .filter-calendar-icon {
   position: relative;
   flex: 0 0 auto;
-  width: 17px;
-  height: 17px;
+  width: 1.0625rem;
+  height: 1.0625rem;
   border: 2px solid currentColor;
   border-radius: 3px;
 }
@@ -1096,8 +1134,8 @@ button.share-pill,
   position: absolute;
   top: -5px;
   left: 3px;
-  width: 7px;
-  height: 5px;
+  width: 0.4375rem;
+  height: 0.3125rem;
   border-left: 2px solid currentColor;
   border-right: 2px solid currentColor;
 }
@@ -1113,12 +1151,12 @@ button.share-pill,
 
 .filter-popover {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 0.5rem);
   left: 0;
   z-index: 20;
   display: none;
   border: 1px solid var(--dc-surface-django-tint);
-  border-radius: 14px;
+  border-radius: 0.875rem;
   background: var(--dc-paper);
   box-shadow: 0 16px 34px color-mix(in srgb, var(--dc-ink), transparent 82%);
   color: var(--dc-ink);
@@ -1134,13 +1172,13 @@ button.share-pill,
 }
 
 .filter-date-popover {
-  width: min(300px, calc(100vw - 40px));
+  width: min(18.75rem, calc(100vw - 2.5rem));
   padding: var(--s-1);
 }
 
 .filter-date-popover-header {
   display: grid;
-  grid-template-columns: 38px 1fr 38px;
+  grid-template-columns: 2.375rem 1fr 2.375rem;
   align-items: center;
   gap: var(--s-2);
   margin-bottom: var(--s-2);
@@ -1164,8 +1202,8 @@ button.share-pill,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 2.375rem;
+  height: 2.375rem;
   border-radius: var(--dc-radius-pill);
   color: var(--dc-accent-dark);
   /* Icon glyph size — off-scale, tied to the 38 px button. */
@@ -1237,7 +1275,7 @@ button.share-pill,
 }
 
 .filter-date-actions button {
-  min-height: 34px;
+  min-height: 2.125rem;
   padding: 0 var(--s-2);
   border-radius: var(--dc-radius-pill);
   color: var(--dc-accent-dark);
@@ -1246,7 +1284,7 @@ button.share-pill,
 
 .filter-select-popover {
   min-width: 100%;
-  max-width: calc(100vw - 40px);
+  max-width: calc(100vw - 2.5rem);
   overflow: hidden;
   padding: var(--s-2);
 }
@@ -1255,9 +1293,9 @@ button.share-pill,
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 38px;
+  min-height: 2.375rem;
   padding: 0 var(--s-1);
-  border-radius: 9px;
+  border-radius: 0.5625rem;
   text-align: left;
   white-space: nowrap;
 }
@@ -1268,7 +1306,7 @@ button.share-pill,
 }
 
 .filter-search--with-clear input {
-  padding-right: 38px;
+  padding-right: 2.375rem;
 }
 
 .filter-search-clear {
@@ -1280,15 +1318,15 @@ button.share-pill,
   /* Regular weight — the `×` glyph reads heavier than other muted UI
      copy if it inherits semibold from the form context. */
   font-weight: 400;
-  height: 28px;
+  height: 1.75rem;
   justify-content: center;
   line-height: var(--leading-flat);
   position: absolute;
-  right: 8px;
+  right: 0.5rem;
   text-decoration: none;
   top: 50%;
   transform: translateY(-50%);
-  width: 28px;
+  width: 1.75rem;
 }
 
 .filter-search-clear:hover,
@@ -1372,7 +1410,7 @@ button.share-pill,
   font-weight: var(--weight-bold);
 }
 
-@container filter-form (max-width: 599px) {
+@container filter-form (max-width: 37.4375em) {
   .filter-extras > button[type="submit"],
   .filter-extras > .filter-clear-all {
     width: 100%;
@@ -1394,7 +1432,7 @@ button.share-pill,
 .episode-row {
   display: grid;
   grid-template-columns: var(--episode-badge-size) 1fr;
-  gap: clamp(12px, 2.5vw, 24px);
+  gap: clamp(0.75rem, 2.5vw, 1.5rem);
   align-items: center;
   padding: var(--s1) 0;
   border-top: 1px solid var(--dc-line);
@@ -1411,9 +1449,9 @@ button.share-pill,
 .episode-row::before {
   content: "";
   position: absolute;
-  inset: 1px calc(-1 * clamp(8px, 1.5vw, 20px)) 0;
+  inset: 1px calc(-1 * clamp(0.5rem, 1.5vw, 1.25rem)) 0;
   background: transparent;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   z-index: -1;
   transition: background-color 0.15s ease;
   pointer-events: none;
@@ -1425,7 +1463,7 @@ button.share-pill,
 
 .episode-number-badge {
   background: var(--dc-accent-dark);
-  border-radius: 5px;
+  border-radius: 0.3125rem;
   display: grid;
   font-family: var(--font-body);
   font-size: clamp(2.25rem, 4.5vw, 4.5rem);
@@ -1490,7 +1528,7 @@ button.share-pill,
   text-wrap: balance;
 }
 
-@container episode-list (max-width: 768px) {
+@container episode-list (max-width: 48em) {
   .episode-row {
     align-items: start;
   }
@@ -1527,10 +1565,10 @@ button.share-pill,
 }
 
 .page-header {
-  --page-header-min-height: 350px;
-  --page-header-shape-width: 1470px;
-  --page-header-shape-height: 665px;
-  --page-header-shape-offset: 350px;
+  --page-header-min-height: 21.875rem;
+  --page-header-shape-width: 91.875rem;
+  --page-header-shape-height: 41.5625rem;
+  --page-header-shape-offset: 21.875rem;
 
   position: relative;
   width: 100%;
@@ -1557,7 +1595,7 @@ button.share-pill,
    blends invisibly into the bubble's top colour (same #14513a). Z-index
    -1 keeps it behind the bubble. Disabled at tablet+ where the bubble's
    path covers the visible area well enough on its own. */
-@container page-header (max-width: 699px) {
+@container page-header (max-width: 43.6875em) {
   .page-header::before {
     content: "";
     position: absolute;
@@ -1573,19 +1611,19 @@ button.share-pill,
   }
 }
 
-@container page-header (max-width: 880px) {
+@container page-header (max-width: 55em) {
   .page-header {
-    --page-header-min-height: 290px;
-    --page-header-shape-width: 1130px;
-    --page-header-shape-height: 470px;
-    --page-header-shape-offset: 266px;
+    --page-header-min-height: 18.125rem;
+    --page-header-shape-width: 70.625rem;
+    --page-header-shape-height: 29.375rem;
+    --page-header-shape-offset: 16.625rem;
   }
 }
 
-@container page-header (max-width: 450px) {
+@container page-header (max-width: 28.125em) {
   .page-header {
-    --page-header-shape-width: 900px;
-    --page-header-shape-offset: 216px;
+    --page-header-shape-width: 56.25rem;
+    --page-header-shape-offset: 13.5rem;
   }
 }
 
@@ -1601,9 +1639,11 @@ button.share-pill,
      widths it ensures the bubble keeps backing the text instead of
      leaving a tint-coloured gap under its curve. */
   bottom: 0;
-  /* Anchored to var(--dc-container)'s left edge: centered with 1120 px
-     above the 1152 px viewport breakpoint, pinned to 16 px below. */
-  left: calc(max(16px, (100% - 1120px) / 2) - var(--page-header-shape-offset));
+  /* Anchored to `var(--dc-container)`'s left edge: centered once the
+     viewport is wide enough, pinned to `--dc-gutter` below the
+     centering threshold. The breakpoint moves with `--dc-gutter`
+     (`--dc-container-max` + 2*gutter px) — no separate constant to update. */
+  left: calc(max(var(--dc-gutter), (100% - var(--dc-container-max)) / 2) - var(--page-header-shape-offset));
   z-index: 0;
   pointer-events: none;
 }
@@ -1639,7 +1679,7 @@ button.share-pill,
 /* When the site-nav switches to its centered phone layout (≤ 540 px),
    mirror that in the page header so the eyebrow, headline and tagline
    read as a single centered column. */
-@container page-header (max-width: 540px) {
+@container page-header (max-width: 33.75em) {
   .page-header-inner {
     text-align: center;
   }
@@ -1654,10 +1694,10 @@ button.share-pill,
    layout class (e.g. `.feed-card`) on the same element when a card
    wraps a vertical content stack. */
 .card {
-  padding: var(--s1) clamp(20px, 3vw, 30px) var(--s1);
+  padding: var(--s1) clamp(1.25rem, 3vw, 1.875rem) var(--s1);
   background: var(--dc-paper);
   border: 1px solid var(--dc-line);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   box-shadow: var(--dc-shadow-sm);
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
@@ -1735,7 +1775,7 @@ button.share-pill,
   padding: var(--s-1);
   background: var(--dc-surface-django-tint);
   border: 1px solid var(--dc-line);
-  border-radius: 10px;
+  border-radius: 0.625rem;
   overflow-x: auto;
 }
 
@@ -1820,7 +1860,7 @@ button.share-pill,
   padding: var(--s0);
   border-left: 2px solid var(--dc-django);
   background: rgb(77 165 83 / 0.05);
-  border-radius: 0 12px 12px 0;
+  border-radius: 0 0.75rem 0.75rem 0;
   display: grid;
   gap: var(--s-2);
   justify-items: start;
@@ -1828,7 +1868,7 @@ button.share-pill,
 }
 
 .subscribe-why-mark {
-  width: 44px;
+  width: 2.75rem;
   height: auto;
   color: var(--dc-django);
 }
@@ -1856,7 +1896,7 @@ button.share-pill,
    episode-detail sidebar. Same width/gap tokens and mobile-stack
    threshold (778 px = +1 of episode-detail's 777 max) as
    `.episode-detail`, so the two layouts feel like a pair. */
-@container subscribe-page (min-width: 778px) {
+@container subscribe-page (min-width: 48.625em) {
   .subscribe-page {
     grid-template-columns: minmax(0, 1fr) var(--dc-aside-width);
     column-gap: var(--dc-aside-column-gap);
@@ -1906,7 +1946,7 @@ button.share-pill,
      (~1700 px). Without this, that intrinsic width would push the whole
      `.sponsor-page` out and cause horizontal scroll on the body. */
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(32px, 4vw, 56px);
+  gap: clamp(2rem, 4vw, 3.5rem);
 }
 
 .sponsor-section-heading {
@@ -1947,7 +1987,7 @@ button.share-pill,
 .sponsor-stats {
   position: relative;
   isolation: isolate;
-  padding: 0 0 clamp(24px, 3vw, 44px);
+  padding: 0 0 clamp(1.5rem, 3vw, 2.75rem);
   color: var(--dc-ink);
   /* Drives the 4-up container query for .sponsor-stats-grid below. */
   container-type: inline-size;
@@ -1965,7 +2005,7 @@ button.share-pill,
 }
 
 .sponsor-stats-inner {
-  --stack-space: clamp(12px, 1.8vw, 22px);
+  --stack-space: clamp(0.75rem, 1.8vw, 1.375rem);
 }
 
 .sponsor-stats-grid {
@@ -1980,20 +2020,20 @@ button.share-pill,
      point where four rings comfortably fit (≥ 800 px). */
   grid-template-columns: repeat(2, auto);
   justify-content: center;
-  gap: clamp(14px, 2vw, 26px) clamp(40px, 6vw, 72px);
+  gap: clamp(0.875rem, 2vw, 1.625rem) clamp(2.5rem, 6vw, 4.5rem);
 }
 
-@container sponsor-stats (min-width: 800px) {
+@container sponsor-stats (min-width: 50em) {
   .sponsor-stats-grid {
     grid-template-columns: repeat(4, 1fr);
     justify-content: stretch;
-    column-gap: clamp(8px, 2vw, 24px);
+    column-gap: clamp(0.5rem, 2vw, 1.5rem);
   }
 }
 
 .sponsor-stat {
   display: grid;
-  gap: clamp(6px, 1vw, 14px);
+  gap: clamp(0.375rem, 1vw, 0.875rem);
   align-content: start;
   justify-items: center;
   text-align: center;
@@ -2002,7 +2042,7 @@ button.share-pill,
 .sponsor-stat-figure {
   position: relative;
   /* Viewport-linear: 115 px on phones → 180 px on desktop. */
-  width: clamp(115px, 6vw + 100px, 185px);
+  width: clamp(7.1875rem, 6vw + 6.25rem, 11.5625rem);
   aspect-ratio: 1;
   display: grid;
   place-items: center;
@@ -2099,7 +2139,7 @@ button.share-pill,
   gap: var(--s0);
 }
 
-@container sponsor-slots (min-width: 960px) {
+@container sponsor-slots (min-width: 60em) {
   .sponsor-slots-grid {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -2131,14 +2171,14 @@ button.share-pill,
   padding: var(--s1);
   background: var(--dc-django-tint);
   border: 2px solid var(--dc-django);
-  border-radius: 14px;
+  border-radius: 0.875rem;
   color: var(--dc-ink);
 }
 
 .sponsor-callout-icon {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 1.75rem;
+  height: 1.75rem;
   margin-top: 2px;
   color: var(--dc-accent-dark);
 }
@@ -2152,7 +2192,7 @@ button.share-pill,
 
 /* Pricing — two cards side by side, then CTA below. */
 .sponsor-pricing-grid {
-  --grid-min: 240px;
+  --grid-min: 15rem;
   --grid-space: var(--s0);
   list-style: none;
   margin: 0 0 var(--s1);
@@ -2188,7 +2228,7 @@ button.share-pill,
 
 .sponsor-cta {
   --stack-space: var(--s-1);
-  margin-top: clamp(20px, 3vw, 32px);
+  margin-top: clamp(1.25rem, 3vw, 2rem);
   text-align: center;
 }
 
@@ -2206,7 +2246,7 @@ button.share-pill,
   align-self: center;
   align-items: center;
   gap: var(--s-1);
-  min-height: 56px;
+  min-height: 3.5rem;
   padding: 0 var(--s2);
   background: var(--dc-accent-dark);
   color: var(--dc-paper);
@@ -2227,14 +2267,14 @@ button.share-pill,
 }
 
 .sponsor-cta-icon {
-  width: 20px;
-  height: 20px;
+  width: 1.25rem;
+  height: 1.25rem;
   flex-shrink: 0;
 }
 
 .sponsor-hosts {
   border-top: 1px solid var(--dc-line);
-  padding-top: clamp(20px, 2.5vw, 32px);
+  padding-top: clamp(1.25rem, 2.5vw, 2rem);
 }
 
 .sponsor-hosts-bio {
@@ -2272,10 +2312,10 @@ button.share-pill,
 .sponsor-reviews-reel::after {
   content: "";
   position: absolute;
-  top: 4px;
-  bottom: 14px;
+  top: 0.25rem;
+  bottom: 0.875rem;
   right: 0;
-  width: 6px;
+  width: 0.375rem;
   background: var(--dc-django);
   border-radius: var(--dc-radius-pill);
   pointer-events: none;
@@ -2291,7 +2331,7 @@ button.share-pill,
   padding: var(--s0) 0 var(--s1);
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(min(100%, 280px), 320px);
+  grid-auto-columns: minmax(min(100%, 17.5rem), 20rem);
   gap: var(--s0);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -2305,7 +2345,7 @@ button.share-pill,
    explicitly so the scrollbar renders as a persistent (non-overlay)
    bar on macOS Safari/Chrome instead of auto-hiding. */
 .sponsor-reviews-grid::-webkit-scrollbar {
-  height: 6px;
+  height: 0.375rem;
 }
 
 .sponsor-reviews-grid::-webkit-scrollbar-track,
@@ -2322,7 +2362,7 @@ button.share-pill,
 .sponsor-reviews-grid:focus-visible {
   outline: 2px solid var(--dc-django);
   outline-offset: 4px;
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 .sponsor-review {
@@ -2339,7 +2379,7 @@ button.share-pill,
   margin-left: auto;
   margin-bottom: -8px;
   margin-right: -8px;
-  width: clamp(120px, 70%, 200px);
+  width: clamp(7.5rem, 70%, 12.5rem);
   height: auto;
   opacity: 0.4;
   pointer-events: none;
@@ -2375,10 +2415,10 @@ button.share-pill,
   align-items: center;
   justify-content: space-between;
   gap: var(--s0);
-  padding: var(--s1) clamp(20px, 3vw, 28px);
+  padding: var(--s1) clamp(1.25rem, 3vw, 1.75rem);
   background: var(--dc-django-soft);
   border: 1px solid rgb(77 165 83 / 0.35);
-  border-radius: 12px;
+  border-radius: 0.75rem;
 }
 
 .sponsor-pdf-text {
@@ -2418,12 +2458,12 @@ button.share-pill,
      back-link margin-bottom (20). The sidebar's height is sized so the
      bottom of its border-left divider mirrors this same distance to the
      viewport bottom at scroll = 0 (symmetric breath above / below). */
-  --episode-natural-top-gap: 78px;
+  --episode-natural-top-gap: 4.875rem;
   /* Shared cover size: capping the badge and the sidebar logo at the same
      height keeps the show-notes hairline and the rail hairline on the same
      baseline (cross-column invariant). */
   --episode-cover-size: clamp(11.25rem, 18cqi, 13rem);
-  padding: clamp(12px, 3vw, 36px) 0 64px;
+  padding: clamp(0.75rem, 3vw, 2.25rem) 0 4rem;
   display: grid;
   /* Sidebar min (`--dc-aside-width` lower bound) fits the logo at its
      lower-bound cover-size; shared with `.subscribe-page`. */
@@ -2451,7 +2491,7 @@ button.share-pill,
   flex-direction: column;
   padding-left: var(--s2);
   border-left: 1px solid var(--dc-line);
-  /* Match the .episode-hero { margin-bottom: 28px } — combined with the
+  /* Match the .episode-hero { margin-bottom: 1.75rem } — combined with the
      logo's `max-height: var(--episode-cover-size)` below, this lands the
      rail's top hairline on the same baseline as the show-notes hairline
      at any desktop viewport width. */
@@ -2489,7 +2529,7 @@ button.share-pill,
   font-weight: var(--weight-semibold);
   color: var(--dc-muted);
   text-decoration: none;
-  margin-bottom: clamp(6px, 1.7vw, 10px);
+  margin-bottom: clamp(0.375rem, 1.7vw, 0.625rem);
   justify-self: start;
 }
 
@@ -2507,7 +2547,7 @@ button.share-pill,
 
 .rail-item {
   display: grid;
-  grid-template-columns: 22px 1fr;
+  grid-template-columns: 1.375rem 1fr;
   align-items: center;
   gap: var(--s-1);
   min-height: var(--dc-tap);
@@ -2532,8 +2572,8 @@ button.share-pill,
 }
 
 .rail-icon {
-  width: 22px;
-  height: 22px;
+  width: 1.375rem;
+  height: 1.375rem;
   justify-self: center;
   color: currentColor;
   flex-shrink: 0;
@@ -2569,7 +2609,7 @@ button.share-pill,
    to ≤2 lines in the hero column — beyond that, a third line pushes the
    show-notes hairline below the rail hairline. The title's `4cqi` clamp
    keeps that line count stable across the full 2-column range. */
-@container episode-detail (max-width: 777px) {
+@container episode-detail (max-width: 48.5625em) {
   .episode-detail {
     grid-template-columns: 1fr;
   }
@@ -2603,7 +2643,7 @@ button.share-pill,
     /* `display: block` so the `margin: auto` actually centers — an `<img>`
        is inline by default and inline auto-margins resolve to zero. */
     display: block;
-    max-width: 200px;
+    max-width: 12.5rem;
     margin: var(--s1) auto 0;
   }
 
@@ -2640,9 +2680,12 @@ button.share-pill,
 
 @layer podlove {
 
+/* Podlove iframe reserves are hardware-pixel matched; keep them in
+   `px` so the CLS-guard height equals the actual iframe height even
+   when the user bumps the root font-size. */
 .audio-panel {
   --player-min-height: 112px;
-  width: min(600px, 100%);
+  width: min(37.5rem, 100%);
   margin: var(--s1) 0 0;
 }
 
@@ -2664,13 +2707,13 @@ button.share-pill,
 
 .audio-panel podlove-player[data-template] {
   display: block;
-  max-width: 600px;
+  max-width: 37.5rem;
 }
 
 .audio-panel podlove-player[data-template] .podlove-player-container {
   inset: 0;
   min-height: var(--player-min-height);
-  max-width: 600px;
+  max-width: 37.5rem;
   position: absolute;
   transition: opacity 160ms ease;
   width: 100%;
@@ -2728,9 +2771,9 @@ button.share-pill,
 .podlove-facade-controls {
   align-items: center;
   display: grid;
-  gap: 20px;
-  grid-template-columns: 50px auto minmax(76px, 1fr) auto;
-  height: 56px;
+  gap: 1.25rem;
+  grid-template-columns: 3.125rem auto minmax(4.75rem, 1fr) auto;
+  height: 3.5rem;
   min-width: 0;
   width: 100%;
 }
@@ -2740,10 +2783,10 @@ button.share-pill,
   background: var(--dc-accent-dark);
   border-radius: var(--dc-radius-pill);
   display: inline-flex;
-  height: 50px;
+  height: 3.125rem;
   justify-content: center;
   position: relative;
-  width: 50px;
+  width: 3.125rem;
 }
 
 .podlove-facade-play-icon {
@@ -2762,9 +2805,9 @@ button.share-pill,
   border-top-color: var(--dc-paper);
   border-radius: var(--dc-radius-pill);
   display: none;
-  height: 20px;
+  height: 1.25rem;
   position: absolute;
-  width: 20px;
+  width: 1.25rem;
 }
 
 .podlove-facade-time,
@@ -2780,7 +2823,7 @@ button.share-pill,
   background: color-mix(in srgb, var(--dc-ink), transparent 87%);
   border-radius: var(--dc-radius-pill);
   display: block;
-  height: 4px;
+  height: 0.25rem;
   min-width: 0;
   overflow: hidden;
   position: relative;
@@ -2798,7 +2841,7 @@ button.share-pill,
   align-items: center;
   display: flex;
   gap: var(--s-1);
-  height: 56px;
+  height: 3.5rem;
   justify-content: flex-end;
 }
 
@@ -2806,8 +2849,8 @@ button.share-pill,
   background: rgb(95 99 93 / 0.22);
   border-radius: var(--dc-radius-pill);
   display: block;
-  height: 18px;
-  width: 18px;
+  height: 1.125rem;
+  width: 1.125rem;
 }
 
 .audio-panel podlove-player[data-django-chat-player-loading="true"] .podlove-facade-play-icon {
@@ -2848,7 +2891,7 @@ button.share-pill,
   display: block;
   /* `min-height` and `width` are plain values: after load Podlove's
      iframe-resizer sets `height` inline on the iframe (e.g.
-     `height: 159px; overflow: hidden`), so neither our `min-height` nor
+     `height: 9.9375rem; overflow: hidden`), so neither our `min-height` nor
      a !important would win against that. We keep the values as
      documentation / pre-load defaults; the visible geometry is
      guaranteed by the wrapper's `.audio-panel { min-height }` reserve
@@ -2905,7 +2948,7 @@ button.share-pill,
      without page-scrolling. Heights match the sticky sidebar's
      `height: calc(100dvh - header - 2 * natural-top-gap)` so the two
      columns settle on the same vertical band in the 2-column layout.
-     Mobile-stack (max-width: 777px) overrides this back to natural
+     Mobile-stack (max-width: 48.5625rem) overrides this back to natural
      page scroll. */
   max-height: calc(100dvh - var(--dc-site-header-height) - 2 * var(--episode-natural-top-gap));
   overflow-y: auto;
@@ -2914,7 +2957,7 @@ button.share-pill,
 }
 
 .transcript-content::-webkit-scrollbar {
-  width: 6px;
+  width: 0.375rem;
 }
 
 /* Per-segment: time on the left in its own narrow column, text on the
@@ -2945,7 +2988,7 @@ button.share-pill,
   max-width: var(--dc-measure);
 }
 
-@container episode-detail (max-width: 777px) {
+@container episode-detail (max-width: 48.5625em) {
   .transcript-content {
     /* Mobile-stack: let the page scroll naturally — no inner scroller
        that would compete with the page's overall scroll affordance. */
@@ -2961,7 +3004,7 @@ button.share-pill,
 }
 
 .show-notes {
-  max-width: 720px;
+  max-width: 45rem;
   font-size: var(--text-base);
 }
 
@@ -3029,7 +3072,7 @@ button.share-pill,
 }
 
 .pagination-nav a {
-  min-height: 40px;
+  min-height: 2.5rem;
   padding: 0 var(--s0);
   border: 1px solid var(--dc-line);
   color: var(--dc-ink);
@@ -3045,7 +3088,7 @@ button.share-pill,
 /* On mobile widths the Fosstodon button and the credit line stack
    vertically; center both so the footer reads as a column rather than
    a left/right split. */
-@container site-footer (max-width: 768px) {
+@container site-footer (max-width: 48em) {
   .site-footer-inner {
     flex-direction: column;
     --cluster-justify: center;
@@ -3220,7 +3263,7 @@ button.share-pill,
 @keyframes dc-vt-episode-root-in {
   from {
     opacity: 0;
-    transform: translateX(34px) scale(1.01);
+    transform: translateX(2.125rem) scale(1.01);
   }
 }
 
@@ -3256,12 +3299,12 @@ button.share-pill,
 
 @layer components {
 
-@container site-header (max-width: 540px) {
+@container site-header (max-width: 33.75em) {
   .site-nav {
     flex-wrap: wrap;
-    gap: clamp(4px, 1.5vw, 12px) var(--s0);
+    gap: clamp(0.25rem, 1.5vw, 0.75rem) var(--s0);
     justify-content: center;
-    padding: clamp(2px, 1.5vw, 12px) 0;
+    padding: clamp(2px, 1.5vw, 0.75rem) 0;
   }
 
   .nav-links {
@@ -3278,7 +3321,7 @@ button.share-pill,
 /* Narrow-stage spacing tweaks for the stacked hero. */
 @container show-hero (max-width: 47.5rem) {
   .show-hero-inner {
-    gap: 20px;
+    gap: 1.25rem;
     padding: var(--s1) 0;
   }
 
@@ -3294,17 +3337,18 @@ button.share-pill,
 /* Phone-sized episode pages: shrink the sidebar artwork and switch the
    Podlove player + facade into their compact mobile layouts. Gated on
    `.episode-detail` because all targets live inside it. */
-@container episode-detail (max-width: 760px) {
+@container episode-detail (max-width: 47.5em) {
   .show-artwork {
     justify-self: start;
-    max-width: 220px;
+    max-width: 13.75rem;
   }
 
   /* Mobile player reserve: bump the wrapper from 112 px to 168 px via
      the `--player-min-height` cascade — desktop pattern preserved, no
      `!important` needed. The critical-CSS in base.html still keeps
      podlove-player at `min-height: 168px !important` so the pre-CSS-load
-     reserve also matches. */
+     reserve also matches. Keep both in hardware px to match the Podlove
+     iframe's own internal sizing. */
   .audio-panel {
     --player-min-height: 168px;
   }
@@ -3319,8 +3363,8 @@ button.share-pill,
   }
 
   .podlove-facade-controls {
-    grid-template-columns: 50px minmax(70px, 1fr) auto;
-    height: 50px;
+    grid-template-columns: 3.125rem minmax(4.375rem, 1fr) auto;
+    height: 3.125rem;
   }
 
   .podlove-facade-time {
@@ -3339,7 +3383,7 @@ button.share-pill,
 
 @layer components {
 
-@container filter-form (max-width: 480px) {
+@container filter-form (max-width: 30em) {
   .filter-date {
     grid-template-columns: 1fr;
   }
@@ -3415,7 +3459,7 @@ button.share-pill,
     @keyframes dc-row-rise {
       from {
         opacity: 0;
-        transform: translateY(44px);
+        transform: translateY(2.75rem);
       }
       to {
         opacity: 1;
@@ -3430,7 +3474,7 @@ button.share-pill,
       }
       70% {
         opacity: 1;
-        transform: translateX(6px);
+        transform: translateX(0.375rem);
       }
       100% {
         opacity: 1;
@@ -3505,7 +3549,7 @@ button.share-pill,
 .share-modal:not([open]):target,
 .share-modal[open]::backdrop {
   background: color-mix(in srgb, var(--dc-ink), transparent 45%);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(0.375rem);
 }
 
 /* No-JS overlay mode: dialog becomes the fullscreen darkened container.
@@ -3548,12 +3592,12 @@ button.share-pill,
   --stack-space: var(--s1);
   padding: var(--s1);
   background: var(--dc-surface, var(--dc-paper));
-  border-radius: 16px;
-  max-width: 480px;
-  width: min(480px, calc(100vw - 32px));
+  border-radius: 1rem;
+  max-width: 30rem;
+  width: min(30rem, calc(100vw - 2 * var(--dc-gutter)));
   box-shadow: var(--dc-shadow-xl);
   opacity: 0;
-  transform: translateY(32px) scale(0.88);
+  transform: translateY(2rem) scale(0.88);
   transition:
     opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
     transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -3574,7 +3618,7 @@ button.share-pill,
   .share-modal[open] .share-modal-inner,
   .share-modal:not([open]):target .share-modal-inner {
     opacity: 0;
-    transform: translateY(32px) scale(0.88);
+    transform: translateY(2rem) scale(0.88);
   }
 }
 
@@ -3629,8 +3673,8 @@ body:has(.share-modal:not([open]):target) {
 .share-modal-close {
   background: none;
   border: 0;
-  width: 42px;
-  height: 42px;
+  width: 2.625rem;
+  height: 2.625rem;
   border-radius: var(--dc-radius-pill);
   display: inline-flex;
   align-items: center;
@@ -3658,7 +3702,7 @@ body:has(.share-modal:not([open]):target) {
 
 .share-pill {
   gap: var(--s-2);
-  min-height: 40px;
+  min-height: 2.5rem;
   padding: 0 var(--s0);
   border: 1px solid var(--dc-line);
   color: var(--dc-ink);
@@ -3680,7 +3724,7 @@ body:has(.share-modal:not([open]):target) {
   --stack-space: var(--s-2);
   background: color-mix(in srgb, var(--dc-ink), transparent 96%);
   padding: var(--s-1) var(--s0);
-  border-radius: 10px;
+  border-radius: 0.625rem;
 }
 
 .share-mastodon-prompt[hidden] {
@@ -3755,7 +3799,7 @@ body:has(.share-modal:not([open]):target) {
   min-width: 0;
   border-radius: var(--dc-radius-pill);
   padding: 0 var(--s-1);
-  min-height: 38px;
+  min-height: 2.375rem;
 }
 
 .share-mastodon-row input[aria-invalid="true"] {
@@ -3766,7 +3810,7 @@ body:has(.share-modal:not([open]):target) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
+  min-height: 2.375rem;
   padding: 0 var(--s0);
   border: 1px solid var(--dc-accent-dark);
   border-radius: var(--dc-radius-pill);
@@ -3812,7 +3856,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-startat-time input {
-  width: 88px;
+  width: 5.5rem;
   border-radius: var(--dc-radius-pill);
   padding: var(--s-2) var(--s-1);
   font-family: var(--font-mono);
@@ -3827,8 +3871,8 @@ body:has(.share-modal:not([open]):target) {
 
 .share-startat-toggle input[type="checkbox"] {
   accent-color: var(--dc-django);
-  width: 16px;
-  height: 16px;
+  width: 1rem;
+  height: 1rem;
 }
 
 .share-copy {
@@ -3842,7 +3886,7 @@ body:has(.share-modal:not([open]):target) {
   min-width: 0;
   border-radius: var(--dc-radius-pill);
   padding: 0 var(--s0);
-  min-height: 42px;
+  min-height: 2.625rem;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
 }
@@ -3852,7 +3896,7 @@ body:has(.share-modal:not([open]):target) {
   padding: 0 var(--s0);
 }
 
-@container share-modal (max-width: 480px) {
+@container share-modal (max-width: 30em) {
   .share-pill {
     padding: 0 var(--s-1);
     font-size: var(--text-sm);
@@ -3862,8 +3906,8 @@ body:has(.share-modal:not([open]):target) {
 /* ---------- Embed Modal additions (extends .share-modal) ---------- */
 
 .embed-modal .share-modal-inner {
-  max-width: 560px;
-  width: min(560px, calc(100vw - 32px));
+  max-width: 35rem;
+  width: min(35rem, calc(100vw - 2 * var(--dc-gutter)));
 }
 
 .embed-info {
@@ -3877,12 +3921,12 @@ body:has(.share-modal:not([open]):target) {
   align-items: center;
   gap: var(--s0);
   padding: var(--s0);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   background: var(--dc-django-soft);
 }
 
 .embed-info-logo {
-  width: 64px;
+  width: 4rem;
   height: auto;
   flex-shrink: 0;
   filter: drop-shadow(2px 3px 1px color-mix(in srgb, var(--dc-ink), transparent 82%));
@@ -3928,7 +3972,7 @@ body:has(.share-modal:not([open]):target) {
 .embed-snippet textarea {
   flex: 1;
   min-width: 0;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   padding: var(--s-1);
   font-family: var(--font-mono);
   font-size: var(--text-xs);

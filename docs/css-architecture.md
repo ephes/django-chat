@@ -80,9 +80,13 @@ Examples:
 - Colours: `--dc-ink`, `--dc-paper`, `--dc-django`, `--dc-accent-dark`,
   `--dc-surface-django-tint`, `--dc-error`.
 - Surfaces and textures: `--dc-paper-texture`.
-- Geometry: `--dc-radius`, `--dc-radius-pill`, `--dc-tap`, `--dc-container`,
-  `--dc-site-header-height`, `--dc-aside-width`, `--dc-aside-column-gap`,
-  `--dc-measure`.
+- Geometry: `--dc-radius`, `--dc-radius-pill`, `--dc-tap`, `--dc-gutter`,
+  `--dc-container`, `--dc-site-header-height`, `--dc-aside-width`,
+  `--dc-aside-column-gap`, `--dc-measure`. `--dc-gutter` is the
+  single-source-of-truth page edge inset: 1rem on phones, bumped to 2rem
+  from 600 px upward via one media query in `:root`. Every site-wide
+  breakout pattern reads `var(--dc-gutter)`; do not re-introduce literal
+  `16px` / `32px` gutters at call sites.
 - Motion / focus / shadow: `--dc-transition-colors`, `--dc-focus-ring-soft`,
   `--dc-focus-outline`, `--dc-shadow-sm` … `--dc-shadow-xl`.
 
