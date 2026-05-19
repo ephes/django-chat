@@ -61,7 +61,7 @@
     </div>
     <div class="show-hero-curve" aria-hidden="true"></div>
   </section>
-  <main id="episode-index-main" data-vt-page="episode-index">
+  <div id="episode-index-main" class="page-content" data-vt-page="episode-index">
 
     {% if source_metadata %}
       {% with distribution_links=source_metadata.visible_distribution_links %}
@@ -147,5 +147,5 @@
         {% include "./pagination.html" %}
       {% endif %}
     </div>
-  </main>
+  </div>
 {% endblock content %}

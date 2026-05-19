@@ -7,7 +7,7 @@
 
 {% block content %}
   {% url 'cast:podcast_feed_rss' slug=blog.slug audio_format='mp3' as podcast_mp3_path %}
-  <main id="subscribe-main">
+  <div id="subscribe-main" class="page-content">
     <div class="subscribe-page">
     <article class="card feed-card stack subscribe-feature">
       <h2 class="feed-card-title">MP3 podcast feed</h2>
@@ -83,7 +83,7 @@
       </ul>
     </aside>
     </div>
-  </main>
+  </div>
 {% endblock content %}
 
 {% block javascript %}

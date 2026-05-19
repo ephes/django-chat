@@ -1,11 +1,11 @@
 {% extends "./base.html" %}
 {% block title %}Server error{% endblock title %}
 {% block content %}
-  <main>
+  <div class="page-content">
     <section class="status-page">
       <h1>Something went wrong on our end</h1>
       <p>The error has been logged. Try again in a moment.</p>
       <p><a href="{% url 'django_chat_episode_index' %}">← Back to Episodes</a></p>
     </section>
-  </main>
+  </div>
 {% endblock content %}

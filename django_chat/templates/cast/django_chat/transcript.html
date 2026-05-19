@@ -14,7 +14,7 @@
 {% endblock render_expect %}
 
 {% block content %}
-  <main id="episode-detail-main" data-vt-page="transcript-detail">
+  <div id="episode-detail-main" class="page-content" data-vt-page="transcript-detail">
     <article class="episode-detail transcript-detail">
       {% if episode %}
         <a class="back-link" href="{{ episode_url|default:episode.url }}">← {% translate "Back to Show Notes" %}</a>
@@ -66,7 +66,7 @@
         {% include "./_episode_sidebar.html" with on_transcript_page=True %}
       {% endif %}
     </article>
-  </main>
+  </div>
 {% endblock content %}
 
 {% block javascript %}

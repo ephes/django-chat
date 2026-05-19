@@ -192,6 +192,15 @@ components we have not renamed:
 
 - `.eyebrow`, `.back-link`, `.no-results`, `.visually-hidden`,
   `.button-primary`, `.button-icon`, `.card`.
+- `.page-content` — centered 1120-px container shared by every page
+  template's inner wrapper. The outer `<main class="site-content">` in
+  `base.html` stays viewport-wide so the page-header bubble and any
+  full-bleed sections can occupy the full row; `.page-content` is the
+  inner element that supplies the container width and centering.
+- `.skip-link` — keyboard-only "skip to main content" anchor, the first
+  element inside `<body>`. Off-screen until `:focus-visible`, then docks
+  at the top-left corner above the sticky header. Target is `#main-content`
+  on the outer `<main class="site-content">`.
 
 Treat these as a closed set. New work should reach for a domain-prefixed
 class instead of growing the global list.
@@ -255,8 +264,14 @@ is for surfaces that need a halo without an outline (cards, popovers).
 
 The repeated `width: 100vw; margin-left: calc(50% - 50vw); margin-right:
 calc(50% - 50vw);` pattern is intentional — it lives wherever a section
-needs to escape the centered `<main>` container. Do not extract it into a
-utility class without a clear reason; the lines are easier to read in
+needs to escape the centered `.page-content` wrapper. The outer
+`<main class="site-content">` is already viewport-wide, so full-bleed
+sections that live outside `.page-content` (e.g. `.page-header-wrap`,
+`.show-hero`) don't need the trick at all; the trick is only needed for
+sections nested inside `.page-content` that still need to break out
+(`.platform-band`, `.filter-form`, `.sponsor-stats::before`, …). Do not
+extract it into a utility class without a clear reason; the lines are
+easier to read in
 place than dereferenced through a name.
 
 ### Modals

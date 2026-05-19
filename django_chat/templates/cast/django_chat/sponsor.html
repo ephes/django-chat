@@ -9,7 +9,7 @@
 
 {% block content %}
   <script>if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&'IntersectionObserver' in window){document.documentElement.classList.add('has-js-stats')}</script>
-  <main class="sponsor-page">
+  <div class="page-content sponsor-page">
     {% if stats %}
       <section class="sponsor-stats" aria-labelledby="sponsor-stats-heading">
         <div class="sponsor-stats-inner stack">
@@ -57,7 +57,7 @@
           {% endfor %}
         </ul>
         {% if page.pricing_note %}
-          <aside class="sponsor-callout" role="note">
+          <aside class="sponsor-callout" aria-label="Sponsorship package note">
             <svg class="sponsor-callout-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M12 2.5 14.6 9.4 22 12l-7.4 2.6L12 21.5 9.4 14.6 2 12l7.4-2.6z" fill="currentColor"/>
             </svg>
@@ -143,7 +143,7 @@
         <span>Download the one-pager (PDF)</span>
       </a>
     </aside>
-  </main>
+  </div>
 {% endblock content %}
 
 {% block javascript %}

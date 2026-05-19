@@ -101,7 +101,7 @@ def test_episode_index_loads_view_transition_script_and_hooks(client: Client) ->
     assert hero_image_attrs["sizes"] == "(max-width: 900px) 100vw, 120vw"
     assert hero_image_attrs["fetchpriority"] == "high"
     assert hero_image_attrs["decoding"] == "async"
-    assert '<main id="episode-index-main" data-vt-page="episode-index">' in body
+    assert '<div id="episode-index-main" class="page-content" data-vt-page="episode-index">' in body
     filter_form_attrs = tag_attrs(body, "form", {"class": "filter-form"})
     assert filter_form_attrs is not None
     assert filter_form_attrs["id"] == "all-episodes"
@@ -124,7 +124,7 @@ def test_episode_detail_exposes_view_transition_episode_hooks(client: Client) ->
 
     body = response.content.decode()
     assert '<link rel="expect" href="#episode-detail-main" blocking="render">' in body
-    assert 'id="episode-detail-main" data-vt-page="episode-detail"' in body
+    assert 'id="episode-detail-main" class="page-content" data-vt-page="episode-detail"' in body
     assert 'data-vt-episode-slug="django-tasks-jake-howard"' in body
     expected_back_link = (
         'class="back-link" href="/episodes/#all-episodes" '

@@ -15,7 +15,7 @@
 {% endblock render_expect %}
 
 {% block content %}
-  <main id="episode-detail-main" data-vt-page="episode-detail" data-vt-episode-slug="{{ page.slug }}">
+  <div id="episode-detail-main" class="page-content" data-vt-page="episode-detail" data-vt-episode-slug="{{ page.slug }}">
     <article class="episode-detail">
       <a class="back-link" href="{% url 'django_chat_episode_index' %}#all-episodes" data-vt-episode-slug="{{ page.slug }}">← Back to Episodes</a>
 
@@ -71,7 +71,7 @@
 
       {% include "./_episode_sidebar.html" %}
     </article>
-  </main>
+  </div>
 {% endblock content %}
 
 {% block javascript %}

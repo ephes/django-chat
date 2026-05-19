@@ -152,12 +152,12 @@
 
   /* ---------- Motion / focus tokens ---------- */
   --dc-transition-colors: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-  /* Safari 16.0/16.1 fallbacks land first; the `color-mix()` declaration
-     overrides them on 16.2+. Mirror the django/ink literals exactly. */
-  --dc-focus-ring-soft: 0 0 0 3px rgb(77 165 83 / 0.18);
-  --dc-focus-ring-soft: 0 0 0 3px color-mix(in srgb, var(--dc-django) 18%, transparent);
-  --dc-focus-outline: 3px solid rgb(77 165 83 / 0.35);
-  --dc-focus-outline: 3px solid color-mix(in srgb, var(--dc-django) 35%, transparent);
+  /* Solid `--dc-accent` (#2d8260) for both focus tokens: 4.7:1 against paper
+     satisfies WCAG 1.4.11 Non-Text Contrast, stays in the brand-green family,
+     and avoids the UA-default blue ring on green pill buttons. Solid colour,
+     no Safari fallback needed (translucent green couldn't reach 3:1). */
+  --dc-focus-ring-soft: 0 0 0 3px var(--dc-accent);
+  --dc-focus-outline: 3px solid var(--dc-accent);
 
   /* ---------- Shadow tokens ----------
      Same Safari 16.0/16.1 fallback pattern: rgba literal first, color-mix
@@ -265,6 +265,15 @@ a:focus-visible {
   border-radius: 2px;
 }
 
+/* Buttons inherit the same focus outline as anchors so the UA default
+   blue ring never paints over a green pill button. Component-level
+   `:focus-visible` rules (e.g. `.share-pill`, `.filter-control-button`)
+   override this with their own treatments — that's intentional. */
+button:focus-visible {
+  outline: var(--dc-focus-outline);
+  outline-offset: 3px;
+}
+
 h1,
 h2,
 h3 {
@@ -317,6 +326,44 @@ button.share-pill,
 .share-mastodon-change,
 .share-mastodon-row button {
   cursor: pointer;
+}
+
+/* Skip-link — keyboard-only bypass for the sticky header. Off-screen
+   until focused, then docks at the top-left corner above the header.
+   Sits inside `base` so its z-index trumps the sticky `.site-header`
+   (z-index 10) and the skip-target landing pad below it. */
+.skip-link {
+  position: fixed;
+  top: var(--s-2);
+  left: var(--s-2);
+  z-index: 100;
+  padding: var(--s-2) var(--s0);
+  background: var(--dc-paper);
+  color: var(--dc-accent-dark);
+  border: 2px solid var(--dc-accent-dark);
+  border-radius: var(--dc-radius);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  transform: translateY(calc(-100% - var(--s1)));
+  transition: transform 0.15s ease;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: var(--dc-focus-outline);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    transition: none;
+  }
+}
+
+/* Suppress the default focus ring on the programmatically-focused
+   skip target — the target is the body of the page, not a control. */
+#main-content:focus {
+  outline: none;
 }
 
 .site-header,
@@ -388,9 +435,14 @@ button.share-pill,
   }
 }
 
+/* Centered page content. The outer `<main class="site-content">` is the
+   landmark — it stays at viewport width so the page-header bubble and
+   any full-bleed sections can occupy the entire row. The inner
+   `.page-content` wrapper supplies the 1120-px container width that the
+   site-nav and footer share. */
 .site-nav,
 .site-footer-inner,
-main {
+.page-content {
   width: var(--dc-container);
   margin: 0 auto;
 }
@@ -1618,12 +1670,13 @@ main {
 }
 
 /* ---------- Subscribe page ----------
-   Mirrors the #episode-detail-main / .episode-detail pattern: <main>
-   supplies the container scope, the inner .subscribe-page does the
-   grid. Width and centering are inherited from the global `main` rule.
-   Aside-column width / gap / mobile-stack threshold are shared with
-   `.episode-detail` via `--aside-*` tokens — the two page layouts
-   read as variations of one "main + sticky aside" pattern. */
+   Mirrors the #episode-detail-main / .episode-detail pattern: the outer
+   `<div id="subscribe-main" class="page-content">` supplies the container
+   scope and inherits the 1120-px width from the global `.page-content`
+   rule; the inner `.subscribe-page` does the grid. Aside-column width /
+   gap / mobile-stack threshold are shared with `.episode-detail` via
+   `--aside-*` tokens — the two page layouts read as variations of one
+   "main + sticky aside" pattern. */
 #subscribe-main {
   container-type: inline-size;
   container-name: subscribe-page;
@@ -1842,7 +1895,8 @@ main {
    length review cards survive the awkward 880-1200 px range without
    towering over the rest of the page. */
 .sponsor-page {
-  /* width and centering come from the global `main {}` rule. */
+  /* width and centering come from the shared `.page-content` rule
+     (this element carries both classes). */
   /* deliberate off-scale: 4.5rem (72 px) section padding-bottom. */
   padding: 0 0 4.5rem;
   display: grid;
@@ -3324,8 +3378,34 @@ main {
   .platform-band-links a,
   .footer-mastodon-button,
   .filter-clear-all,
-  .pagination-nav a {
+  .pagination-nav a,
+  .sponsor-cta-button {
     transition: var(--dc-transition-colors);
+    transform: none;
+  }
+
+  /* The :hover / :focus-visible / :active rules below set
+     `transform: translateY(±Npx)` with higher specificity than the bare
+     class selectors above; match the same specificity here so the lift
+     stays disabled in all interactive states under reduced motion. */
+  .button-primary:hover,
+  .button-primary:focus-visible,
+  .button-primary:active,
+  .platform-band-links a:hover,
+  .platform-band-links a:focus-visible,
+  .platform-band-links a:active,
+  .footer-mastodon-button:hover,
+  .footer-mastodon-button:focus-visible,
+  .footer-mastodon-button:active,
+  .filter-clear-all:hover,
+  .filter-clear-all:focus-visible,
+  .filter-clear-all:active,
+  .pagination-nav a:hover,
+  .pagination-nav a:focus-visible,
+  .pagination-nav a:active,
+  .sponsor-cta-button:hover,
+  .sponsor-cta-button:focus-visible,
+  .sponsor-cta-button:active {
     transform: none;
   }
 }
@@ -3638,10 +3718,18 @@ body:has(.share-modal:not([open]):target) {
 
 }
 
-.share-mastodon-change:hover,
-.share-mastodon-change:focus-visible {
+.share-mastodon-change:hover {
   color: var(--dc-django);
-  outline: none;
+}
+
+/* Color alone is not a sufficient focus indicator (WCAG 1.4.11), and the
+   hover-state colour change actually lowers contrast against the prompt
+   surface. Keep the accent-dark colour on focus and supply a visible
+   outline via the global focus token. */
+.share-mastodon-change:focus-visible {
+  outline: var(--dc-focus-outline);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 .share-mastodon-prompt label {
