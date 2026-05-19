@@ -162,10 +162,9 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert "Roboto Flex" not in css  # dead font fallback retired
     assert '--font-body: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;' in css
     assert "background: var(--dc-accent-dark);" in _css_blocks(css, ".button-primary")[0]
-    assert "min-height: var(--dc-tap);" in _css_blocks(css, '.filter-form button[type="submit"]')[0]
+    assert "min-height: var(--dc-tap);" in _css_blocks(css, ".button-primary")[0]
     assert ".filter-clear-all {" in css
     assert "background: var(--dc-accent-dark);" in css
-    assert '.filter-form button[type="submit"]:hover,' in css
     assert ".filter-control-button {" in css
     assert ".filter-date-popover {" in css
     assert ".filter-select-popover {" in css

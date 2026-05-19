@@ -1310,26 +1310,6 @@ main {
   border: 0;
 }
 
-/* Visually identical to `.button-primary` but reached as a bare button
-   inside `.filter-form`. */
-.filter-form button[type="submit"] {
-  justify-content: center;
-  min-height: var(--dc-tap);
-  padding: 0 var(--s0);
-  border: 1px solid var(--dc-accent-dark);
-  background: var(--dc-accent-dark);
-  color: var(--dc-paper);
-  font-weight: var(--weight-semibold);
-  cursor: pointer;
-}
-
-.filter-form button[type="submit"]:hover,
-.filter-form button[type="submit"]:focus {
-  background: var(--dc-django);
-  border-color: var(--dc-django);
-  color: var(--dc-ink);
-}
-
 .filter-clear-all {
   justify-content: center;
   min-height: var(--dc-tap);
@@ -3388,7 +3368,6 @@ main {
 .button-primary,
 .platform-band-links a,
 .footer-mastodon-button,
-.filter-form button,
 .filter-clear-all,
 .pagination-nav a {
   transition: var(--dc-transition-colors), transform 0.12s ease;
@@ -3397,7 +3376,6 @@ main {
 .button-primary:hover,
 .platform-band-links a:hover,
 .footer-mastodon-button:hover,
-.filter-form button:hover,
 .filter-clear-all:hover,
 .pagination-nav a:hover {
   transform: translateY(1px);
@@ -3406,7 +3384,6 @@ main {
 .button-primary:active,
 .platform-band-links a:active,
 .footer-mastodon-button:active,
-.filter-form button:active,
 .filter-clear-all:active,
 .pagination-nav a:active {
   transform: translateY(2px);
@@ -3416,7 +3393,6 @@ main {
   .button-primary,
   .platform-band-links a,
   .footer-mastodon-button,
-  .filter-form button,
   .filter-clear-all,
   .pagination-nav a {
     transition: var(--dc-transition-colors);
