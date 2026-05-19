@@ -133,6 +133,30 @@ network trace, and the unminified CSS and unused CSS audits now pass on all
 measured pages. The RSS XML endpoints returned HTTP 200 and gzip-compressed GET
 responses.
 
+Current scores after `view-transitions.js` defer and the player-facade minifier
+fix deployed to staging:
+
+Measured on 2026-05-19 with Lighthouse 13.3.0. Reports are in
+`/tmp/django-chat-lighthouse-20260519-post-defer-minifier/`.
+
+| Page | Mode | Performance | Accessibility | Best Practices | SEO | FCP | LCP | CLS | TBT | Speed Index |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `/` -> `/episodes/` | desktop | 98 | 100 | 100 | 100 | 0.3 s | 0.5 s | 0.083 | 0 ms | 0.4 s |
+| `/` -> `/episodes/` | mobile | 100 | 100 | 100 | 100 | 1.2 s | 1.7 s | 0.001 | 0 ms | 1.2 s |
+| `/episodes/` | desktop | 98 | 100 | 100 | 100 | 0.3 s | 0.5 s | 0.083 | 0 ms | 0.3 s |
+| `/episodes/` | mobile | 100 | 100 | 100 | 100 | 1.4 s | 1.7 s | 0.001 | 0 ms | 1.4 s |
+| `/episodes/django-tasks-jake-howard/` | desktop | 100 | 100 | 100 | 100 | 0.2 s | 0.3 s | 0 | 0 ms | 0.3 s |
+| `/episodes/django-tasks-jake-howard/` | mobile | 100 | 100 | 100 | 100 | 1.1 s | 1.2 s | 0 | 0 ms | 1.1 s |
+| `/episodes/feed/` | desktop | 100 | 100 | 100 | 100 | 0.3 s | 0.3 s | 0 | 0 ms | 0.3 s |
+| `/episodes/feed/` | mobile | 100 | 100 | 100 | 100 | 1.1 s | 1.1 s | 0 | 0 ms | 1.1 s |
+
+The deployed render-blocking request table now lists only `site.css`; the
+deferred `view-transitions.js` file is no longer render-blocking. A staging
+browser probe on `/episodes/django-deployments-in-2025-eric-matthes/` confirmed
+that the corrected minified player selector matches, the facade becomes
+`opacity: 0` with `pointer-events: none`, and the initialized Podlove iframe
+occupies the same slot instead of stacking below the facade.
+
 ## Changes Required
 
 The baseline was already strong for the subscribe page, but the episode index
@@ -209,15 +233,15 @@ Done:
   filter transitions, a local Chromium timing probe confirmed the
   cross-document `pageswap` / `pagereveal` handlers still ran for transitions
   with `viewTransition`, and a local mobile Lighthouse run removed
-  `view-transitions.js` from the render-blocking request table. Re-run staging
-  Lighthouse after deployment before treating this as deployed performance
-  evidence.
+  `view-transitions.js` from the render-blocking request table. A deployed
+  staging Lighthouse re-run confirmed that only `site.css` remains in the
+  render-blocking request table.
 - 2026-05-19: Fixed a deploy-path CSS minifier bug that removed the descendant
   space from `podlove-player[data-django-chat-player-ready="true"]
   [data-django-chat-player-placeholder]`. The broken minified selector left
   the lightweight player facade visible above the initialized Podlove iframe on
-  staging. Re-run collectstatic/deploy so the corrected minified CSS reaches
-  staging before validating the final Lighthouse pass.
+  staging. A deployed staging browser probe confirmed the corrected minified
+  selector matches and the facade hides when the Podlove iframe is ready.
 
 Planned:
 
