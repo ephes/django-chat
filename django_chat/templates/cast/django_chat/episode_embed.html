@@ -6,17 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ episode.title }} | Django Chat</title>
     <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ episode.get_url }}">
+    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=date-picker-1">
     <style>
+      /* Source order matters: this block sits AFTER `site.css` so its
+         `background: transparent` and `padding: 12px` on body win against
+         site.css's body rule. Tokens still resolve correctly because
+         custom-property resolution happens at compute time. */
       html, body { margin: 0; padding: 0; background: transparent; }
       body {
-        font-family: "Roboto", system-ui, -apple-system, sans-serif;
-        color: #1c1c1c;
+        font-family: var(--font-body);
+        color: var(--dc-ink);
         padding: 12px;
       }
       .embed-shell { display: block; max-width: 720px; margin: 0 auto; }
       .embed-title {
         font-size: 0.95rem;
-        font-weight: 600;
+        font-weight: var(--weight-semibold);
         margin: 0 0 8px;
         letter-spacing: -0.01em;
       }
@@ -25,14 +30,17 @@
         text-decoration: none;
       }
       .embed-title a:hover { text-decoration: underline; }
+      /* `.audio-panel` (from site.css) already sets `--player-min-height: 112px`
+         on this element's parent; we override it for the mobile breakpoint
+         since the @container scope used in site.css doesn't fire in the embed. */
       podlove-player {
         display: block;
         height: auto !important;
-        min-height: 112px !important;
+        min-height: var(--player-min-height) !important;
       }
       @media (max-width: 760px) {
         podlove-player {
-          min-height: 168px !important;
+          --player-min-height: 168px;
         }
       }
       .embed-placeholder {
@@ -41,8 +49,8 @@
         gap: 16px;
         padding: 18px 20px;
         border-radius: 14px;
-        background: rgb(77 165 83 / 0.10);
-        color: #14513a;
+        background: var(--dc-django-tint);
+        color: var(--dc-accent-dark);
         min-height: 112px;
       }
       .embed-placeholder-logo {
@@ -62,7 +70,6 @@
         margin-bottom: 2px;
       }
     </style>
-    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=date-picker-1">
   </head>
   <body>
     <div class="embed-shell">
