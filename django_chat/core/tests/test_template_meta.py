@@ -131,7 +131,7 @@ def test_episode_detail_exposes_view_transition_episode_hooks(client: Client) ->
         'data-vt-episode-slug="django-tasks-jake-howard"'
     )
     assert expected_back_link in body
-    assert 'class="episode-number-badge episode-detail-badge"' in body
+    assert 'class="episode-number-badge episode-number-badge--detail"' in body
     assert "data-vt-episode-badge" in body
     assert "<h1 data-vt-episode-title>Django Tasks - Jake Howard</h1>" in body
 
@@ -150,7 +150,7 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert "html[data-vt-same-pagination]::view-transition-new(dc-episode-results)" in css
     assert "::view-transition-group(dc-episode-badge)" in css
     assert "::view-transition-group(dc-episode-title)" in css
-    assert ".episode-detail-badge {" in css
+    assert ".episode-number-badge--detail {" in css
     assert ".audio-panel,\n.audio-panel *,\npodlove-player,\npodlove-player * {" in css
     assert "background-color: var(--dc-ink);" in _css_blocks(css, "html")[0]
     assert "overflow-x: clip;" in _css_blocks(css, "html")[0]
@@ -159,7 +159,7 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert "--dc-accent-dark: #14513a;" in css
     assert "--dc-django: #4da553;" in css
     assert "--dc-surface-django-tint: #dfeede;" in css
-    assert "--error-red: #c0392b;" in css
+    assert "--dc-error: #c0392b;" in css
     assert "--dc-player-surface: transparent;" in css
     assert (
         ".audio-panel podlove-player[data-template] .podlove-hover-placeholder {\n"

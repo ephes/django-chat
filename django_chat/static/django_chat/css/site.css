@@ -53,20 +53,24 @@
      via `color-mix` so changing `--dc-django` flows through automatically.
      Other percentages (12 %, 15 %, 35 %, …) appear inline at single-use
      sites; promote to a token only once a second consumer needs the same
-     value. */
+     value. The literal `rgb()` declaration immediately above each
+     `color-mix()` is a Safari 16.0/16.1 fallback (color-mix landed in 16.2);
+     keep the literal in sync with `--dc-django` (#4da553 → 77 165 83). */
+  --dc-django-soft: rgb(77 165 83 / 0.08);
   --dc-django-soft: color-mix(in srgb, var(--dc-django) 8%, transparent);
+  --dc-django-tint: rgb(77 165 83 / 0.1);
   --dc-django-tint: color-mix(in srgb, var(--dc-django) 10%, transparent);
   /* Opaque pale-green surface tint. Distinct from the translucent
      `--dc-django-soft/-tint` because consumers paint it on a base that
      is not always `--dc-paper` (hero curve, wide bleed sections). */
   --dc-surface-django-tint: #dfeede;
-  --error-red: #c0392b;
+  --dc-error: #c0392b;
 
   /* Paper-stock background image: a 20% white softener layered over the
      horizontal-grain texture PNG. Used by the main content area and a
      couple of section bleeds. Consumers compose this with their own
      `background-color` and `background-attachment: fixed`. */
-  --paper-texture:
+  --dc-paper-texture:
     linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)),
     url("../img/simple-horizontal-light.png");
 
@@ -95,7 +99,7 @@
      surfaces (e.g. the episode sidebar) that need to sit below the menu bar
      at scroll-y = 0. Slightly larger than the measured 69px to absorb minor
      clamp variance. */
-  --site-header-height: 72px;
+  --dc-site-header-height: 72px;
 
   /* ---------- Typography tokens ----------
      Font-family tokens use the long fallback chain so a missing primary
@@ -148,13 +152,23 @@
 
   /* ---------- Motion / focus tokens ---------- */
   --dc-transition-colors: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  /* Safari 16.0/16.1 fallbacks land first; the `color-mix()` declaration
+     overrides them on 16.2+. Mirror the django/ink literals exactly. */
+  --dc-focus-ring-soft: 0 0 0 3px rgb(77 165 83 / 0.18);
   --dc-focus-ring-soft: 0 0 0 3px color-mix(in srgb, var(--dc-django) 18%, transparent);
+  --dc-focus-outline: 3px solid rgb(77 165 83 / 0.35);
   --dc-focus-outline: 3px solid color-mix(in srgb, var(--dc-django) 35%, transparent);
 
-  /* ---------- Shadow tokens ---------- */
+  /* ---------- Shadow tokens ----------
+     Same Safari 16.0/16.1 fallback pattern: rgba literal first, color-mix
+     second. `transparent 98%` in color-mix corresponds to a 2 % ink alpha. */
+  --dc-shadow-sm: 0 1px 0 rgb(13 13 13 / 0.02);
   --dc-shadow-sm: 0 1px 0 color-mix(in srgb, var(--dc-ink), transparent 98%);
+  --dc-shadow-md: 0 8px 22px rgb(13 13 13 / 0.06);
   --dc-shadow-md: 0 8px 22px color-mix(in srgb, var(--dc-ink), transparent 94%);
+  --dc-shadow-lg: 0 18px 36px rgb(13 13 13 / 0.1);
   --dc-shadow-lg: 0 18px 36px color-mix(in srgb, var(--dc-ink), transparent 90%);
+  --dc-shadow-xl: 0 24px 64px rgb(13 13 13 / 0.22);
   --dc-shadow-xl: 0 24px 64px color-mix(in srgb, var(--dc-ink), transparent 78%);
 
   /* ---------- Sidebar-pair layout tokens ----------
@@ -164,8 +178,8 @@
      identical by design so the two layouts read as the same pattern.
      Values use `cqi` so they track the layout's own container width
      (centered `<main>`), independent of viewport zoom or embeds. */
-  --aside-width: clamp(230px, 24cqi, 280px);
-  --aside-column-gap: clamp(24px, 4cqi, 48px);
+  --dc-aside-width: clamp(230px, 24cqi, 280px);
+  --dc-aside-column-gap: clamp(24px, 4cqi, 48px);
 }
 
 *,
@@ -184,11 +198,11 @@ html {
      horizontal rubber-band scroll. Clip on the root too so the viewport itself
      is clipped on the inline axis. */
   overflow-x: clip;
-  /* Sticky `.site-header` covers the top `--site-header-height` of the
+  /* Sticky `.site-header` covers the top `--dc-site-header-height` of the
      viewport. Reserve that space for any element scrolled into view
      (anchor links, scrollIntoView, focus-driven scrolls) so the target
      lands below the menu bar, not behind it. */
-  scroll-padding-top: var(--site-header-height);
+  scroll-padding-top: var(--dc-site-header-height);
 }
 
 body {
@@ -222,7 +236,7 @@ body > .site-content {
      the dark `<html>` background instead of bleeding white via the fixed
      attachment. */
   background-color: var(--dc-paper);
-  background-image: var(--paper-texture);
+  background-image: var(--dc-paper-texture);
   background-attachment: fixed;
 }
 
@@ -487,7 +501,7 @@ main {
 
 .show-hero-curve {
   background-color: var(--dc-surface-django-tint);
-  background-image: var(--paper-texture);
+  background-image: var(--dc-paper-texture);
   background-attachment: fixed;
   clip-path: url(#show-hero-curve-clip);
   height: clamp(60px, 15vw, 220px);
@@ -727,7 +741,7 @@ main {
   margin-bottom: var(--s3);
   padding: clamp(10px, 4vw - 10px, 40px) max(16px, calc(50vw - 560px)) clamp(32px, 4vw + 16px, 48px);
   background-color: var(--dc-surface-django-tint);
-  background-image: var(--paper-texture);
+  background-image: var(--dc-paper-texture);
   background-attachment: fixed;
   border-bottom: 1px solid var(--dc-line);
   position: relative;
@@ -1400,7 +1414,7 @@ main {
   z-index: 2;
 }
 
-.episode-detail-badge {
+.episode-number-badge--detail {
   --episode-badge-size: var(--episode-cover-size);
   display: inline-grid;
   font-size: clamp(4rem, 9vw, 6.5rem);
@@ -1791,8 +1805,8 @@ main {
    `.episode-detail`, so the two layouts feel like a pair. */
 @container subscribe-page (min-width: 778px) {
   .subscribe-page {
-    grid-template-columns: minmax(0, 1fr) var(--aside-width);
-    column-gap: var(--aside-column-gap);
+    grid-template-columns: minmax(0, 1fr) var(--dc-aside-width);
+    column-gap: var(--dc-aside-column-gap);
     align-items: start;
   }
 
@@ -1814,7 +1828,7 @@ main {
        keep both height strategies as-is. */
     align-self: stretch;
     position: sticky;
-    top: calc(var(--site-header-height) + var(--s2));
+    top: calc(var(--dc-site-header-height) + var(--s2));
     margin-top: 0;
   }
 }
@@ -2357,10 +2371,10 @@ main {
   --episode-cover-size: clamp(11.25rem, 18cqi, 13rem);
   padding: clamp(12px, 3vw, 36px) 0 64px;
   display: grid;
-  /* Sidebar min (`--aside-width` lower bound) fits the logo at its
+  /* Sidebar min (`--dc-aside-width` lower bound) fits the logo at its
      lower-bound cover-size; shared with `.subscribe-page`. */
-  grid-template-columns: minmax(0, 1fr) var(--aside-width);
-  column-gap: var(--aside-column-gap);
+  grid-template-columns: minmax(0, 1fr) var(--dc-aside-width);
+  column-gap: var(--dc-aside-column-gap);
   align-items: start;
 }
 
@@ -2372,12 +2386,12 @@ main {
 /* Sticky aside in the second grid column. Anatomy (logo + action rail,
    border-left divider) is deliberately different from `.subscribe-why`'s
    callout pair — episode-detail wants a tools/identity rail, subscribe
-   wants a "why?" callout card. Both layouts share `--aside-width`,
-   `--aside-column-gap`, and the same mobile-stack threshold (777 px). */
+   wants a "why?" callout card. Both layouts share `--dc-aside-width`,
+   `--dc-aside-column-gap`, and the same mobile-stack threshold (777 px). */
 .episode-sidebar {
   grid-column: 2;
   position: sticky;
-  top: calc(var(--site-header-height) + var(--episode-sticky-gap));
+  top: calc(var(--dc-site-header-height) + var(--episode-sticky-gap));
   align-self: start;
   display: flex;
   flex-direction: column;
@@ -2391,7 +2405,7 @@ main {
   /* Stretches column + divider so the line's bottom mirrors the top-gap
      (symmetric breath at scroll=0). Different intent from
      `.subscribe-why`'s `align-self: stretch` — do not unify. */
-  height: calc(100dvh - var(--site-header-height) - 2 * var(--episode-natural-top-gap));
+  height: calc(100dvh - var(--dc-site-header-height) - 2 * var(--episode-natural-top-gap));
   /* Floor at the rail's intrinsic content height: if the viewport is too
      short to fit everything with both gaps, keep the rail full-size and
      let the page scroll (the sidebar then exceeds the viewport bottom,
@@ -2839,7 +2853,7 @@ main {
      columns settle on the same vertical band in the 2-column layout.
      Mobile-stack (max-width: 777px) overrides this back to natural
      page scroll. */
-  max-height: calc(100dvh - var(--site-header-height) - 2 * var(--episode-natural-top-gap));
+  max-height: calc(100dvh - var(--dc-site-header-height) - 2 * var(--episode-natural-top-gap));
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--dc-django) transparent;
@@ -3657,7 +3671,7 @@ body:has(.share-modal:not([open]):target) {
 }
 
 .share-mastodon-row input[aria-invalid="true"] {
-  border-color: var(--error-red);
+  border-color: var(--dc-error);
 }
 
 .share-mastodon-row button {

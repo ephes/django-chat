@@ -23,6 +23,10 @@ can download the matching interpreter when needed. See
 [`docs/local-development.md`](docs/local-development.md) for the full local
 workflow, environment file expectations, tooling commands, and hook setup.
 
+Frontend conventions — cascade-layer order, token naming, class naming, JS
+hooks, and Safari 16 `color-mix()` fallbacks — are documented in
+[`docs/css-architecture.md`](docs/css-architecture.md).
+
 Install dependencies:
 
 ```sh
