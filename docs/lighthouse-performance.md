@@ -112,6 +112,27 @@ the LCP node, is discoverable from the initial HTML, has `fetchpriority="high"`,
 and requests the smaller `show-hero-bg.avif` asset. Desktop requests the 2x AVIF
 variant under the current `sizes="(max-width: 900px) 100vw, 120vw"` rule.
 
+Current scores after CSS minification deployed to staging:
+
+Measured on 2026-05-19 with Lighthouse 13.3.0. Reports are in
+`/tmp/django-chat-lighthouse-20260519-post-minify/`.
+
+| Page | Mode | Performance | Accessibility | Best Practices | SEO | FCP | LCP | CLS | TBT | Speed Index |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `/` -> `/episodes/` | desktop | 98 | 100 | 100 | 100 | 0.3 s | 0.5 s | 0.083 | 0 ms | 0.4 s |
+| `/` -> `/episodes/` | mobile | 100 | 100 | 100 | 100 | 1.3 s | 1.5 s | 0.001 | 0 ms | 1.3 s |
+| `/episodes/` | desktop | 99 | 100 | 100 | 100 | 0.3 s | 0.5 s | 0.082 | 0 ms | 0.3 s |
+| `/episodes/` | mobile | 100 | 100 | 100 | 100 | 1.2 s | 1.5 s | 0.001 | 0 ms | 1.2 s |
+| `/episodes/django-tasks-jake-howard/` | desktop | 100 | 100 | 100 | 100 | 0.3 s | 0.3 s | 0.013 | 0 ms | 0.3 s |
+| `/episodes/django-tasks-jake-howard/` | mobile | 100 | 100 | 100 | 100 | 1.2 s | 1.4 s | 0 | 0 ms | 1.2 s |
+| `/episodes/feed/` | desktop | 100 | 100 | 100 | 100 | 0.3 s | 0.3 s | 0 | 0 ms | 0.3 s |
+| `/episodes/feed/` | mobile | 100 | 100 | 100 | 100 | 1.1 s | 1.1 s | 0 | 0 ms | 1.1 s |
+
+The deployed hashed `site.css` transfer is about 11.4 KiB in the Lighthouse
+network trace, and the unminified CSS and unused CSS audits now pass on all
+measured pages. The RSS XML endpoints returned HTTP 200 and gzip-compressed GET
+responses.
+
 ## Changes Required
 
 The baseline was already strong for the subscribe page, but the episode index
@@ -180,18 +201,24 @@ Done:
   `collectstatic`, before manifest hashing and WhiteNoise compression, so the
   source CSS stays readable and the deployment host does not need a frontend
   build toolchain. A full local `collectstatic` probe reduced the hashed
-  deployed `site.css` to 58,471 bytes raw and 11,331 bytes gzipped. Re-run
-  staging Lighthouse after deploying this change before treating the CSS
-  minification savings as deployed performance evidence.
+  deployed `site.css` to 58,471 bytes raw and 11,331 bytes gzipped. A deployed
+  staging Lighthouse re-run confirmed about 11.4 KiB CSS transfer and 98-100
+  scores across all measured categories.
+- 2026-05-19: Deferred the head-loaded `view-transitions.js` file. Targeted
+  browser checks still passed for enhanced filter controls and same-document
+  filter transitions, a local Chromium timing probe confirmed the
+  cross-document `pageswap` / `pagereveal` handlers still ran for transitions
+  with `viewTransition`, and a local mobile Lighthouse run removed
+  `view-transitions.js` from the render-blocking request table. Re-run staging
+  Lighthouse after deployment before treating this as deployed performance
+  evidence.
 
 Planned:
 
-- Test deferring `view-transitions.js`. If `pageswap` / `pagereveal`
-  transition behaviour remains stable, load it with `defer` or split the
-  same-document pagination/filter enhancement from the first-paint path.
-- Split or critical-inline CSS for the public host-review pages. The current
-  single `site.css` keeps the system simple, but Lighthouse reports substantial
-  unused CSS on the mobile overview page.
+- Split or critical-inline CSS for the public host-review pages only if the
+  remaining CSS render-blocking estimate is worth the added complexity. The
+  current single `site.css` keeps the system simple, and the unminified CSS and
+  unused CSS audits pass after deploy-time minification.
 - Revisit the `rel="expect" blocking="render"` hints on the index and detail
   pages after the image and script/CSS work. They improve native
   cross-document transition stability, but they should stay only if their

@@ -86,6 +86,7 @@ def test_episode_index_loads_view_transition_script_and_hooks(client: Client) ->
 
     body = response.content.decode()
     assert 'src="/static/django_chat/js/view-transitions.js' in body
+    assert 'defer src="/static/django_chat/js/view-transitions.js' in body
     assert 'type="module" src="/static/django_chat/js/view-transitions.js"' not in body
     assert '<link rel="expect" href="#episode-index-main" blocking="render">' in body
     hero_picture_attrs = tag_attrs(body, "picture", {"class": "show-hero-media"})
