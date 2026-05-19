@@ -48,17 +48,17 @@
   --dc-line: #d8d8d8;
   --dc-accent: #2d8260;
   --dc-accent-dark: #14513a;
-  --dc-django: #4da553;
+  --dc-django: #48a04e;
   /* Translucent django-green tints used for hover/focus surfaces. Derived
      via `color-mix` so changing `--dc-django` flows through automatically.
      Other percentages (12 %, 15 %, 35 %, …) appear inline at single-use
      sites; promote to a token only once a second consumer needs the same
      value. The literal `rgb()` declaration immediately above each
      `color-mix()` is a Safari 16.0/16.1 fallback (color-mix landed in 16.2);
-     keep the literal in sync with `--dc-django` (#4da553 → 77 165 83). */
-  --dc-django-soft: rgb(77 165 83 / 0.08);
+     keep the literal in sync with `--dc-django` (#48a04e → 72 160 78). */
+  --dc-django-soft: rgb(72 160 78 / 0.08);
   --dc-django-soft: color-mix(in srgb, var(--dc-django) 8%, transparent);
-  --dc-django-tint: rgb(77 165 83 / 0.1);
+  --dc-django-tint: rgb(72 160 78 / 0.1);
   --dc-django-tint: color-mix(in srgb, var(--dc-django) 10%, transparent);
   /* Opaque pale-green surface tint. Distinct from the translucent
      `--dc-django-soft/-tint` because consumers paint it on a base that
@@ -1097,7 +1097,7 @@ button.share-pill,
 
 .filter-control-button[aria-expanded="true"] {
   border-color: var(--dc-accent);
-  box-shadow: 0 0 0 3px rgb(77 165 83 / 0.16);
+  box-shadow: 0 0 0 3px rgb(72 160 78 / 0.16);
 }
 
 .filter-control-text {
@@ -1586,7 +1586,7 @@ button.share-pill,
    page-header has a transparent background; consumers add the tint where
    it makes sense. */
 .page-header-tint {
-  background: rgb(77 165 83 / 0.14);
+  background: rgb(72 160 78 / 0.14);
 }
 
 /* Narrow viewports: a dark-green gradient pseudo behind the bubble ensures
@@ -1704,7 +1704,7 @@ button.share-pill,
 
 .card:hover,
 .card:focus-within {
-  border-color: rgb(77 165 83 / 0.45);
+  border-color: rgb(72 160 78 / 0.45);
   box-shadow: var(--dc-shadow-md);
   transform: translateY(-1px);
 }
@@ -1859,7 +1859,7 @@ button.share-pill,
 .subscribe-why {
   padding: var(--s0);
   border-left: 2px solid var(--dc-django);
-  background: rgb(77 165 83 / 0.05);
+  background: rgb(72 160 78 / 0.05);
   border-radius: 0 0.75rem 0.75rem 0;
   display: grid;
   gap: var(--s-2);
@@ -2000,7 +2000,7 @@ button.share-pill,
   inset-block: 0;
   inset-inline: calc(50% - 50vw);
   z-index: -1;
-  background: rgb(77 165 83 / 0.14);
+  background: rgb(72 160 78 / 0.14);
   border-bottom: 3px solid var(--dc-django);
 }
 
@@ -2281,7 +2281,10 @@ button.share-pill,
   color: var(--dc-ink);
   font-size: var(--text-md);
   line-height: var(--leading-body);
-  max-width: 66%;
+  /* Lower bound `28ch` keeps narrow viewports from collapsing the bio
+     to a sliver; upper bound `66ch` caps line-length for readability
+     on wide viewports; `66%` is the intermediate proportional cap. */
+  max-width: clamp(28ch, 66%, 66ch);
 }
 
 .sponsor-hosts-bio p {
@@ -2417,7 +2420,7 @@ button.share-pill,
   gap: var(--s0);
   padding: var(--s1) clamp(1.25rem, 3vw, 1.75rem);
   background: var(--dc-django-soft);
-  border: 1px solid rgb(77 165 83 / 0.35);
+  border: 1px solid rgb(72 160 78 / 0.35);
   border-radius: 0.75rem;
 }
 

@@ -1,5 +1,5 @@
 {% extends "./base.html" %}
-{% load static wagtailcore_tags %}
+{% load static wagtailcore_tags dc_filters %}
 
 {% block page_header %}
   <div class="page-header-tint">
@@ -23,7 +23,7 @@
             <defs>
               <linearGradient id="sponsor-stat-ring-gradient" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0" stop-color="#a8dcad"/>
-                <stop offset="1" stop-color="#4da553"/>
+                <stop offset="1" stop-color="#48a04e"/>
               </linearGradient>
             </defs>
           </svg>
@@ -114,7 +114,7 @@
             {% for review in reviews %}
             <li class="card sponsor-review stack">
               <p class="sponsor-review-stars" aria-label="{{ review.stars }} out of 5 stars">
-                {% for _ in ""|ljust:review.stars %}<span aria-hidden="true">&#9733;</span>{% endfor %}
+                <span aria-hidden="true">{{ review.stars|star_glyphs }}</span>
               </p>
               <h3 class="sponsor-review-title">{{ review.title }}</h3>
               <p class="sponsor-review-body">{{ review.body }}</p>

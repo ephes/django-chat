@@ -80,13 +80,13 @@
 
 [data-test="tab-title--close"]:hover,
 [data-test="tab-title--close"]:focus-visible {
-  background: rgb(77 165 83 / 0.10) !important;
+  background: rgb(72 160 78 / 0.10) !important;
   color: #14513a !important;
   outline: none;
 }
 
 [data-test="tab-title--close"]:focus-visible {
-  outline: 2px solid #4da553 !important;
+  outline: 2px solid #48a04e !important;
   outline-offset: 2px !important;
 }
 
@@ -112,14 +112,14 @@
 
 [data-test="tab-transcripts--follow"]:hover,
 [data-test="tab-transcripts--follow"]:focus-visible {
-  background: rgb(77 165 83 / 0.10) !important;
-  border-color: #4da553 !important;
+  background: rgb(72 160 78 / 0.10) !important;
+  border-color: #48a04e !important;
   color: #14513a !important;
   outline: none;
 }
 
 [data-test="tab-transcripts--follow"]:focus-visible {
-  outline: 2px solid #4da553 !important;
+  outline: 2px solid #48a04e !important;
   outline-offset: 2px !important;
 }
 
@@ -135,52 +135,52 @@
 }
 
 [data-test="play-button"]:focus-visible {
-  border-color: #4da553 !important;
+  border-color: #48a04e !important;
   border-radius: 999px !important;
-  box-shadow: 0 0 0 2px #4da553 !important;
+  box-shadow: 0 0 0 2px #48a04e !important;
   outline: none !important;
 }
 
 [data-test="play-button"]:focus:not(:focus-visible) {
-  border-color: #4da553 !important;
+  border-color: #48a04e !important;
   border-radius: 999px !important;
-  box-shadow: 0 0 0 2px #4da553 !important;
+  box-shadow: 0 0 0 2px #48a04e !important;
   outline: none !important;
 }
 
 [data-test^="tab-trigger--"] {
   border-radius: 8px !important;
-  outline-color: #4da553 !important;
+  outline-color: #48a04e !important;
 }
 
 [data-test^="tab-trigger--"]:focus-visible,
 [data-test^="tab-trigger--"][aria-selected="true"] {
-  border-color: #4da553 !important;
-  box-shadow: 0 0 0 2px #4da553 !important;
+  border-color: #48a04e !important;
+  box-shadow: 0 0 0 2px #48a04e !important;
   outline: none !important;
 }
 
 [data-test^="tab-trigger--"]:focus:not(:focus-visible) {
-  border-color: #4da553 !important;
+  border-color: #48a04e !important;
   border-radius: 8px !important;
   outline: none !important;
 }
 
 [data-test^="tab-trigger--"][aria-selected="true"] * {
-  border-color: #4da553 !important;
+  border-color: #48a04e !important;
 }
 
 /* Podlove renders the selected-tab marker as the final direct span child. */
 [data-test^="tab-trigger--"][aria-selected="true"] > span:last-child,
 [data-test^="tab-trigger--"][aria-selected="true"] > span:last-child svg,
 [data-test^="tab-trigger--"][aria-selected="true"] > span:last-child path {
-  color: #4da553 !important;
-  fill: #4da553 !important;
-  stroke: #4da553 !important;
+  color: #48a04e !important;
+  fill: #48a04e !important;
+  stroke: #48a04e !important;
 }
 
 [data-test="tab-transcripts--results"] .active-transcript {
-  background: linear-gradient(to top, rgb(77 165 83 / 0.28) 0 42%, transparent 42%) !important;
+  background: linear-gradient(to top, rgb(72 160 78 / 0.28) 0 42%, transparent 42%) !important;
   border-radius: 2px;
   color: #0d0d0d !important;
 }

@@ -158,7 +158,7 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert "--dc-muted: #5f635d;" in css
     assert "--dc-accent: #2d8260;" in css
     assert "--dc-accent-dark: #14513a;" in css
-    assert "--dc-django: #4da553;" in css
+    assert "--dc-django: #48a04e;" in css
     assert "--dc-surface-django-tint: #dfeede;" in css
     assert "--dc-error: #c0392b;" in css
     assert "--dc-player-surface: transparent;" in css
@@ -353,13 +353,13 @@ def test_podlove_loader_injects_iframe_panel_styles() -> None:
     assert '[data-test^="tab-trigger--"]:focus,' not in loader
     assert "border-radius: 999px !important;" in loader
     assert "border-radius: 8px !important;" in loader
-    assert "box-shadow: 0 0 0 2px #4da553 !important;" in loader
+    assert "box-shadow: 0 0 0 2px #48a04e !important;" in loader
     assert "outline: none !important;" in loader
     assert "Podlove renders the selected-tab marker as the final direct span child." in loader
     assert '[data-test^="tab-trigger--"][aria-selected="true"] > span:last-child,' in loader
-    assert "fill: #4da553 !important;" in loader
+    assert "fill: #48a04e !important;" in loader
     assert '[data-test="tab-transcripts--results"] .active-transcript {' in loader
-    assert "background: linear-gradient(to top, rgb(77 165 83 / 0.28)" in loader
+    assert "background: linear-gradient(to top, rgb(72 160 78 / 0.28)" in loader
 
 
 def episode_index_path() -> str:

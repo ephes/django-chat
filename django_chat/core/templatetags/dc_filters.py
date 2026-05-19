@@ -93,6 +93,19 @@ def youtube_first(links):
 
 
 @register.filter
+def star_glyphs(value, total: int = 5) -> str:
+    """Render an integer rating as `value` filled `★` glyphs, clamped to
+    `[0, total]`. The textual rating ("3 out of 5 stars") belongs in an
+    `aria-label` on the surrounding element — these glyphs are visual
+    decoration only."""
+    try:
+        n = int(value)
+    except TypeError, ValueError:
+        return ""
+    return "★" * max(0, min(n, int(total)))
+
+
+@register.filter
 def split_amazon_audible(links):
     """Split the combined "Amazon Music and Audible" entry into two display links."""
     result = []
