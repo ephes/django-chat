@@ -413,14 +413,10 @@ main {
   height: auto;
   width: 100%;
   position: relative;
-  /* Stacking context so the `::before` parallax layer below can sit at
-     `z-index: -1` — behind the hero's in-flow content but above the
-     background-color. */
-  isolation: isolate;
-  /* Geometric clip for the sticky pseudo below: when the hero is shorter
-     than 100 vh, the pseudo's box overflows; `overflow: clip` cuts that
-     overflow without establishing a new scroll container, so sticky still
-     uses the document scroll and the pseudo never bleeds past the hero. */
+  /* Geometric clip for the sticky media layer below: when the hero is shorter
+     than 100vh, the media overflows; `overflow: clip` cuts that overflow
+     without establishing a new scroll container, so sticky still uses the
+     document scroll and the media never bleeds past the hero. */
   overflow: clip;
   /* Drives the stacked-state container queries below — the hero rearranges
      itself based on its own width rather than the viewport, so the same
@@ -431,39 +427,27 @@ main {
 
 /* Cross-browser image layer: rather than `background-attachment: fixed`
    (broken on iOS Safari) or `position: fixed` (escapes the parent's clipping
-   box entirely), use `position: sticky` on a pseudo-element. The sticky
-   containing-block constraint plus the `overflow: clip` above ensure the
-   pseudo's box is clipped to the hero so it never shows through to content
-   below. Because the hero itself is shorter than 100 vh, sticky's
-   containing-block constraint cannot satisfy `top: 0` and the pseudo
-   effectively scrolls with the hero — visually a stable backdrop while the
-   hero is in view, not a perfect viewport-locked parallax like the previous
-   fixed-attachment behaviour. `margin-bottom: -100vh` cancels the pseudo's
+   box entirely), use `position: sticky` on an HTML-discoverable `<picture>`.
+   The sticky containing-block constraint plus the `overflow: clip` above keep
+   the layer clipped to the hero. `margin-bottom: -100vh` cancels its
    contribution to the hero's in-flow height. */
-.show-hero::before {
-  content: "";
+.show-hero-media {
   display: block;
   position: sticky;
   top: 0;
   height: 100vh;
   margin-bottom: -100vh;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
-  /* JPEG fallback for browsers without image-set() support. */
-  background-image: url("../img/show-hero-bg.jpg");
-  /* DPI- and format-aware delivery: AVIF/WebP first, JPEG fallback;
-     1x source for non-retina, 2x for high-DPI screens. */
-  background-image: image-set(
-    url("../img/show-hero-bg.avif") type("image/avif") 1x,
-    url("../img/show-hero-bg@2x.avif") type("image/avif") 2x,
-    url("../img/show-hero-bg.webp") type("image/webp") 1x,
-    url("../img/show-hero-bg@2x.webp") type("image/webp") 2x,
-    url("../img/show-hero-bg.jpg") 1x,
-    url("../img/show-hero-bg@2x.jpg") 2x
-  );
-  background-position: 20% 0%;
-  background-repeat: no-repeat;
-  background-size: 120% auto;
+  overflow: hidden;
+}
+
+.show-hero-media img {
+  display: block;
+  width: 120%;
+  max-width: none;
+  height: auto;
+  margin-left: -4%;
 }
 
 /* On mobile/tablet the proportional 120% width would leave too little image
@@ -471,8 +455,12 @@ main {
    Container-driven: gated on the `.show-hero` container's own width so the
    rule also fires for narrow embeds / zoomed-in views. */
 @container show-hero (max-width: 900px) {
-  .show-hero::before {
-    background-size: cover;
+  .show-hero-media img {
+    width: 100%;
+    height: 100%;
+    margin-left: 0;
+    object-fit: cover;
+    object-position: 20% 0%;
   }
 }
 

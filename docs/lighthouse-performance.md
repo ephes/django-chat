@@ -130,6 +130,45 @@ and episode detail page needed small fixes:
   the iframe initializes, and starts the player on hover, focus, tap, or button
   click.
 
+## Performance Optimization Backlog
+
+This section tracks follow-up performance work after the original 2026-04-29
+host-review Lighthouse pass. Keep it focused on concrete findings from
+Lighthouse, Playwright, or browser network probes.
+
+Done:
+
+- 2026-05-19: The `/episodes/` show-hero background moved from a CSS
+  `image-set()` pseudo-element to an HTML-discoverable `<picture>` with AVIF,
+  WebP, and JPEG fallbacks. The image is marked `fetchpriority="high"` and
+  `decoding="async"`, and the sticky clipped media layer keeps the same visual
+  behaviour as the old CSS background. A local mobile Playwright probe verified
+  Chromium requests `show-hero-bg.avif` instead of the heavier
+  `show-hero-bg@2x.avif`; a local mobile Lighthouse run reported
+  `lcp-discovery-insight` score `1` with the hero image as the LCP node.
+
+Planned:
+
+- Deploy the HTML-discoverable hero background change to staging and re-run
+  mobile and desktop Lighthouse for `/episodes/` and a representative episode
+  detail page. Update the results table above with the deployed measurements.
+- Re-check the mobile `/episodes/` render-blocking audit after the hero-image
+  change. The current known blockers are the head-loaded
+  `view-transitions.js` file and the shared `site.css` stylesheet.
+- Test deferring `view-transitions.js`. If `pageswap` / `pagereveal`
+  transition behaviour remains stable, load it with `defer` or split the
+  same-document pagination/filter enhancement from the first-paint path.
+- Split or critical-inline CSS for the public host-review pages. The current
+  single `site.css` keeps the system simple, but Lighthouse reports substantial
+  unused CSS on the mobile overview page.
+- Add CSS minification to the static build/deploy path if it can be done
+  without adding a fragile frontend toolchain. Lighthouse currently reports
+  a small but measurable CSS transfer saving.
+- Revisit the `rel="expect" blocking="render"` hints on the index and detail
+  pages after the image and script/CSS work. They improve native
+  cross-document transition stability, but they should stay only if their
+  visual benefit outweighs first-render cost.
+
 ## Caveats
 
 The 2026-04-29 Lighthouse reports predate the click-to-load player facade.

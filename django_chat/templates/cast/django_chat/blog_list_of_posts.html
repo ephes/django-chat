@@ -13,6 +13,28 @@
   {% load static %}
   {% firstof podcast blog as show %}
   <section class="show-hero" aria-labelledby="show-hero-title">
+    <picture class="show-hero-media" aria-hidden="true">
+      <source
+        type="image/avif"
+        srcset="{% static 'django_chat/img/show-hero-bg.avif' %} 1584w, {% static 'django_chat/img/show-hero-bg@2x.avif' %} 3168w"
+        sizes="(max-width: 900px) 100vw, 120vw"
+      >
+      <source
+        type="image/webp"
+        srcset="{% static 'django_chat/img/show-hero-bg.webp' %} 1584w, {% static 'django_chat/img/show-hero-bg@2x.webp' %} 3168w"
+        sizes="(max-width: 900px) 100vw, 120vw"
+      >
+      <img
+        src="{% static 'django_chat/img/show-hero-bg.jpg' %}"
+        srcset="{% static 'django_chat/img/show-hero-bg.jpg' %} 1584w, {% static 'django_chat/img/show-hero-bg@2x.jpg' %} 3168w"
+        sizes="(max-width: 900px) 100vw, 120vw"
+        width="1584"
+        height="1007"
+        alt=""
+        fetchpriority="high"
+        decoding="async"
+      >
+    </picture>
     <svg class="show-hero-shape" aria-hidden="true" focusable="false" width="0" height="0">
       <defs>
         <clipPath id="show-hero-curve-clip" clipPathUnits="objectBoundingBox">

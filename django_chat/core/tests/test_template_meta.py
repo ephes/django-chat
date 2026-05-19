@@ -88,6 +88,19 @@ def test_episode_index_loads_view_transition_script_and_hooks(client: Client) ->
     assert 'src="/static/django_chat/js/view-transitions.js' in body
     assert 'type="module" src="/static/django_chat/js/view-transitions.js"' not in body
     assert '<link rel="expect" href="#episode-index-main" blocking="render">' in body
+    hero_picture_attrs = tag_attrs(body, "picture", {"class": "show-hero-media"})
+    assert hero_picture_attrs is not None
+    assert hero_picture_attrs["aria-hidden"] == "true"
+    assert "/static/django_chat/img/show-hero-bg.avif 1584w" in body
+    hero_image_attrs = tag_attrs(
+        body,
+        "img",
+        {"src": "/static/django_chat/img/show-hero-bg.jpg"},
+    )
+    assert hero_image_attrs is not None
+    assert hero_image_attrs["sizes"] == "(max-width: 900px) 100vw, 120vw"
+    assert hero_image_attrs["fetchpriority"] == "high"
+    assert hero_image_attrs["decoding"] == "async"
     assert '<main id="episode-index-main" data-vt-page="episode-index">' in body
     filter_form_attrs = tag_attrs(body, "form", {"class": "filter-form"})
     assert filter_form_attrs is not None
