@@ -149,4 +149,6 @@ def _compact_css(css: str) -> str:
 
 
 def _needs_css_space(left: str, right: str) -> bool:
+    if left == "]" and right == "[":
+        return True
     return not (left in "{(:;,[>~" or right in "{}):;,[>~")

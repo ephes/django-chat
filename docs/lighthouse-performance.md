@@ -212,6 +212,12 @@ Done:
   `view-transitions.js` from the render-blocking request table. Re-run staging
   Lighthouse after deployment before treating this as deployed performance
   evidence.
+- 2026-05-19: Fixed a deploy-path CSS minifier bug that removed the descendant
+  space from `podlove-player[data-django-chat-player-ready="true"]
+  [data-django-chat-player-placeholder]`. The broken minified selector left
+  the lightweight player facade visible above the initialized Podlove iframe on
+  staging. Re-run collectstatic/deploy so the corrected minified CSS reaches
+  staging before validating the final Lighthouse pass.
 
 Planned:
 

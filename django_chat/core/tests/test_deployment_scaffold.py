@@ -197,6 +197,20 @@ def test_css_minifier_preserves_strings_and_required_calc_spacing() -> None:
     )
 
 
+def test_css_minifier_preserves_descendant_attribute_selector_spacing() -> None:
+    css = """
+    .audio-panel podlove-player[data-django-chat-player-ready="true"]
+      [data-django-chat-player-placeholder] {
+      opacity: 0;
+    }
+    """
+
+    assert minify_css(css) == (
+        '.audio-panel podlove-player[data-django-chat-player-ready="true"] '
+        "[data-django-chat-player-placeholder]{opacity:0}"
+    )
+
+
 def test_collectstatic_minifies_project_css_before_manifest_hashing(tmp_path: Path) -> None:
     source_root = tmp_path / "source"
     static_root = tmp_path / "staticfiles"
