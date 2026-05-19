@@ -96,21 +96,9 @@
   --font-heading: "Ubuntu", "Roboto", system-ui, sans-serif;
   --font-mono: "Roboto Mono", ui-monospace, monospace;
 
-  /* Size scale — six static steps plus the responsive h2 clamp.
-     Component-scoped fluid sizes that are tokenised live in the
-     `--text-h1 / -show-hero / -episode-hero / -tagline / -platform-link
-     / -callout` block below.
-     Every other static `font-size` in the file resolves through these
-     tokens with two documented exceptions, each carrying an inline
-     justification at the use site:
-     - `.show-notes h3` keeps `1.3rem` so its section
-       markers read heavier than the global `h3` rule (1.2rem).
-     - `.filter-popover-icon-button` keeps `1.6rem` to size its `+/−`
-       glyphs against the 38 px button geometry.
-     The remaining responsive `clamp(...)` font-sizes — episode-number
-     badge, episode-detail badge, sponsor stats / pricing / CTA, and the
-     audio-panel facade — stay literal at the consumer because each is a
-     one-off design value tied to a specific figure or card. */
+  /* Static size scale; component-scoped fluid sizes follow below.
+     Two literal `font-size` holdouts (`.show-notes h3`,
+     `.filter-popover-icon-button`) are justified inline at the use site. */
   --text-xs: 0.78rem;
   --text-sm: 0.9rem;
   /* `--text-base` sits a hair above 1rem so the default body copy lands
@@ -122,9 +110,7 @@
   --text-lg: 1.2rem;
   --text-xl: 1.4rem;
   --text-h2: clamp(1.6rem, 1.6vw + 0.8rem, 2.2rem);
-  /* Component-scoped fluid sizes that previously lived as one-off clamps
-     at the component rule. Tokenised so the formula sits next to its
-     siblings; the consumer still owns the choice of token vs literal. */
+  /* Component-scoped fluid sizes. */
   --text-h1: clamp(2.4rem, 4vw + 1rem, 3.5rem);
   --text-show-hero: clamp(2.5rem, 5vw + 1rem, 6rem);
   --text-episode-hero: clamp(1.8rem, 4cqi, 2.4rem);
@@ -154,6 +140,7 @@
   /* ---------- Motion / focus tokens ---------- */
   --dc-transition-colors: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   --dc-focus-ring-soft: 0 0 0 3px color-mix(in srgb, var(--dc-django) 18%, transparent);
+  --dc-focus-outline: 3px solid color-mix(in srgb, var(--dc-django) 35%, transparent);
 
   /* ---------- Shadow tokens ---------- */
   --dc-shadow-sm: 0 1px 0 color-mix(in srgb, var(--dc-ink), transparent 98%);
@@ -250,7 +237,7 @@ a:focus {
 }
 
 a:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--dc-django) 35%, transparent);
+  outline: var(--dc-focus-outline);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -284,6 +271,29 @@ h3 {
   text-transform: uppercase;
   color: var(--dc-muted);
   margin: 0 0 var(--s-2);
+}
+
+/* UA reset: form controls and buttons inherit the page font instead
+   of the user-agent default. `:where()` keeps the reset out of any
+   specificity battle with component rules. */
+:where(button, input, select, textarea) {
+  font: inherit;
+}
+
+/* Pointer cursor on real <button> elements — browser default is the
+   arrow, not the hand. Listed explicitly per class so future <button>
+   additions consciously opt in. */
+.filter-control-button,
+.filter-popover-icon-button,
+.filter-date-day,
+.filter-date-actions button,
+.filter-select-option,
+button.feed-action,
+.audio-panel podlove-player[data-template] .podlove-player-button,
+button.share-pill,
+.share-mastodon-change,
+.share-mastodon-row button {
+  cursor: pointer;
 }
 
 .site-header,
@@ -410,8 +420,6 @@ main {
 .show-hero {
   background-color: var(--dc-accent-dark);
   color: var(--dc-paper);
-  height: auto;
-  width: 100%;
   position: relative;
   /* Geometric clip for the sticky media layer below: when the hero is shorter
      than 100vh, the media overflows; `overflow: clip` cuts that overflow
@@ -544,13 +552,10 @@ main {
   justify-self: end;
   margin-top: var(--s2);
   max-width: 100%;
+  view-transition-name: hero-logo;
 }
 
-/* Hero stacked state — gated on the `.show-hero` container's own width
-   (see `container-name: show-hero` above). Single block replaces the
-   former JS path (`html.is-stacked`, set by an inline script) plus the
-   no-JS media-query fallback (`html:not(.js-vt)` at ≤ 1024 px). The
-   intrinsic CQ trigger means we no longer need either class. */
+/* Hero stacks at narrow container widths — see the `show-hero` CQ host above. */
 @container show-hero (max-width: 64rem) {
   .show-hero-inner {
     grid-template-columns: 1fr;
@@ -574,10 +579,6 @@ main {
   }
 }
 
-.show-hero-logo {
-  view-transition-name: hero-logo;
-}
-
 .show-copy {
   view-transition-name: hero-copy;
 }
@@ -597,20 +598,6 @@ main {
 ::view-transition-new(hero-copy) {
   animation-duration: 0.4s;
   animation-timing-function: ease-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(root),
-  ::view-transition-group(hero-logo),
-  ::view-transition-group(hero-copy),
-  ::view-transition-old(root),
-  ::view-transition-new(root),
-  ::view-transition-old(hero-logo),
-  ::view-transition-new(hero-logo),
-  ::view-transition-old(hero-copy),
-  ::view-transition-new(hero-copy) {
-    animation-duration: 0.01ms;
-  }
 }
 
 /* ---------- Layout primitives ----------
@@ -653,7 +640,6 @@ main {
   grid-template-columns: repeat(auto-fit, minmax(min(var(--grid-min, 16rem), 100%), 1fr));
   gap: var(--grid-space, var(--s1));
 }
-
 
 /* ---------- Pill-button anatomy ----------
    Shared structural traits across every pill-shaped button on the site:
@@ -699,8 +685,16 @@ main {
   font-weight: var(--weight-semibold);
 }
 
+/* Inverse-hover surface shared by every "primary"-styled control. */
 .button-primary:hover,
-.button-primary:focus {
+.button-primary:focus,
+.feed-action--primary:hover,
+.feed-action--primary:focus-visible,
+.feed-action[data-copied],
+.sponsor-cta-button:hover,
+.sponsor-cta-button:focus-visible,
+.share-mastodon-row button:hover,
+.share-mastodon-row button:focus-visible {
   background: var(--dc-django);
   border-color: var(--dc-django);
   color: var(--dc-ink);
@@ -785,15 +779,9 @@ main {
   text-overflow: ellipsis;
 }
 
-/* Threshold matches the stable inner width of `.platform-band` once its
-   horizontal padding (`max(16px, calc(50vw - 560px))`) caps at 1120 px,
-   i.e. from a viewport of ~1152 px upward — the point where all 7 current
-   buttons fit content-sized in a single row (measured sum ≈ 1046 px). The
-   single-row layout is tuned for the present, stable platform-name list;
-   if a future label grows long enough that the row sum exceeds the inner
-   width, the buttons will wrap instead of preserving the single-row
-   layout. The long-label hard-cap lives in the wrapped state above, where
-   every button shares the same clamp. */
+/* Threshold matches `.platform-band`'s stable 1120 px inner width
+   (viewport ≥ ~1152 px), where the current 7 buttons fit content-sized
+   in a single row (measured sum ≈ 1046 px). */
 @container (min-width: 1120px) {
   .platform-band-links a {
     min-width: 140px;
@@ -801,11 +789,19 @@ main {
   }
 }
 
-.platform-icon {
-  display: inline-block;
+/* Shared 18 × 18 icon size for the inline mask / SVG icons that ride
+   along inline-flex labels (platform, feed, mastodon, share-pill). */
+.platform-icon,
+.feed-action-icon,
+.footer-mastodon-icon,
+.share-pill-icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+
+.platform-icon {
+  display: inline-block;
   background-color: currentColor;
   -webkit-mask-image: var(--platform-icon-url);
   mask-image: var(--platform-icon-url);
@@ -817,9 +813,6 @@ main {
   mask-size: contain;
   transition: background-color 0.15s ease;
 }
-
-/* Hover/focus surface shared with other ghost-style pills — see the
-   `.button-primary, .platform-band-links a, …` block at the top. */
 
 .episode-section-heading {
   margin: var(--s-2) 0 var(--s0);
@@ -940,11 +933,7 @@ main {
   width: 100%;
   min-height: var(--dc-tap);
   padding: 0 var(--s-1);
-  border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
-  background: var(--dc-paper);
-  color: var(--dc-ink);
-  font: inherit;
   font-size: var(--text-base);
 }
 
@@ -990,10 +979,9 @@ main {
   border-radius: var(--dc-radius-pill);
   background: var(--dc-paper);
   color: var(--dc-ink);
-  font: inherit;
   font-size: var(--text-base);
   text-align: left;
-  cursor: pointer;
+
 }
 
 .filter-control-button:hover,
@@ -1107,8 +1095,7 @@ main {
   border: 0;
   background: transparent;
   color: inherit;
-  font: inherit;
-  cursor: pointer;
+
 }
 
 .filter-popover-icon-button {
@@ -1171,7 +1158,8 @@ main {
   box-shadow: inset 0 0 0 1px var(--dc-django);
 }
 
-.filter-date-day.is-selected {
+.filter-date-day.is-selected,
+.filter-select-option.is-selected {
   background: var(--dc-accent-dark);
   color: var(--dc-paper);
   font-weight: var(--weight-bold);
@@ -1212,12 +1200,6 @@ main {
   white-space: nowrap;
 }
 
-.filter-select-option.is-selected {
-  background: var(--dc-accent-dark);
-  color: var(--dc-paper);
-  font-weight: var(--weight-bold);
-}
-
 .filter-search {
   position: relative;
   min-width: 0;
@@ -1254,12 +1236,33 @@ main {
 }
 
 .filter-search-clear:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--dc-django) 35%, transparent);
+  outline: var(--dc-focus-outline);
   outline-offset: 2px;
 }
 
-.filter-form input:focus,
-.filter-form select:focus {
+/* Site-wide form-input base + focus look. Per-field rules elsewhere
+   add size, padding, font-family, and border-radius variants. */
+:is(
+  .filter-form input:not([type="checkbox"]),
+  .filter-form select,
+  .share-mastodon-row input,
+  .share-startat-time input,
+  .share-copy input,
+  .embed-snippet textarea
+) {
+  border: 1px solid var(--dc-line);
+  background: var(--dc-paper);
+  color: var(--dc-ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+:is(
+  .filter-form :is(input, select),
+  .share-mastodon-row input,
+  .share-startat-time input,
+  .share-copy input,
+  .embed-snippet textarea
+):focus {
   border-color: var(--dc-django);
   box-shadow: var(--dc-focus-ring-soft);
   outline: 0;
@@ -1278,8 +1281,7 @@ main {
   font-weight: var(--weight-bold);
 }
 
-.filter-date input,
-.filter-date input[type="date"] {
+.filter-date input {
   min-width: 0;
 }
 
@@ -1308,9 +1310,6 @@ main {
   font-weight: var(--weight-bold);
 }
 
-/* Hover/focus surface shared with other ghost-style pills — see the
-   `.button-primary, .platform-band-links a, …` block at the top. */
-
 @container filter-form (max-width: 599px) {
   .filter-extras > button[type="submit"],
   .filter-extras > .filter-clear-all {
@@ -1321,7 +1320,6 @@ main {
 .episode-list {
   --episode-badge-size: clamp(4.5rem, 9vw, 9rem);
   display: grid;
-  gap: 0;
   /* deliberate off-scale: 3.5rem (56 px) bottom buffer before footer. */
   padding: 0 0 3.5rem;
   /* Drives the narrow-row container query for .episode-row below — the
@@ -1377,7 +1375,6 @@ main {
   /* Off-scale ultra-tight leading so the episode number visually stacks
      onto the `#` glyph behind it; not a typographic line-height choice. */
   line-height: 0.64;
-  margin-top: 0;
   overflow: hidden;
   padding: var(--s-3);
   place-content: center;
@@ -1471,7 +1468,6 @@ main {
   --page-header-min-height: 350px;
   --page-header-shape-width: 1470px;
   --page-header-shape-height: 665px;
-  --page-header-shape-top: -315px;
   --page-header-shape-offset: 350px;
 
   position: relative;
@@ -1520,7 +1516,6 @@ main {
     --page-header-min-height: 290px;
     --page-header-shape-width: 1130px;
     --page-header-shape-height: 470px;
-    --page-header-shape-top: -180px;
     --page-header-shape-offset: 266px;
   }
 }
@@ -1650,7 +1645,6 @@ main {
   min-width: 0;
 }
 
-
 /* Vertical content stack — works both inside a `.card` and as a flat
    section item (audio-feed list). No container styling here. */
 .feed-card {
@@ -1666,7 +1660,8 @@ main {
   font-size: var(--text-lg);
 }
 
-.feed-card-desc {
+.feed-card-desc,
+.subscribe-audio-intro {
   color: var(--dc-muted);
   margin: 0;
   max-width: var(--dc-measure);
@@ -1700,10 +1695,9 @@ main {
   border: 1px solid var(--dc-line);
   background: var(--dc-paper);
   color: var(--dc-ink);
-  font: inherit;
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
-  cursor: pointer;
+
   /* Slightly slower than `--dc-transition-colors` so the copy-feedback flash
      reads as deliberate; opted out of the shared token on purpose. */
   transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
@@ -1721,19 +1715,6 @@ main {
   color: var(--dc-paper);
 }
 
-.feed-action--primary:hover,
-.feed-action--primary:focus-visible {
-  background: var(--dc-django);
-  border-color: var(--dc-django);
-  color: var(--dc-ink);
-}
-
-.feed-action[data-copied] {
-  background: var(--dc-django);
-  border-color: var(--dc-django);
-  color: var(--dc-ink);
-}
-
 /* `podcast://` and `feed://` only have a reliable system handler on iOS.
    On macOS Apple Podcasts opens with an empty URL field (Apple bug,
    developer.apple.com/forums/thread/737234); on Android/Windows/Linux no
@@ -1747,24 +1728,12 @@ main {
   display: inline-flex;
 }
 
-.feed-action-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
 .subscribe-audio {
   --stack-space: var(--s0);
 }
 
 .subscribe-audio-heading {
   margin: 0;
-}
-
-.subscribe-audio-intro {
-  color: var(--dc-muted);
-  margin: 0;
-  max-width: var(--dc-measure);
 }
 
 .audio-feeds {
@@ -1833,12 +1802,8 @@ main {
 
   .subscribe-feature {
     grid-column: 1;
-    /* Design decision (deliberately different from `.episode-sidebar`):
-       the feature card stretches to match the row-1 height set by the
-       aside, so the card and the aside-callout read as a pair of
-       equal-height blocks. `.episode-sidebar` uses a viewport-calculated
-       `height: calc(...)` for symmetric breath instead — different
-       intent per layout. */
+    /* Pair with `.subscribe-why` for equal-height blocks. Different
+       intent from `.episode-sidebar`'s calc-height — do not unify. */
     align-self: stretch;
   }
 
@@ -1849,18 +1814,14 @@ main {
   .subscribe-why {
     grid-column: 2;
     grid-row: 1;
-    /* Design decision: `align-self: stretch` ties the aside height to the
-       row-1 content height (feature card on the left). Contrast with
-       `.episode-sidebar`, which uses a viewport-calculated `height`
-       with `min-height: max-content` floor for symmetric vertical
-       breath around its rail content. Different intent — keep both. */
+    /* Sibling of `.subscribe-feature`, not of `.episode-sidebar` —
+       keep both height strategies as-is. */
     align-self: stretch;
     position: sticky;
     top: calc(var(--site-header-height) + var(--s2));
     margin-top: 0;
   }
 }
-
 
 /* ---------- Sponsor page ----------
    Same outer container pattern as `.subscribe-page` but a single column —
@@ -2197,9 +2158,6 @@ main {
 
 .sponsor-cta-button:hover,
 .sponsor-cta-button:focus-visible {
-  background: var(--dc-django);
-  border-color: var(--dc-django);
-  color: var(--dc-ink);
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgb(20 81 58 / 0.32);
 }
@@ -2209,7 +2167,6 @@ main {
   height: 20px;
   flex-shrink: 0;
 }
-
 
 .sponsor-hosts {
   border-top: 1px solid var(--dc-line);
@@ -2280,18 +2237,20 @@ main {
   scrollbar-color: var(--dc-django) transparent;
 }
 
-/* WebKit / Blink: thin green scrollbar, transparent track. Defined
+/* WebKit / Blink scrollbar — shared with `.transcript-content`. Defined
    explicitly so the scrollbar renders as a persistent (non-overlay)
    bar on macOS Safari/Chrome instead of auto-hiding. */
 .sponsor-reviews-grid::-webkit-scrollbar {
   height: 6px;
 }
 
-.sponsor-reviews-grid::-webkit-scrollbar-track {
+.sponsor-reviews-grid::-webkit-scrollbar-track,
+.transcript-content::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.sponsor-reviews-grid::-webkit-scrollbar-thumb {
+.sponsor-reviews-grid::-webkit-scrollbar-thumb,
+.transcript-content::-webkit-scrollbar-thumb {
   background: var(--dc-django);
   border-radius: 3px;
 }
@@ -2396,25 +2355,14 @@ main {
      bottom of its border-left divider mirrors this same distance to the
      viewport bottom at scroll = 0 (symmetric breath above / below). */
   --episode-natural-top-gap: 78px;
-  /* Shared cover size: both the episode number badge and the sidebar logo
-     cap at this height so the hero column and the sidebar column have the
-     same row-1 height. That keeps the show-notes hairline and the rail
-     hairline on the same baseline without needing subgrid (which can't
-     coexist with `position: sticky` because subgrid forces the sidebar to
-     be as tall as the body row). 18 cqi instead of vw so the cover stops
-     growing once the centered main container reaches its 1120 px cap. The
-     lower bound (11.25 rem = 180 px) is tuned so the cover keeps dominating
-     the hero row height all the way down to the mobile-stack threshold
-     — otherwise the content (wrapped title + audio) becomes the taller
-     side and the rail hairline drifts above the show-notes hairline. */
+  /* Shared cover size: capping the badge and the sidebar logo at the same
+     height keeps the show-notes hairline and the rail hairline on the same
+     baseline (cross-column invariant). */
   --episode-cover-size: clamp(11.25rem, 18cqi, 13rem);
   padding: clamp(12px, 3vw, 36px) 0 64px;
   display: grid;
-  /* Fluid column-gap and sidebar width so the two-column layout survives
-     down to ~780 cqi before the mobile-stack container query trips. The
-     sidebar min (230 px = `--aside-width` lower bound) is sized so the
-     logo at its lower-bound cover-size (180 × 1.094 ≈ 197 px wide) still
-     fits inside the 32 px padding-left. Shared with `.subscribe-page`. */
+  /* Sidebar min (`--aside-width` lower bound) fits the logo at its
+     lower-bound cover-size; shared with `.subscribe-page`. */
   grid-template-columns: minmax(0, 1fr) var(--aside-width);
   column-gap: var(--aside-column-gap);
   align-items: start;
@@ -2437,19 +2385,16 @@ main {
   align-self: start;
   display: flex;
   flex-direction: column;
+  padding-left: var(--s2);
+  border-left: 1px solid var(--dc-line);
   /* Match the .episode-hero { margin-bottom: 28px } — combined with the
      logo's `max-height: var(--episode-cover-size)` below, this lands the
      rail's top hairline on the same baseline as the show-notes hairline
      at any desktop viewport width. */
   gap: var(--s1);
-  /* Design decision (deliberately different from `.subscribe-why`):
-     stretch the column (and its border-left divider) so the bottom of
-     the line mirrors the natural top gap to the menu — symmetric breath
-     at scroll=0. `.subscribe-why` uses `align-self: stretch` to match
-     the feature card height instead; different intent per layout.
-     The user accepted the small "anschmiegen" slide as the page starts
-     to scroll, so we don't try to match the sticky-pinned position
-     for symmetry here. */
+  /* Stretches column + divider so the line's bottom mirrors the top-gap
+     (symmetric breath at scroll=0). Different intent from
+     `.subscribe-why`'s `align-self: stretch` — do not unify. */
   height: calc(100dvh - var(--site-header-height) - 2 * var(--episode-natural-top-gap));
   /* Floor at the rail's intrinsic content height: if the viewport is too
      short to fit everything with both gaps, keep the rail full-size and
@@ -2467,6 +2412,7 @@ main {
 .episode-sidebar > .show-artwork {
   /* Logo first visually; rail stays first in DOM order for a11y. */
   order: -1;
+  margin-right: auto;
 }
 
 .back-link {
@@ -2481,16 +2427,6 @@ main {
   text-decoration: none;
   margin-bottom: clamp(6px, 1.7vw, 10px);
   justify-self: start;
-}
-
-.episode-sidebar {
-  padding-left: var(--s2);
-  border-left: 1px solid var(--dc-line);
-}
-
-.episode-sidebar .show-artwork {
-  justify-self: start;
-  margin-right: auto;
 }
 
 .episode-action-rail {
@@ -2515,8 +2451,7 @@ main {
   border: 0;
   border-bottom: 1px solid var(--dc-line);
   color: inherit;
-  cursor: pointer;
-  font: inherit;
+
   letter-spacing: inherit;
   padding: var(--s-1) 0;
   text-align: left;
@@ -2525,14 +2460,10 @@ main {
   width: 100%;
 }
 
-
 .rail-item:hover,
 .rail-item:focus-visible {
   color: var(--dc-ink);
   outline: none;
-}
-
-.rail-item:focus-visible {
   box-shadow: inset 2px 0 0 var(--dc-ink);
 }
 
@@ -2570,13 +2501,10 @@ main {
   font-size: var(--text-episode-hero);
 }
 
-/* Mobile-stack switch is now tied to the article's own container width
-   instead of the whole viewport. The cutoff is chosen so the title still
-   wraps to two lines max in the hero column at the breakpoint — at
-   narrower container widths the title spills to a third line and pushes
-   the show-notes hairline below the rail hairline. The shrinking title
-   `font-size: clamp(..., 4cqi, ...)` keeps the line count stable across
-   the full 2-column range. */
+/* Mobile-stack threshold (777 px) is the point where the title still wraps
+   to ≤2 lines in the hero column — beyond that, a third line pushes the
+   show-notes hairline below the rail hairline. The title's `4cqi` clamp
+   keeps that line count stable across the full 2-column range. */
 @container episode-detail (max-width: 777px) {
   .episode-detail {
     grid-template-columns: 1fr;
@@ -2645,6 +2573,7 @@ main {
 }
 
 .audio-panel {
+  --player-min-height: 112px;
   width: min(600px, 100%);
   margin: var(--s1) 0 0;
 }
@@ -2661,7 +2590,7 @@ main {
    Gated with `:has(podlove-player)` so episodes without audio
    ("Audio copy pending" fallback) don't get a hollow reserve. */
 .audio-panel:has(podlove-player) {
-  min-height: 112px;
+  min-height: var(--player-min-height);
   position: relative;
 }
 
@@ -2672,7 +2601,7 @@ main {
 
 .audio-panel podlove-player[data-template] .podlove-player-container {
   inset: 0;
-  min-height: 112px;
+  min-height: var(--player-min-height);
   max-width: 600px;
   position: absolute;
   transition: opacity 160ms ease;
@@ -2695,8 +2624,7 @@ main {
   border: 0;
   border-radius: 0;
   color: inherit;
-  cursor: pointer;
-  font: inherit;
+
   min-height: 0;
   padding: 0;
 }
@@ -2711,7 +2639,7 @@ main {
   display: grid;
   gap: var(--s1);
   grid-template-columns: minmax(0, 1fr) auto;
-  min-height: 112px;
+  min-height: var(--player-min-height);
   padding: var(--s0);
   text-align: left;
   transition: opacity 160ms ease;
@@ -2725,7 +2653,7 @@ main {
 }
 
 .audio-panel podlove-player[data-template] .podlove-hover-placeholder:focus-visible {
-  outline: 3px solid rgb(101 166 92 / 0.35);
+  outline: var(--dc-focus-outline);
   outline-offset: 3px;
 }
 
@@ -2837,7 +2765,7 @@ main {
 
 .audio-panel podlove-player[data-template] .podlove-player-host {
   inset: 0;
-  min-height: 112px;
+  min-height: var(--player-min-height);
   opacity: 1;
   position: absolute;
   transition: opacity 160ms ease;
@@ -2858,7 +2786,7 @@ main {
      guaranteed by the wrapper's `.audio-panel { min-height }` reserve
      and the host's `position: absolute; inset: 0`, which together
      prevent visual collapse even when the iframe ends up shorter. */
-  min-height: 112px;
+  min-height: var(--player-min-height);
   width: 100%;
 }
 
@@ -2909,25 +2837,12 @@ main {
      page scroll. */
   max-height: calc(100dvh - var(--site-header-height) - 2 * var(--episode-natural-top-gap));
   overflow-y: auto;
-  /* Thin green scrollbar matching the `.sponsor-reviews-grid` reel —
-     consistent scroll-affordance across the site. Firefox + WebKit
-     declarations are listed separately because they don't share a
-     spec yet. */
   scrollbar-width: thin;
   scrollbar-color: var(--dc-django) transparent;
 }
 
 .transcript-content::-webkit-scrollbar {
   width: 6px;
-}
-
-.transcript-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.transcript-content::-webkit-scrollbar-thumb {
-  background: var(--dc-django);
-  border-radius: 3px;
 }
 
 /* Per-segment: time on the left in its own narrow column, text on the
@@ -2991,7 +2906,6 @@ main {
 
 /* Imported show-note section labels are normalized to semantic h3 blocks. */
 .show-notes h3 {
-  font-family: var(--font-body);
   /* Deliberate off-scale: 1.3rem keeps show-notes section markers visibly
      heavier than the global `h3` rule (1.2rem = --text-lg). Snapping to
      --text-lg would collapse the visual hierarchy. */
@@ -3049,9 +2963,6 @@ main {
   color: var(--dc-ink);
 }
 
-/* Hover/focus surface shared with other ghost-style pills — see the
-   `.button-primary, .platform-band-links a, …` block at the top. */
-
 .site-footer-inner {
   --cluster-space: var(--s0);
   --cluster-justify: space-between;
@@ -3085,12 +2996,6 @@ main {
   background-color: color-mix(in srgb, var(--dc-django) 15%, transparent);
   border-color: var(--dc-django);
   color: var(--dc-django);
-}
-
-.footer-mastodon-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
 }
 
 .site-footer .footer-cast-link {
@@ -3267,10 +3172,7 @@ main {
   }
 }
 
-/* Hero refinements at the second stack stage. The previous narrow-stage
-   `font-size` override on `.show-hero h1` was folded into the single
-   `--text-show-hero` clamp at the top of the file; the narrow stage now
-   only adjusts surrounding spacing. */
+/* Narrow-stage spacing tweaks for the stacked hero. */
 @container show-hero (max-width: 47.5rem) {
   .show-hero-inner {
     gap: 20px;
@@ -3283,27 +3185,21 @@ main {
 }
 
 /* Phone-sized episode pages: shrink the sidebar artwork and switch the
-   Podlove player + facade into their compact mobile layouts. All targets
-   live inside `.episode-detail`, so the rule is gated on that container.
-   The `.episode-sidebar .show-artwork { max-width: 200px }` override that
-   used to sit here was redundant with the 777 CQ block above, which
-   already sets that on the stacked sidebar — dropped. */
+   Podlove player + facade into their compact mobile layouts. Gated on
+   `.episode-detail` because all targets live inside it. */
 @container episode-detail (max-width: 760px) {
   .show-artwork {
     justify-self: start;
     max-width: 220px;
   }
 
-  /* Mobile player reserve: bump the wrapper to 168 px (was 112 px from
-     the base rule). Mirrors the desktop pattern — sizing lives on the
-     wrapper, not on <podlove-player>, so we don't need `!important`
-     here. Same `:has(podlove-player)` gate as the desktop rule so
-     audio-pending episodes don't get a hollow reserve. The
-     critical-CSS in base.html still keeps podlove-player at
-     `min-height: 168px !important` so the pre-CSS-load reserve also
-     matches. */
-  .audio-panel:has(podlove-player) {
-    min-height: 168px;
+  /* Mobile player reserve: bump the wrapper from 112 px to 168 px via
+     the `--player-min-height` cascade — desktop pattern preserved, no
+     `!important` needed. The critical-CSS in base.html still keeps
+     podlove-player at `min-height: 168px !important` so the pre-CSS-load
+     reserve also matches. */
+  .audio-panel {
+    --player-min-height: 168px;
   }
 
   .audio-panel podlove-player[data-template] .podlove-player-click-to-load {
@@ -3311,19 +3207,8 @@ main {
   }
 
   .audio-panel podlove-player[data-template] .podlove-hover-placeholder {
-    gap: var(--s1);
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
-    min-height: 168px;
-    padding: var(--s0);
-  }
-
-  .audio-panel podlove-player[data-template] iframe {
-    min-height: 168px;
-  }
-
-  .audio-panel podlove-player[data-template] .podlove-player-host {
-    min-height: 168px;
   }
 
   .podlove-facade-controls {
@@ -3519,6 +3404,8 @@ main {
 
 /* Inner card slides + scales in. Same animation for [open] and :target. */
 .share-modal-inner {
+  --stack-space: var(--s1);
+  padding: var(--s1);
   background: var(--dc-surface, var(--dc-paper));
   border-radius: 16px;
   max-width: 480px;
@@ -3573,11 +3460,6 @@ body:has(.share-modal:not([open]):target) {
   overflow: hidden;
 }
 
-.share-modal-inner {
-  --stack-space: var(--s1);
-  padding: var(--s1);
-}
-
 .share-modal-header {
   display: flex;
   align-items: center;
@@ -3613,7 +3495,7 @@ body:has(.share-modal:not([open]):target) {
   align-items: center;
   justify-content: center;
   color: var(--dc-ink);
-  cursor: pointer;
+
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
@@ -3640,10 +3522,9 @@ body:has(.share-modal:not([open]):target) {
   border: 1px solid var(--dc-line);
   color: var(--dc-ink);
   background: transparent;
-  font: inherit;
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
-  cursor: pointer;
+
   transition: var(--dc-transition-colors);
 }
 
@@ -3652,12 +3533,6 @@ body:has(.share-modal:not([open]):target) {
 .share-pill:hover,
 .share-pill:focus-visible {
   outline: none;
-}
-
-.share-pill-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
 }
 
 .share-mastodon-prompt {
@@ -3694,13 +3569,12 @@ body:has(.share-modal:not([open]):target) {
   background: none;
   border: 0;
   padding: 0;
-  font: inherit;
   font-size: var(--text-sm);
   color: var(--dc-accent-dark);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
-  cursor: pointer;
+
 }
 
 .share-mastodon-change:hover,
@@ -3730,20 +3604,9 @@ body:has(.share-modal:not([open]):target) {
 .share-mastodon-row input {
   flex: 1;
   min-width: 0;
-  border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
   padding: 0 var(--s-1);
   min-height: 38px;
-  background: var(--dc-paper);
-  color: var(--dc-ink);
-  font: inherit;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.share-mastodon-row input:focus {
-  border-color: var(--dc-django);
-  box-shadow: var(--dc-focus-ring-soft);
-  outline: 0;
 }
 
 .share-mastodon-row input[aria-invalid="true"] {
@@ -3760,17 +3623,13 @@ body:has(.share-modal:not([open]):target) {
   border-radius: var(--dc-radius-pill);
   background: var(--dc-accent-dark);
   color: var(--dc-paper);
-  font: inherit;
   font-weight: var(--weight-semibold);
-  cursor: pointer;
+
   transition: var(--dc-transition-colors);
 }
 
 .share-mastodon-row button:hover,
 .share-mastodon-row button:focus-visible {
-  background: var(--dc-django);
-  border-color: var(--dc-django);
-  color: var(--dc-ink);
   outline: none;
 }
 
@@ -3805,20 +3664,11 @@ body:has(.share-modal:not([open]):target) {
 
 .share-startat-time input {
   width: 88px;
-  border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
   padding: var(--s-2) var(--s-1);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  background: var(--dc-paper);
   text-align: center;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.share-startat-time input:focus {
-  border-color: var(--dc-django);
-  box-shadow: var(--dc-focus-ring-soft);
-  outline: 0;
 }
 
 .share-startat-time input:disabled {
@@ -3841,21 +3691,11 @@ body:has(.share-modal:not([open]):target) {
 .share-copy input {
   flex: 1;
   min-width: 0;
-  border: 1px solid var(--dc-line);
   border-radius: var(--dc-radius-pill);
   padding: 0 var(--s0);
   min-height: 42px;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  background: var(--dc-paper);
-  color: var(--dc-ink);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.share-copy input:focus {
-  border-color: var(--dc-django);
-  box-shadow: var(--dc-focus-ring-soft);
-  outline: 0;
 }
 
 .share-copy .share-copy-button {
@@ -3939,20 +3779,10 @@ body:has(.share-modal:not([open]):target) {
 .embed-snippet textarea {
   flex: 1;
   min-width: 0;
-  border: 1px solid var(--dc-line);
   border-radius: 12px;
   padding: var(--s-1);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   line-height: var(--leading-tagline);
-  background: var(--dc-paper);
-  color: var(--dc-ink);
   resize: vertical;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.embed-snippet textarea:focus {
-  border-color: var(--dc-django);
-  box-shadow: var(--dc-focus-ring-soft);
-  outline: 0;
 }

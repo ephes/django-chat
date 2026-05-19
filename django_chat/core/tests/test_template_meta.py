@@ -210,8 +210,9 @@ def test_site_css_pins_django_chat_palette() -> None:
     # <podlove-player>. Make sure the wrapper picks up the reserve only
     # when a player actually exists (no hollow reserve for the
     # "Audio copy pending" fallback).
-    assert ".audio-panel:has(podlove-player) {\n  min-height: 112px;" in css
-    assert ".audio-panel:has(podlove-player) {\n    min-height: 168px;" in css
+    assert ".audio-panel {\n  --player-min-height: 112px;" in css
+    assert ".audio-panel {\n    --player-min-height: 168px;\n  }" in css
+    assert ".audio-panel:has(podlove-player) {\n  min-height: var(--player-min-height);" in css
     assert (
         ".button-primary,\n"
         ".platform-band-links a,\n"
@@ -227,10 +228,8 @@ def test_site_css_pins_django_chat_palette() -> None:
         "  text-decoration: none;\n"
         "}"
     ) in css
-    assert (
-        ".feed-action--primary:hover,\n.feed-action--primary:focus-visible {\n"
-        "  background: var(--dc-django);" in css
-    )
+    assert ".feed-action--primary:hover,\n.feed-action--primary:focus-visible," in css
+    assert "  background: var(--dc-django);\n  border-color: var(--dc-django);" in css
     assert "#0e7c7b" not in normalized_css
     assert "#5d6673" not in normalized_css
     assert "#0d6efd" not in normalized_css
