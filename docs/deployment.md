@@ -57,7 +57,7 @@ host. Do not run production deployment from this slice.
 `deploy/requirements.yml` installs:
 
 - `local.ops_library` from `https://github.com/ephes/ops-library.git` pinned to
-  commit `39aaa0e3de8a99e07f4ac6642cae01518e8a043e`
+  commit `5faa07767dc83aa06501a09d2ed59a199b6d8ed5`
 - `community.postgresql` pinned to `4.2.0`
 - `community.general` pinned to `12.6.0`
 - `community.sops` pinned to `2.3.0`
@@ -122,7 +122,13 @@ collected files are missing:
 - `staticfiles/cast/vite/manifest.json.gz`
 
 No frontend build is configured in this slice because the required Vite
-manifests are bundled with installed Python packages.
+manifests are bundled with installed Python packages. First-party Django Chat
+CSS is minified inside Django's staticfiles storage during `collectstatic`:
+`django_chat.core.staticfiles.MinifiedCompressedManifestStaticFilesStorage`
+minifies copied `django_chat/css/*.css` files in `STATIC_ROOT` before Django's
+manifest hashing rewrites URLs and before WhiteNoise writes compressed
+variants. Source CSS remains readable in the repository, and no Node/npm
+toolchain is required on the deployment host.
 
 The deployed application also needs `gunicorn` available in the app virtualenv,
 because the generated systemd unit starts `{{ wagtail_venv_bin }}/gunicorn`,

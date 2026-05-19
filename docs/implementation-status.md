@@ -268,10 +268,11 @@ with 202 items.
 5. **Performance optimization backlog.** Continue tracking concrete Lighthouse
    and browser-network follow-ups in
    [`docs/lighthouse-performance.md#performance-optimization-backlog`](lighthouse-performance.md#performance-optimization-backlog).
-   The current focus is verifying the HTML-discoverable `/episodes/` hero
-   background on staging, then deciding whether to defer view-transition
-   JavaScript, split or critical-inline CSS, minify CSS, and revisit
-   render-blocking `rel="expect"` hints.
+   The HTML-discoverable `/episodes/` hero background has been verified on
+   staging. The current focus is deciding whether to defer view-transition
+   JavaScript, split or critical-inline CSS, and revisit render-blocking
+   `rel="expect"` hints. First-party CSS minification now runs during
+   `collectstatic`.
 6. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the

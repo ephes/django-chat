@@ -95,6 +95,23 @@ evidence.
 | `/episodes/feed/` | desktop | 100 | 100 | 100 | 100 | 0.3 s | 0.001 | 0 ms |
 | `/episodes/feed/` | mobile | 100 | 100 | 100 | 100 | 1.3 s | 0.001 | 0 ms |
 
+Current scores after the HTML-discoverable hero background deployed to staging:
+
+Measured on 2026-05-19 with Lighthouse 13.3.0. Reports are in
+`/tmp/django-chat-lighthouse-20260519/`.
+
+| Page | Mode | Performance | Accessibility | Best Practices | SEO | FCP | LCP | CLS | TBT | Speed Index |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `/episodes/` | desktop | 98 | 100 | 100 | 100 | 0.3 s | 0.5 s | 0.083 | 0 ms | 0.4 s |
+| `/episodes/` | mobile | 100 | 100 | 100 | 100 | 1.1 s | 1.4 s | 0.001 | 0 ms | 1.1 s |
+| `/episodes/django-tasks-jake-howard/` | desktop | 100 | 100 | 100 | 100 | 0.3 s | 0.3 s | 0 | 0 ms | 0.4 s |
+| `/episodes/django-tasks-jake-howard/` | mobile | 100 | 100 | 100 | 100 | 1.4 s | 1.4 s | 0 | 0 ms | 1.4 s |
+
+The 2026-05-19 `/episodes/` mobile report confirms the hero background is now
+the LCP node, is discoverable from the initial HTML, has `fetchpriority="high"`,
+and requests the smaller `show-hero-bg.avif` asset. Desktop requests the 2x AVIF
+variant under the current `sizes="(max-width: 900px) 100vw, 120vw"` rule.
+
 ## Changes Required
 
 The baseline was already strong for the subscribe page, but the episode index
@@ -146,24 +163,35 @@ Done:
   Chromium requests `show-hero-bg.avif` instead of the heavier
   `show-hero-bg@2x.avif`; a local mobile Lighthouse run reported
   `lcp-discovery-insight` score `1` with the hero image as the LCP node.
+- 2026-05-19: Re-ran deployed staging Lighthouse after the hero-image deploy for
+  `/episodes/` and `/episodes/django-tasks-jake-howard/` in desktop and mobile
+  modes. Scores were 98-100 across all Lighthouse categories, and `/episodes/`
+  mobile LCP dropped to 1.4 s.
+- 2026-05-19: Re-checked the remaining render-blocking and CSS audits. The
+  known render blockers are still the head-loaded `view-transitions.js` file
+  (~5.5 KiB transfer) and shared `site.css` (~27.2 KiB transfer). Lighthouse
+  reports 300 ms CSS render-blocking duration on mobile and a CSS minification
+  opportunity of about 12 KiB transfer. A local esbuild minification probe
+  reduced `site.css` from 105,869 bytes to 57,770 bytes raw, and from 27,167
+  bytes to 11,364 bytes when gzipped.
+- 2026-05-19: Added deploy-path CSS minification through
+  `django_chat.core.staticfiles.MinifiedCompressedManifestStaticFilesStorage`.
+  It minifies copied first-party `django_chat/css/*.css` files during
+  `collectstatic`, before manifest hashing and WhiteNoise compression, so the
+  source CSS stays readable and the deployment host does not need a frontend
+  build toolchain. A full local `collectstatic` probe reduced the hashed
+  deployed `site.css` to 58,471 bytes raw and 11,331 bytes gzipped. Re-run
+  staging Lighthouse after deploying this change before treating the CSS
+  minification savings as deployed performance evidence.
 
 Planned:
 
-- Deploy the HTML-discoverable hero background change to staging and re-run
-  mobile and desktop Lighthouse for `/episodes/` and a representative episode
-  detail page. Update the results table above with the deployed measurements.
-- Re-check the mobile `/episodes/` render-blocking audit after the hero-image
-  change. The current known blockers are the head-loaded
-  `view-transitions.js` file and the shared `site.css` stylesheet.
 - Test deferring `view-transitions.js`. If `pageswap` / `pagereveal`
   transition behaviour remains stable, load it with `defer` or split the
   same-document pagination/filter enhancement from the first-paint path.
 - Split or critical-inline CSS for the public host-review pages. The current
   single `site.css` keeps the system simple, but Lighthouse reports substantial
   unused CSS on the mobile overview page.
-- Add CSS minification to the static build/deploy path if it can be done
-  without adding a fragile frontend toolchain. Lighthouse currently reports
-  a small but measurable CSS transfer saving.
 - Revisit the `rel="expect" blocking="render"` hints on the index and detail
   pages after the image and script/CSS work. They improve native
   cross-document transition stability, but they should stay only if their

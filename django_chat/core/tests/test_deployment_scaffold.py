@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import subprocess
@@ -8,6 +9,8 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
+
+from django_chat.core.staticfiles import minify_css
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
 
@@ -173,6 +176,110 @@ def test_static_asset_check_fails_when_manifest_is_missing(tmp_path: Path) -> No
         pytest.raises(CommandError, match="Missing required Django Chat source static"),
     ):
         call_command("check_django_chat_static_assets")
+
+
+def test_css_minifier_preserves_strings_and_required_calc_spacing() -> None:
+    css = """
+    .example {
+      content: "keep   spaces /* and comment markers */";
+      width: calc(100% - 1rem);
+      color: red;
+    }
+    .example + .sibling {
+      margin-top: 1rem;
+    }
+    /* remove me */
+    """
+
+    assert minify_css(css) == (
+        '.example{content:"keep   spaces /* and comment markers */";'
+        "width:calc(100% - 1rem);color:red} .example + .sibling{margin-top:1rem}"
+    )
+
+
+def test_collectstatic_minifies_project_css_before_manifest_hashing(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    static_root = tmp_path / "staticfiles"
+    css_path = source_root / "django_chat" / "css" / "site.css"
+    image_path = source_root / "django_chat" / "img" / "paper.png"
+    css_path.parent.mkdir(parents=True)
+    image_path.parent.mkdir(parents=True)
+    css_path.write_text(
+        """
+        .hero {
+          background: url("../img/paper.png");
+          content: "keep   spacing";
+        }
+        /* deployment-only comment */
+        """,
+        encoding="utf-8",
+    )
+    image_path.write_bytes(b"fake-png")
+
+    with override_settings(
+        STATICFILES_DIRS=[source_root],
+        STATIC_ROOT=static_root,
+        STATICFILES_FINDERS=["django.contrib.staticfiles.finders.FileSystemFinder"],
+        STORAGES={
+            "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+            "staticfiles": {
+                "BACKEND": (
+                    "django_chat.core.staticfiles.MinifiedCompressedManifestStaticFilesStorage"
+                ),
+            },
+        },
+    ):
+        call_command("collectstatic", interactive=False, verbosity=0)
+
+    manifest = json.loads((static_root / "staticfiles.json").read_text(encoding="utf-8"))
+    hashed_css_name = manifest["paths"]["django_chat/css/site.css"]
+    hashed_image_name = manifest["paths"]["django_chat/img/paper.png"]
+
+    collected_css = (static_root / "django_chat" / "css" / "site.css").read_text(
+        encoding="utf-8",
+    )
+    hashed_css = (static_root / hashed_css_name).read_text(encoding="utf-8")
+
+    assert collected_css == '.hero{background:url("../img/paper.png");content:"keep   spacing"}'
+    assert "deployment-only comment" not in hashed_css
+    assert "keep   spacing" in hashed_css
+    assert f'url("../img/{Path(hashed_image_name).name}")' in hashed_css
+    assert "  " not in hashed_css.replace("keep   spacing", "")
+
+
+def test_collectstatic_minification_does_not_mutate_source_when_linking(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    static_root = tmp_path / "staticfiles"
+    css_path = source_root / "django_chat" / "css" / "site.css"
+    css_path.parent.mkdir(parents=True)
+    source_css = """
+    .hero {
+      color: red;
+    }
+    /* source comment */
+    """
+    css_path.write_text(source_css, encoding="utf-8")
+
+    with override_settings(
+        STATICFILES_DIRS=[source_root],
+        STATIC_ROOT=static_root,
+        STATICFILES_FINDERS=["django.contrib.staticfiles.finders.FileSystemFinder"],
+        STORAGES={
+            "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+            "staticfiles": {
+                "BACKEND": (
+                    "django_chat.core.staticfiles.MinifiedCompressedManifestStaticFilesStorage"
+                ),
+            },
+        },
+    ):
+        call_command("collectstatic", interactive=False, verbosity=0, link=True)
+
+    collected_css_path = static_root / "django_chat" / "css" / "site.css"
+
+    assert css_path.read_text(encoding="utf-8") == source_css
+    assert not collected_css_path.is_symlink()
+    assert collected_css_path.read_text(encoding="utf-8") == ".hero{color:red}"
 
 
 def test_production_settings_import_with_explicit_environment() -> None:

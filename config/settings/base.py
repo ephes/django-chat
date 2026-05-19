@@ -145,9 +145,11 @@ STORAGES: dict[str, dict[str, Any]] = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "django_chat.core.staticfiles.MinifiedCompressedManifestStaticFilesStorage",
     },
 }
+DJANGO_CHAT_MINIFY_STATIC_CSS = env.bool("DJANGO_CHAT_MINIFY_STATIC_CSS", default=True)
+DJANGO_CHAT_MINIFY_STATIC_CSS_PATTERNS = ("django_chat/css/*.css",)
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = ROOT_DIR / "media"
