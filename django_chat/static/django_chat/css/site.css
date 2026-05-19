@@ -583,23 +583,6 @@ main {
   view-transition-name: hero-copy;
 }
 
-::view-transition-group(root),
-::view-transition-group(hero-logo),
-::view-transition-group(hero-copy) {
-  animation-duration: 0.4s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-::view-transition-old(root),
-::view-transition-new(root),
-::view-transition-old(hero-logo),
-::view-transition-new(hero-logo),
-::view-transition-old(hero-copy),
-::view-transition-new(hero-copy) {
-  animation-duration: 0.4s;
-  animation-timing-function: ease-out;
-}
-
 /* ---------- Layout primitives ----------
    Small, single-purpose layout classes with custom-property APIs.
    Components compose with them as combo classes — the primitive
@@ -3020,6 +3003,33 @@ main {
 
 .status-page p {
   color: var(--dc-muted);
+}
+
+/* ---------- View transitions ----------
+   Top-level `@view-transition { navigation: auto }` and the per-component
+   `view-transition-name` pins live near their owners (top of file / hero
+   block). The pseudo-element animations below run in this order:
+   1. Base defaults for `root` and the hero pair (always applied).
+   2. `@media (prefers-reduced-motion: no-preference)` block — concrete
+      episode / filter / pagination animations referencing the keyframes
+      defined further down.
+   3. `@media (prefers-reduced-motion: reduce)` block — collapses
+      every pseudo to 1ms with `!important`. */
+::view-transition-group(root),
+::view-transition-group(hero-logo),
+::view-transition-group(hero-copy) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-old(hero-logo),
+::view-transition-new(hero-logo),
+::view-transition-old(hero-copy),
+::view-transition-new(hero-copy) {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-out;
 }
 
 @media (prefers-reduced-motion: no-preference) {
