@@ -30,6 +30,15 @@
   navigation: auto;
 }
 
+/* ---------- Cascade layer order ----------
+   Later layers win against earlier ones, regardless of selector
+   specificity. Unlayered rules (the view-transition pseudo-element
+   block and `@keyframes` definitions further down) win against
+   everything in layers. */
+@layer base, components, podlove, modals;
+
+@layer base {
+
 :root {
   /* ---------- Color tokens ---------- */
   --dc-ink: #0d0d0d;
@@ -416,6 +425,10 @@ main {
   align-items: center;
   min-height: clamp(32px, 1.5vw + 28px, 44px);
 }
+
+}  /* end @layer base */
+
+@layer components {
 
 .show-hero {
   background-color: var(--dc-accent-dark);
@@ -2555,6 +2568,10 @@ main {
   }
 }
 
+}  /* end @layer components */
+
+@layer podlove {
+
 .audio-panel {
   --player-min-height: 112px;
   width: min(600px, 100%);
@@ -2795,6 +2812,10 @@ main {
   font-weight: var(--weight-semibold);
 }
 
+}  /* end @layer podlove */
+
+@layer components {
+
 .episode-body {
   padding-top: var(--s2);
   border-top: 1px solid var(--dc-line);
@@ -3005,6 +3026,8 @@ main {
   color: var(--dc-muted);
 }
 
+}  /* end @layer components */
+
 /* ---------- View transitions ----------
    Top-level `@view-transition { navigation: auto }` and the per-component
    `view-transition-name` pins live near their owners (top of file / hero
@@ -3163,6 +3186,8 @@ main {
   }
 }
 
+@layer components {
+
 @container site-header (max-width: 540px) {
   .site-nav {
     flex-wrap: wrap;
@@ -3193,6 +3218,10 @@ main {
     margin-top: 0;
   }
 }
+
+}  /* end @layer components */
+
+@layer podlove {
 
 /* Phone-sized episode pages: shrink the sidebar artwork and switch the
    Podlove player + facade into their compact mobile layouts. Gated on
@@ -3237,6 +3266,10 @@ main {
     padding-top: var(--s0);
   }
 }
+
+}  /* end @layer podlove */
+
+@layer components {
 
 @container filter-form (max-width: 480px) {
   .filter-date {
@@ -3324,6 +3357,10 @@ main {
     }
   }
 }
+
+}  /* end @layer components */
+
+@layer modals {
 
 /* ---------- Share Modal ---------- */
 
@@ -3796,3 +3833,5 @@ body:has(.share-modal:not([open]):target) {
   line-height: var(--leading-tagline);
   resize: vertical;
 }
+
+}  /* end @layer modals */
