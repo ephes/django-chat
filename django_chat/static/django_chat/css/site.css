@@ -1455,7 +1455,6 @@ main {
   /* Off-scale ultra-tight leading paired with the same number-overlap
      stacking trick — visual effect, not text rhythm. */
   line-height: 0.78;
-  margin: 0;
 }
 
 .episode-row h2 {
@@ -1946,7 +1945,6 @@ main {
   font-size: var(--text-md);
   color: var(--dc-ink);
   max-width: 70ch;
-  margin: 0;
 }
 
 .sponsor-stats-intro p {
@@ -2987,7 +2985,6 @@ main {
   grid-template-columns: auto minmax(0, 1fr);
   column-gap: var(--s1);
   align-items: baseline;
-  margin: 0;
 }
 
 .transcript-segment-time {
