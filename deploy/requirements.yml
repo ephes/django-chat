@@ -2,7 +2,7 @@
 collections:
   - name: https://github.com/ephes/ops-library.git
     type: git
-    version: 39aaa0e3de8a99e07f4ac6642cae01518e8a043e
+    version: 5faa07767dc83aa06501a09d2ed59a199b6d8ed5
   - name: community.postgresql
     version: 4.2.0
   - name: community.general
