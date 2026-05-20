@@ -420,11 +420,14 @@ button.share-pill,
   color: var(--dc-django);
 }
 
-/* Auto-hide on scroll-down, reveal on scroll-up. A tiny script in
-   `header-autohide.js` toggles `.site-header--hidden` based on scroll
-   direction; the actual slide-and-fade is this CSS transition. When JS
-   is disabled the class is never added, so the header simply stays
-   sticky-visible (progressive enhancement, core functionality intact). */
+/* Auto-hide on scroll-down, reveal on scroll-up. `header-autohide.js`
+   uses an IntersectionObserver sentinel for the "past threshold" check
+   and only reads `scrollY` to determine scroll direction, toggling
+   `.site-header--hidden` solely on state changes — this keeps forced
+   reflows out of the scroll path. The actual slide-and-fade is this
+   CSS transition. When JS is disabled the class is never added, so the
+   header simply stays sticky-visible (progressive enhancement, core
+   functionality intact). */
 .site-header {
   border-bottom: 1px solid var(--dc-ink);
   container-type: inline-size;
