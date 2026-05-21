@@ -107,13 +107,14 @@
       var(--bg-deep);
   }
 
-  /* headphones illustration: large, anchored bottom-right, sits just above
-     the LISTEN UP word. Shrinks on short viewports via vh-aware clamp. */
+  /* Headphones illustration — bottom-right; width / bottom / right are
+     panel-driven via the anchor system, so the fallbacks below are just
+     sane pre-JS render values. */
   .hero__headphones {
     position: absolute;
-    right: var(--tw-hp-right, clamp(0rem, 2.3cqw, 2.75rem));
-    bottom: var(--tw-hp-bottom, calc(var(--listen-up-size) * 0.54));
-    width: var(--tw-hp-w, clamp(17.5rem, min(42cqw, 65vh), 31.25rem));
+    right: var(--tw-hp-right, 0%);
+    bottom: var(--tw-hp-bottom, 22vh);
+    width: var(--tw-hp-w, 30vw);
     height: auto;
     color: var(--accent);
     pointer-events: none;
@@ -717,6 +718,9 @@
       <div class="anchor-group" data-anchor-group="--tw-h1"></div>
       <div class="anchor-group" data-anchor-group="--tw-subtitle"></div>
       <div class="anchor-group" data-anchor-group="--tw-bubble-inset-top"></div>
+      <div class="anchor-group" data-anchor-group="--tw-hp-w"></div>
+      <div class="anchor-group" data-anchor-group="--tw-hp-bottom"></div>
+      <div class="anchor-group" data-anchor-group="--tw-hp-right"></div>
       <div class="anchor-group" data-anchor-group="--tw-hero-min-h"></div>
       <div class="anchor-group" data-anchor-group="--tw-topbar-h"></div>
     </fieldset>
@@ -763,19 +767,6 @@
       </label>
       <label><span>Outline — translate Y</span><input type="text" class="tweak-value" spellcheck="false">
         <input type="range" min="-30" max="80" step="0.5" value="10" data-var="--tw-listen-outline-ty" data-unit="%">
-      </label>
-    </fieldset>
-
-    <fieldset>
-      <legend>Headphones</legend>
-      <label><span>Width</span><input type="text" class="tweak-value" spellcheck="false">
-        <input type="range" min="200" max="900" step="5" value="580" data-var="--tw-hp-w" data-unit="px">
-      </label>
-      <label><span>Bottom offset</span><input type="text" class="tweak-value" spellcheck="false">
-        <input type="range" min="-100" max="500" step="2" value="187" data-var="--tw-hp-bottom" data-unit="px">
-      </label>
-      <label><span>Right offset</span><input type="text" class="tweak-value" spellcheck="false">
-        <input type="range" min="-120" max="120" step="1" value="0" data-var="--tw-hp-right" data-unit="px">
       </label>
     </fieldset>
 
@@ -831,61 +822,149 @@
   //   final = clamp(MIN, inner, MAX)  (or min/max/inner if one bound missing)
   // — piecewise-linear, container-query-driven, no media queries.
   const ANCHORED = [
-    { var: '--tw-logo-tx',          label: 'Logo translate X',   units: ['%','rem','vw'],
+    { var: '--tw-logo-tx',          label: 'Logo translate X',   units: ['%','rem','vw','svh','vh'],
       slider: [-180, 50, 0.5],
-      defaults: [{vw:1920, val:-135}, {vw:820, val:-60}, {vw:460, val:-45}] },
-    { var: '--tw-logo-ty',          label: 'Logo translate Y',   units: ['%','rem','vw'],
+      defaults: [
+        {vw:1920, val:-140, unit:'%'},
+        {vw:820,  val:-60,  unit:'%'},
+        {vw:400,  val:-30,  unit:'%'},
+      ] },
+    { var: '--tw-logo-ty',          label: 'Logo translate Y',   units: ['%','rem','vw','svh','vh'],
       slider: [-40, 40, 0.5],
-      defaults: [{vw:1920, val:-18}, {vw:1360, val:-10}, {vw:820, val:30}] },
-    { var: '--tw-logo-w',           label: 'Logo width',         units: ['vw','rem','%'],
+      defaults: [
+        {vw:1920, val:-18, unit:'%'},
+        {vw:1360, val:-10, unit:'%'},
+        {vw:1024, val:4,   unit:'vh'},
+        {vw:737,  val:4,   unit:'vh'},
+        {vw:380,  val:2,   unit:'vh'},
+      ] },
+    { var: '--tw-logo-w',           label: 'Logo width',         units: ['vw','rem','%','svh','vh'],
       slider: [0, 50, 0.5],
-      defaults: [{vw:1920, val:17}, {vw:1360, val:22}, {vw:820, val:32}],
-      defaultMin: '10rem', defaultMax: '35rem' },
-    { var: '--tw-bubble-tx',        label: 'Bubble translate X', units: ['%','rem','vw'],
+      defaults: [
+        {vw:1920, val:17, unit:'vw'},
+        {vw:1360, val:22, unit:'vw'},
+        {vw:820,  val:32, unit:'vw'},
+        {vw:400,  val:20, unit:'vh'},
+      ],
+      defaultMin: '9rem', defaultMax: '35rem' },
+    { var: '--tw-bubble-tx',        label: 'Bubble translate X', units: ['%','rem','vw','svh','vh'],
       slider: [-20, 25, 0.5],
-      defaults: [{vw:1024, val:0}] },
-    { var: '--tw-bubble-ty',        label: 'Bubble translate Y', units: ['%','rem','vw'],
-      slider: [-50, 30, 0.5],
-      defaults: [{vw:1920, val:-19}, {vw:820, val:25}] },
-    { var: '--tw-bubble-w',         label: 'Bubble width',       units: ['vw','rem','%'],
+      defaults: [{vw:1024, val:0, unit:'%'}] },
+    { var: '--tw-bubble-ty',        label: 'Bubble translate Y', units: ['%','rem','vw','svh','vh'],
+      slider: [-25, 30, 0.25],
+      defaults: [
+        {vw:1920, val:-22,    unit:'%'},
+        {vw:1024, val:10.5,   unit:'vw'},
+        {vw:820,  val:11,     unit:'vh'},
+        {vw:400,  val:15.5,   unit:'vh'},
+        {vw:380,  val:12.25,  unit:'vh'},
+      ] },
+    { var: '--tw-bubble-w',         label: 'Bubble width',       units: ['vw','rem','%','svh','vh'],
       slider: [20, 100, 0.5],
-      defaults: [{vw:1920, val:50}, {vw:1024, val:67}, {vw:460, val:95}],
-      defaultMin: '28rem', defaultMax: '60rem' },
-    { var: '--tw-h1',               label: 'H1 size',            units: ['rem','em','vw','%'],
+      defaults: [
+        {vw:1920, val:50, unit:'vw'},
+        {vw:1400, val:55, unit:'vw'},
+        {vw:1024, val:76, unit:'vw'},
+        {vw:400,  val:80, unit:'%'},
+      ],
+      defaultMin: '26rem', defaultMax: '60rem' },
+    { var: '--tw-h1',               label: 'H1 size',            units: ['rem','em','vw','%','svh','vh'],
       slider: [1.5, 10, 0.05],
-      defaults: [{vw:1920, val:7}, {vw:1024, val:5.5}, {vw:460, val:3.5}],
+      defaults: [
+        {vw:1920, val:7,    unit:'rem'},
+        {vw:1024, val:5.95, unit:'rem'},
+        {vw:400,  val:3.5,  unit:'rem'},
+      ],
       defaultMin: '2.5rem', defaultMax: '9rem' },
-    { var: '--tw-subtitle',         label: 'Subtitle size',      units: ['rem','em','vw','%'],
+    { var: '--tw-subtitle',         label: 'Subtitle size',      units: ['rem','em','vw','%','svh','vh'],
       slider: [0.8, 2.5, 0.02],
-      defaults: [{vw:1920, val:1.55}, {vw:460, val:1.06}],
+      defaults: [
+        {vw:1920, val:1.55, unit:'rem'},
+        {vw:400,  val:1.06, unit:'rem'},
+      ],
       defaultMin: '1.06rem', defaultMax: '1.55rem' },
-    { var: '--tw-bubble-inset-top', label: 'Bubble inset top',   units: ['%','rem'],
+    { var: '--tw-bubble-inset-top', label: 'Bubble inset top',   units: ['%','rem','svh','vh'],
       slider: [0, 40, 0.5],
-      defaults: [{vw:1920, val:22}, {vw:820, val:12}] },
+      defaults: [
+        {vw:1920, val:22, unit:'%'},
+        {vw:820,  val:12, unit:'%'},
+      ] },
+    { var: '--tw-hp-w',             label: 'Headphones width',   units: ['vw','rem','%','svh','vh','cqw'],
+      slider: [10, 80, 0.5],
+      defaults: [
+        {vw:1920, val:30, unit:'vw'},
+        {vw:1024, val:50, unit:'vh'},
+        {vw:400,  val:26, unit:'vh'},
+      ],
+      defaultMin: '5rem', defaultMax: '32rem' },
+    { var: '--tw-hp-bottom',        label: 'Headphones bottom',  units: ['vh','svh','rem','%','vw'],
+      slider: [-10, 40, 0.5],
+      defaults: [
+        {vw:1024, val:13, unit:'vw'},
+        {vw:400,  val:11, unit:'vw'},
+        {vw:380,  val:9,  unit:'vh'},
+      ] },
+    { var: '--tw-hp-right',         label: 'Headphones right',   units: ['%','rem','vw','cqw'],
+      slider: [-10, 20, 0.5],
+      defaults: [
+        {vw:1024, val:0, unit:'%'},
+        {vw:380,  val:2, unit:'rem'},
+      ] },
     { var: '--tw-hero-min-h',       label: 'Hero min height',    units: ['rem','svh','vh','%'],
       slider: [0, 80, 1],
-      defaults: [{vw:1920, val:40}, {vw:820, val:0}],
+      defaults: [
+        {vw:1920, val:40, unit:'rem'},
+        {vw:820,  val:50, unit:'rem'},
+        {vw:400,  val:0,  unit:'rem'},
+      ],
       defaultMin: 'calc(100svh - var(--tw-topbar-h, 5rem))' },
     { var: '--tw-topbar-h',         label: 'Topbar height',      units: ['rem','vh','svh','%'],
       slider: [3, 10, 0.25],
-      defaults: [{vw:1920, val:5}, {vw:1020, val:6}] },
+      defaults: [
+        {vw:1920, val:5, unit:'rem'},
+        {vw:1020, val:6, unit:'rem'},
+      ] },
   ];
   const SPEC_BY_VAR = Object.fromEntries(ANCHORED.map(s => [s.var, s]));
 
-  // sum-of-ramps composer (inner expression)
-  const composeInner = (list, unit) => {
+  // Sum-of-ramps composer. Each anchor carries its own unit; when all
+  // anchors share a unit we emit the compact delta form (just numbers),
+  // otherwise we emit the explicit subtraction form `(b - a) * ramp` so
+  // CSS calc can resolve mixed-unit deltas (e.g. `60vw - 50svh`) at use
+  // time. The `defaultUnit` argument is the fallback when an anchor
+  // doesn't carry an own unit (legacy state).
+  const composeInner = (list, defaultUnit) => {
     if (!list || !list.length) return null;
     const sorted = [...list].sort((a, b) => a.vw - b.vw);
-    if (sorted.length === 1) return `${sorted[0].val}${unit}`;
     const num = n => Number.isInteger(n) ? n.toString() : n.toFixed(4).replace(/\.?0+$/, '');
-    const parts = [`${num(sorted[0].val)}${unit}`];
+    const unitOf = a => a.unit || defaultUnit;
+    const fmt = a => `${num(a.val)}${unitOf(a)}`;
+    if (sorted.length === 1) return fmt(sorted[0]);
+
+    const allSame = sorted.every(a => unitOf(a) === unitOf(sorted[0]));
+    if (allSame) {
+      const unit = unitOf(sorted[0]);
+      const parts = [`${num(sorted[0].val)}${unit}`];
+      for (let i = 1; i < sorted.length; i++) {
+        const prev = sorted[i-1], cur = sorted[i];
+        const delta = cur.val - prev.val;
+        const span = cur.vw - prev.vw;
+        if (delta === 0 || span <= 0) continue;
+        const ramp = `clamp(0, (100cqw - ${prev.vw}px) / ${span}px, 1)`;
+        parts.push(`${delta < 0 ? '- ' : '+ '}${num(Math.abs(delta))}${unit} * ${ramp}`);
+      }
+      return `calc(${parts.join(' ')})`;
+    }
+
+    // Mixed units — emit explicit (cur - prev) deltas. CSS calc
+    // resolves mixed-unit subtractions to a single computed length.
+    const parts = [fmt(sorted[0])];
     for (let i = 1; i < sorted.length; i++) {
       const prev = sorted[i-1], cur = sorted[i];
-      const delta = cur.val - prev.val;
       const span = cur.vw - prev.vw;
-      if (delta === 0 || span <= 0) continue;
+      if (span <= 0) continue;
       const ramp = `clamp(0, (100cqw - ${prev.vw}px) / ${span}px, 1)`;
-      parts.push(`${delta < 0 ? '- ' : '+ '}${num(Math.abs(delta))}${unit} * ${ramp}`);
+      parts.push(`+ (${fmt(cur)} - ${fmt(prev)}) * ${ramp}`);
     }
     return `calc(${parts.join(' ')})`;
   };
@@ -909,28 +988,33 @@
     singles: {},   // var -> css string
   };
   const clone = x => JSON.parse(JSON.stringify(x));
+  // Each anchor carries `unit` so users can mix units across viewports.
+  // `state.anchors[var].unit` is the property-level default used when an
+  // anchor doesn't have its own (legacy state, or when adding a new
+  // anchor before the user picks a unit).
   const freshAnchorState = (spec) => ({
     unit: spec.units[0],
     min:  spec.defaultMin || '',
     max:  spec.defaultMax || '',
-    list: clone(spec.defaults),
+    list: clone(spec.defaults).map(a => ({ ...a, unit: a.unit || spec.units[0] })),
   });
   ANCHORED.forEach(spec => {
     const s = saved.anchors?.[spec.var];
     if (Array.isArray(s)) {
-      // legacy (pre-unit-picker) — wrap into new shape
+      // very-legacy (pre-unit-picker) — wrap and lift unit to anchors
       state.anchors[spec.var] = {
         unit: spec.units[0],
         min:  spec.defaultMin || '',
         max:  spec.defaultMax || '',
-        list: clone(s),
+        list: clone(s).map(a => ({ ...a, unit: a.unit || spec.units[0] })),
       };
-    } else if (s && Array.isArray(s.list) && spec.units.includes(s.unit)) {
+    } else if (s && Array.isArray(s.list)) {
+      const propUnit = spec.units.includes(s.unit) ? s.unit : spec.units[0];
       state.anchors[spec.var] = {
-        unit: s.unit,
+        unit: propUnit,
         min:  s.min || '',
         max:  s.max || '',
-        list: clone(s.list),
+        list: clone(s.list).map(a => ({ ...a, unit: a.unit || propUnit })),
       };
     } else {
       state.anchors[spec.var] = freshAnchorState(spec);
@@ -961,27 +1045,11 @@
     const a = state.anchors[spec.var];
     host.innerHTML = '';
 
-    // --- Head: label + unit picker + add button ---
+    // --- Head: label + add button (per-anchor unit lives on each row) ---
     const head = document.createElement('div');
     head.className = 'anchor-group__head';
     const title = document.createElement('span');
     title.textContent = spec.label;
-
-    const controls = document.createElement('div');
-    controls.className = 'anchor-group__controls';
-    const unitSel = document.createElement('select');
-    unitSel.className = 'anchor-unit-select';
-    unitSel.title = 'Unit';
-    spec.units.forEach(u => {
-      const opt = document.createElement('option');
-      opt.value = u; opt.textContent = u;
-      if (u === a.unit) opt.selected = true;
-      unitSel.appendChild(opt);
-    });
-    unitSel.addEventListener('change', () => {
-      a.unit = unitSel.value;
-      persist(); applyAnchored(spec.var); renderAnchorGroup(spec);
-    });
 
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
@@ -990,9 +1058,13 @@
     addBtn.textContent = '+';
     addBtn.addEventListener('click', () => {
       const sorted = [...a.list].sort((x, y) => x.vw - y.vw);
-      let newVw, newVal;
-      if (sorted.length === 0) { newVw = 1024; newVal = 0; }
-      else if (sorted.length === 1) { newVw = Math.max(320, sorted[0].vw - 400); newVal = sorted[0].val; }
+      let newVw, newVal, newUnit;
+      if (sorted.length === 0) { newVw = 1024; newVal = 0; newUnit = a.unit; }
+      else if (sorted.length === 1) {
+        newVw = Math.max(320, sorted[0].vw - 400);
+        newVal = sorted[0].val;
+        newUnit = sorted[0].unit || a.unit;
+      }
       else {
         let gap = 0, idx = 1;
         for (let i = 1; i < sorted.length; i++) {
@@ -1001,12 +1073,13 @@
         }
         newVw = Math.round((sorted[idx-1].vw + sorted[idx].vw) / 2);
         newVal = +(((sorted[idx-1].val + sorted[idx].val) / 2)).toFixed(2);
+        // Inherit the unit of the lower-vw anchor of the gap we just split.
+        newUnit = sorted[idx-1].unit || a.unit;
       }
-      a.list.push({ vw: newVw, val: newVal });
+      a.list.push({ vw: newVw, val: newVal, unit: newUnit });
       persist(); applyAnchored(spec.var); renderAnchorGroup(spec);
     });
-    controls.append(unitSel, addBtn);
-    head.append(title, controls);
+    head.append(title, addBtn);
     host.appendChild(head);
 
     // --- Bounds: min / max (free-form CSS length strings) ---
@@ -1030,8 +1103,9 @@
     });
     host.appendChild(bounds);
 
-    // --- Anchor rows ---
+    // --- Anchor rows (each anchor carries its own unit) ---
     const sorted = [...a.list].sort((x, y) => x.vw - y.vw);
+    const unitOptions = spec.units.map(u => `<option value="${u}">${u}</option>`).join('');
     sorted.forEach(anchor => {
       const row = document.createElement('div');
       row.className = 'anchor-row';
@@ -1040,16 +1114,18 @@
         <input type="number" class="anchor-vw" step="10" min="200" max="3000">
         <span>px</span>
         <input type="number" class="anchor-val" step="${spec.slider[2]}">
-        <span class="anchor-unit">${a.unit}</span>
+        <select class="anchor-unit-select" title="Unit">${unitOptions}</select>
         <button type="button" class="anchor-remove" title="Remove">×</button>
         <input type="range" class="anchor-slider"
                min="${spec.slider[0]}" max="${spec.slider[1]}" step="${spec.slider[2]}">
       `;
       const vwInput = row.querySelector('.anchor-vw');
       const valInput = row.querySelector('.anchor-val');
+      const unitSel = row.querySelector('.anchor-unit-select');
       const slider = row.querySelector('.anchor-slider');
       vwInput.value = anchor.vw;
       valInput.value = anchor.val;
+      unitSel.value = anchor.unit || a.unit;
       slider.value = anchor.val;
 
       const commitVal = (src) => {
@@ -1070,6 +1146,10 @@
       vwInput.addEventListener('change', () => renderAnchorGroup(spec)); // resort
       valInput.addEventListener('input', () => commitVal(valInput));
       slider.addEventListener('input', () => commitVal(slider));
+      unitSel.addEventListener('change', () => {
+        anchor.unit = unitSel.value;
+        persist(); applyAnchored(spec.var); updateOutput(spec);
+      });
       row.querySelector('.anchor-remove').addEventListener('click', () => {
         const idx = a.list.indexOf(anchor);
         if (idx !== -1) a.list.splice(idx, 1);

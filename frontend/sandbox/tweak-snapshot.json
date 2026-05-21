@@ -1,26 +1,18 @@
 {
+  "_meta": {
+    "captured": "2026-05-21",
+    "source": "Helium localStorage dc-tweak-v5 (latest)",
+    "notes": "Authoritative user state. singles is intentionally empty — no static-slider values were touched. Defaults in new-header.html ANCHORED config match this 1:1."
+  },
   "anchors": {
     "--tw-logo-tx": {
       "unit": "%",
       "min": "",
       "max": "",
       "list": [
-        {
-          "vw": 500,
-          "val": -41.5
-        },
-        {
-          "vw": 820,
-          "val": -62
-        },
-        {
-          "vw": 1360,
-          "val": -124.5
-        },
-        {
-          "vw": 1920,
-          "val": -139
-        }
+        { "vw": 1920, "val": -140, "unit": "%" },
+        { "vw": 820,  "val": -60,  "unit": "%" },
+        { "vw": 400,  "val": -30,  "unit": "%" }
       ]
     },
     "--tw-logo-ty": {
@@ -28,41 +20,22 @@
       "min": "",
       "max": "",
       "list": [
-        {
-          "vw": 500,
-          "val": 30.5
-        },
-        {
-          "vw": 820,
-          "val": 30
-        },
-        {
-          "vw": 1360,
-          "val": -10
-        },
-        {
-          "vw": 1920,
-          "val": -16
-        }
+        { "vw": 1920, "val": -18, "unit": "%"  },
+        { "vw": 1360, "val": -10, "unit": "%"  },
+        { "vw": 1024, "val": 4,   "unit": "vh" },
+        { "vw": 737,  "val": 4,   "unit": "vh" },
+        { "vw": 380,  "val": 2,   "unit": "vh" }
       ]
     },
     "--tw-logo-w": {
       "unit": "vw",
-      "min": "10rem",
+      "min": "9rem",
       "max": "35rem",
       "list": [
-        {
-          "vw": 820,
-          "val": 32
-        },
-        {
-          "vw": 1360,
-          "val": 22
-        },
-        {
-          "vw": 1920,
-          "val": 17.5
-        }
+        { "vw": 1920, "val": 17, "unit": "vw" },
+        { "vw": 1360, "val": 22, "unit": "vw" },
+        { "vw": 820,  "val": 32, "unit": "vw" },
+        { "vw": 400,  "val": 20, "unit": "vh" }
       ]
     },
     "--tw-bubble-tx": {
@@ -70,10 +43,7 @@
       "min": "",
       "max": "",
       "list": [
-        {
-          "vw": 1024,
-          "val": 0
-        }
+        { "vw": 1024, "val": 0, "unit": "%" }
       ]
     },
     "--tw-bubble-ty": {
@@ -81,37 +51,22 @@
       "min": "",
       "max": "",
       "list": [
-        {
-          "vw": 820,
-          "val": 25
-        },
-        {
-          "vw": 1020,
-          "val": 12.25
-        },
-        {
-          "vw": 1920,
-          "val": -19
-        }
+        { "vw": 1920, "val": -22,   "unit": "%"  },
+        { "vw": 1024, "val": 10.5,  "unit": "vw" },
+        { "vw": 820,  "val": 11,    "unit": "vh" },
+        { "vw": 400,  "val": 15.5,  "unit": "vh" },
+        { "vw": 380,  "val": 12.25, "unit": "vh" }
       ]
     },
     "--tw-bubble-w": {
       "unit": "vw",
-      "min": "28rem",
+      "min": "26rem",
       "max": "60rem",
       "list": [
-        {
-          "vw": 460,
-          "val": 95
-        },
-        {
-          "vw": 1024,
-          "val": 67
-        },
-        {
-          "vw": 1920,
-          "val": 50
-        }
+        { "vw": 1920, "val": 50, "unit": "vw" },
+        { "vw": 1400, "val": 55, "unit": "vw" },
+        { "vw": 1024, "val": 76, "unit": "vw" },
+        { "vw": 400,  "val": 80, "unit": "%"  }
       ]
     },
     "--tw-h1": {
@@ -119,26 +74,9 @@
       "min": "2.5rem",
       "max": "9rem",
       "list": [
-        {
-          "vw": 320,
-          "val": 3
-        },
-        {
-          "vw": 500,
-          "val": 3.6
-        },
-        {
-          "vw": 800,
-          "val": 5.25
-        },
-        {
-          "vw": 1024,
-          "val": 5.6
-        },
-        {
-          "vw": 1920,
-          "val": 6.9
-        }
+        { "vw": 1920, "val": 7,    "unit": "rem" },
+        { "vw": 1024, "val": 5.95, "unit": "rem" },
+        { "vw": 400,  "val": 3.5,  "unit": "rem" }
       ]
     },
     "--tw-subtitle": {
@@ -146,18 +84,8 @@
       "min": "1.06rem",
       "max": "1.55rem",
       "list": [
-        {
-          "vw": 460,
-          "val": 1.06
-        },
-        {
-          "vw": 1024,
-          "val": 1.25
-        },
-        {
-          "vw": 1920,
-          "val": 1.55
-        }
+        { "vw": 1920, "val": 1.55, "unit": "rem" },
+        { "vw": 400,  "val": 1.06, "unit": "rem" }
       ]
     },
     "--tw-bubble-inset-top": {
@@ -165,29 +93,47 @@
       "min": "",
       "max": "",
       "list": [
-        {
-          "vw": 820,
-          "val": 12
-        },
-        {
-          "vw": 1920,
-          "val": 22
-        }
+        { "vw": 1920, "val": 22, "unit": "%" },
+        { "vw": 820,  "val": 12, "unit": "%" }
+      ]
+    },
+    "--tw-hp-w": {
+      "unit": "vw",
+      "min": "5rem",
+      "max": "32rem",
+      "list": [
+        { "vw": 1920, "val": 30, "unit": "vw" },
+        { "vw": 1024, "val": 50, "unit": "vh" },
+        { "vw": 400,  "val": 26, "unit": "vh" }
+      ]
+    },
+    "--tw-hp-bottom": {
+      "unit": "vh",
+      "min": "",
+      "max": "",
+      "list": [
+        { "vw": 1024, "val": 13, "unit": "vw" },
+        { "vw": 400,  "val": 11, "unit": "vw" },
+        { "vw": 380,  "val": 9,  "unit": "vh" }
+      ]
+    },
+    "--tw-hp-right": {
+      "unit": "%",
+      "min": "",
+      "max": "",
+      "list": [
+        { "vw": 1024, "val": 0, "unit": "%"   },
+        { "vw": 380,  "val": 2, "unit": "rem" }
       ]
     },
     "--tw-hero-min-h": {
       "unit": "rem",
-      "min": "calc(100svh - var(--topbar-h))",
+      "min": "calc(100svh - var(--tw-topbar-h, 5rem))",
       "max": "",
       "list": [
-        {
-          "vw": 820,
-          "val": 0
-        },
-        {
-          "vw": 1920,
-          "val": 40
-        }
+        { "vw": 1920, "val": 40, "unit": "rem" },
+        { "vw": 820,  "val": 50, "unit": "rem" },
+        { "vw": 400,  "val": 0,  "unit": "rem" }
       ]
     },
     "--tw-topbar-h": {
@@ -195,37 +141,10 @@
       "min": "",
       "max": "",
       "list": [
-        {
-          "vw": 1020,
-          "val": 6
-        },
-        {
-          "vw": 1920,
-          "val": 5
-        }
+        { "vw": 1920, "val": 5, "unit": "rem" },
+        { "vw": 1020, "val": 6, "unit": "rem" }
       ]
     }
   },
-  "singles": {
-    "--tw-bubble-inset-bottom": "15%",
-    "--tw-bubble-inset-x": "8.5%",
-    "--tw-sub-size": "1.4rem",
-    "--tw-sub-py": "1.5rem",
-    "--tw-sub-px": "3.5rem",
-    "--tw-listen-size": "340px",
-    "--tw-listen-tracking": "-0.07em",
-    "--tw-listen-fill-tx": "-49%",
-    "--tw-listen-fill-ty": "8%",
-    "--tw-listen-outline-tx": "-51%",
-    "--tw-listen-outline-ty": "10%",
-    "--tw-hp-w": "580px",
-    "--tw-hp-bottom": "188px",
-    "--tw-hp-right": "0px",
-    "--tw-ep-size": "2.1rem",
-    "--tw-ep-tracking": "0.04em",
-    "--tw-ep-arrow": "0.9em",
-    "--tw-ep-gap": "0.4em",
-    "--tw-ep-right": "2.95vw",
-    "--tw-ep-bottom": "8px"
-  }
+  "singles": {}
 }
