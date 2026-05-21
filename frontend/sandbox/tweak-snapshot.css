@@ -1,0 +1,35 @@
+/* Captured 2026-05-21 — user's tuned panel state before the cleanup refactor.
+   Paste into :root or copy individual values back into the panel by hand. */
+:root {
+  --tw-logo-tx: calc(-41.5% - 20.5% * clamp(0, (100vw - 500px) / 320px, 1) - 62.5% * clamp(0, (100vw - 820px) / 540px, 1) - 14.5% * clamp(0, (100vw - 1360px) / 560px, 1));
+  --tw-logo-ty: calc(30.5% - 0.5% * clamp(0, (100vw - 500px) / 320px, 1) - 40% * clamp(0, (100vw - 820px) / 540px, 1) - 6% * clamp(0, (100vw - 1360px) / 560px, 1));
+  --tw-logo-w: clamp(10rem, calc(32vw - 10vw * clamp(0, (100vw - 820px) / 540px, 1) - 4.5vw * clamp(0, (100vw - 1360px) / 560px, 1)), 35rem);
+  --tw-bubble-tx: 0%;
+  --tw-bubble-ty: calc(25% - 12.75% * clamp(0, (100vw - 820px) / 200px, 1) - 31.25% * clamp(0, (100vw - 1020px) / 900px, 1));
+  --tw-bubble-w: clamp(28rem, calc(95vw - 28vw * clamp(0, (100vw - 460px) / 564px, 1) - 17vw * clamp(0, (100vw - 1024px) / 896px, 1)), 60rem);
+  --tw-h1: clamp(2.5rem, calc(3rem + 0.6rem * clamp(0, (100vw - 320px) / 180px, 1) + 1.65rem * clamp(0, (100vw - 500px) / 300px, 1) + 0.35rem * clamp(0, (100vw - 800px) / 224px, 1) + 1.3rem * clamp(0, (100vw - 1024px) / 896px, 1)), 9rem);
+  --tw-subtitle: clamp(1.06rem, calc(1.06rem + 0.19rem * clamp(0, (100vw - 460px) / 564px, 1) + 0.3rem * clamp(0, (100vw - 1024px) / 896px, 1)), 1.55rem);
+  --tw-bubble-inset-top: calc(12% + 10% * clamp(0, (100vw - 820px) / 1100px, 1));
+  --tw-hero-min-h: max(calc(100svh - var(--topbar-h)), calc(0rem + 40rem * clamp(0, (100vw - 820px) / 1100px, 1)));
+  --tw-topbar-h: calc(6rem - 1rem * clamp(0, (100vw - 1020px) / 900px, 1));
+  --tw-bubble-inset-bottom: 15%;
+  --tw-bubble-inset-x: 8.5%;
+  --tw-sub-size: 1.4rem;
+  --tw-sub-py: 1.5rem;
+  --tw-sub-px: 3.5rem;
+  --tw-listen-size: 340px;
+  --tw-listen-tracking: -0.07em;
+  --tw-listen-fill-tx: -49%;
+  --tw-listen-fill-ty: 8%;
+  --tw-listen-outline-tx: -51%;
+  --tw-listen-outline-ty: 10%;
+  --tw-hp-w: 580px;
+  --tw-hp-bottom: 188px;
+  --tw-hp-right: 0px;
+  --tw-ep-size: 2.1rem;
+  --tw-ep-tracking: 0.04em;
+  --tw-ep-arrow: 0.9em;
+  --tw-ep-gap: 0.4em;
+  --tw-ep-right: 2.95vw;
+  --tw-ep-bottom: 8px;
+}

@@ -1,0 +1,231 @@
+{
+  "anchors": {
+    "--tw-logo-tx": {
+      "unit": "%",
+      "min": "",
+      "max": "",
+      "list": [
+        {
+          "vw": 500,
+          "val": -41.5
+        },
+        {
+          "vw": 820,
+          "val": -62
+        },
+        {
+          "vw": 1360,
+          "val": -124.5
+        },
+        {
+          "vw": 1920,
+          "val": -139
+        }
+      ]
+    },
+    "--tw-logo-ty": {
+      "unit": "%",
+      "min": "",
+      "max": "",
+      "list": [
+        {
+          "vw": 500,
+          "val": 30.5
+        },
+        {
+          "vw": 820,
+          "val": 30
+        },
+        {
+          "vw": 1360,
+          "val": -10
+        },
+        {
+          "vw": 1920,
+          "val": -16
+        }
+      ]
+    },
+    "--tw-logo-w": {
+      "unit": "vw",
+      "min": "10rem",
+      "max": "35rem",
+      "list": [
+        {
+          "vw": 820,
+          "val": 32
+        },
+        {
+          "vw": 1360,
+          "val": 22
+        },
+        {
+          "vw": 1920,
+          "val": 17.5
+        }
+      ]
+    },
+    "--tw-bubble-tx": {
+      "unit": "%",
+      "min": "",
+      "max": "",
+      "list": [
+        {
+          "vw": 1024,
+          "val": 0
+        }
+      ]
+    },
+    "--tw-bubble-ty": {
+      "unit": "%",
+      "min": "",
+      "max": "",
+      "list": [
+        {
+          "vw": 820,
+          "val": 25
+        },
+        {
+          "vw": 1020,
+          "val": 12.25
+        },
+        {
+          "vw": 1920,
+          "val": -19
+        }
+      ]
+    },
+    "--tw-bubble-w": {
+      "unit": "vw",
+      "min": "28rem",
+      "max": "60rem",
+      "list": [
+        {
+          "vw": 460,
+          "val": 95
+        },
+        {
+          "vw": 1024,
+          "val": 67
+        },
+        {
+          "vw": 1920,
+          "val": 50
+        }
+      ]
+    },
+    "--tw-h1": {
+      "unit": "rem",
+      "min": "2.5rem",
+      "max": "9rem",
+      "list": [
+        {
+          "vw": 320,
+          "val": 3
+        },
+        {
+          "vw": 500,
+          "val": 3.6
+        },
+        {
+          "vw": 800,
+          "val": 5.25
+        },
+        {
+          "vw": 1024,
+          "val": 5.6
+        },
+        {
+          "vw": 1920,
+          "val": 6.9
+        }
+      ]
+    },
+    "--tw-subtitle": {
+      "unit": "rem",
+      "min": "1.06rem",
+      "max": "1.55rem",
+      "list": [
+        {
+          "vw": 460,
+          "val": 1.06
+        },
+        {
+          "vw": 1024,
+          "val": 1.25
+        },
+        {
+          "vw": 1920,
+          "val": 1.55
+        }
+      ]
+    },
+    "--tw-bubble-inset-top": {
+      "unit": "%",
+      "min": "",
+      "max": "",
+      "list": [
+        {
+          "vw": 820,
+          "val": 12
+        },
+        {
+          "vw": 1920,
+          "val": 22
+        }
+      ]
+    },
+    "--tw-hero-min-h": {
+      "unit": "rem",
+      "min": "calc(100svh - var(--topbar-h))",
+      "max": "",
+      "list": [
+        {
+          "vw": 820,
+          "val": 0
+        },
+        {
+          "vw": 1920,
+          "val": 40
+        }
+      ]
+    },
+    "--tw-topbar-h": {
+      "unit": "rem",
+      "min": "",
+      "max": "",
+      "list": [
+        {
+          "vw": 1020,
+          "val": 6
+        },
+        {
+          "vw": 1920,
+          "val": 5
+        }
+      ]
+    }
+  },
+  "singles": {
+    "--tw-bubble-inset-bottom": "15%",
+    "--tw-bubble-inset-x": "8.5%",
+    "--tw-sub-size": "1.4rem",
+    "--tw-sub-py": "1.5rem",
+    "--tw-sub-px": "3.5rem",
+    "--tw-listen-size": "340px",
+    "--tw-listen-tracking": "-0.07em",
+    "--tw-listen-fill-tx": "-49%",
+    "--tw-listen-fill-ty": "8%",
+    "--tw-listen-outline-tx": "-51%",
+    "--tw-listen-outline-ty": "10%",
+    "--tw-hp-w": "580px",
+    "--tw-hp-bottom": "188px",
+    "--tw-hp-right": "0px",
+    "--tw-ep-size": "2.1rem",
+    "--tw-ep-tracking": "0.04em",
+    "--tw-ep-arrow": "0.9em",
+    "--tw-ep-gap": "0.4em",
+    "--tw-ep-right": "2.95vw",
+    "--tw-ep-bottom": "8px"
+  }
+}
