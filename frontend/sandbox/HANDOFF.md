@@ -45,7 +45,7 @@ val₀<unit₀> + Σᵢ (valᵢ<unitᵢ> − valᵢ₋₁<unitᵢ₋₁>) × cla
 
 | Property | Defaults | Units |
 |---|---|---|
-| `--tw-logo-tx` | 4 anchors @ 1920/-160%, 1400/-145%, 820/-60%, 400/-30% | %, rem, vw, svh, vh |
+| `--tw-logo-tx` | 5 anchors @ 1920/-159.5%, 1400/-145%, 1024/-90%, 820/-60%, 400/-30% | %, rem, vw, svh, vh |
 | `--tw-logo-ty` | 4 anchors @ 1400/-6vh, 1024/2vh, 737/4vh, 380/2vh | %, rem, vw, svh, vh |
 | `--tw-logo-w` | 4 anchors @ 1920/17vw, 1360/22vw, 820/32vw, 400/20vh; min 9rem max 35rem | vw, rem, %, svh, vh |
 | `--tw-bubble-tx` | 1 anchor @ 1024/0% | %, rem, vw, svh, vh |
@@ -57,13 +57,13 @@ val₀<unit₀> + Σᵢ (valᵢ<unitᵢ> − valᵢ₋₁<unitᵢ₋₁>) × cla
 | `--tw-hp-w` | 3 anchors @ 1920/30vw, 1024/50vh, 400/26vh; min 5rem max 32rem | vw, rem, %, svh, vh, cqw |
 | `--tw-hp-bottom` | 3 anchors @ 1024/13vw, 400/11vw, 380/9vh | vh, svh, rem, %, vw |
 | `--tw-hp-right` | 2 anchors @ 1024/0%, 380/2rem | %, rem, vw, cqw |
-| `--tw-ep-size` | 3 anchors @ 1920/2.5rem, 1024/4rem, 460/2rem; min 1rem max 7rem | rem, em, vw, %, svh, vh, cqw |
+| `--tw-ep-size` | 2 anchors @ 1030/2.5rem, 1024/5.15cqw; min 1rem max 7rem (sharp 6 px ramp = step at the mobile↔desktop boundary) | rem, em, vw, %, svh, vh, cqw |
 | `--tw-ep-tracking` | 2 anchors @ 1920/0.04em, 820/-0.045em | em, rem, % |
-| `--tw-ep-arrow` | 2 anchors @ 1920/0.9em, 1024/1.5rem | em, rem, vw, cqw |
+| `--tw-ep-arrow` | 1 anchor @ 1024/1.75rem | em, rem, vw, cqw |
 | `--tw-ep-gap` | 1 anchor @ 1024/0.1em | em, rem, % |
-| `--tw-ep-right` | 2 anchors @ 1920/1.5rem, 1024/3rem | rem, vw, %, cqw |
-| `--tw-ep-bottom` | 2 anchors @ 1920/1.5rem, 820/18vh | rem, vh, svh, %, cqw |
-| `--tw-hero-min-h` | 2 anchors @ 820/50rem, 400/0rem; min calc(100svh − var(--tw-topbar-h, 5rem)) | rem, svh, vh, % |
+| `--tw-ep-right` | 2 anchors @ 1920/1.5rem, 1024/5.3cqw | rem, vw, %, cqw |
+| `--tw-ep-bottom` | 2 anchors @ 1030/1.5rem, 1024/16cqw (sharp 6 px ramp) | rem, vh, svh, %, cqw |
+| `--tw-hero-min-h` | 3 anchors @ 1400/50rem, 820/50rem, 400/0rem; min calc(100svh − var(--tw-topbar-h, 5rem)) | rem, svh, vh, % |
 | `--tw-topbar-h` | 2 anchors @ 1920/7rem, 1024/6rem | rem, vh, svh, % |
 
 ### Static Single-Sliders (im Panel, kein Anchor-System)

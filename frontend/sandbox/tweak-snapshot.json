@@ -2,7 +2,7 @@
   "_meta": {
     "captured": "2026-05-22",
     "source": "Helium localStorage dc-tweak-v5",
-    "notes": "Authoritative user state. singles is intentionally empty — no static-slider values were touched. Code defaults in new-header.html ANCHORED config match this 1:1 with minor smoothing: logo-tx @1024:-90 dropped (sat on linear path between @820 and @1400), hero-min-h @1400:50rem dropped (matched @820:50rem, flat segment), and logo-tx @1920 rounded -159.5 → -160. Episodes hook has been promoted to the anchor system; defaults for ep-* are fresh (not in saved state)."
+    "notes": "Authoritative user state, mirrored 1:1 into the ANCHORED defaults in new-header.html. singles is intentionally empty — no static-slider values were touched. Note: ep-size and ep-bottom use a sharp 6 px ramp at 1024→1030 (effectively a step function between mobile/tablet and desktop layouts). logo-tx and hero-min-h have anchors on or at their linear segments (kept as deliberate control points)."
   },
   "anchors": {
     "--tw-logo-tx": {
@@ -127,6 +127,58 @@
       "list": [
         { "vw": 1024, "val": 0, "unit": "%"   },
         { "vw": 380,  "val": 2, "unit": "rem" }
+      ]
+    },
+    "--tw-ep-size": {
+      "unit": "rem",
+      "min": "1rem",
+      "max": "7rem",
+      "list": [
+        { "vw": 1030, "val": 2.5,  "unit": "rem" },
+        { "vw": 1024, "val": 5.15, "unit": "cqw" }
+      ]
+    },
+    "--tw-ep-tracking": {
+      "unit": "em",
+      "min": "",
+      "max": "",
+      "list": [
+        { "vw": 1920, "val": 0.04,   "unit": "em" },
+        { "vw": 820,  "val": -0.045, "unit": "em" }
+      ]
+    },
+    "--tw-ep-arrow": {
+      "unit": "em",
+      "min": "",
+      "max": "",
+      "list": [
+        { "vw": 1024, "val": 1.75, "unit": "rem" }
+      ]
+    },
+    "--tw-ep-gap": {
+      "unit": "em",
+      "min": "",
+      "max": "",
+      "list": [
+        { "vw": 1024, "val": 0.1, "unit": "em" }
+      ]
+    },
+    "--tw-ep-right": {
+      "unit": "rem",
+      "min": "",
+      "max": "",
+      "list": [
+        { "vw": 1920, "val": 1.5, "unit": "rem" },
+        { "vw": 1024, "val": 5.3, "unit": "cqw" }
+      ]
+    },
+    "--tw-ep-bottom": {
+      "unit": "rem",
+      "min": "",
+      "max": "",
+      "list": [
+        { "vw": 1030, "val": 1.5, "unit": "rem" },
+        { "vw": 1024, "val": 16,  "unit": "cqw" }
       ]
     },
     "--tw-hero-min-h": {
