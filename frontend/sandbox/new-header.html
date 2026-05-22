@@ -95,9 +95,15 @@
     overflow-x: clip;             /* sides bleed: clip horizontally … */
     overflow-y: visible;          /* … but LISTEN UP may dip below */
     /* No stacking context here — lets the logo bubble pierce the topbar.
-       min-height is panel-driven (--tw-hero-min-h); the default keeps
-       the hero filling tall viewports below the topbar. */
-    min-height: var(--tw-hero-min-h, calc(100svh - 5rem));
+       Hero never exceeds the visible viewport (max-height = svh − topbar)
+       so LISTEN UP and the Episodes hook always sit on the viewport edge.
+       The panel-driven --tw-hero-min-h floors hero on tall viewports;
+       it's clamped to svh-topbar so a hard rem floor can't push content
+       below the fold. The bubble may overflow downward and overlap
+       LISTEN UP on short viewports (intentional, bubble paints on top
+       via DOM order). */
+    min-height: min(var(--tw-hero-min-h, 50rem), calc(100svh - var(--tw-topbar-h, 5rem)));
+    max-height: calc(100svh - var(--tw-topbar-h, 5rem));
     padding-block: 0 clamp(5rem, 14vh, 11rem);
     color: #fff;
     /* gradient overlay layered on top of the photographic background */
@@ -820,9 +826,9 @@
     { var: '--tw-bubble-ty',        label: 'Bubble translate Y', units: ['%','rem','vw','svh','vh'],
       slider: [-25, 30, 0.25],
       defaults: [
-        {vw:1920, val:-22,    unit:'%'},
-        {vw:1400, val:-11.25, unit:'vh'},
-        {vw:1024, val:2.5,    unit:'vh'},
+        {vw:1920, val:-22,  unit:'%'},
+        {vw:1400, val:-10,  unit:'vw'},
+        {vw:1024, val:2.5,  unit:'vh'},
         {vw:820,  val:11,     unit:'vh'},
         {vw:400,  val:15.5,   unit:'vh'},
         {vw:380,  val:12.25,  unit:'vh'},

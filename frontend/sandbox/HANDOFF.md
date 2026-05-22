@@ -49,7 +49,7 @@ val₀<unit₀> + Σᵢ (valᵢ<unitᵢ> − valᵢ₋₁<unitᵢ₋₁>) × cla
 | `--tw-logo-ty` | 4 anchors @ 1400/-6vh, 1024/2vh, 737/4vh, 380/2vh | %, rem, vw, svh, vh |
 | `--tw-logo-w` | 4 anchors @ 1920/17vw, 1360/22vw, 820/32vw, 400/20vh; min 9rem max 35rem | vw, rem, %, svh, vh |
 | `--tw-bubble-tx` | 1 anchor @ 1024/0% | %, rem, vw, svh, vh |
-| `--tw-bubble-ty` | 6 anchors @ 1920/-22%, 1400/-11.25vh, 1024/2.5vh, 820/11vh, 400/15.5vh, 380/12.25vh | %, rem, vw, svh, vh |
+| `--tw-bubble-ty` | 6 anchors @ 1920/-22%, 1400/-10vw, 1024/2.5vh, 820/11vh, 400/15.5vh, 380/12.25vh | %, rem, vw, svh, vh |
 | `--tw-bubble-w` | 4 anchors @ 1920/50vw, 1400/59vw, 1024/84%, 600/90%; min 26rem max 56rem | vw, rem, %, svh, vh |
 | `--tw-h1` | 3 anchors @ 1920/7rem, 1024/6rem, 400/3.5rem; min 2.5rem max 9rem | rem, em, vw, %, svh, vh |
 | `--tw-subtitle` | 2 anchors @ 1920/1.55rem, 400/1.06rem; min 1.06rem max 1.55rem | rem, em, vw, %, svh, vh |
@@ -63,7 +63,7 @@ val₀<unit₀> + Σᵢ (valᵢ<unitᵢ> − valᵢ₋₁<unitᵢ₋₁>) × cla
 | `--tw-ep-gap` | 1 anchor @ 1024/0.1em | em, rem, % |
 | `--tw-ep-right` | 2 anchors @ 1920/1.5rem, 1024/5.3cqw | rem, vw, %, cqw |
 | `--tw-ep-bottom` | 2 anchors @ 1030/1.5rem, 1024/16cqw (sharp 6 px ramp) | rem, vh, svh, %, cqw |
-| `--tw-hero-min-h` | 3 anchors @ 1400/50rem, 820/50rem, 400/0rem; min calc(100svh − var(--tw-topbar-h, 5rem)) | rem, svh, vh, % |
+| `--tw-hero-min-h` | 3 anchors @ 1400/50rem, 820/50rem, 400/0rem; min `calc(100svh - var(--tw-topbar-h, 5rem))`. The composed value is wrapped in `min(…, svh-topbar)` inside the `.hero` rule and capped by `max-height: svh-topbar` so the rem floor can never push hero below the viewport fold. | rem, svh, vh, % |
 | `--tw-topbar-h` | 2 anchors @ 1920/7rem, 1024/6rem | rem, vh, svh, % |
 
 ### Static Single-Sliders (im Panel, kein Anchor-System)
