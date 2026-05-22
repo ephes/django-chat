@@ -202,9 +202,14 @@
      overlap with text). Vertical insets use padding-block with an
      aspect-ratio compensator (× 908/1039) so the panel's % values stay
      meaningful as "% of bubble HEIGHT" — % padding is normally inline,
-     so without the compensator the visual position would drift. */
+     so without the compensator the visual position would drift.
+     z-index: 5 paints the bubble above LISTEN UP (z:0) and the
+     Episodes hook (z:4) — the hook should slide behind on short
+     viewports where the bubble overhangs. The logo bubble keeps
+     z-index: 60 so it still pierces the sticky topbar (z:50). */
   .hero__bubble {
     position: relative;
+    z-index: 5;
     width: var(--tw-bubble-w, 50rem);
     aspect-ratio: 1039 / 908;
     transform: translate(var(--tw-bubble-tx, 0%), var(--tw-bubble-ty, 0%));
