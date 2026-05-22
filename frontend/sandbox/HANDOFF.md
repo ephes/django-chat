@@ -2,207 +2,108 @@
 
 ## Goal
 
-Wir bauen den neuen Header für die Django-Chat-Seite als Sandbox-Komponente. Erst sauber außerhalb der Live-Seite entwickeln, dann später migrieren.
+Selbst-contained Sandbox für den neuen Django-Chat Hero-Header. Erst hier sauber zu Ende bauen, dann migrieren ins Hauptprojekt (`django_chat/templates/cast/django_chat/base.html` + `django_chat/static/django_chat/css/site.css`).
 
-**Entwurf:** `/Users/katha/Desktop/Django-Header-Idee.jpg`
-**Original-Assets:** auf `~/Desktop/` (DC-Bubble.svg, Django-chat-logo-neu.svg, Headphones.svg)
+**Entwurf**: `/Users/katha/Desktop/Django-Header-Idee.jpg`
+**Repo-Assets**: `frontend/sandbox/assets/` (Django-chat-logo, Headphones SVG, Hero-Hintergrundbild)
 
 ## Files
 
-- `frontend/sandbox/new-header.html` — die komplette Sandbox (HTML + CSS + JS)
-- `frontend/sandbox/assets/` — Kopien der drei SVGs + des Hero-Hintergrundbilds
-- `frontend/sandbox/HANDOFF.md` — dieses Dokument
+- `frontend/sandbox/new-header.html` — kompletter Sandbox-HTML mit eingebettetem CSS + JS + Tweak-Panel.
+- `frontend/sandbox/assets/` — Logo, Headphones, Hero-BG.
+- `frontend/sandbox/tweak-snapshot.json` — authoritative Snapshot der Panel-Anchors (extrahiert direkt aus Helium-LevelDB). `singles: {}` ist immer leer, weil keine statischen Slider angefasst wurden.
+- `frontend/sandbox/tweak-snapshot.css` — legacy paste-ready CSS-Snippet (historisch, JSON ist der Wahrheits-Stand).
 
-## Vorgehen
+## Aktueller Stand (2026-05-22)
 
-1. **Schritt 1 + 2 (erledigt):** statisches Layout, responsive Verhalten, Komposition
-2. **Schritt 3 (offen):** Scroll-Morph — Logo + „Django Chat" wandern beim Scrollen aus dem Hero in die Topbar, via `animation-timeline: scroll()`
-3. **Schritt 4 (offen):** Maus-Parallax auf Headphones + LISTEN-UP-Layer
-4. **Schritt 5 (offen):** Migration in `django_chat/templates/cast/django_chat/base.html` und `site.css`
+### Komposition
 
-## Aktueller Stand der Komponente
+- **Topbar** (`.topbar`): sticky, einreihig, vertikal zentriert. Brand-Slot links (opacity:0 — reserved für Scroll-Morph, Schritt 3). Nav rechts. Auf Tablet+Mobile (≤820 cqw via @container) horizontal zentriert, Brand `display: none`.
+- **Hero** (`.hero`): position:relative, padding-block 0 unten clamp(5rem, 14vh, 11rem). min-height anchored via `--tw-hero-min-h`.
+- **`.hero__center`**: Grid mit logo-bubble + bubble in derselben grid-cell (z-stacking via DOM order + z-index). Rechts-aligned wenn nötig (über bubble-w-Anchors).
+- **`.hero__bubble`**: Flex column, position relative. SVG sitzt absolut dahinter. Content (H1 + Subtitle + Subscribe) flex-zentriert. Padding-block + padding-inline für Insets (% von container-WIDTH, mit aspect-ratio-Compensator × 908/1039 für vertikale Paddings, damit Panel-`%`-Werte als "% der HÖHE" funktionieren).
+- **`.hero__logo-bubble`**: position relative, aspect-ratio 442/399, transform translate(--tw-logo-tx, --tw-logo-ty). z-index 60.
+- **`.hero__headphones`**: position absolute bottom-right. width / bottom / right alle anchored.
+- **LISTEN UP** (`.listen-up`): position absolute bottom: 0 of stage. Fill + Outline mit translate-Y ~5%/-1% (Anschnitt-Effekt unter Viewport-Kante gewollt).
+- **Episodes Hook** (`.hero__episodes`): position absolute. Wandert von kleinem Corner-Label (Desktop) zu großem Above-LISTEN-UP-Marker (Mobile) — komplett über Anchors gesteuert, ohne @container-Override.
 
-### Komposition (von oben nach unten)
+### Anchor-System (Panel)
 
-- **Topbar** (`.topbar`): sticky, 2 Reihen — Menü oben rechts, Brand-Lockup („django Django Chat") unten links. Auf Mobile sichtbar (immer), auf Desktop bis zum Scroll-Morph unsichtbar (Ziel-Slot für den Scroll-Morph).
-- **Hero** (`.hero`): `min-height: max(calc(100svh - var(--topbar-h)), 42rem)` — Bubble, Logo, Headphones, LISTEN UP, Episodes-Hook
-- **Below** (`.below`): Placeholder-Section unter dem Hero (Scroll-Test)
+Pro Property eine Anchor-Liste mit `(viewport-breakpoint, value, unit)`. Pro Anchor eigene Unit wählbar via Dropdown in der Row. Sum-of-ramps Composer:
 
-### Menü-Items (final)
-
-`Episodes`, `Sponsor Us`, `Fosstodon`. Live-Daten kommen später aus `source_metadata.visible_menu_links` (siehe `templates/cast/django_chat/base.html:90-99`).
-
-### Background
-
-`assets/hero-bg.jpg` (Kopie von `django_chat/static/django_chat/img/show-hero-bg.jpg`), mit `linear-gradient(180deg, rgba(9,32,29,.45) 0%, rgba(9,32,29,.55) 100%)` als Overlay.
-
-### Farben
-
-```css
---bg-deep:    #09201D;
---accent:     #41FCB9;
---green:      #0ea342;
---green-soft: rgba(14, 163, 66, 0.35);
+```
+val₀<unit₀> + Σᵢ (valᵢ<unitᵢ> − valᵢ₋₁<unitᵢ₋₁>) × clamp(0, (100cqw − vwᵢ₋₁px) / spanᵢpx, 1)
 ```
 
-### Body-Text-Größe (aus dem bestehenden Projekt)
+- Wenn alle Anchors gleiche Unit haben: kompakte Delta-Form.
+- Wenn gemischte Units: explizite `(b - a) * ramp` — CSS calc löst mixed-unit deltas zur Laufzeit (z.B. `(50svh - 76vw) * ramp`).
+- Pro Property optional min/max bounds (`clamp(MIN, inner, MAX)` oder `min`/`max` wenn nur eines gesetzt).
 
-`--text-base: 1.06rem` (≈17px) — `site.css:143`. Subtitle-Min hängt daran.
+**Container-Query-basiert**: `.dc-shell` wrappt topbar + hero, hat `container-type: inline-size; container-name: dc`. Alle Anchor-Formeln nutzen `100cqw` statt `100vw` — Header adaptiert auf seine Container-Breite, nicht auf den Viewport. Drop-in in beliebige Layouts möglich.
 
-## Design-Entscheidungen (Why)
+### 20 anchored Properties
 
-### Bubble-Composition
-
-- **70vw-Spec von Anfang an verworfen** — User hat sich später für eine kleinere, kontrolliertere Bubble entschieden, gesteuert durch `min/svh/horizontalen Constraint/max`.
-- **Bubble „fillt die oberen 2/3"** — bezogen auf die *Dome ohne Tail*. Tail nimmt ~10% der Bubble-Höhe; Dome ≈ 90%. Daraus die svh-Faktoren.
-- **Bubble darf nie kleiner werden als Content + Padding** — Floor 35rem.
-- **Bubble darf nie zu groß werden** — Ceiling 60rem.
-- **Bubble bleed auf Mobile** — unter ~470 px erlaubt, dann ist die Bubble breiter als der Viewport (Floor 28rem mobile). Content bleibt aber durch `max-width: calc(100vw - 2rem)` immer im Viewport mit Padding.
-
-### Bewegungs-Interpolation zwischen 1920px ↔ 820px
-
-- **820px** ist die Mobile-Schwelle (Media-Query-Breakpoint). Bei 820 sollte die Composition optisch dort sein, wo der Mobile-Stack einsteigt → saubere Überleitung, kein Sprung.
-- **Bubble translateY**: `-14rem` (1920) → `+5rem` (820). Bei narrow Desktop sinkt die Bubble UNTER den Topbar, sodass die H1 unterhalb der Logo-Unterkante liegt.
-- **Logo translateX**: `-135%` (1920) → `-120%` (820). Logo wandert leicht nach rechts, schließt das „Dreieck-Loch" zwischen Logo / Bubble / Topbar.
-- **Logo translateY**: `-19%` (1920) → `-45%` (820). Logo darf **niemals** oben angeschnitten werden. Die Range ist begrenzt durch die Topbar-Höhe an jedem Viewport.
-- **Bubble inset-top**: `22%` (1920) → `12%` (820). Kompensiert die Bubble-Bewegung — wenn die Bubble runter rutscht, sitzt der Content nicht „abgestürzt" zu tief.
-- **Topbar-Höhe**: `5rem` (1920) → `8.5rem` (820). Topbar wächst beim schmaler werden, damit Menü oben + Brand unten Platz haben.
-
-### Größen-Verhältnisse
-
-- **H1 = 13% der Bubble-Breite**, capped by 6rem max. Plus viewport-Cap `(100vw - 2rem) / 5.6` bei sehr schmalen Devices (verhindert H1-Anschnitt auf <440px).
-- **Subtitle = 22.5% der H1** ≈ 2.9% der Bubble. Min 1.06rem (Body-Text-Größe).
-- **Logo = 0.4 × Bubble-Breite** (Default, war zwischenzeitlich 0.48).
-- **LISTEN UP = 23vw**, max 29rem. Bottom-anchored mit Fill `+2%`/Outline `-1%` (eigene Höhe) — konstant über alle Viewports.
-- **Headphones = 32vw mit 65vh-Cap**, min 17.5rem floor, max 31.25rem.
-
-### Topbar 2-Reihen-Layout (umgedreht zu Live-Seite)
-
-- **Live-Seite:** Logo oben, Menü unten.
-- **Neues Design:** **Menü oben, Logo unten.** Grund: Scroll-Morph soll das große Hero-Logo in die untere Reihe der Topbar wandern lassen — sauberer animierbar.
-
-### Hartzonen (NICHT verletzen)
-
-1. **Logo darf NIE oben angeschnitten werden** (logo_top ≥ 0 in Viewport-Koordinaten).
-2. **Logo darf NIE die H1 überlappen** — runde Form, Body-Curve am H1-y-Level muss links der H1 bleiben.
-3. **Logo darf NIE aus dem Viewport rutschen** (auch nicht links bei sehr schmalen Viewports).
-4. **Bubble darf NIE kleiner werden als der Content** (mit Padding innen).
-5. **Content (H1/Subtitle/Subscribe) bleibt immer mit Padding zum Viewport-Rand** — auch wenn die Bubble seitlich aus dem Viewport ragt.
-6. **Episodes-Hook ist immer im Viewport sichtbar**.
-
-### Selektor-Falle (gelöst, dokumentiert)
-
-`.hero__bubble svg` matched **alle** Descendant-SVGs inklusive dem Feed-Icon im Subscribe-Button → führte dazu, dass das Icon auf die volle Bubble gestreckt wurde und „im Layout herumflog". **Fix:** Direkter Kind-Selektor `.hero__bubble > svg`.
-
-### Z-Index-Falle (gelöst, dokumentiert)
-
-`.hero__center` hatte `z-index: 2` → erzeugte einen Stacking-Context, der den Logo (z-index: 60) im 2er-Kontext gefangen hielt → das Logo blieb hinter der Topbar (z-index: 50). **Fix:** Kein `z-index` auf `.hero__center`. DOM-Order regelt die internen Stacks.
-
-## Tweak Panel
-
-Sandbox-only Dev-Tool im selben HTML-File. Aktuell:
-
-- **Position:** rechts oben, draggable per Drag am Header
-- **Toggle:** ⚙-Button unten rechts (war früher `≡`, wurde mit Hamburger-Menü verwechselt)
-- **Default-State:** sichtbar (`localStorage.getItem('dc-tweak-hidden') === '1'` versteckt)
-- **Slider + Text-Input pro Variable:** Slider für Quick-Tweak in nativer Einheit, Text-Input nimmt beliebigen CSS-Wert (vw, svh, rem, clamp, calc, …)
-- **Werte persistieren** in `localStorage` unter Key `dc-tweak-v3` (alte v1/v2 werden beim Load gelöscht)
-- **Reset / Copy** im Header
-
-### Bekanntes Limit (das ist der nächste Schritt!)
-
-Sobald ein Slider gesetzt wird, fliegt die Clamp-Interpolation raus (CSS-Variable hat einen konstanten Wert). Die dynamischen Bewegungen über die Viewport-Range sind nicht über die Slider einstellbar.
-
-## NÄCHSTER SCHRITT — A + B Implementation
-
-Der User hat A + B beauftragt. Das ist der **erste Task der neuen Session**.
-
-### A) Anchor-Slider-Paare für interpolierte Bewegungen
-
-Für jede viewport-getriebene Animation **zwei Slider** statt einem:
-
-| Variable | @ 1920 (wide) | @ 820 (narrow) |
+| Property | Defaults | Units |
 |---|---|---|
-| `--logo-tx-wide` / `--logo-tx-narrow` | `-135%` | `-120%` |
-| `--logo-ty-wide` / `--logo-ty-narrow` | `-19%` | `-45%` |
-| `--bubble-ty-wide` / `--bubble-ty-narrow` | `-14rem` | `5rem` |
-| `--inset-top-wide` / `--inset-top-narrow` | `22%` | `12%` |
-| `--topbar-h-wide` / `--topbar-h-narrow` | `5rem` | `8.5rem` |
+| `--tw-logo-tx` | 4 anchors @ 1920/-160%, 1400/-145%, 820/-60%, 400/-30% | %, rem, vw, svh, vh |
+| `--tw-logo-ty` | 4 anchors @ 1400/-6vh, 1024/2vh, 737/4vh, 380/2vh | %, rem, vw, svh, vh |
+| `--tw-logo-w` | 4 anchors @ 1920/17vw, 1360/22vw, 820/32vw, 400/20vh; min 9rem max 35rem | vw, rem, %, svh, vh |
+| `--tw-bubble-tx` | 1 anchor @ 1024/0% | %, rem, vw, svh, vh |
+| `--tw-bubble-ty` | 6 anchors @ 1920/-22%, 1400/-11.25vh, 1024/2.5vh, 820/11vh, 400/15.5vh, 380/12.25vh | %, rem, vw, svh, vh |
+| `--tw-bubble-w` | 4 anchors @ 1920/50vw, 1400/59vw, 1024/84%, 600/90%; min 26rem max 56rem | vw, rem, %, svh, vh |
+| `--tw-h1` | 3 anchors @ 1920/7rem, 1024/6rem, 400/3.5rem; min 2.5rem max 9rem | rem, em, vw, %, svh, vh |
+| `--tw-subtitle` | 2 anchors @ 1920/1.55rem, 400/1.06rem; min 1.06rem max 1.55rem | rem, em, vw, %, svh, vh |
+| `--tw-bubble-inset-top` | 3 anchors @ 1920/22%, 1400/24%, 820/12% | %, rem, svh, vh |
+| `--tw-hp-w` | 3 anchors @ 1920/30vw, 1024/50vh, 400/26vh; min 5rem max 32rem | vw, rem, %, svh, vh, cqw |
+| `--tw-hp-bottom` | 3 anchors @ 1024/13vw, 400/11vw, 380/9vh | vh, svh, rem, %, vw |
+| `--tw-hp-right` | 2 anchors @ 1024/0%, 380/2rem | %, rem, vw, cqw |
+| `--tw-ep-size` | 3 anchors @ 1920/2.5rem, 1024/4rem, 460/2rem; min 1rem max 7rem | rem, em, vw, %, svh, vh, cqw |
+| `--tw-ep-tracking` | 2 anchors @ 1920/0.04em, 820/-0.045em | em, rem, % |
+| `--tw-ep-arrow` | 2 anchors @ 1920/0.9em, 1024/1.5rem | em, rem, vw, cqw |
+| `--tw-ep-gap` | 1 anchor @ 1024/0.1em | em, rem, % |
+| `--tw-ep-right` | 2 anchors @ 1920/1.5rem, 1024/3rem | rem, vw, %, cqw |
+| `--tw-ep-bottom` | 2 anchors @ 1920/1.5rem, 820/18vh | rem, vh, svh, %, cqw |
+| `--tw-hero-min-h` | 2 anchors @ 820/50rem, 400/0rem; min calc(100svh − var(--tw-topbar-h, 5rem)) | rem, svh, vh, % |
+| `--tw-topbar-h` | 2 anchors @ 1920/7rem, 1024/6rem | rem, vh, svh, % |
 
-**CSS-Komposition** in den Components, etwa:
+### Static Single-Sliders (im Panel, kein Anchor-System)
 
-```css
-clamp(
-  min(var(--bubble-ty-wide), var(--bubble-ty-narrow)),
-  calc(
-    var(--bubble-ty-narrow) +
-    (100vw - var(--vp-narrow)) / (var(--vp-wide) - var(--vp-narrow))
-    * (var(--bubble-ty-wide) - var(--bubble-ty-narrow))
-  ),
-  max(var(--bubble-ty-wide), var(--bubble-ty-narrow))
-)
-```
+- `--tw-bubble-inset-bottom`: 15% (default)
+- `--tw-bubble-inset-x`: 8.5%
+- `--tw-sub-size` / `--tw-sub-py` / `--tw-sub-px`: Subscribe-Button (rem)
+- `--tw-listen-size`, `--tw-listen-tracking`, `--tw-listen-fill-tx/ty`, `--tw-listen-outline-tx/ty`: LISTEN UP
 
-mit `--vp-wide: 120rem` und `--vp-narrow: 51.25rem`.
+### Panel-Features
 
-### B) Clamp-Komponenten-Slider für Größen
+- Pro Anchor-Group: Label + `+`-Button. Pro Anchor-Zeile: `@<vw>px` + Value + Unit-Dropdown + `×`-Button + Slider darunter. Output-Box zeigt das aktuell composte CSS.
+- Min/Max-Inputs als freie CSS-Length-Strings (z.B. `calc(100svh - var(--tw-topbar-h, 5rem))`).
+- Copy-Button gibt `:root { … }` paste-ready aus (achtung: enthält auch statische Slider-Defaults, die nicht unbedingt angewandt sind — siehe `singles: {}` im Snapshot).
+- Reset gibt alle Properties auf die Code-Defaults zurück.
+- Resizable Panel (CSS `resize: both`), draggable Header. Position + Größe + Hidden-State werden persistiert (`dc-tweak-pos`, `dc-tweak-size`, `dc-tweak-hidden`).
+- Storage-Key: `dc-tweak-v5`. v1–v4 werden beim Laden geräumt.
 
-| Variable | Min | Fluid | Max |
-|---|---|---|---|
-| `--bubble-w` | `--bubble-min: 35rem` | `--bubble-vw: 75` + `--bubble-svh: 92` | `--bubble-max: 60rem` |
-| `--listen-up-size` | `--listen-min: 3rem` | `--listen-vw: 23` | `--listen-max: 29rem` |
-| `--hp-w` | `--hp-min: 17.5rem` | `--hp-vw: 32` + `--hp-vh: 65` | `--hp-max: 31.25rem` |
+### Tooling
 
-Plus Ratios:
-- `--logo-ratio: 0.4`
-- `--h1-ratio: 0.13` mit `--h1-min: 2.5rem` und `--h1-max: 6rem`
-- `--subtitle-ratio: 0.029` mit `--subtitle-min: 1.06rem` und `--subtitle-max: 1.55rem`
+- Server: `python3 -m http.server 8765` im `frontend/sandbox/` Ordner.
+- Playwright-Verify-Skript: `/tmp/dc-shots/devices.js` (deckt iPhone SE, XR, Galaxy S8+, Pixel 7, Surface Duo, iPad Pro, Tablet 768 ab). Output in `/tmp/dc-shots/*.png`. Vor jedem Screenshot wird localStorage geclearet (Code-Defaults werden gerendert).
+- **localStorage aus dem Helium-Browser auslesen** (User benutzt Helium, nicht Chrome): `strings -a ~/Library/Application\ Support/net.imput.helium/Default/Local\ Storage/leveldb/*.{log,ldb} 2>/dev/null | grep "dc-tweak-v5" -A0 | tail -1` liefert das letzte JSON.
 
-**Fluid-Komposition** (Beispiel Bubble):
-```css
---bubble-w: clamp(
-  var(--bubble-min),
-  min(
-    calc(var(--bubble-vw) * 1vw),
-    calc(var(--bubble-svh) * 1svh)
-  ),
-  var(--bubble-max)
-);
-```
+## Schritte / Offene Punkte
 
-### Panel-Umbau
+1. **Schritt 1 + 2 (erledigt)**: statisches Layout, responsive Verhalten, Komposition. Alle 20 anchored Properties getunt, Headphones + Episodes promoted.
+2. **Schritt 3 (offen) — Scroll-Morph**: Logo + „Django Chat" beim Scrollen aus Hero in die Topbar wandern lassen. Plan: pure CSS via `animation-timeline: scroll(root block)` + `@keyframes logo-morph`. Topbar `.topbar__brand` ist schon als Landing-Slot vorhanden (opacity:0, layout-relevant, links neben Nav).
+3. **Schritt 4 (offen) — Maus-Parallax**: Headphones + LISTEN-UP-Layer leicht mit Maus-Position bewegen. Pure CSS möglich via `mouse-tracking` ist nicht standardisiert — vermutlich kleinem JS-Snippet.
+4. **Schritt 5 (offen) — Migration ins Hauptprojekt**:
+   - Templates: `django_chat/templates/cast/django_chat/base.html` (Topbar + Hero einsetzen, `source_metadata.visible_menu_links` für Nav).
+   - CSS: in `site.css` integrieren. Vor Migration `git log -p django_chat/static/django_chat/css/site.css django_chat/templates/cast/django_chat/base.html` checken: User erinnerte sich, dass es früher schon mal ein vergleichbares Mobile-Verhalten gab (Brand unsichtbar, Nav zentriert), Endzustand soll dazu passen.
+   - Panel + tweak-snapshot.json bleiben in der Sandbox, fließen NICHT in die Production. Aus dem Panel via Copy oder direkt aus dem Snapshot extrahieren.
+   - LevelDB-Backup empfehlen vor Migration, falls User später noch tunen will.
 
-- Bestehende Slider für die o.g. Variablen entfernen / ersetzen
-- Pro Anchor-Paar: 2 Slider + 2 Text-Inputs (Sektion „… @ wide" / „… @ narrow")
-- Pro Clamp-Größe: 3-4 Slider + Text-Inputs (Min/Fluid-VW/Fluid-VH/Max)
-- Andere Tweaks (Padding-X, Tracking, Subscribe-Button etc.) bleiben als Single-Slider mit Text-Input.
+## Wichtige Conventions
 
-### Reihenfolge
-
-1. CSS :root umstrukturieren (neue Variablen einführen, Composing-Formeln schreiben)
-2. Component-Rules aktualisieren (`hero__bubble`, `hero__logo-bubble`, `hero__bubble-content`, `topbar`, etc.)
-3. Panel HTML neu strukturieren (Anchor- und Komponenten-Sektionen)
-4. JS leicht anpassen (keine grundsätzliche Änderung — die bestehende Slider+TextInput-Logik passt)
-5. Per Playwright-Screenshots bei 1920/1440/1200/1024/820/768/480/375 verifizieren
-
-### Storage-Key bumpen
-
-Beim Umbau zu `dc-tweak-v4` bumpen, damit alte v3-Overrides nicht reinpfuschen.
-
-## Playwright-Setup für Verification
-
-```js
-const { chromium } = require('playwright');
-// installiert: /Users/katha/Library/Caches/ms-playwright/chromium-headless-shell-...
-// Script-Vorlagen: /tmp/dc-shots/all-widths.js (Multi-Viewport-Sweep)
-//                  /tmp/dc-shots/with-panel.js (mit sichtbarem Panel)
-// Output:           /tmp/dc-shots/*.png
-```
-
-Vor dem Screenshot immer `localStorage.clear()` aufrufen, damit alte Tweaks nicht reinhängen.
-
-## Diverses
-
-- **Build-Hook / Hot-Reload:** keiner. User refresht den Browser manuell.
-- **Commit-Politik:** **nie eigenmächtig commit/push** ([[feedback_no_auto_commit]]). Nur auf explizite Aufforderung.
-- **Letzter visueller Stand (1920 px):** Logo top-left, fully visible (top y ≈ 14), Bubble tief im Anschnitt (-14rem translateY), H1 bei y ≈ 41-129, kein Logo-H1-Overlap, Headphones rechts hinter Bubble, LISTEN UP bottom-anchored mit leichtem Anschnitt links/rechts, Episodes bottom-right.
+- **Niemals eigenmächtig committen/pushen** (siehe `~/.claude/projects/-Users-katha-gitprojects-django-chat/memory/feedback_no_auto_commit.md`).
+- User benutzt **Helium-Browser** (Chromium-basiert). localStorage liegt in `~/Library/Application Support/net.imput.helium/Default/Local Storage/leveldb/` (nicht Chrome).
+- **CSS first, JS als Fallback/Progressive Enhancement** — siehe `~/.claude/CLAUDE.md` Frontend Principles.
+- Für UI-Arbeit: `frontend-design` und `every-layout` Skills proaktiv nutzen, Every-Layout-Primitives (Stack, Cluster, Sidebar, Switcher, Cover, Grid, Frame, Reel, …) vor ad-hoc Media-Queries.
+- **Commit-Messages**: nie Selbstreferenzen / "Claude" / „Generated with …". Siehe `~/.claude/CLAUDE.md`.
+- Slider-Werte ≠ angewandte Werte: das Panel-Copy gibt ALLE Slider-Defaults aus, auch unangetastete. Die `state.singles`-Map ist die Source of Truth für tatsächlich gesetzte single-slider Werte. Anchor-State ist immer angewandt.

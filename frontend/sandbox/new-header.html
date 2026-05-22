@@ -302,51 +302,33 @@
     display: block;
   }
 
-  /* Episodes hook — desktop default: small label in the bottom-right
-     corner of the hero. Tablet + below (@container rule below) lifts it
-     above LISTEN UP and matches the word width to "UP". */
+  /* Episodes hook — every dimension is panel-driven via the anchor
+     system (size, tracking, arrow, gap, right, bottom). The fallbacks
+     below are simple pre-JS render values. */
   .hero__episodes {
     position: absolute;
-    right: var(--tw-ep-right, clamp(1rem, 2.1cqw, 2.5rem));
-    bottom: var(--tw-ep-bottom, clamp(.5rem, 1.5cqw, 1.8rem));
+    right: var(--tw-ep-right, 1.5rem);
+    bottom: var(--tw-ep-bottom, 1.5rem);
     z-index: 4;
     display: inline-flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: var(--tw-ep-gap, .12em);
+    gap: var(--tw-ep-gap, .1em);
     color: var(--accent);
     font-family: "Ubuntu", sans-serif;
     font-weight: 700;
-    font-size: var(--tw-ep-size, clamp(1.4rem, 2.5cqw, 3rem));
+    font-size: var(--tw-ep-size, 2.5rem);
     line-height: 1;
     letter-spacing: var(--tw-ep-tracking, 0em);
     text-transform: var(--tw-ep-case, none);
   }
   .hero__episodes svg {
-    width: var(--tw-ep-arrow, .78em);
-    height: var(--tw-ep-arrow, .78em);
+    width: var(--tw-ep-arrow, .9em);
+    height: var(--tw-ep-arrow, .9em);
     fill: currentColor;
-  }
-
-  /* Tablet + below: Episodes hook moves above LISTEN UP, sized so the
-     word width matches "UP". Arrow stays compact and may dip into the
-     letterforms; drop-shadow halo keeps it visible against the outline
-     (both are accent-green). */
-  @container dc (max-width: 1024px) {
-    .hero__episodes {
-      right: var(--tw-ep-right, clamp(1.5rem, 4cqw, 4rem));
-      bottom: var(--tw-ep-bottom,
-        calc(var(--tw-listen-size, var(--listen-up-size)) * 0.75));
-      gap: var(--tw-ep-gap, .08em);
-      font-size: var(--tw-ep-size,
-        calc(var(--tw-listen-size, var(--listen-up-size)) * 0.3));
-      letter-spacing: var(--tw-ep-tracking, -0.045em);
-    }
-    .hero__episodes svg {
-      width: var(--tw-ep-arrow, clamp(1rem, 2.5cqw, 2rem));
-      height: var(--tw-ep-arrow, clamp(1rem, 2.5cqw, 2rem));
-      filter: drop-shadow(0 0 .15em var(--bg-deep));
-    }
+    /* Halo so the arrow stays visible if it overlaps LISTEN UP's
+       outline at narrow viewports (both are accent-green). */
+    filter: drop-shadow(0 0 .15em var(--bg-deep));
   }
 
   /* Narrow shell: every fluid dimension is panel-driven; only the
@@ -721,6 +703,12 @@
       <div class="anchor-group" data-anchor-group="--tw-hp-w"></div>
       <div class="anchor-group" data-anchor-group="--tw-hp-bottom"></div>
       <div class="anchor-group" data-anchor-group="--tw-hp-right"></div>
+      <div class="anchor-group" data-anchor-group="--tw-ep-size"></div>
+      <div class="anchor-group" data-anchor-group="--tw-ep-tracking"></div>
+      <div class="anchor-group" data-anchor-group="--tw-ep-arrow"></div>
+      <div class="anchor-group" data-anchor-group="--tw-ep-gap"></div>
+      <div class="anchor-group" data-anchor-group="--tw-ep-right"></div>
+      <div class="anchor-group" data-anchor-group="--tw-ep-bottom"></div>
       <div class="anchor-group" data-anchor-group="--tw-hero-min-h"></div>
       <div class="anchor-group" data-anchor-group="--tw-topbar-h"></div>
     </fieldset>
@@ -770,28 +758,6 @@
       </label>
     </fieldset>
 
-    <fieldset>
-      <legend>Episodes hook</legend>
-      <label><span>Font size</span><input type="text" class="tweak-value" spellcheck="false">
-        <input type="range" min="0.9" max="3.5" step="0.05" value="2.1" data-var="--tw-ep-size" data-unit="rem">
-      </label>
-      <label><span>Letter tracking</span><input type="text" class="tweak-value" spellcheck="false">
-        <input type="range" min="-0.05" max="0.2" step="0.005" value="0.04" data-var="--tw-ep-tracking" data-unit="em">
-      </label>
-      <label><span>Arrow size</span><input type="text" class="tweak-value" spellcheck="false">
-        <input type="range" min="0.4" max="1.8" step="0.02" value="0.9" data-var="--tw-ep-arrow" data-unit="em">
-      </label>
-      <label><span>Gap text↔arrow</span><input type="text" class="tweak-value" spellcheck="false">
-        <input type="range" min="0" max="1.2" step="0.02" value="0.4" data-var="--tw-ep-gap" data-unit="em">
-      </label>
-      <label><span>Right offset</span><input type="text" class="tweak-value" spellcheck="false">
-        <input type="range" min="0" max="80" step="1" value="20" data-var="--tw-ep-right" data-unit="px">
-      </label>
-      <label><span>Bottom offset</span><input type="text" class="tweak-value" spellcheck="false">
-        <input type="range" min="-20" max="120" step="1" value="20" data-var="--tw-ep-bottom" data-unit="px">
-      </label>
-    </fieldset>
-
   </div>
 </aside>
 
@@ -823,20 +789,20 @@
   // — piecewise-linear, container-query-driven, no media queries.
   const ANCHORED = [
     { var: '--tw-logo-tx',          label: 'Logo translate X',   units: ['%','rem','vw','svh','vh'],
-      slider: [-180, 50, 0.5],
+      slider: [-200, 50, 0.5],
       defaults: [
-        {vw:1920, val:-140, unit:'%'},
+        {vw:1920, val:-160, unit:'%'},
+        {vw:1400, val:-145, unit:'%'},
         {vw:820,  val:-60,  unit:'%'},
         {vw:400,  val:-30,  unit:'%'},
       ] },
     { var: '--tw-logo-ty',          label: 'Logo translate Y',   units: ['%','rem','vw','svh','vh'],
       slider: [-40, 40, 0.5],
       defaults: [
-        {vw:1920, val:-18, unit:'%'},
-        {vw:1360, val:-10, unit:'%'},
-        {vw:1024, val:4,   unit:'vh'},
-        {vw:737,  val:4,   unit:'vh'},
-        {vw:380,  val:2,   unit:'vh'},
+        {vw:1400, val:-6, unit:'vh'},
+        {vw:1024, val:2,  unit:'vh'},
+        {vw:737,  val:4,  unit:'vh'},
+        {vw:380,  val:2,  unit:'vh'},
       ] },
     { var: '--tw-logo-w',           label: 'Logo width',         units: ['vw','rem','%','svh','vh'],
       slider: [0, 50, 0.5],
@@ -854,7 +820,8 @@
       slider: [-25, 30, 0.25],
       defaults: [
         {vw:1920, val:-22,    unit:'%'},
-        {vw:1024, val:10.5,   unit:'vw'},
+        {vw:1400, val:-11.25, unit:'vh'},
+        {vw:1024, val:2.5,    unit:'vh'},
         {vw:820,  val:11,     unit:'vh'},
         {vw:400,  val:15.5,   unit:'vh'},
         {vw:380,  val:12.25,  unit:'vh'},
@@ -863,17 +830,17 @@
       slider: [20, 100, 0.5],
       defaults: [
         {vw:1920, val:50, unit:'vw'},
-        {vw:1400, val:55, unit:'vw'},
-        {vw:1024, val:76, unit:'vw'},
-        {vw:400,  val:80, unit:'%'},
+        {vw:1400, val:59, unit:'vw'},
+        {vw:1024, val:84, unit:'%'},
+        {vw:600,  val:90, unit:'%'},
       ],
-      defaultMin: '26rem', defaultMax: '60rem' },
+      defaultMin: '26rem', defaultMax: '56rem' },
     { var: '--tw-h1',               label: 'H1 size',            units: ['rem','em','vw','%','svh','vh'],
       slider: [1.5, 10, 0.05],
       defaults: [
-        {vw:1920, val:7,    unit:'rem'},
-        {vw:1024, val:5.95, unit:'rem'},
-        {vw:400,  val:3.5,  unit:'rem'},
+        {vw:1920, val:7,   unit:'rem'},
+        {vw:1024, val:6,   unit:'rem'},
+        {vw:400,  val:3.5, unit:'rem'},
       ],
       defaultMin: '2.5rem', defaultMax: '9rem' },
     { var: '--tw-subtitle',         label: 'Subtitle size',      units: ['rem','em','vw','%','svh','vh'],
@@ -887,6 +854,7 @@
       slider: [0, 40, 0.5],
       defaults: [
         {vw:1920, val:22, unit:'%'},
+        {vw:1400, val:24, unit:'%'},
         {vw:820,  val:12, unit:'%'},
       ] },
     { var: '--tw-hp-w',             label: 'Headphones width',   units: ['vw','rem','%','svh','vh','cqw'],
@@ -910,19 +878,53 @@
         {vw:1024, val:0, unit:'%'},
         {vw:380,  val:2, unit:'rem'},
       ] },
+    { var: '--tw-ep-size',          label: 'Episodes size',       units: ['rem','em','vw','%','svh','vh','cqw'],
+      slider: [0.5, 8, 0.05],
+      defaults: [
+        {vw:1920, val:2.5, unit:'rem'},
+        {vw:1024, val:4,   unit:'rem'},
+        {vw:460,  val:2,   unit:'rem'},
+      ],
+      defaultMin: '1rem', defaultMax: '7rem' },
+    { var: '--tw-ep-tracking',      label: 'Episodes tracking',   units: ['em','rem','%'],
+      slider: [-0.1, 0.2, 0.005],
+      defaults: [
+        {vw:1920, val:0.04,   unit:'em'},
+        {vw:820,  val:-0.045, unit:'em'},
+      ] },
+    { var: '--tw-ep-arrow',         label: 'Episodes arrow size', units: ['em','rem','vw','cqw'],
+      slider: [0.4, 3, 0.05],
+      defaults: [
+        {vw:1920, val:0.9, unit:'em'},
+        {vw:1024, val:1.5, unit:'rem'},
+      ] },
+    { var: '--tw-ep-gap',           label: 'Episodes gap',        units: ['em','rem','%'],
+      slider: [0, 1, 0.02],
+      defaults: [{vw:1024, val:0.1, unit:'em'}] },
+    { var: '--tw-ep-right',         label: 'Episodes right',      units: ['rem','vw','%','cqw'],
+      slider: [-2, 10, 0.1],
+      defaults: [
+        {vw:1920, val:1.5, unit:'rem'},
+        {vw:1024, val:3,   unit:'rem'},
+      ] },
+    { var: '--tw-ep-bottom',        label: 'Episodes bottom',     units: ['rem','vh','svh','%','cqw'],
+      slider: [-2, 30, 0.5],
+      defaults: [
+        {vw:1920, val:1.5, unit:'rem'},
+        {vw:820,  val:18,  unit:'vh'},
+      ] },
     { var: '--tw-hero-min-h',       label: 'Hero min height',    units: ['rem','svh','vh','%'],
       slider: [0, 80, 1],
       defaults: [
-        {vw:1920, val:40, unit:'rem'},
-        {vw:820,  val:50, unit:'rem'},
-        {vw:400,  val:0,  unit:'rem'},
+        {vw:820, val:50, unit:'rem'},
+        {vw:400, val:0,  unit:'rem'},
       ],
       defaultMin: 'calc(100svh - var(--tw-topbar-h, 5rem))' },
     { var: '--tw-topbar-h',         label: 'Topbar height',      units: ['rem','vh','svh','%'],
       slider: [3, 10, 0.25],
       defaults: [
-        {vw:1920, val:5, unit:'rem'},
-        {vw:1020, val:6, unit:'rem'},
+        {vw:1920, val:7, unit:'rem'},
+        {vw:1024, val:6, unit:'rem'},
       ] },
   ];
   const SPEC_BY_VAR = Object.fromEntries(ANCHORED.map(s => [s.var, s]));
