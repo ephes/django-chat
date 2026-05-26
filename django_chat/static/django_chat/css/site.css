@@ -445,9 +445,12 @@ button.share-pill,
   z-index: 50;
   background: var(--dc-surface-deep);
   color: var(--dc-paper);
-  /* Ubuntu cascades to brand-name and nav-links — same as the sandbox's
-     body-level font-family. */
+  /* Ubuntu + browser-default line-height cascade to brand-name and
+     nav-links, mirroring the sandbox's body-level typography. Without
+     `line-height: normal` here the brand-name span inherits body's
+     --leading-body (1.55) and renders ~7px taller than the sandbox. */
   font-family: var(--font-heading);
+  line-height: normal;
   /* Mint hairline — component-local accent, only used by this header
      family (and re-used by the hero's LISTEN UP outline). */
   border-bottom: 1px solid #41fcb9;

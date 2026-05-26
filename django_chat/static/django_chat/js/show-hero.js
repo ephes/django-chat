@@ -56,10 +56,13 @@
     addEventListener('load', fit);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
 
-    // ResizeObserver tracks layout changes (cqw breakpoints crossing, a
-    // parent container resizing, the brand slot restyled) — keeps the
-    // morph aligned without a viewport resize event. rAF-throttled to
-    // one fit per frame.
+    // ResizeObserver on the shell covers cqw-driven layout changes
+    // (hero-logo resizes with the container) plus parent resizes that
+    // wouldn't fire a window resize. heroLogoImg is observed directly to
+    // catch font-load reflows of the bubble. brandLogo is NOT observed:
+    // its height is static (`3rem` literal, no panel slider in prod), so
+    // a watcher would never fire and only burns one ObserverEntry slot.
+    // rAF-throttled to one fit per frame.
     let pending = false;
     const schedule = () => {
       if (pending) return;
@@ -69,7 +72,6 @@
     const ro = new ResizeObserver(schedule);
     if (shell) ro.observe(shell);
     ro.observe(heroLogoImg);
-    ro.observe(brandLogo);
   }
 
   // ---- 2. Scroll-morph polyfill ----
