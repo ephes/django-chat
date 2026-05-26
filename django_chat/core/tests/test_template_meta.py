@@ -353,13 +353,13 @@ def test_podlove_loader_injects_iframe_panel_styles() -> None:
     assert '[data-test^="tab-trigger--"]:focus,' not in loader
     assert "border-radius: 999px !important;" in loader
     assert "border-radius: 8px !important;" in loader
-    assert "box-shadow: 0 0 0 2px #48a04e !important;" in loader
+    assert "box-shadow: 0 0 0 2px #0ea342 !important;" in loader
     assert "outline: none !important;" in loader
     assert "Podlove renders the selected-tab marker as the final direct span child." in loader
     assert '[data-test^="tab-trigger--"][aria-selected="true"] > span:last-child,' in loader
-    assert "fill: #48a04e !important;" in loader
+    assert "fill: #0ea342 !important;" in loader
     assert '[data-test="tab-transcripts--results"] .active-transcript {' in loader
-    assert "background: linear-gradient(to top, rgb(72 160 78 / 0.28)" in loader
+    assert "background: linear-gradient(to top, rgb(14 163 66 / 0.28)" in loader
 
 
 def episode_index_path() -> str:

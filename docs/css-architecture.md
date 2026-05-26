@@ -220,9 +220,10 @@ class instead of growing the global list.
   the truthy/falsy state itself (`.feed-action[data-copied]` is fine — the
   attribute *is* the state). Otherwise add an `.is-*` class.
 - **JS adds polish, not access.** Core content and primary actions must work
-  with JS disabled. The share modal, the filter form, and the header
-  auto-hide are wired so the no-JS path still functions; new components
-  must keep that contract.
+  with JS disabled. The share modal and the filter form are wired so the
+  no-JS path still functions; the show-hero scroll-morph / parallax run as
+  pure progressive enhancement (no JS → static hero, brand hidden, hero
+  logo visible as the only mark). New components must keep that contract.
 
 ## Vendor / Podlove rules
 

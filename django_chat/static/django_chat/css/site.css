@@ -1366,7 +1366,7 @@ body:has([data-show-hero-shell]) .brand {
 
 .filter-control-button[aria-expanded="true"] {
   border-color: var(--dc-accent);
-  box-shadow: 0 0 0 3px rgb(72 160 78 / 0.16);
+  box-shadow: 0 0 0 3px rgb(14 163 66 / 0.16);
 }
 
 .filter-control-text {
@@ -1855,7 +1855,7 @@ body:has([data-show-hero-shell]) .brand {
    page-header has a transparent background; consumers add the tint where
    it makes sense. */
 .page-header-tint {
-  background: rgb(72 160 78 / 0.14);
+  background: rgb(14 163 66 / 0.14);
 }
 
 /* Narrow viewports: a dark-green gradient pseudo behind the bubble ensures
@@ -1973,7 +1973,7 @@ body:has([data-show-hero-shell]) .brand {
 
 .card:hover,
 .card:focus-within {
-  border-color: rgb(72 160 78 / 0.45);
+  border-color: rgb(14 163 66 / 0.45);
   box-shadow: var(--dc-shadow-md);
   transform: translateY(-1px);
 }
@@ -2128,7 +2128,7 @@ body:has([data-show-hero-shell]) .brand {
 .subscribe-why {
   padding: var(--s0);
   border-left: 2px solid var(--dc-django);
-  background: rgb(72 160 78 / 0.05);
+  background: rgb(14 163 66 / 0.05);
   border-radius: 0 0.75rem 0.75rem 0;
   display: grid;
   gap: var(--s-2);
@@ -2269,7 +2269,7 @@ body:has([data-show-hero-shell]) .brand {
   inset-block: 0;
   inset-inline: calc(50% - 50vw);
   z-index: -1;
-  background: rgb(72 160 78 / 0.14);
+  background: rgb(14 163 66 / 0.14);
   border-bottom: 3px solid var(--dc-django);
 }
 
@@ -2689,7 +2689,7 @@ body:has([data-show-hero-shell]) .brand {
   gap: var(--s0);
   padding: var(--s1) clamp(1.25rem, 3vw, 1.75rem);
   background: var(--dc-django-soft);
-  border: 1px solid rgb(72 160 78 / 0.35);
+  border: 1px solid rgb(14 163 66 / 0.35);
   border-radius: 0.75rem;
 }
 

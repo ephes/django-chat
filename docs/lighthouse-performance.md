@@ -110,7 +110,9 @@ Measured on 2026-05-19 with Lighthouse 13.3.0. Reports are in
 The 2026-05-19 `/episodes/` mobile report confirms the hero background is now
 the LCP node, is discoverable from the initial HTML, has `fetchpriority="high"`,
 and requests the smaller `show-hero-bg.avif` asset. Desktop requests the 2x AVIF
-variant under the current `sizes="(max-width: 900px) 100vw, 120vw"` rule.
+variant under the current `sizes="100vw"` rule (the new-header migration on
+2026-05-26 dropped the legacy `120vw` overshoot — the hero now fills the
+section width via `object-fit: cover`).
 
 Current scores after CSS minification deployed to staging:
 
