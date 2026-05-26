@@ -129,7 +129,30 @@ val₀<unit₀> + Σᵢ (valᵢ<unitᵢ> − valᵢ₋₁<unitᵢ₋₁>) × cla
    - **Migration MITNEHMEN**: Den Parallax-`<script>`-Block + die drei `translate:`-CSS-Properties.
    - **Verifiziert via** `/tmp/dc-shots/parallax-test.js`.
 
-4. **Schritt 5 (offen) — Migration ins Hauptprojekt**:
+4. **Schritt 5 — Migration ins Hauptprojekt** (durchgeführt 2026-05-26/27 auf `feat/new-header`):
+
+   > **Post-migration note (2026-05-27):** The migration is complete; the
+   > recommendations below are preserved as the original pre-migration plan
+   > and diverge from the actual outcome in three places:
+   > - The `--green` → `--dc-django` mapping in the colour table further down
+   >   ended up *raising the site token* to the sandbox value (`#0ea342`),
+   >   not adopting the old site.css value (`#48a04e`).
+   > - The `data-show-hero-*` hook list under "JS-Migration" was trimmed to
+   >   four hooks (`-shell`, `-brand`, `-brand-logo`, `-brand-name`,
+   >   `-hero-logo`); the three parallax-target hooks (`-headphones`,
+   >   `-listen-up-fill`, `-listen-up-outline`) were dropped because the
+   >   parallax JS writes container-scoped CSS vars on the shell instead of
+   >   querying per-element.
+   > - The A11y contrast notes at the end of this step compute against the
+   >   old `--dc-django` (#48a04e). With the new value (#0ea342), `--dc-ink`
+   >   on the Subscribe pill measures 5.86:1 (AA Normal ✓), white on
+   >   `--dc-accent-dark` stays at 9.26:1 (AAA ✓), and white-on-`--dc-django`
+   >   moves from 3.27:1 to 3.31:1 — still AA Large only, which is why the
+   >   "dark text on light brand-green" pattern was kept.
+   >
+   > See the `feat/new-header` commit log (`cb7fffa` … `6f90a46`) for the
+   > as-built implementation. The rest of this section stays verbatim so the
+   > original plan and its trade-off discussion remain readable.
 
    **Production Migration Rule (für den ausführenden Agenten):**
    > Topbar bleibt in `base.html` (siteweit), der große Show-Hero wandert in den Episodenindex (`blog_list_of_posts.html`). Alte `.show-hero`-Implementierung **vor** der Migration entfernen. Tweak-Panel/Storage/Snapshot werden **nicht** migriert. Sandbox-`--tw-*`-Variablen zu component-lokalen `--show-hero-*` umbenennen. Morph- und Parallax-JS in eine statische Datei (`django_chat/static/django_chat/js/show-hero.js`) auslagern und über `data-*`-Hooks ansteuern statt über reine Klassen-Queries.
