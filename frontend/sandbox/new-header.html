@@ -128,6 +128,10 @@
     height: auto;
     color: var(--accent);
     pointer-events: none;
+    /* Parallax drift — separate `translate` property composites with any
+       future transform without clobbering it. Driven by the parallax
+       script (mouse on fine pointer, scroll on touch). */
+    translate: var(--dc-px-hp-x, 0) var(--dc-px-hp-y, 0);
   }
   .hero__headphones path {
     stroke: currentColor;
@@ -170,6 +174,10 @@
       var(--tw-listen-fill-tx, -49.5%),
       var(--tw-listen-fill-ty, 5%)
     );
+    /* Parallax drift on a separate property so the centering transform
+       above stays untouched. Layered with --outline in opposite signs so
+       the two LISTEN UP layers always sit slightly offset. */
+    translate: var(--dc-px-fill-x, 0) var(--dc-px-fill-y, 0);
   }
   .listen-up--outline {
     color: transparent;
@@ -180,6 +188,7 @@
       var(--tw-listen-outline-tx, -50.5%),
       var(--tw-listen-outline-ty, -1%)
     );
+    translate: var(--dc-px-outline-x, 0) var(--dc-px-outline-y, 0);
   }
 
   /* Logo bubble + white bubble share the same grid cell, anchored TOP.
@@ -1097,6 +1106,92 @@
   addEventListener('resize', schedule);
   // Wait one frame so the auto-fit script writes --tw-morph-* first.
   requestAnimationFrame(update);
+})();
+</script>
+
+<!-- =====================================================================
+     PARALLAX — Headphones + LISTEN UP fill/outline drift in different
+     directions so they never sit aligned. Progressive enhancement: no
+     JS = no drift (static look). Honors prefers-reduced-motion.
+     Desktop (hover: hover + pointer: fine): mouse-driven X/Y, layers
+       split apart (outline against headphones, fill with headphones but
+       weaker → outline vs fill always offset).
+     Touch / coarse pointer: scroll-driven Y only, same per-layer signs
+       so the three layers drift apart as the user scrolls into the hero.
+     Writes 6 CSS vars to :root; the layers' `translate` property reads
+     them. A rAF lerp toward a target value smooths the motion.
+     ===================================================================== -->
+
+<script>
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const root = document.documentElement;
+  const shell = document.querySelector('.dc-shell');
+  if (!shell) return;
+
+  // Per-layer magnitudes in cqw (container-width-relative, matches the
+  // rest of the header's sizing). Headphones move in lockstep with the
+  // outline (treated as one composite "outline + headphones" element);
+  // fill drifts mirrored against them.
+  const M = {
+    hp:      { x: -0.8, y: -0.5 },
+    outline: { x: -0.8, y: -0.5 },
+    fill:    { x:  0.8, y:  0.5 },
+  };
+
+  // Target (tx,ty) is set by the input handler; current (cx,cy) is
+  // lerped toward the target on each rAF tick. Both in -1..+1 range.
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+  let running = false;
+
+  const apply = () => {
+    const set = (name, v) => root.style.setProperty(name, v.toFixed(3) + 'cqw');
+    set('--dc-px-hp-x',      cx * M.hp.x);
+    set('--dc-px-hp-y',      cy * M.hp.y);
+    set('--dc-px-outline-x', cx * M.outline.x);
+    set('--dc-px-outline-y', cy * M.outline.y);
+    set('--dc-px-fill-x',    cx * M.fill.x);
+    set('--dc-px-fill-y',    cy * M.fill.y);
+  };
+
+  const tick = () => {
+    cx += (tx - cx) * 0.08;
+    cy += (ty - cy) * 0.08;
+    apply();
+    if (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) {
+      requestAnimationFrame(tick);
+    } else {
+      cx = tx; cy = ty; apply();
+      running = false;
+    }
+  };
+  const start = () => { if (!running) { running = true; requestAnimationFrame(tick); } };
+
+  const clamp1 = v => Math.max(-1, Math.min(1, v));
+
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  if (finePointer) {
+    // Map pointer position within the shell to -1..+1 on each axis.
+    shell.addEventListener('pointermove', (e) => {
+      const r = shell.getBoundingClientRect();
+      tx = clamp1((e.clientX - r.left - r.width  / 2) / (r.width  / 2));
+      ty = clamp1((e.clientY - r.top  - r.height / 2) / (r.height / 2));
+      start();
+    });
+    shell.addEventListener('pointerleave', () => { tx = 0; ty = 0; start(); });
+  } else {
+    // Touch / coarse pointer: scroll-linked Y drift. Maps the first
+    // viewport-height of scroll to 0..+1 so each layer drifts in its
+    // own magnitude direction. X stays at rest (no natural mapping).
+    const onScroll = () => {
+      ty = Math.min(1, scrollY / Math.max(innerHeight * 0.8, 1));
+      tx = 0;
+      start();
+    };
+    addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
 })();
 </script>
 
