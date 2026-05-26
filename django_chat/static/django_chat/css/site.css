@@ -117,11 +117,12 @@
      in the threshold. */
   --dc-container-max: 70rem;   /* ~70rem */
   --dc-container: min(var(--dc-container-max), 100% - 2 * var(--dc-gutter));
-  /* Approximate height of `.site-header` on desktop. Used by fixed-positioned
-     surfaces (e.g. the episode sidebar) that need to sit below the menu bar
-     at scroll-y = 0. Slightly larger than the measured ~4.3125rem to absorb minor
-     clamp variance. */
-  --dc-site-header-height: 4.5rem;  /* ~72px */
+  /* Reserved height for the sticky site topbar. Consumed by sticky surfaces
+     (episode sidebar, sponsor stickies) and by `scroll-padding-top` so
+     anchor jumps land below the bar. Bumped to 5rem to cover the new
+     topbar's tallest desktop step; the topbar component itself owns the
+     responsive composed value and may override this in `:root` per range. */
+  --dc-topbar-h: 5rem;
 
   /* ---------- Typography tokens ----------
      Font-family tokens use the long fallback chain so a missing primary
@@ -232,11 +233,11 @@ html {
      horizontal rubber-band scroll. Clip on the root too so the viewport itself
      is clipped on the inline axis. */
   overflow-x: clip;
-  /* Sticky `.site-header` covers the top `--dc-site-header-height` of the
-     viewport. Reserve that space for any element scrolled into view
-     (anchor links, scrollIntoView, focus-driven scrolls) so the target
-     lands below the menu bar, not behind it. */
-  scroll-padding-top: var(--dc-site-header-height);
+  /* Sticky topbar covers the top `--dc-topbar-h` of the viewport. Reserve
+     that space for any element scrolled into view (anchor links,
+     scrollIntoView, focus-driven scrolls) so the target lands below the
+     bar, not behind it. */
+  scroll-padding-top: var(--dc-topbar-h);
 }
 
 body {
@@ -1676,7 +1677,7 @@ button.share-pill,
        keep both height strategies as-is. */
     align-self: stretch;
     position: sticky;
-    top: calc(var(--dc-site-header-height) + var(--s2));
+    top: calc(var(--dc-topbar-h) + var(--s2));
     margin-top: 0;
   }
 }
@@ -2243,7 +2244,7 @@ button.share-pill,
 .episode-sidebar {
   grid-column: 2;
   position: sticky;
-  top: calc(var(--dc-site-header-height) + var(--episode-sticky-gap));
+  top: calc(var(--dc-topbar-h) + var(--episode-sticky-gap));
   align-self: start;
   display: flex;
   flex-direction: column;
@@ -2257,7 +2258,7 @@ button.share-pill,
   /* Stretches column + divider so the line's bottom mirrors the top-gap
      (symmetric breath at scroll=0). Different intent from
      `.subscribe-why`'s `align-self: stretch` — do not unify. */
-  height: calc(100dvh - var(--dc-site-header-height) - 2 * var(--episode-natural-top-gap));
+  height: calc(100dvh - var(--dc-topbar-h) - 2 * var(--episode-natural-top-gap));
   /* Floor at the rail's intrinsic content height: if the viewport is too
      short to fit everything with both gaps, keep the rail full-size and
      let the page scroll (the sidebar then exceeds the viewport bottom,
@@ -2708,7 +2709,7 @@ button.share-pill,
      columns settle on the same vertical band in the 2-column layout.
      Mobile-stack (max-width: 48.5625rem) overrides this back to natural
      page scroll. */
-  max-height: calc(100dvh - var(--dc-site-header-height) - 2 * var(--episode-natural-top-gap));
+  max-height: calc(100dvh - var(--dc-topbar-h) - 2 * var(--episode-natural-top-gap));
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--dc-django) transparent;
