@@ -1177,15 +1177,18 @@ body:has([data-show-hero-shell]) .brand {
 
 /* Override the shared ghost-pill hover (which goes to a light-green
    tint with dark text — designed for the rest of the site's light
-   surfaces) so the dark platform-band pills flip the other way:
-   filled paper background with ink text. Source-order beats the
-   shared rule at L1031 because the selectors have equal specificity. */
+   surfaces) so the dark platform-band pills get a soft hover instead:
+   the idle 35 %-paper outline brightens to full paper, the background
+   picks up a subtle 12 %-paper tint, and the text stays white. The
+   transition token on .platform-band-links a fades all three over
+   150 ms. Source order beats the shared rule at L1031 because the
+   selectors have equal specificity. */
 .platform-band-links a:hover,
 .platform-band-links a:focus,
 .platform-band-links a:focus-visible {
-  background: var(--dc-paper);
+  background: color-mix(in srgb, var(--dc-paper) 12%, transparent);
   border-color: var(--dc-paper);
-  color: var(--dc-ink);
+  color: var(--dc-paper);
 }
 
 .platform-band-links a > span:last-child {
