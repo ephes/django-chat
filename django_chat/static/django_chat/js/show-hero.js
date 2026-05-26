@@ -211,4 +211,25 @@
       onScroll();
     }
   }
+
+  // ---- 4. Hash-aware aria-current on the topbar "All Episodes" link ----
+  // The link points at /episodes/#all-episodes and is rendered on every
+  // page. It's only "current" when the user is actually focused on the
+  // all-episodes section — i.e. the URL fragment matches. The server
+  // can't see the hash, so flip the attribute client-side. show-hero.js
+  // only loads on the episode-index, which keeps the behaviour scoped:
+  // on subpages the link never carries aria-current at all, which is the
+  // intended fallback.
+  const allEpisodesLink = document.querySelector('[data-show-hero-all-episodes-link]');
+  if (allEpisodesLink) {
+    const sync = () => {
+      if (location.hash === '#all-episodes') {
+        allEpisodesLink.setAttribute('aria-current', 'page');
+      } else {
+        allEpisodesLink.removeAttribute('aria-current');
+      }
+    };
+    sync();
+    addEventListener('hashchange', sync);
+  }
 })();

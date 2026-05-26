@@ -87,7 +87,7 @@
           <span class="brand-name" data-show-hero-brand-name>Django Chat</span>
         </a>
         <ul class="nav-links">
-          <li><a href="{% url 'django_chat_episode_index' %}#all-episodes"{% if request.resolver_match.url_name == 'django_chat_episode_index' %} aria-current="page"{% endif %}>Episodes</a></li>
+          <li><a href="{% url 'django_chat_episode_index' %}#all-episodes" data-show-hero-all-episodes-link>All Episodes</a></li>
           {% if source_metadata %}
             {% for link in source_metadata.visible_menu_links %}
               {% if link.name == "Sponsor Us" %}
