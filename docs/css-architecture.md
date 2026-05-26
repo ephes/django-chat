@@ -78,10 +78,10 @@ custom properties from Podlove or Wagtail.
 Examples:
 
 - Colours: `--dc-ink`, `--dc-paper`, `--dc-django`, `--dc-accent-dark`,
-  `--dc-surface-django-tint`, `--dc-error`.
+  `--dc-surface-deep`, `--dc-surface-django-tint`, `--dc-error`.
 - Surfaces and textures: `--dc-paper-texture`.
 - Geometry: `--dc-radius`, `--dc-radius-pill`, `--dc-tap`, `--dc-gutter`,
-  `--dc-container`, `--dc-site-header-height`, `--dc-aside-width`,
+  `--dc-container`, `--dc-topbar-h`, `--dc-aside-width`,
   `--dc-aside-column-gap`, `--dc-measure`. `--dc-gutter` is the
   single-source-of-truth page edge inset: 1rem on phones, bumped to 2rem
   from 600 px upward via one media query in `:root`. Every site-wide
@@ -117,7 +117,7 @@ surface on Safari 16.0/16.1, pair the modern declaration with a
 hand-computed `rgb()` fallback declared immediately above it, e.g.:
 
 ```css
---dc-django-soft: rgb(77 165 83 / 0.08);
+--dc-django-soft: rgb(14 163 66 / 0.08);
 --dc-django-soft: color-mix(in srgb, var(--dc-django) 8%, transparent);
 ```
 
@@ -129,8 +129,8 @@ fallback-paired tokens are:
 - `--dc-focus-ring-soft`, `--dc-focus-outline`
 - `--dc-shadow-sm`, `--dc-shadow-md`, `--dc-shadow-lg`, `--dc-shadow-xl`
 
-Keep the literal `rgb()` value in sync with `--dc-django` (#4da553 →
-77 165 83) and `--dc-ink` (#0d0d0d → 13 13 13). One-off `color-mix()`
+Keep the literal `rgb()` value in sync with `--dc-django` (#0ea342 →
+14 163 66) and `--dc-ink` (#0d0d0d → 13 13 13). One-off `color-mix()`
 calls in component rules do **not** need a fallback unless their absence
 would visibly break the page on Safari 16.0/16.1 — most are
 progressive-enhancement detail (subtle overlays, decorative drop-shadows)
