@@ -11,56 +11,6 @@
 
 {% block content %}
   {% load static %}
-  {% firstof podcast blog as show %}
-  <section class="show-hero" aria-labelledby="show-hero-title">
-    <picture class="show-hero-media" aria-hidden="true">
-      <source
-        type="image/avif"
-        srcset="{% static 'django_chat/img/show-hero-bg.avif' %} 1584w, {% static 'django_chat/img/show-hero-bg@2x.avif' %} 3168w"
-        sizes="(max-width: 900px) 100vw, 120vw"
-      >
-      <source
-        type="image/webp"
-        srcset="{% static 'django_chat/img/show-hero-bg.webp' %} 1584w, {% static 'django_chat/img/show-hero-bg@2x.webp' %} 3168w"
-        sizes="(max-width: 900px) 100vw, 120vw"
-      >
-      <img
-        src="{% static 'django_chat/img/show-hero-bg.jpg' %}"
-        srcset="{% static 'django_chat/img/show-hero-bg.jpg' %} 1584w, {% static 'django_chat/img/show-hero-bg@2x.jpg' %} 3168w"
-        sizes="(max-width: 900px) 100vw, 120vw"
-        width="1584"
-        height="1007"
-        alt=""
-        fetchpriority="high"
-        decoding="async"
-      >
-    </picture>
-    <svg class="show-hero-shape" aria-hidden="true" focusable="false" width="0" height="0">
-      <defs>
-        <clipPath id="show-hero-curve-clip" clipPathUnits="objectBoundingBox">
-          <path d="M 0,0 L 1,0 L 1,1 L 0,1 Z M 0,0 L 1,0 A 0.752 3.094 0 0 1 0.34 0.710 L 0.118 0.988 L 0.18 0.487 A 0.752 3.094 0 0 1 0 0 Z" clip-rule="evenodd" />
-        </clipPath>
-      </defs>
-    </svg>
-    <div class="show-hero-inner">
-      <div class="show-copy">
-        <h1 id="show-hero-title">{{ page.title }}</h1>
-        <p class="show-tagline">A biweekly podcast on the Django Web Framework by Will&nbsp;Vincent and Carlton&nbsp;Gibson.</p>
-        <div class="show-actions cluster">
-          <a class="button-primary" href="{% url 'cast:feed_detail' slug=podcast.slug %}">
-            <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M4 11a9 9 0 0 1 9 9"/>
-              <path d="M4 4a16 16 0 0 1 16 16"/>
-              <circle cx="5" cy="19" r="2.2"/>
-            </svg>
-            Subscribe
-          </a>
-        </div>
-      </div>
-      <img class="show-hero-logo" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="938" height="858" alt="Django Chat logo" fetchpriority="high" decoding="async">
-    </div>
-    <div class="show-hero-curve" aria-hidden="true"></div>
-  </section>
   <div id="episode-index-main" class="page-content" data-vt-page="episode-index">
 
     {% if source_metadata %}

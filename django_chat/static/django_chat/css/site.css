@@ -147,7 +147,6 @@
   --text-h2: clamp(1.6rem, 1.6vw + 0.8rem, 2.2rem);
   /* Component-scoped fluid sizes. */
   --text-h1: clamp(2.4rem, 4vw + 1rem, 3.5rem);
-  --text-show-hero: clamp(2.5rem, 5vw + 1rem, 6rem);
   --text-episode-hero: clamp(1.8rem, 4cqi, 2.4rem);
   --text-tagline: clamp(1.2rem, 1.5vw, 1.5rem);
   --text-platform-link: clamp(0.82rem, 0.25vw + 0.78rem, 0.96rem);
@@ -363,10 +362,9 @@ button.share-pill,
   cursor: pointer;
 }
 
-/* Skip-link — keyboard-only bypass for the sticky header. Off-screen
-   until focused, then docks at the top-left corner above the header.
-   Sits inside `base` so its z-index trumps the sticky `.site-header`
-   (z-index 10) and the skip-target landing pad below it. */
+/* Skip-link — keyboard-only bypass to `#main-content`. Off-screen until
+   focused, then docks at the top-left corner. Z-index sits above any
+   sticky chrome the layout may introduce. */
 .skip-link {
   position: fixed;
   top: var(--s-2);
@@ -401,44 +399,19 @@ button.share-pill,
   outline: none;
 }
 
-.site-header,
 .site-footer {
   background: var(--dc-ink);
   color: var(--dc-paper);
 }
 
-.site-header a,
 .site-footer a {
   color: var(--dc-paper);
   text-decoration: none;
 }
 
-.site-header a:hover,
-.site-header a:focus,
 .site-footer a:hover,
 .site-footer a:focus {
   color: var(--dc-django);
-}
-
-/* Auto-hide on scroll-down, reveal on scroll-up. `header-autohide.js`
-   uses an IntersectionObserver sentinel for the "past threshold" check
-   and only reads `scrollY` to determine scroll direction, toggling
-   `.site-header--hidden` solely on state changes — this keeps forced
-   reflows out of the scroll path. The actual slide-and-fade is this
-   CSS transition. When JS is disabled the class is never added, so the
-   header simply stays sticky-visible (progressive enhancement, core
-   functionality intact). */
-.site-header {
-  border-bottom: 1px solid var(--dc-ink);
-  container-type: inline-size;
-  container-name: site-header;
-  position: sticky;
-  top: 0;
-  /* Above the sticky episode sidebar, which would otherwise paint on top
-     by virtue of appearing later in the DOM. */
-  z-index: 10;
-  transition: transform 220ms ease, opacity 220ms ease;
-  will-change: transform;
 }
 
 /* Drives the stacked-state container query for `.site-footer-inner` —
@@ -450,199 +423,15 @@ button.share-pill,
   container-name: site-footer;
 }
 
-.site-header--hidden {
-  transform: translateY(-100%);
-  opacity: 0;
-  /* Pointer-events: none so the invisible bar above the viewport top
-     does not eat clicks on content right under it. */
-  pointer-events: none;
-}
-
-/* Keyboard users tabbing through the page must never land on an
-   invisible offscreen link. Reveal the header whenever anything inside
-   it has focus, overriding the hidden state. */
-.site-header:focus-within {
-  transform: none;
-  opacity: 1;
-  pointer-events: auto;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .site-header {
-    transition: none;
-  }
-}
-
-/* Centered page content. The outer `<main class="site-content">` is the
-   landmark — it stays at viewport width so the page-header bubble and
-   any full-bleed sections can occupy the entire row. The inner
-   `.page-content` wrapper supplies the 1120-px container width that the
-   site-nav and footer share. */
-.site-nav,
 .site-footer-inner,
 .page-content {
   width: var(--dc-container);
   margin: 0 auto;
 }
 
-.site-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s1);
-  padding: clamp(0.25rem, 0.8vw, 0.5rem) 0;
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-1);
-  min-height: var(--dc-tap);
-  color: var(--dc-paper);
-  font-weight: var(--weight-bold);
-  text-decoration: none;
-}
-
-.brand-mark {
-  height: clamp(2.25rem, 5vw, 3.25rem);
-  width: auto;
-  display: block;
-}
-
-.brand-name {
-  font-family: var(--font-heading);
-  font-size: var(--text-base);
-  /* Off-scale heavy weight for the wordmark — distinct from the
-     `--weight-bold` (700) used for ordinary headings. */
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.nav-links {
-  --cluster-space: 0.9375rem 2.1875rem;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-}
-
-.nav-links a {
-  display: inline-flex;
-  align-items: center;
-  min-height: clamp(2rem, 1.5vw + 1.75rem, 2.75rem);
-}
-
 }  /* end @layer base */
 
 @layer components {
-
-.show-hero {
-  background-color: var(--dc-accent-dark);
-  color: var(--dc-paper);
-  position: relative;
-  /* Geometric clip for the sticky media layer below: when the hero is shorter
-     than 100vh, the media overflows; `overflow: clip` cuts that overflow
-     without establishing a new scroll container, so sticky still uses the
-     document scroll and the media never bleeds past the hero. */
-  overflow: clip;
-  /* Drives the stacked-state container queries below — the hero rearranges
-     itself based on its own width rather than the viewport, so the same
-     rules trigger in narrow embeds, narrow columns, or zoomed-in views. */
-  container-type: inline-size;
-  container-name: show-hero;
-}
-
-/* Cross-browser image layer: rather than `background-attachment: fixed`
-   (broken on iOS Safari) or `position: fixed` (escapes the parent's clipping
-   box entirely), use `position: sticky` on an HTML-discoverable `<picture>`.
-   The sticky containing-block constraint plus the `overflow: clip` above keep
-   the layer clipped to the hero. `margin-bottom: -100vh` cancels its
-   contribution to the hero's in-flow height. */
-.show-hero-media {
-  display: block;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  margin-bottom: -100vh;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.show-hero-media img {
-  display: block;
-  width: 120%;
-  max-width: none;
-  height: auto;
-  margin-left: -4%;
-}
-
-/* On mobile/tablet the proportional 120% width would leave too little image
-   height to fill the taller stacked hero, so switch to cover.
-   Container-driven: gated on the `.show-hero` container's own width so the
-   rule also fires for narrow embeds / zoomed-in views. */
-@container show-hero (max-width: 56.25em) {
-  .show-hero-media img {
-    width: 100%;
-    height: 100%;
-    margin-left: 0;
-    object-fit: cover;
-    object-position: 20% 0%;
-  }
-}
-
-.show-hero-curve {
-  background-color: var(--dc-surface-django-tint);
-  background-image: var(--dc-paper-texture);
-  background-attachment: fixed;
-  clip-path: url(#show-hero-curve-clip);
-  height: clamp(3.75rem, 15vw, 13.75rem);
-  margin-top: clamp(-80px, -5vw, -15px);
-  position: relative;
-  z-index: 1;
-  transform: translateZ(0);
-}
-
-.show-hero-shape {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
-
-.show-hero-inner {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  /* deliberate off-scale: 2.5rem (40 px) sits between --s2 and --s3. */
-  gap: 2.5rem;
-  align-items: center;
-  min-height: 14svh;
-  width: min(clamp(50rem, 66vw, 62.5rem), 100% - 2 * var(--dc-gutter));
-  margin: 0 auto;
-  padding: clamp(0.25rem, 1vw, 0.75rem) 0 clamp(2px, 0.8vw, 0.5rem);
-  position: relative;
-  z-index: 2;
-}
-
-.show-hero h1 {
-  font-size: var(--text-show-hero);
-  margin: var(--s-3) 0 var(--s-1);
-}
-
-.show-hero .eyebrow,
-.show-hero .show-tagline {
-  color: var(--dc-paper);
-}
-
-.show-tagline {
-  max-width: 40ch;
-  color: var(--dc-muted);
-  font-size: var(--text-tagline);
-  line-height: var(--leading-tagline);
-  margin: 0 0 var(--s1);
-}
-
-.show-actions {
-  --cluster-space: var(--s-2);
-}
 
 .show-artwork {
   width: 100%;
@@ -661,43 +450,6 @@ button.share-pill,
   border-radius: 0;
   box-shadow: none;
   filter: drop-shadow(0.3125rem 0.375rem 3px color-mix(in srgb, var(--dc-ink), transparent 55%));
-}
-
-.show-hero-logo {
-  height: auto;
-  width: clamp(10.625rem, 23vw, 17.5rem);
-  justify-self: end;
-  margin-top: var(--s2);
-  max-width: 100%;
-  view-transition-name: hero-logo;
-}
-
-/* Hero stacks at narrow container widths — see the `show-hero` CQ host above. */
-@container show-hero (max-width: 64rem) {
-  .show-hero-inner {
-    grid-template-columns: 1fr;
-    gap: clamp(0.5rem, 2vw, 1.5rem);
-    text-align: center;
-  }
-
-  .show-tagline {
-    margin: 0 auto var(--s0);
-    text-align: center;
-  }
-
-  .show-actions {
-    --cluster-justify: center;
-  }
-
-  .show-hero-logo {
-    order: -1;
-    justify-self: center;
-    margin-top: clamp(0.25rem, 1.5vw, 1.875rem);
-  }
-}
-
-.show-copy {
-  view-transition-name: hero-copy;
 }
 
 /* ---------- Layout primitives ----------
@@ -3304,37 +3056,6 @@ button.share-pill,
 }
 
 @layer components {
-
-@container site-header (max-width: 33.75em) {
-  .site-nav {
-    flex-wrap: wrap;
-    gap: clamp(0.25rem, 1.5vw, 0.75rem) var(--s0);
-    justify-content: center;
-    padding: clamp(2px, 1.5vw, 0.75rem) 0;
-  }
-
-  .nav-links {
-    --cluster-justify: center;
-    flex: 1 1 100%;
-    line-height: var(--leading-snug);
-  }
-
-  .nav-links a {
-    flex: 0 0 auto;
-  }
-}
-
-/* Narrow-stage spacing tweaks for the stacked hero. */
-@container show-hero (max-width: 47.5rem) {
-  .show-hero-inner {
-    gap: 1.25rem;
-    padding: var(--s1) 0;
-  }
-
-  .show-hero-logo {
-    margin-top: 0;
-  }
-}
 
 }  /* end @layer components */
 
