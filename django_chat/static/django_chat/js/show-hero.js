@@ -21,12 +21,19 @@
   // hero page (subpages early-return on the heroLogo guard).
   if (heroLogo && brandLogo && heroLogoImg) {
     const fit = () => {
-      // Drop the animation for the read so getBoundingClientRect() sees
-      // the brand at its un-morphed natural size. Preserve any inline
-      // animation-name so the polyfill's settings survive the read.
+      // Drop the CSS animation AND the polyfill's inline transform for
+      // the read so getBoundingClientRect() sees the brand at its
+      // un-morphed natural slot. Without clearing the transform, a refit
+      // mid-polyfill (font swap, ResizeObserver) would measure the
+      // already-flying brand and rewrite the morph vars to near-identity,
+      // collapsing the next scroll tick onto the docked position.
+      // Preserve and restore both so the polyfill state survives the read.
       const prevAnim = brandLogo.style.animationName;
+      const prevTransform = brandLogo.style.transform;
       brandLogo.style.animationName = 'none';
+      brandLogo.style.transform = 'none';
       const b = brandLogo.getBoundingClientRect();
+      brandLogo.style.transform = prevTransform;
       brandLogo.style.animationName = prevAnim;
 
       const h = heroLogoImg.getBoundingClientRect();

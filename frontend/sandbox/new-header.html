@@ -938,15 +938,19 @@
   if (!heroLogo || !brandLogo) return;
 
   const fit = () => {
-    // Measure the brand slot at its natural, un-morphed size: drop its
-    // animation for the read, then restore. getBoundingClientRect()
-    // forces a sync layout flush, so the transform is gone for the read.
-    // Preserve any value the polyfill (or anything else) set inline —
-    // resetting to '' would let the CSS keyframe animation re-take over
-    // and overwrite the polyfill's transform on the next frame.
+    // Measure the brand slot at its natural, un-morphed size: drop the
+    // CSS animation AND the polyfill's inline transform for the read,
+    // then restore both. Without clearing the inline transform a refit
+    // mid-polyfill (font swap, ResizeObserver) would measure the
+    // already-flying brand and rewrite --tw-morph-* to near-identity,
+    // collapsing the next scroll tick onto the docked position.
+    // Preserve and restore both so the polyfill state survives the read.
     const prevAnim = brandLogo.style.animationName;
+    const prevTransform = brandLogo.style.transform;
     brandLogo.style.animationName = 'none';
+    brandLogo.style.transform = 'none';
     const brand = brandLogo.getBoundingClientRect();
+    brandLogo.style.transform = prevTransform;
     brandLogo.style.animationName = prevAnim;
 
     const hero = heroLogo.getBoundingClientRect();
