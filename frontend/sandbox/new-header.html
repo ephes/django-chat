@@ -8,20 +8,27 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  /* ---------- design tokens ----------
-     Every viewport-driven value comes from the panel's anchor system
-     via --tw-* custom properties; the fallbacks below are just a sane
-     pre-JS render. The only fluid var defined here is --listen-up-size,
-     used as both the band height and the headphones bottom anchor. */
+  /* Design tokens. Viewport-driven values flow in as --tw-* custom
+     properties; the fallbacks elsewhere are just a sane pre-JS render. */
   :root {
     --bg-deep:   #09201D;
     --accent:    #41FCB9;
     --green:     #0ea342;
+    --green-dark: #14513a;            /* Mirrors site.css `--dc-accent-dark`. */
     --green-soft: rgba(14, 163, 66, 0.35);
     --ink:       #0b1a17;
-    --paper:     #ffffff;
     --listen-up-size: clamp(3rem, 23cqw, 29rem);
     --ease-out:  cubic-bezier(.2, .7, .2, 1);
+    /* Rendered-text-width / font-size ratio for "Django Chat" in Ubuntu
+       Bold, measured empirically. Used by the desktop logo-calc rule to
+       derive the H1 text width from --tw-h1 without JS. If the H1 text
+       content ever changes, remeasure: const r=document.createRange();
+       r.selectNodeContents(h1); r.getBoundingClientRect().width /
+       parseFloat(getComputedStyle(h1).fontSize); — and update here.
+       No `--dc-*` prefix on purpose: this is component-scoped, not a
+       site-wide token. Migration will rename to `--show-hero-h1-text-ratio`
+       (component-local) — see HANDOFF naming-mapping. */
+    --h1-text-ratio: 5.568;
   }
 
   * { box-sizing: border-box; }
@@ -34,20 +41,16 @@
   }
   a { color: inherit; text-decoration: none; }
 
-  /* Header lives in its own size-query container — every cqw/cqi unit
-     and @container query inside topbar + hero is resolved against this
-     wrapper's inline-size, not the viewport. Drop the shell into any
-     layout and the header adapts to its column, not the page. */
+  /* Header lives in its own size-query container — every cqw/cqi and
+     @container query is resolved against the shell's inline-size, so
+     the header adapts to its column, not the page. */
   .dc-shell {
     container-type: inline-size;
     container-name: dc;
   }
 
-  /* ---------- top bar ----------
-     Single-row layout: brand reserves space on the left (invisible until
-     the scroll-morph reveals it), nav lives on the right and is always
-     vertically centered. Mobile 2-row arrangement comes with the scroll
-     animation later. */
+  /* Top bar — desktop is single-row (brand left, nav right). Mobile
+     ≤1200 cqw rearranges to two centered rows; see further down. */
   .topbar {
     position: sticky;
     top: 0;
@@ -77,13 +80,11 @@
     display: inline-flex;
     align-items: center;
     gap: .6rem;
-    /* Hidden by default; the @supports block (native scroll-driven
-       animations) and the JS polyfill (older browsers) both promote
-       it to opacity:1 as part of the scroll-morph reveal. If JS is
-       fully off AND the browser lacks animation-timeline, the brand
-       stays hidden and the hero logo remains visible — the layout
-       still works, only the morph is missing. */
-    opacity: 0;
+    /* Hidden by default and removed from the focus order. The morph
+       paths (@supports + JS polyfill) promote it back to visible.
+       In the no-morph fallback (no JS + no animation-timeline) the
+       brand stays hidden and the hero logo remains the only mark. */
+    visibility: hidden;
     pointer-events: none;
   }
   .topbar__brand img { height: var(--tw-brand-logo-h, 3rem); width: auto; display: block; }
@@ -93,33 +94,31 @@
     font-size: 1.05rem;
   }
 
-  /* ---------- hero ---------- */
+  /* Hero — no stacking context here so the logo bubble pierces the
+     topbar. min/max-height clamp the hero to the visible viewport so
+     LISTEN UP and the Episodes hook sit on the viewport edge. */
   .hero {
     position: relative;
-    overflow-x: clip;             /* sides bleed: clip horizontally … */
-    overflow-y: visible;          /* … but LISTEN UP may dip below */
-    /* No stacking context here — lets the logo bubble pierce the topbar.
-       Hero never exceeds the visible viewport (max-height = svh − topbar)
-       so LISTEN UP and the Episodes hook always sit on the viewport edge.
-       The panel-driven --tw-hero-min-h floors hero on tall viewports;
-       it's clamped to svh-topbar so a hard rem floor can't push content
-       below the fold. The bubble may overflow downward and overlap
-       LISTEN UP on short viewports (intentional, bubble paints on top
-       via DOM order). */
+    overflow-x: clip;
+    overflow-y: visible;
     min-height: min(var(--tw-hero-min-h, 50rem), calc(100svh - var(--tw-topbar-h, 5rem)));
     max-height: calc(100svh - var(--tw-topbar-h, 5rem));
     padding-block: 0 clamp(5rem, 14vh, 11rem);
     color: #fff;
-    /* gradient overlay layered on top of the photographic background */
+    /* Photographic background with a top-to-bottom --bg-deep wash so the
+       white bubble and LISTEN UP keep contrast on every image variant.
+       site.css uses `color-mix` for the same brand-tint pattern (e.g.
+       `--dc-django-soft`); migration should optionally add a literal
+       `rgb()` fallback for Safari <16.2 as documented there. */
     background:
-      linear-gradient(180deg, rgba(9,32,29,.45) 0%, rgba(9,32,29,.55) 100%),
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--bg-deep) 45%, transparent) 0%,
+        color-mix(in srgb, var(--bg-deep) 55%, transparent) 100%),
       url("assets/hero-bg.jpg") center / cover no-repeat,
       var(--bg-deep);
   }
 
-  /* Headphones illustration — bottom-right; width / bottom / right are
-     panel-driven via the anchor system, so the fallbacks below are just
-     sane pre-JS render values. */
+  /* Headphones illustration — bottom-right, fully panel-driven. */
   .hero__headphones {
     position: absolute;
     right: var(--tw-hp-right, 0%);
@@ -140,10 +139,8 @@
     fill: none;
   }
 
-  /* Big LISTEN UP layers — sit at the hero's bottom edge so the text
-     bleeds slightly below the viewport (intentional Anschnitt). The
-     translate-Y on .listen-up--fill / --outline controls the precise
-     bleed depth; keep those small at every viewport. */
+  /* Big LISTEN UP — sits at the hero's bottom edge; the fill/outline
+     translate-Y values bleed it slightly below the viewport. */
   .listen-up-stage {
     position: absolute;
     left: 0;
@@ -210,22 +207,18 @@
     grid-row: 1;
   }
 
-  /* White speech bubble — flex column for the content, SVG sits behind
-     as an absolute backdrop (the natural fit for a shape that has to
-     overlap with text). Vertical insets use padding-block with an
-     aspect-ratio compensator (× 908/1039) so the panel's % values stay
-     meaningful as "% of bubble HEIGHT" — % padding is normally inline,
-     so without the compensator the visual position would drift.
-     z-index: 5 paints the bubble above LISTEN UP (z:0) and the
-     Episodes hook (z:4) — the hook should slide behind on short
-     viewports where the bubble overhangs. The logo bubble keeps
-     z-index: 60 so it still pierces the sticky topbar (z:50). */
+  /* White speech bubble. Vertical insets use padding-block × 908/1039
+     (the bubble's aspect ratio) so panel % values read as "% of
+     bubble height" — % padding is normally inline-relative, so the
+     compensator keeps insets visually height-tied. Z-order: logo
+     bubble (60) > sticky topbar (50) > bubble (5) > Episodes (4) >
+     LISTEN UP (0). */
   .hero__bubble {
     position: relative;
     z-index: 5;
     width: var(--tw-bubble-w, 50rem);
     aspect-ratio: 1039 / 908;
-    transform: translate(var(--tw-bubble-tx, 0%), var(--tw-bubble-ty, 0%));
+    transform: translateY(var(--tw-bubble-ty, 0%));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -243,13 +236,10 @@
     filter: drop-shadow(0 30px 40px rgba(0,0,0,.25));
   }
   .hero__bubble-content {
-    /* The SVG's drop-shadow filter creates a stacking context that would
-       paint over the content; lift the content with a stacking context
-       of its own so it stays in front. */
+    /* Own stacking context — the bubble SVG's drop-shadow filter would
+       otherwise paint over the content. */
     position: relative;
     z-index: 1;
-    /* Cap content so it never overflows the shell even when the bubble
-       bleeds past container edges on tiny screens. */
     max-width: min(100%, calc(100cqw - 2rem));
     display: flex;
     flex-direction: column;
@@ -280,6 +270,16 @@
     transition: border-color .15s ease;
   }
   .hero__bubble-content p a:hover { border-bottom-color: var(--green); }
+  /* Primary pill — mirrors the main project's "two-tone brand-green
+     pill" pattern (site.css `.button-primary`). The site renders that
+     button on a dark page → dark default, lighter hover. We sit inside
+     the white speech-bubble, so we flip it: lighter default, darker
+     hover. The text colour also flips: dark ink on the light-green idle
+     to satisfy WCAG-AA at 16 px (font-size clamps to 1rem below
+     ~1200 cqw, which is NOT "large text" — white on --green is only
+     3.31:1). White text returns on the dark-green hover/focus state.
+     Migration tokens: --green → --dc-django, --green-dark →
+     --dc-accent-dark, --ink → --dc-ink, #fff → --dc-paper. */
   .hero__subscribe {
     justify-self: center;
     display: inline-flex;
@@ -289,16 +289,37 @@
       var(--tw-sub-py, clamp(.8rem, 1.2cqw, 1.1rem))
       var(--tw-sub-px, clamp(2rem, 3.8cqw, 4.1rem));
     border-radius: 999px;
+    border: 1px solid var(--green);
     background: var(--green);
-    color: #fff;
+    color: var(--ink);
     font-weight: 700;
     letter-spacing: 0.04em;
     font-size: var(--tw-sub-size, clamp(1rem, 1.4cqw, 1.4rem));
-    border: 0;
-    cursor: pointer;
-    transition: transform .15s var(--ease-out), background .15s var(--ease-out);
+    transition:
+      transform    .15s var(--ease-out),
+      background   .15s var(--ease-out),
+      border-color .15s var(--ease-out),
+      color        .15s var(--ease-out);
   }
-  .hero__subscribe:hover { background: #0c8e3a; transform: translateY(-1px); }
+  .hero__subscribe:hover,
+  .hero__subscribe:focus-visible {
+    background: var(--green-dark);
+    border-color: var(--green-dark);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  .hero__subscribe:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  /* Honor reduce-motion: the colour change still happens (it's the
+     hover affordance, not motion), but the translateY lift and the
+     transition timing are dropped. */
+  @media (prefers-reduced-motion: reduce) {
+    .hero__subscribe { transition: none; }
+    .hero__subscribe:hover,
+    .hero__subscribe:focus-visible { transform: none; }
+  }
   .hero__subscribe svg {
     width: 1.1em;
     height: 1.1em;
@@ -311,25 +332,10 @@
   }
   .hero__subscribe svg circle { fill: currentColor; stroke: none; }
 
-  /* Green logo bubble — upper-left, pulled up to overlap the topbar.
-     z-index above the topbar.
-
-     On side-by-side layouts (>1200 cqw) the X-position is derived
-     entirely from the H1 font-size: the rendered "Django Chat" in
-     Ubuntu Bold is consistently 5.568 × font-size wide (empirically
-     measured, constant across viewports), so we can compute the H1
-     text width without measuring. The formula:
-
-       translate.x = -(h1_text_w / 2 + 2vw + logo_w / 2)
-
-     starts from the cell center (logo is `justify-self: center`) and
-     shifts the logo left by half the H1 text width plus a 2vw gap plus
-     half the logo's own width — putting its right edge exactly the gap
-     to the left of the H1's left edge. No JS measurement needed.
-
-     The `--tw-logo-tx` anchor is only used on mobile/tablet
-     (≤1200 cqw) where the layout is stacked and a calc-based
-     clearance doesn't apply. */
+  /* Green logo bubble — upper-left, pierces the topbar (z 60 > 50).
+     On side-by-side layouts (>1200 cqw) the @container rule below
+     derives X/Y from the H1 width and the bubble's offset. On stacked
+     mobile/tablet the --tw-logo-tx/-ty anchors take over. */
   .hero__logo-bubble {
     position: relative;
     width: var(--tw-logo-w, 14rem);
@@ -339,21 +345,12 @@
   }
   @container dc (min-width: 1201px) {
     .hero__logo-bubble {
-      /* X: H1 text width is derived purely from font-size: empirically
-         the rendered "Django Chat" in Ubuntu Bold is consistently
-         5.568 × font-size wide at every viewport, so we don't need to
-         measure with JS. If the H1 text content ever changes, remeasure
-         once and update the ratio.
-
-         Y: anchored to the bubble's vertical position so the logo
-         tracks the bubble when its `--tw-bubble-ty` shifts at different
-         viewports. The constant -8.5rem keeps the logo's CENTER
-         8.5rem above the bubble's CENTER (matches the original look
-         at the 1440 reference). The size-difference term compensates
-         for bubble/logo height delta so center-to-center stays exact
-         regardless of how much wider the bubble is than the logo. */
+      /* X: H1 text width is --tw-h1 × --h1-text-ratio (see token).
+         Y: tracks --tw-bubble-ty + a fixed -8.5rem center-to-center,
+         plus a size-difference term that compensates for bubble/logo
+         height delta so the centers stay exactly 8.5rem apart. */
       transform: translate(
-        calc(-0.5 * var(--tw-h1, 5.5rem) * 5.568 - 2vw - 0.5 * var(--tw-logo-w, 14rem)),
+        calc(-0.5 * var(--tw-h1, 5.5rem) * var(--h1-text-ratio) - 2vw - 0.5 * var(--tw-logo-w, 14rem)),
         calc(
           var(--tw-bubble-ty, 0px)
           - 8.5rem
@@ -368,9 +365,7 @@
     display: block;
   }
 
-  /* Episodes hook — every dimension is panel-driven via the anchor
-     system (size, tracking, arrow, gap, right, bottom). The fallbacks
-     below are simple pre-JS render values. */
+  /* Episodes hook — size, tracking, right, bottom are panel-driven. */
   .hero__episodes {
     position: absolute;
     right: var(--tw-ep-right, 1.5rem);
@@ -379,37 +374,29 @@
     display: inline-flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: var(--tw-ep-gap, .1em);
+    gap: .1em;
     color: var(--accent);
     font-family: "Ubuntu", sans-serif;
     font-weight: 700;
     font-size: var(--tw-ep-size, 2.5rem);
     line-height: 1;
     letter-spacing: var(--tw-ep-tracking, 0em);
-    text-transform: var(--tw-ep-case, none);
   }
   .hero__episodes svg {
-    width: var(--tw-ep-arrow, .9em);
-    height: var(--tw-ep-arrow, .9em);
+    width: 1.75rem;
+    height: 1.75rem;
     fill: currentColor;
     /* Halo so the arrow stays visible if it overlaps LISTEN UP's
        outline at narrow viewports (both are accent-green). */
     filter: drop-shadow(0 0 .15em var(--bg-deep));
   }
 
-  /* Narrow shell: every fluid dimension is panel-driven; only the
-     full-width hero__center and the centered mobile nav remain
-     query-bound — but now via @container, not @media. */
+  /* Stacked layout below 1200 cqw — two-row topbar (nav above, brand
+     below) and a vertical hero composition. The 1200 threshold is the
+     point below which the calc-driven side-by-side layout would push
+     the logo off the left edge. */
   @container dc (max-width: 1200px) {
     .hero__center { width: 100%; }
-    /* Mobile/tablet topbar: two rows stacked, both centered. Nav on top,
-       the morphing logo + wordmark docks below. Brand stays in flow so
-       the scroll-morph runs here too (auto-fit measures both elements
-       and writes pixel-perfect start geometry for the flying logo).
-       Threshold raised to 1200 so the side-by-side hero layout (calc
-       rule, see below) only activates when there's enough room for
-       both logo + bubble + text without the logo running off the left
-       edge of the viewport. */
     .topbar {
       flex-direction: column;
       justify-content: center;
@@ -419,12 +406,8 @@
     }
     .topbar__nav { order: 0; }
     .topbar__brand { order: 1; }
-    /* Lift the logo a touch in the mobile/tablet range. The hero-logo
-       container's bbox (incl. the speech-bubble tail's whitespace
-       quadrant) clips into the h1's bbox near the 1200 boundary; this
-       keeps the two bboxes apart so automated overlap checks stay
-       clean and the tail visibly clears the H1's left edge at short
-       heights too. */
+    /* Small upward lift so the logo bbox (including the bubble tail's
+       whitespace quadrant) clears the H1 bbox near the 1200 boundary. */
     .hero__logo-bubble { translate: 0 -1rem; }
   }
 
@@ -441,42 +424,31 @@
   .below h2 { color: var(--accent); }
 
   /* =====================================================================
-     SCROLL-MORPH — the hero logo hands off to the topbar brand as you
-     scroll. The flight is a single travelling element: .topbar__brand img.
+     SCROLL-MORPH — the hero logo hands off to the topbar brand on scroll.
+     One travelling element: .topbar__brand img. It starts blown-up
+     (scale --tw-morph-scale + offset --tw-morph-tx/ty) sitting on top
+     of the hero logo, then shrinks onto its natural topbar slot over
+     [--tw-morph-start, --tw-morph-end]. The wordmark fades in over
+     [--tw-morph-text-start, --tw-morph-text-end]. .hero__logo-bubble
+     is set to visibility:hidden while the morph is active.
 
-       · .topbar__brand img  is the flying logo: it starts blown up
-         (scale --tw-morph-scale) and offset (--tw-morph-tx/ty) so it
-         sits exactly on top of the hero logo, then flies + shrinks onto
-         its natural topbar slot over [--tw-morph-start, --tw-morph-end].
-       · .topbar__brand span ("Django Chat") fades in once the logo has
-         docked, over [--tw-morph-text-start, --tw-morph-text-end].
-       · .hero__logo-bubble  has `visibility: hidden` while the morph is
-         active. The flying logo is pixel-aligned on top of it at
-         scroll=0 (auto-fit), so the user sees a single logo that just
-         shrinks into the topbar — no cross-fade.
+     Only the transform changes — the layout box stays put, so the nav
+     and the docked click target never shift. --tw-morph-scale/-tx/-ty
+     are measured per-viewport by the auto-fit script (CSS cannot read
+     another element's rendered geometry); keyframe `from` values are
+     just sane fallbacks.
 
-     The transform on the flying logo only changes its VISUAL — the
-     `--tw-brand-logo-h` img layout box never moves, so the nav never
-     shifts and the docked click target stays put.
-     `--tw-morph-scale / -tx / -ty` (the blown-up start state) are
-     measured per viewport by the auto-fit script below (CSS cannot
-     read another element's rendered geometry); the keyframe `from`
-     values are just sane fallbacks if that script fails to write them.
-
-     This block wraps in prefers-reduced-motion + @supports for native
-     scroll-driven animations (Chrome/Edge 115+, Safari 26+). On other
-     browsers a JS polyfill (further down) drives the same morph using
-     the same CSS variables. With prefers-reduced-motion: reduce, both
-     paths bail and the static layout (hero logo visible, brand hidden)
-     remains.
+     Wrapped in prefers-reduced-motion + @supports. Native path runs on
+     Chrome/Edge 115+ and Safari 26+. The JS polyfill below drives the
+     same morph on older browsers via the same CSS vars. reduce-motion
+     bails both paths → static layout, hero logo visible, brand hidden.
      ===================================================================== */
   @media (prefers-reduced-motion: no-preference) {
     @supports (animation-timeline: scroll(root)) {
       .topbar__brand {
-        opacity: 1;
+        visibility: visible;
         pointer-events: auto;
       }
-      /* Flying logo — blown-up start state shrinks onto the topbar slot. */
       .topbar__brand img {
         transform-origin: left center;
         animation-name: dc-logo-morph;
@@ -487,7 +459,6 @@
           var(--tw-morph-start, 0vh)
           var(--tw-morph-end, 30vh);
       }
-      /* Wordmark — fades in next to the logo once it has docked. */
       .topbar__brand span {
         animation-name: dc-brand-text;
         animation-fill-mode: both;
@@ -497,11 +468,9 @@
           var(--tw-morph-text-start, 25vh)
           var(--tw-morph-text-end, 32vh);
       }
-      /* Hero logo stays hidden — the flying .topbar__brand img sits at
-         the same pixel position at scroll=0 (auto-fit) and is the only
-         visible logo, so it just shrinks into the topbar without any
-         cross-fade. visibility:hidden keeps the layout box intact so
-         the bubble composition (grid cell, sizing) is unaffected. */
+      /* visibility:hidden (not display:none) preserves the layout
+         box, so the bubble composition stays unaffected and the flying
+         logo can pixel-align with it. */
       .hero__logo-bubble {
         visibility: hidden;
       }
@@ -524,9 +493,7 @@
   }
 
 
-  /* =====================================================================
-     TWEAK PANEL — sandbox-only, remove before migrating to production
-     ===================================================================== */
+  /* TWEAK PANEL — sandbox-only, do not migrate. */
   .tweak {
     position: fixed;
     top: 12px;
@@ -802,7 +769,7 @@
   </ul>
 </nav>
 
-<header class="hero" id="top">
+<section class="hero" id="top" aria-labelledby="hero-title">
   <svg class="hero__headphones" viewBox="0 0 521.99 658.19" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M208.4,626.42c-36.79,71.44-228.62,5.66-129.48-45.95,78.27-40.74,218.51,142.67,299.45-35.33,29.72-46.66,74.05-119.41,76.36-177.07,1.46-36.35-50.97-16.69-75.01,8.8-27.19,28.84-53.65,81.86-28.4,93.21,20.39,9.17,51.35-20.1,64.08-37.14,50.43-67.46,44.75-175.65-29.46-116.73-182.82,145.15-4.46,328.85,91.72,104.08,14.08-32.9,23.36-79.73-7.62-102.65-80.21-41.58-231.67,160.95-115.08,214.75,49.46,22.83,112.03-6.39,148.38-91.11,22.96-53.5,11.71-99.01-5.1-114.86-20.27-19.11-7.98-63.04,7.03-44.23,13.24,16.58-18.74,76.86-37.7,57.49-20.39-20.82,10-77.86,14.39-104.05C514.11,43.68,218.6-62.25,124.06,158.92c-6.1,14.27-18.07,5.62-14.1-5.42C196.11-86.47,537.63,3.64,502.66,251.81c-1.65,11.68,12.89,17,14.94,5.64C561.79,12.25,228.82-104.14,105.48,120.17c-27.19,49.45,21.55,95.57-8.68,102.9C-1.31,246.86,3.21,443.89,89.08,476.42c108,40.92,139.03-201.56,52.9-250.94C72.94,185.9,9.31,247.13,1.59,335.5c-2.73,31.26-2.78,69.32,21.38,108.11,68.94,110.73,150.51-56.89,122.55-137.66-8.5-24.55-42.8-42.52-51.87,45.19-5.2,50.31,19.68,96.65,44.52,77.32,26.3-20.45,51.41-170.8-15.48-181.99-77.55-12.98-82.68,193.42-15.06,217.52,52.75,18.8,136.63,86.52,100.77,162.41Z"/>
   </svg>
@@ -814,7 +781,7 @@
 
   <div class="hero__center">
     <div class="hero__logo-bubble">
-      <img src="assets/Django-chat-logo-neu.svg" alt="Django Chat">
+      <img src="assets/Django-chat-logo-neu.svg" alt="">
     </div>
 
     <div class="hero__bubble">
@@ -823,17 +790,17 @@
         <path fill="#fff" d="M1039.04,409.13C1039.04,183.18,806.45,0,519.52,0S0,183.18,0,409.13s232.6,409.13,519.52,409.13c40.84,0,80.58-3.71,118.7-10.73,11.12-2.05,22.49-.26,32.79,5.19l180.92,95.67-33.41-145.11c-2.28-9.92,1.66-20.38,9.35-24.85,128.09-74.51,211.16-194.26,211.16-329.3Z"/>
       </svg>
       <div class="hero__bubble-content">
-        <h1>Django Chat</h1>
+        <h1 id="hero-title">Django Chat</h1>
         <p>A biweekly podcast on the Django Web Framework<br>
           by&nbsp;<a href="https://wsvincent.com/">Will Vincent</a> and <a href="https://noumenal.es/">Carlton Gibson</a>.</p>
-        <button class="hero__subscribe" type="button">
+        <a class="hero__subscribe" href="/django-chat/feed/">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 11a9 9 0 0 1 9 9"/>
             <path d="M4 4a16 16 0 0 1 16 16"/>
             <circle cx="5" cy="19" r="2.2"/>
           </svg>
           Subscribe
-        </button>
+        </a>
       </div>
     </div>
   </div>
@@ -842,13 +809,11 @@
     <span>Episodes</span>
     <svg viewBox="0 0 12 10" aria-hidden="true"><polygon points="0,0 12,0 6,9"/></svg>
   </a>
-</header>
+</section>
 </div><!-- /.dc-shell -->
 
-<!-- =====================================================================
-     TWEAK PANEL — sandbox-only. Toggle with the "≡" button, top-right.
-     Values persist in localStorage. Click "Reset" to clear.
-     ===================================================================== -->
+<!-- TWEAK PANEL — sandbox-only. Toggle with the "⚙" button, bottom-right.
+     Values persist in localStorage. Click "Reset" to clear. -->
 <button class="tweak-toggle" id="tweak-toggle" type="button" aria-label="Open tweak panel" hidden>⚙</button>
 <aside class="tweak" id="tweak" aria-label="Layout tweak panel">
   <header>
@@ -866,7 +831,6 @@
       <div class="anchor-group" data-anchor-group="--tw-logo-tx"></div>
       <div class="anchor-group" data-anchor-group="--tw-logo-ty"></div>
       <div class="anchor-group" data-anchor-group="--tw-logo-w"></div>
-      <div class="anchor-group" data-anchor-group="--tw-bubble-tx"></div>
       <div class="anchor-group" data-anchor-group="--tw-bubble-ty"></div>
       <div class="anchor-group" data-anchor-group="--tw-bubble-w"></div>
       <div class="anchor-group" data-anchor-group="--tw-h1"></div>
@@ -877,8 +841,6 @@
       <div class="anchor-group" data-anchor-group="--tw-hp-right"></div>
       <div class="anchor-group" data-anchor-group="--tw-ep-size"></div>
       <div class="anchor-group" data-anchor-group="--tw-ep-tracking"></div>
-      <div class="anchor-group" data-anchor-group="--tw-ep-arrow"></div>
-      <div class="anchor-group" data-anchor-group="--tw-ep-gap"></div>
       <div class="anchor-group" data-anchor-group="--tw-ep-right"></div>
       <div class="anchor-group" data-anchor-group="--tw-ep-bottom"></div>
       <div class="anchor-group" data-anchor-group="--tw-hero-min-h"></div>
@@ -958,19 +920,16 @@
 
 <section class="below" id="episodes">
   <h2>Episodes (placeholder)</h2>
-  <p>Scroll-area below the hero. Step 3 will animate the logo + wordmark into the top bar as you scroll past the hero.</p>
+  <p>Scroll-area below the hero — gives the scroll-morph room to run.</p>
 </section>
 
 <!-- =====================================================================
-     SCROLL-MORPH AUTO-FIT (Schritt 3) — progressive enhancement.
-     CSS cannot read another element's rendered geometry, so this tiny
-     script measures the hero logo + the topbar brand slot and writes the
-     exact blown-up start state (--tw-morph-scale / -tx / -ty) into :root.
-     The flight itself stays 100% CSS (scroll-driven). Without this script
-     the keyframe fallbacks still run — just not pixel-perfect off the
-     tuned viewport. Re-runs on resize / font load so every viewport
-     docks perfectly. Keep this on migration; the tweak panel below does
-     not. ==================================================================== -->
+     SCROLL-MORPH AUTO-FIT — progressive enhancement. Measures the hero
+     logo + the topbar brand slot and writes the exact blown-up start
+     state (--tw-morph-scale/-tx/-ty) into :root, so the flying logo
+     pixel-aligns with the hero logo on every viewport. Re-runs on
+     resize / font load. Keep this on migration.
+     ===================================================================== -->
 <script>
 (() => {
   const root = document.documentElement;
@@ -1011,19 +970,29 @@
   fit();
   addEventListener('load', fit);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
-  // rAF-throttle (was 120ms setTimeout — caused visible snapping in stages
-  // during continuous resize). Runs at most once per frame, so the flying
-  // logo tracks the hero logo smoothly as the viewport changes.
+  // rAF-throttle keeps refits to one per frame so the flying logo tracks
+  // smoothly during continuous size changes.
   let pending = false;
-  addEventListener('resize', () => {
+  const schedule = () => {
     if (pending) return;
     pending = true;
     requestAnimationFrame(() => { pending = false; fit(); });
-  });
-  // Re-fit after the panel's docked-logo-height slider resizes the slot
+  };
+  // ResizeObserver instead of window.resize so the morph stays in sync
+  // when the layout changes without a viewport resize — e.g. a sidebar
+  // collapses, a parent container shrinks, the hero logo's container-
+  // query-driven width crosses a breakpoint, or the docked brand logo
+  // is restyled. Observes the shell (covers cqw-driven anchor changes)
+  // plus the two measured elements (covers any direct size change).
+  const shell = document.querySelector('.dc-shell');
+  const ro = new ResizeObserver(schedule);
+  if (shell) ro.observe(shell);
+  ro.observe(heroLogo);
+  ro.observe(brandLogo);
+  // Re-fit when the panel's docked-logo-height slider changes the slot
   // (rAF so it runs once the panel handler has applied the new size).
   const sizeSlider = document.querySelector('[data-var="--tw-brand-logo-h"]');
-  if (sizeSlider) sizeSlider.addEventListener('input', () => requestAnimationFrame(fit));
+  if (sizeSlider) sizeSlider.addEventListener('input', schedule);
 })();
 </script>
 
@@ -1037,7 +1006,12 @@
 
 <script>
 (() => {
-  if (CSS.supports('animation-timeline', 'scroll(root block)')) return;
+  // Defensive: very old browsers / non-DOM contexts lack CSS.supports.
+  // Treat unknown support as "not supported" → polyfill runs.
+  const hasNativeTimeline = typeof CSS !== 'undefined'
+    && typeof CSS.supports === 'function'
+    && CSS.supports('animation-timeline', 'scroll(root block)');
+  if (hasNativeTimeline) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const root = document.documentElement;
   const brand = document.querySelector('.topbar__brand');
@@ -1046,17 +1020,12 @@
   const heroLogo = document.querySelector('.hero__logo-bubble');
   if (!brand || !brandImg || !brandSpan || !heroLogo) return;
 
-  // Mirror the @supports block's static state so the morph has the same
-  // visual baseline: brand visible, hero logo hidden (the polyfill drives
-  // the flight in place of the CSS scroll-driven animation). Also disable
-  // the CSS keyframe animations — the browser may have parsed and run them
-  // even though CSS.supports() returned false (e.g. native support exists
-  // but we choose to override). The polyfill owns transform/opacity now.
-  // transform-origin must match the @supports block (left center) so the
-  // auto-fit-measured scale + offset still align the flying logo with the
-  // hero logo at scroll=0 — on browsers where @supports doesn't apply,
-  // the default origin (50% 50%) would put it in the wrong place.
-  brand.style.opacity = '1';
+  // Mirror the @supports baseline: brand visible, hero logo hidden,
+  // CSS keyframe animations disabled (the polyfill drives transform
+  // and opacity directly). transform-origin: left center must match
+  // the @supports rule so the auto-fit-measured scale + offset align
+  // the flying logo with the hero logo at scroll=0.
+  brand.style.visibility = 'visible';
   brand.style.pointerEvents = 'auto';
   heroLogo.style.visibility = 'hidden';
   brandImg.style.animationName = 'none';
@@ -1197,26 +1166,19 @@
 
 <script>
 (() => {
-  const STORAGE_KEY = 'dc-tweak-v6';
+  const STORAGE_KEY = 'dc-tweak-v7';
   const HIDDEN_KEY = 'dc-tweak-hidden';
   const POS_KEY = 'dc-tweak-pos';
-  // Wipe older versions so the current defaults take over on first
-  // load. The version key is bumped whenever a default value or unit
-  // changes in a way that old user state would silently break.
-  ['dc-tweak-v1','dc-tweak-v2','dc-tweak-v3','dc-tweak-v4','dc-tweak-v5'].forEach(k => localStorage.removeItem(k));
+  // Wipe older versions on load — bumped whenever a default, unit, or
+  // anchor list changes in a way that old user state would silently
+  // break. v7 drops --tw-bubble-tx / --tw-ep-arrow / --tw-ep-gap.
+  ['dc-tweak-v1','dc-tweak-v2','dc-tweak-v3','dc-tweak-v4','dc-tweak-v5','dc-tweak-v6'].forEach(k => localStorage.removeItem(k));
 
   // -- Anchored variables ----------------------------------------------
-  // Each property:
-  //   units       — allowed unit suffixes (first is the default)
-  //   slider      — [min, max, step] for the per-anchor value slider
-  //   defaults    — initial anchor list in the default unit
-  //   defaultMin  — optional default for the clamp floor (CSS length string)
-  //   defaultMax  — optional default for the clamp ceiling (CSS length string)
-  // Per-property state shape: { unit, min, max, list: [{vw,val}, …] }
-  // Composed CSS:
-  //   inner = calc(val₀ + Σᵢ (valᵢ − valᵢ₋₁) · clamp(0, (100cqw − vwᵢ₋₁px)/(vwᵢ − vwᵢ₋₁)px, 1))
-  //   final = clamp(MIN, inner, MAX)  (or min/max/inner if one bound missing)
-  // — piecewise-linear, container-query-driven, no media queries.
+  // Per-property: { units, slider:[min,max,step], defaults, defaultMin?, defaultMax? }.
+  // Stored state shape: { unit, min, max, list: [{vw, val, unit}, …] }.
+  // Composer emits  clamp(MIN, calc(piecewise-linear sum), MAX)  using
+  // 100cqw ramps between consecutive anchors. No @media queries.
   const ANCHORED = [
     { var: '--tw-logo-tx',          label: 'Logo translate X',   units: ['%','rem','vw','svh','vh'],
       slider: [-200, 50, 0.5],
@@ -1244,9 +1206,6 @@
         {vw:400,  val:20,   unit:'vh'},
       ],
       defaultMin: '9rem', defaultMax: '20rem' },
-    { var: '--tw-bubble-tx',        label: 'Bubble translate X', units: ['%','rem','vw','svh','vh'],
-      slider: [-20, 25, 0.5],
-      defaults: [{vw:1024, val:0, unit:'%'}] },
     { var: '--tw-bubble-ty',        label: 'Bubble translate Y', units: ['rem','vw','svh','vh'],
       slider: [-25, 30, 0.25],
       defaults: [
@@ -1322,12 +1281,6 @@
         {vw:1920, val:0.04,   unit:'em'},
         {vw:820,  val:-0.045, unit:'em'},
       ] },
-    { var: '--tw-ep-arrow',         label: 'Episodes arrow size', units: ['em','rem','vw','cqw'],
-      slider: [0.4, 3, 0.05],
-      defaults: [{vw:1024, val:1.75, unit:'rem'}] },
-    { var: '--tw-ep-gap',           label: 'Episodes gap',        units: ['em','rem','%'],
-      slider: [0, 1, 0.02],
-      defaults: [{vw:1024, val:0.1, unit:'em'}] },
     { var: '--tw-ep-right',         label: 'Episodes right',      units: ['rem','vw','%','cqw'],
       slider: [-2, 10, 0.1],
       defaults: [
@@ -1356,7 +1309,6 @@
         {vw:820,  val:7.5, unit:'rem'},
       ] },
   ];
-  const SPEC_BY_VAR = Object.fromEntries(ANCHORED.map(s => [s.var, s]));
 
   // Sum-of-ramps composer. Each anchor carries its own unit; when all
   // anchors share a unit we emit the compact delta form (just numbers),
@@ -1431,15 +1383,7 @@
   });
   ANCHORED.forEach(spec => {
     const s = saved.anchors?.[spec.var];
-    if (Array.isArray(s)) {
-      // very-legacy (pre-unit-picker) — wrap and lift unit to anchors
-      state.anchors[spec.var] = {
-        unit: spec.units[0],
-        min:  spec.defaultMin || '',
-        max:  spec.defaultMax || '',
-        list: clone(s).map(a => ({ ...a, unit: a.unit || spec.units[0] })),
-      };
-    } else if (s && Array.isArray(s.list)) {
+    if (s && Array.isArray(s.list)) {
       const propUnit = spec.units.includes(s.unit) ? s.unit : spec.units[0];
       state.anchors[spec.var] = {
         unit: propUnit,
@@ -1663,15 +1607,18 @@
   });
 
   panel.querySelector('[data-action=copy]').addEventListener('click', async (e) => {
+    // Migration-safe export: anchors always reflect the composed
+    // calc() the page is using; singles only ship when the user
+    // actually touched them (state.singles is the source of truth).
     const lines = [':root {'];
     ANCHORED.forEach(spec => {
       const css = composeFull(state.anchors[spec.var]);
       if (css) lines.push(`  ${spec.var}: ${css};`);
     });
     singles.forEach(input => {
-      const text = input.parentElement.querySelector('.tweak-value');
-      const v = text ? text.value : input.value + (input.dataset.unit || '');
-      lines.push(`  ${input.dataset.var}: ${v};`);
+      const varName = input.dataset.var;
+      if (!(varName in state.singles)) return;
+      lines.push(`  ${varName}: ${state.singles[varName]};`);
     });
     lines.push('}');
     const out = lines.join('\n');

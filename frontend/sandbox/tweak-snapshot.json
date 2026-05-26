@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "captured": "2026-05-22",
-    "source": "Helium localStorage dc-tweak-v5",
-    "notes": "Authoritative user state, mirrored 1:1 into the ANCHORED defaults in new-header.html. singles is intentionally empty — no static-slider values were touched. Note: ep-size and ep-bottom use a sharp 6 px ramp at 1024→1030 (effectively a step function between mobile/tablet and desktop layouts). logo-tx and hero-min-h have anchors on or at their linear segments (kept as deliberate control points)."
+    "captured": "2026-05-26",
+    "source": "Code defaults — STORAGE_KEY 'dc-tweak-v7' in new-header.html",
+    "notes": "Authoritative anchor defaults shipped in the sandbox. The v7 bump dropped --tw-bubble-tx (always 0%), --tw-ep-arrow (constant 1.75rem) and --tw-ep-gap (constant 0.1em) — those values are now inlined in the CSS. Units are restricted in --tw-bubble-ty and --tw-bubble-w to non-% so the desktop logo-calc rule can reuse the variables safely. singles is intentionally empty: the static single-sliders are sandbox-tuning only and are not applied unless the user touches them. To capture a tuned Helium state, dump the dc-tweak-v7 LevelDB entry and replace `anchors`/`singles` here."
   },
   "anchors": {
     "--tw-logo-tx": {
@@ -12,7 +12,6 @@
       "list": [
         { "vw": 1920, "val": -159.5, "unit": "%" },
         { "vw": 1400, "val": -145,   "unit": "%" },
-        { "vw": 1024, "val": -90,    "unit": "%" },
         { "vw": 820,  "val": -60,    "unit": "%" },
         { "vw": 400,  "val": -30,    "unit": "%" }
       ]
@@ -22,42 +21,35 @@
       "min": "",
       "max": "",
       "list": [
-        { "vw": 1400, "val": -6, "unit": "vh" },
-        { "vw": 1024, "val": 2,  "unit": "vh" },
-        { "vw": 737,  "val": 4,  "unit": "vh" },
-        { "vw": 380,  "val": 2,  "unit": "vh" }
+        { "vw": 1024, "val": 2, "unit": "vh" },
+        { "vw": 737,  "val": 4, "unit": "vh" },
+        { "vw": 380,  "val": 2, "unit": "vh" }
       ]
     },
     "--tw-logo-w": {
       "unit": "vw",
       "min": "9rem",
-      "max": "35rem",
+      "max": "20rem",
       "list": [
         { "vw": 1920, "val": 17, "unit": "vw" },
         { "vw": 1360, "val": 22, "unit": "vw" },
+        { "vw": 1070, "val": 22, "unit": "vw" },
+        { "vw": 1024, "val": 24, "unit": "vw" },
         { "vw": 820,  "val": 32, "unit": "vw" },
         { "vw": 400,  "val": 20, "unit": "vh" }
       ]
     },
-    "--tw-bubble-tx": {
-      "unit": "%",
-      "min": "",
-      "max": "",
-      "list": [
-        { "vw": 1024, "val": 0, "unit": "%" }
-      ]
-    },
     "--tw-bubble-ty": {
-      "unit": "%",
+      "unit": "rem",
       "min": "",
       "max": "",
       "list": [
-        { "vw": 1920, "val": -22,  "unit": "%"  },
-        { "vw": 1400, "val": -10,  "unit": "vw" },
-        { "vw": 1024, "val": 2.5,  "unit": "vh" },
-        { "vw": 820,  "val": 11,     "unit": "vh" },
-        { "vw": 400,  "val": 15.5,   "unit": "vh" },
-        { "vw": 380,  "val": 12.25,  "unit": "vh" }
+        { "vw": 1920, "val": -12,    "unit": "rem" },
+        { "vw": 1400, "val": -10,    "unit": "vw"  },
+        { "vw": 1024, "val": 2.5,    "unit": "vh"  },
+        { "vw": 820,  "val": 11,     "unit": "vh"  },
+        { "vw": 400,  "val": 15.5,   "unit": "vh"  },
+        { "vw": 380,  "val": 12.25,  "unit": "vh"  }
       ]
     },
     "--tw-bubble-w": {
@@ -67,8 +59,8 @@
       "list": [
         { "vw": 1920, "val": 50, "unit": "vw" },
         { "vw": 1400, "val": 59, "unit": "vw" },
-        { "vw": 1024, "val": 84, "unit": "%"  },
-        { "vw": 600,  "val": 90, "unit": "%"  }
+        { "vw": 1024, "val": 84, "unit": "vw" },
+        { "vw": 600,  "val": 90, "unit": "vw" }
       ]
     },
     "--tw-h1": {
@@ -147,22 +139,6 @@
         { "vw": 820,  "val": -0.045, "unit": "em" }
       ]
     },
-    "--tw-ep-arrow": {
-      "unit": "em",
-      "min": "",
-      "max": "",
-      "list": [
-        { "vw": 1024, "val": 1.75, "unit": "rem" }
-      ]
-    },
-    "--tw-ep-gap": {
-      "unit": "em",
-      "min": "",
-      "max": "",
-      "list": [
-        { "vw": 1024, "val": 0.1, "unit": "em" }
-      ]
-    },
     "--tw-ep-right": {
       "unit": "rem",
       "min": "",
@@ -196,8 +172,9 @@
       "min": "",
       "max": "",
       "list": [
-        { "vw": 1920, "val": 7, "unit": "rem" },
-        { "vw": 1024, "val": 6, "unit": "rem" }
+        { "vw": 1920, "val": 7,   "unit": "rem" },
+        { "vw": 1024, "val": 6,   "unit": "rem" },
+        { "vw": 820,  "val": 7.5, "unit": "rem" }
       ]
     }
   },
