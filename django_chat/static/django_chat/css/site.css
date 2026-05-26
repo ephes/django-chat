@@ -42,7 +42,7 @@
 :root {
   /* ---------- Color tokens ---------- */
   --dc-ink: #0d0d0d;
-  --dc-paper: #ffffff;
+  --dc-paper: #f8f7f4;
   --dc-player-surface: transparent;
   --dc-muted: #5f635d;
   --dc-line: #d8d8d8;
