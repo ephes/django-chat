@@ -1,0 +1,1696 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Django Chat — New Header Sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* Design tokens. Viewport-driven values flow in as --tw-* custom
+     properties; the fallbacks elsewhere are just a sane pre-JS render. */
+  :root {
+    --bg-deep:   #09201D;
+    --accent:    #41FCB9;
+    --green:     #0ea342;
+    --green-dark: #14513a;            /* Mirrors site.css `--dc-accent-dark`. */
+    --green-soft: rgba(14, 163, 66, 0.35);
+    --ink:       #0b1a17;
+    --listen-up-size: clamp(3rem, 23cqw, 29rem);
+    --ease-out:  cubic-bezier(.2, .7, .2, 1);
+    /* Rendered-text-width / font-size ratio for "Django Chat" in Ubuntu
+       Bold, measured empirically. Used by the desktop logo-calc rule to
+       derive the H1 text width from --tw-h1 without JS. If the H1 text
+       content ever changes, remeasure: const r=document.createRange();
+       r.selectNodeContents(h1); r.getBoundingClientRect().width /
+       parseFloat(getComputedStyle(h1).fontSize); — and update here.
+       No `--dc-*` prefix on purpose: this is component-scoped, not a
+       site-wide token. Migration will rename to `--show-hero-h1-text-ratio`
+       (component-local) — see HANDOFF naming-mapping. */
+    --h1-text-ratio: 5.568;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { background: #0b0d0d; }     /* deepest layer so .below can sit at z-index -1 */
+  body {
+    font-family: "Ubuntu", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* Header lives in its own size-query container — every cqw/cqi and
+     @container query is resolved against the shell's inline-size, so
+     the header adapts to its column, not the page. */
+  .dc-shell {
+    container-type: inline-size;
+    container-name: dc;
+  }
+
+  /* Top bar — desktop is single-row (brand left, nav right). Mobile
+     ≤1200 cqw rearranges to two centered rows; see further down. */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding-block: .5rem;
+    padding-inline: clamp(1rem, 3cqw, 2rem);
+    height: var(--tw-topbar-h, 5rem);
+    background: var(--bg-deep);
+    border-bottom: 1px solid var(--accent);
+    color: #fff;
+  }
+  .topbar__nav {
+    display: flex;
+    gap: clamp(1rem, 2.5cqw, 2rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-weight: 500;
+    font-size: .95rem;
+  }
+  .topbar__nav a:hover { color: var(--accent); }
+  .topbar__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    /* Hidden by default and removed from the focus order. The morph
+       paths (@supports + JS polyfill) promote it back to visible.
+       In the no-morph fallback (no JS + no animation-timeline) the
+       brand stays hidden and the hero logo remains the only mark. */
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .topbar__brand img { height: var(--tw-brand-logo-h, 3rem); width: auto; display: block; }
+  .topbar__brand span {
+    font-weight: 700;
+    letter-spacing: -.01em;
+    font-size: 1.05rem;
+  }
+
+  /* Hero — no stacking context here so the logo bubble pierces the
+     topbar. min/max-height clamp the hero to the visible viewport so
+     LISTEN UP and the Episodes hook sit on the viewport edge. */
+  .hero {
+    position: relative;
+    overflow-x: clip;
+    overflow-y: visible;
+    min-height: min(var(--tw-hero-min-h, 50rem), calc(100svh - var(--tw-topbar-h, 5rem)));
+    max-height: calc(100svh - var(--tw-topbar-h, 5rem));
+    padding-block: 0 clamp(5rem, 14vh, 11rem);
+    color: #fff;
+    /* Photographic background with a top-to-bottom --bg-deep wash so the
+       white bubble and LISTEN UP keep contrast on every image variant.
+       site.css uses `color-mix` for the same brand-tint pattern (e.g.
+       `--dc-django-soft`); migration should optionally add a literal
+       `rgb()` fallback for Safari <16.2 as documented there. */
+    background:
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--bg-deep) 45%, transparent) 0%,
+        color-mix(in srgb, var(--bg-deep) 55%, transparent) 100%),
+      url("assets/hero-bg.jpg") center / cover no-repeat,
+      var(--bg-deep);
+  }
+
+  /* Headphones illustration — bottom-right, fully panel-driven. */
+  .hero__headphones {
+    position: absolute;
+    right: var(--tw-hp-right, 0%);
+    bottom: var(--tw-hp-bottom, 22vh);
+    width: var(--tw-hp-w, 30vw);
+    height: auto;
+    color: var(--accent);
+    pointer-events: none;
+    /* Parallax drift — separate `translate` property composites with any
+       future transform without clobbering it. Driven by the parallax
+       script (mouse on fine pointer, scroll on touch). */
+    translate: var(--dc-px-hp-x, 0) var(--dc-px-hp-y, 0);
+  }
+  .hero__headphones path {
+    stroke: currentColor;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    fill: none;
+  }
+
+  /* Big LISTEN UP — sits at the hero's bottom edge; the fill/outline
+     translate-Y values bleed it slightly below the viewport. */
+  .listen-up-stage {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--listen-up-size);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .listen-up {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 700;
+    font-size: var(--tw-listen-size, var(--listen-up-size));
+    line-height: 0.82;
+    letter-spacing: var(--tw-listen-tracking, -0.045em);
+    white-space: nowrap;
+    user-select: none;
+    text-align: center;
+  }
+  .listen-up--fill {
+    color: var(--green-soft);
+    /* Bottom-anchored, push out 2% of own height — consistent across
+       every viewport. */
+    transform: translate(
+      var(--tw-listen-fill-tx, -49.5%),
+      var(--tw-listen-fill-ty, 5%)
+    );
+    /* Parallax drift on a separate property so the centering transform
+       above stays untouched. Layered with --outline in opposite signs so
+       the two LISTEN UP layers always sit slightly offset. */
+    translate: var(--dc-px-fill-x, 0) var(--dc-px-fill-y, 0);
+  }
+  .listen-up--outline {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--accent);
+    text-stroke: 1px var(--accent);
+    /* Slightly above the fill layer for the double-layer offset */
+    transform: translate(
+      var(--tw-listen-outline-tx, -50.5%),
+      var(--tw-listen-outline-ty, -1%)
+    );
+    translate: var(--dc-px-outline-x, 0) var(--dc-px-outline-y, 0);
+  }
+
+  /* Logo bubble + white bubble share the same grid cell, anchored TOP.
+     No z-index here — would create a stacking context that traps the
+     logo below the sticky topbar (DOM order is enough). */
+  .hero__center {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    align-items: start;
+    margin-inline: auto;
+    width: min(100%, calc(var(--tw-bubble-w, 50rem) + var(--tw-logo-w, 14rem) * .4));
+    padding-inline: clamp(1rem, 3cqw, 2rem);
+  }
+  .hero__bubble,
+  .hero__logo-bubble {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  /* White speech bubble. Vertical insets use padding-block × 908/1039
+     (the bubble's aspect ratio) so panel % values read as "% of
+     bubble height" — % padding is normally inline-relative, so the
+     compensator keeps insets visually height-tied. Z-order: logo
+     bubble (60) > sticky topbar (50) > bubble (5) > Episodes (4) >
+     LISTEN UP (0). */
+  .hero__bubble {
+    position: relative;
+    z-index: 5;
+    width: var(--tw-bubble-w, 50rem);
+    aspect-ratio: 1039 / 908;
+    transform: translateY(var(--tw-bubble-ty, 0%));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-block:
+      calc(var(--tw-bubble-inset-top, 17%) * (908 / 1039))
+      calc(var(--tw-bubble-inset-bottom, 15%) * (908 / 1039));
+    padding-inline: var(--tw-bubble-inset-x, 8.5%);
+  }
+  .hero__bubble > svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 30px 40px rgba(0,0,0,.25));
+  }
+  .hero__bubble-content {
+    /* Own stacking context — the bubble SVG's drop-shadow filter would
+       otherwise paint over the content. */
+    position: relative;
+    z-index: 1;
+    max-width: min(100%, calc(100cqw - 2rem));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(.75rem, 1.5cqw, 1.75rem);
+    text-align: center;
+    color: var(--ink);
+  }
+  .hero__bubble-content h1 {
+    margin: 0;
+    color: var(--green);
+    font-weight: 700;
+    font-size: var(--tw-h1, 5.5rem);
+    letter-spacing: -0.025em;
+    line-height: .92;
+    white-space: nowrap;
+  }
+  .hero__bubble-content p {
+    margin: 0;
+    font-size: var(--tw-subtitle, 1.25rem);
+    line-height: 1.45;
+  }
+  .hero__bubble-content p a {
+    font-weight: 700;
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color .15s ease;
+  }
+  .hero__bubble-content p a:hover { border-bottom-color: var(--green); }
+  /* Primary pill — mirrors the main project's "two-tone brand-green
+     pill" pattern (site.css `.button-primary`). The site renders that
+     button on a dark page → dark default, lighter hover. We sit inside
+     the white speech-bubble, so we flip it: lighter default, darker
+     hover. The text colour also flips: dark ink on the light-green idle
+     to satisfy WCAG-AA at 16 px (font-size clamps to 1rem below
+     ~1200 cqw, which is NOT "large text" — white on --green is only
+     3.31:1). White text returns on the dark-green hover/focus state.
+     Migration tokens: --green → --dc-django, --green-dark →
+     --dc-accent-dark, --ink → --dc-ink, #fff → --dc-paper. */
+  .hero__subscribe {
+    justify-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding:
+      var(--tw-sub-py, clamp(.8rem, 1.2cqw, 1.1rem))
+      var(--tw-sub-px, clamp(2rem, 3.8cqw, 4.1rem));
+    border-radius: 999px;
+    border: 1px solid var(--green);
+    background: var(--green);
+    color: var(--ink);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-size: var(--tw-sub-size, clamp(1rem, 1.4cqw, 1.4rem));
+    transition:
+      transform    .15s var(--ease-out),
+      background   .15s var(--ease-out),
+      border-color .15s var(--ease-out),
+      color        .15s var(--ease-out);
+  }
+  .hero__subscribe:hover,
+  .hero__subscribe:focus-visible {
+    background: var(--green-dark);
+    border-color: var(--green-dark);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  .hero__subscribe:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  /* Honor reduce-motion: the colour change still happens (it's the
+     hover affordance, not motion), but the translateY lift and the
+     transition timing are dropped. */
+  @media (prefers-reduced-motion: reduce) {
+    .hero__subscribe { transition: none; }
+    .hero__subscribe:hover,
+    .hero__subscribe:focus-visible { transform: none; }
+  }
+  .hero__subscribe svg {
+    width: 1.1em;
+    height: 1.1em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex: 0 0 auto;
+  }
+  .hero__subscribe svg circle { fill: currentColor; stroke: none; }
+
+  /* Green logo bubble — upper-left, pierces the topbar (z 60 > 50).
+     On side-by-side layouts (>1200 cqw) the @container rule below
+     derives X/Y from the H1 width and the bubble's offset. On stacked
+     mobile/tablet the --tw-logo-tx/-ty anchors take over. */
+  .hero__logo-bubble {
+    position: relative;
+    width: var(--tw-logo-w, 14rem);
+    aspect-ratio: 442 / 399;
+    transform: translate(var(--tw-logo-tx, -60%), var(--tw-logo-ty, -10%));
+    z-index: 60;
+  }
+  @container dc (min-width: 1201px) {
+    .hero__logo-bubble {
+      /* X: H1 text width is --tw-h1 × --h1-text-ratio (see token).
+         Y: tracks --tw-bubble-ty + a fixed -8.5rem center-to-center,
+         plus a size-difference term that compensates for bubble/logo
+         height delta so the centers stay exactly 8.5rem apart. */
+      transform: translate(
+        calc(-0.5 * var(--tw-h1, 5.5rem) * var(--h1-text-ratio) - 2vw - 0.5 * var(--tw-logo-w, 14rem)),
+        calc(
+          var(--tw-bubble-ty, 0px)
+          - 8.5rem
+          + 0.5 * (var(--tw-bubble-w, 50rem) * 908 / 1039 - var(--tw-logo-w, 14rem) * 399 / 442)
+        )
+      );
+    }
+  }
+  .hero__logo-bubble img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Episodes hook — size, tracking, right, bottom are panel-driven. */
+  .hero__episodes {
+    position: absolute;
+    right: var(--tw-ep-right, 1.5rem);
+    bottom: var(--tw-ep-bottom, 1.5rem);
+    z-index: 4;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .1em;
+    color: var(--accent);
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 700;
+    font-size: var(--tw-ep-size, 2.5rem);
+    line-height: 1;
+    letter-spacing: var(--tw-ep-tracking, 0em);
+  }
+  .hero__episodes svg {
+    width: 1.75rem;
+    height: 1.75rem;
+    fill: currentColor;
+    /* Halo so the arrow stays visible if it overlaps LISTEN UP's
+       outline at narrow viewports (both are accent-green). */
+    filter: drop-shadow(0 0 .15em var(--bg-deep));
+  }
+
+  /* Stacked layout below 1200 cqw — two-row topbar (nav above, brand
+     below) and a vertical hero composition. The 1200 threshold is the
+     point below which the calc-driven side-by-side layout would push
+     the logo off the left edge. */
+  @container dc (max-width: 1200px) {
+    .hero__center { width: 100%; }
+    .topbar {
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 0.4rem;
+      padding-block: 0.6rem;
+    }
+    .topbar__nav { order: 0; }
+    .topbar__brand { order: 1; }
+    /* Small upward lift so the logo bbox (including the bubble tail's
+       whitespace quadrant) clears the H1 bbox near the 1200 boundary. */
+    .hero__logo-bubble { translate: 0 -1rem; }
+  }
+
+  /* below content placeholder so the page is long enough to scroll.
+     z-index: -1 lets the LISTEN UP overflow from the hero render on top. */
+  .below {
+    position: relative;
+    z-index: -1;
+    min-height: 200vh;
+    padding: 4rem 2rem;
+    color: #cfd9d5;
+    background: linear-gradient(180deg, #0b1a17 0%, #050908 100%);
+  }
+  .below h2 { color: var(--accent); }
+
+  /* =====================================================================
+     SCROLL-MORPH — the hero logo hands off to the topbar brand on scroll.
+     One travelling element: .topbar__brand img. It starts blown-up
+     (scale --tw-morph-scale + offset --tw-morph-tx/ty) sitting on top
+     of the hero logo, then shrinks onto its natural topbar slot over
+     [--tw-morph-start, --tw-morph-end]. The wordmark fades in over
+     [--tw-morph-text-start, --tw-morph-text-end]. .hero__logo-bubble
+     is set to visibility:hidden while the morph is active.
+
+     Only the transform changes — the layout box stays put, so the nav
+     and the docked click target never shift. --tw-morph-scale/-tx/-ty
+     are measured per-viewport by the auto-fit script (CSS cannot read
+     another element's rendered geometry); keyframe `from` values are
+     just sane fallbacks.
+
+     Wrapped in prefers-reduced-motion + @supports. Native path runs on
+     Chrome/Edge 115+ and Safari 26+. The JS polyfill below drives the
+     same morph on older browsers via the same CSS vars. reduce-motion
+     bails both paths → static layout, hero logo visible, brand hidden.
+     ===================================================================== */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: scroll(root)) {
+      .topbar__brand {
+        visibility: visible;
+        pointer-events: auto;
+      }
+      .topbar__brand img {
+        transform-origin: left center;
+        animation-name: dc-logo-morph;
+        animation-fill-mode: both;
+        animation-timing-function: var(--ease-out);
+        animation-timeline: scroll(root block);
+        animation-range:
+          var(--tw-morph-start, 0vh)
+          var(--tw-morph-end, 30vh);
+      }
+      .topbar__brand span {
+        animation-name: dc-brand-text;
+        animation-fill-mode: both;
+        animation-timing-function: var(--ease-out);
+        animation-timeline: scroll(root block);
+        animation-range:
+          var(--tw-morph-text-start, 25vh)
+          var(--tw-morph-text-end, 32vh);
+      }
+      /* visibility:hidden (not display:none) preserves the layout
+         box, so the bubble composition stays unaffected and the flying
+         logo can pixel-align with it. */
+      .hero__logo-bubble {
+        visibility: hidden;
+      }
+    }
+  }
+
+  @keyframes dc-logo-morph {
+    from {
+      transform:
+        translate(var(--tw-morph-tx, 6vw), var(--tw-morph-ty, 15.2vh))
+        scale(var(--tw-morph-scale, 5.8));
+    }
+    to {
+      transform: translate(0, 0) scale(1);
+    }
+  }
+  @keyframes dc-brand-text {
+    from { opacity: 0; transform: translateX(-0.6rem); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+
+  /* TWEAK PANEL — sandbox-only, do not migrate. */
+  .tweak {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 200;
+    width: 420px;
+    height: min(calc(100vh - 24px), 720px);
+    min-width: 280px;
+    min-height: 160px;
+    max-width: 90vw;
+    max-height: calc(100vh - 24px);
+    display: flex;
+    flex-direction: column;
+    background: rgba(8, 18, 16, .92);
+    color: #e6f3ee;
+    border: 1px solid #2a5a4d;
+    border-radius: 10px;
+    font: 12px/1.3 -apple-system, system-ui, sans-serif;
+    box-shadow: 0 16px 32px rgba(0,0,0,.4);
+    backdrop-filter: blur(8px);
+    resize: both;
+    overflow: hidden;       /* required for resize to take effect */
+  }
+  .tweak[hidden] { display: none; }
+  .tweak header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .5rem .75rem;
+    border-bottom: 1px solid #2a5a4d;
+    cursor: grab;
+    user-select: none;
+  }
+  .tweak header:active { cursor: grabbing; }
+  .tweak header h2 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .tweak header .group { display: flex; gap: .35rem; }
+  .tweak button {
+    background: #1a3a32;
+    color: #e6f3ee;
+    border: 1px solid #2a5a4d;
+    padding: .25rem .5rem;
+    border-radius: 5px;
+    font: inherit;
+    cursor: pointer;
+  }
+  .tweak button:hover { background: #235049; }
+  .tweak__body {
+    flex: 1 1 auto;
+    min-height: 0;          /* lets the flex child actually scroll */
+    overflow-y: auto;
+    padding: .5rem .75rem 1rem;
+  }
+  .tweak fieldset {
+    border: none;
+    margin: .75rem 0 0;
+    padding: 0;
+  }
+  .tweak legend {
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #9ad9c0;
+    margin-bottom: .25rem;
+  }
+  .tweak label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: .5rem;
+    margin: .35rem 0;
+  }
+  .tweak label > span:first-child { color: #cfeae0; }
+  .tweak label > .tweak-value {
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    font-weight: 600;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 1px 4px;
+    width: 16em;
+    text-align: left;
+  }
+  .tweak label > .tweak-value:hover { border-color: #2a5a4d; }
+  .tweak label > .tweak-value:focus {
+    border-color: var(--accent);
+    outline: none;
+    background: rgba(255,255,255,.05);
+    color: #fff;
+  }
+  .tweak input[type=range] {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--accent);
+    margin: 0;
+  }
+  /* Anchor group — per-property list of (viewport, value) anchors.
+     The panel composes these into a single calc() expression that
+     interpolates linearly between anchors, no media queries needed. */
+  .anchor-group { margin: .6rem 0 .9rem; }
+  .anchor-group__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #9ad9c0;
+    margin-bottom: .35rem;
+  }
+  .anchor-group__head .anchor-add {
+    background: transparent;
+    border: 1px solid #2a5a4d;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border-radius: 4px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .anchor-group__head .anchor-add:hover { background: #1a3a32; }
+  .anchor-group__controls {
+    display: flex;
+    gap: .35rem;
+    align-items: center;
+  }
+  .anchor-group__head .anchor-unit-select {
+    background: rgba(255,255,255,.05);
+    color: var(--accent);
+    border: 1px solid #2a5a4d;
+    border-radius: 4px;
+    font: inherit;
+    font-weight: 600;
+    padding: 1px 4px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .anchor-group__head .anchor-unit-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .anchor-group__bounds {
+    display: grid;
+    grid-template-columns: auto 1fr auto 1fr;
+    gap: .15rem .35rem;
+    align-items: center;
+    margin-bottom: .4rem;
+  }
+  .anchor-group__bounds > span {
+    font-size: 10px;
+    color: #6a9d8d;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .anchor-group__bounds input {
+    background: rgba(255,255,255,.05);
+    border: 1px solid #2a5a4d;
+    color: #fff;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 4px;
+    border-radius: 3px;
+    min-width: 0;
+  }
+  .anchor-group__bounds input:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+  .anchor-group__bounds input::placeholder { color: #4a6e63; }
+  .anchor-row {
+    display: grid;
+    grid-template-columns: auto 4.5em auto 1fr auto auto;
+    align-items: center;
+    gap: .15rem .3rem;
+    margin-bottom: .45rem;
+  }
+  .anchor-row > span { color: #6a9d8d; font-size: 10px; }
+  .anchor-row input[type=number] {
+    background: rgba(255,255,255,.05);
+    border: 1px solid #2a5a4d;
+    color: #fff;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 4px;
+    border-radius: 3px;
+    width: 100%;
+    min-width: 0;
+  }
+  .anchor-row input[type=number]:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+  .anchor-row .anchor-unit { color: var(--accent); font-weight: 600; }
+  .anchor-row .anchor-remove {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #6a9d8d;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  .anchor-row .anchor-remove:hover {
+    color: #ff6b6b;
+    border-color: #6a4040;
+  }
+  .anchor-row .anchor-slider {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--accent);
+    margin: 0;
+  }
+  .anchor-group__output {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 9.5px;
+    background: rgba(0,0,0,.3);
+    border-radius: 3px;
+    padding: 4px 6px;
+    color: #7ed9b0;
+    margin: .25rem 0 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 5em;
+    overflow-y: auto;
+  }
+  /* Tweak-toggle: gear icon, bottom-right — clearly a dev tool, not a menu. */
+  .tweak-toggle {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    z-index: 199;
+    background: rgba(8, 18, 16, .8);
+    color: var(--accent);
+    border: 1px solid #2a5a4d;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    opacity: .6;
+  }
+  .tweak-toggle:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="dc-shell">
+<nav class="topbar" aria-label="Primary">
+  <a class="topbar__brand" href="#top">
+    <img src="assets/Django-chat-logo-neu.svg" alt="">
+    <span>Django Chat</span>
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="#episodes">Episodes</a></li>
+    <li><a href="#sponsor">Sponsor Us</a></li>
+    <li><a href="#fosstodon" rel="me">Fosstodon</a></li>
+  </ul>
+</nav>
+
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <svg class="hero__headphones" viewBox="0 0 521.99 658.19" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M208.4,626.42c-36.79,71.44-228.62,5.66-129.48-45.95,78.27-40.74,218.51,142.67,299.45-35.33,29.72-46.66,74.05-119.41,76.36-177.07,1.46-36.35-50.97-16.69-75.01,8.8-27.19,28.84-53.65,81.86-28.4,93.21,20.39,9.17,51.35-20.1,64.08-37.14,50.43-67.46,44.75-175.65-29.46-116.73-182.82,145.15-4.46,328.85,91.72,104.08,14.08-32.9,23.36-79.73-7.62-102.65-80.21-41.58-231.67,160.95-115.08,214.75,49.46,22.83,112.03-6.39,148.38-91.11,22.96-53.5,11.71-99.01-5.1-114.86-20.27-19.11-7.98-63.04,7.03-44.23,13.24,16.58-18.74,76.86-37.7,57.49-20.39-20.82,10-77.86,14.39-104.05C514.11,43.68,218.6-62.25,124.06,158.92c-6.1,14.27-18.07,5.62-14.1-5.42C196.11-86.47,537.63,3.64,502.66,251.81c-1.65,11.68,12.89,17,14.94,5.64C561.79,12.25,228.82-104.14,105.48,120.17c-27.19,49.45,21.55,95.57-8.68,102.9C-1.31,246.86,3.21,443.89,89.08,476.42c108,40.92,139.03-201.56,52.9-250.94C72.94,185.9,9.31,247.13,1.59,335.5c-2.73,31.26-2.78,69.32,21.38,108.11,68.94,110.73,150.51-56.89,122.55-137.66-8.5-24.55-42.8-42.52-51.87,45.19-5.2,50.31,19.68,96.65,44.52,77.32,26.3-20.45,51.41-170.8-15.48-181.99-77.55-12.98-82.68,193.42-15.06,217.52,52.75,18.8,136.63,86.52,100.77,162.41Z"/>
+  </svg>
+
+  <div class="listen-up-stage" aria-hidden="true">
+    <span class="listen-up listen-up--fill">LISTEN UP</span>
+    <span class="listen-up listen-up--outline">LISTEN UP</span>
+  </div>
+
+  <div class="hero__center">
+    <div class="hero__logo-bubble">
+      <img src="assets/Django-chat-logo-neu.svg" alt="">
+    </div>
+
+    <div class="hero__bubble">
+      <!-- inline the white bubble SVG so it scales perfectly -->
+      <svg viewBox="0 0 1039.04 908.39" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#fff" d="M1039.04,409.13C1039.04,183.18,806.45,0,519.52,0S0,183.18,0,409.13s232.6,409.13,519.52,409.13c40.84,0,80.58-3.71,118.7-10.73,11.12-2.05,22.49-.26,32.79,5.19l180.92,95.67-33.41-145.11c-2.28-9.92,1.66-20.38,9.35-24.85,128.09-74.51,211.16-194.26,211.16-329.3Z"/>
+      </svg>
+      <div class="hero__bubble-content">
+        <h1 id="hero-title">Django Chat</h1>
+        <p>A biweekly podcast on the Django Web Framework<br>
+          by&nbsp;<a href="https://wsvincent.com/">Will Vincent</a> and <a href="https://noumenal.es/">Carlton Gibson</a>.</p>
+        <a class="hero__subscribe" href="/django-chat/feed/">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 11a9 9 0 0 1 9 9"/>
+            <path d="M4 4a16 16 0 0 1 16 16"/>
+            <circle cx="5" cy="19" r="2.2"/>
+          </svg>
+          Subscribe
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <a class="hero__episodes" href="#episodes">
+    <span>Episodes</span>
+    <svg viewBox="0 0 12 10" aria-hidden="true"><polygon points="0,0 12,0 6,9"/></svg>
+  </a>
+</section>
+</div><!-- /.dc-shell -->
+
+<!-- TWEAK PANEL — sandbox-only. Toggle with the "⚙" button, bottom-right.
+     Values persist in localStorage. Click "Reset" to clear. -->
+<button class="tweak-toggle" id="tweak-toggle" type="button" aria-label="Open tweak panel" hidden>⚙</button>
+<aside class="tweak" id="tweak" aria-label="Layout tweak panel">
+  <header>
+    <h2>Tweak</h2>
+    <div class="group">
+      <button data-action="copy" type="button" title="Copy current values to clipboard">Copy</button>
+      <button data-action="reset" type="button" title="Reset all sliders">Reset</button>
+      <button data-action="hide" type="button" title="Hide panel">×</button>
+    </div>
+  </header>
+  <div class="tweak__body">
+
+    <fieldset>
+      <legend>Anchored (viewport-driven)</legend>
+      <div class="anchor-group" data-anchor-group="--tw-logo-tx"></div>
+      <div class="anchor-group" data-anchor-group="--tw-logo-ty"></div>
+      <div class="anchor-group" data-anchor-group="--tw-logo-w"></div>
+      <div class="anchor-group" data-anchor-group="--tw-bubble-ty"></div>
+      <div class="anchor-group" data-anchor-group="--tw-bubble-w"></div>
+      <div class="anchor-group" data-anchor-group="--tw-h1"></div>
+      <div class="anchor-group" data-anchor-group="--tw-subtitle"></div>
+      <div class="anchor-group" data-anchor-group="--tw-bubble-inset-top"></div>
+      <div class="anchor-group" data-anchor-group="--tw-hp-w"></div>
+      <div class="anchor-group" data-anchor-group="--tw-hp-bottom"></div>
+      <div class="anchor-group" data-anchor-group="--tw-hp-right"></div>
+      <div class="anchor-group" data-anchor-group="--tw-ep-size"></div>
+      <div class="anchor-group" data-anchor-group="--tw-ep-tracking"></div>
+      <div class="anchor-group" data-anchor-group="--tw-ep-right"></div>
+      <div class="anchor-group" data-anchor-group="--tw-ep-bottom"></div>
+      <div class="anchor-group" data-anchor-group="--tw-hero-min-h"></div>
+      <div class="anchor-group" data-anchor-group="--tw-topbar-h"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>White bubble — insets</legend>
+      <label><span>Inset bottom</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="15" max="45" step="0.5" value="15" data-var="--tw-bubble-inset-bottom" data-unit="%">
+      </label>
+      <label><span>Inset X</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="4" max="25" step="0.5" value="8.5" data-var="--tw-bubble-inset-x" data-unit="%">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Subscribe button</legend>
+      <label><span>Font size</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="0.9" max="2.4" step="0.05" value="1.4" data-var="--tw-sub-size" data-unit="rem">
+      </label>
+      <label><span>Padding Y</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="0.5" max="2.5" step="0.05" value="1.5" data-var="--tw-sub-py" data-unit="rem">
+      </label>
+      <label><span>Padding X</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="1" max="6" step="0.1" value="3.5" data-var="--tw-sub-px" data-unit="rem">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>LISTEN UP</legend>
+      <label><span>Size</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="100" max="540" step="2" value="340" data-var="--tw-listen-size" data-unit="px">
+      </label>
+      <label><span>Letter tracking</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="-0.15" max="0.05" step="0.005" value="-0.07" data-var="--tw-listen-tracking" data-unit="em">
+      </label>
+      <label><span>Fill — translate X</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="-60" max="-40" step="0.5" value="-49" data-var="--tw-listen-fill-tx" data-unit="%">
+      </label>
+      <label><span>Fill — translate Y</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="-30" max="80" step="0.5" value="18" data-var="--tw-listen-fill-ty" data-unit="%">
+      </label>
+      <label><span>Outline — translate X</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="-60" max="-40" step="0.5" value="-51" data-var="--tw-listen-outline-tx" data-unit="%">
+      </label>
+      <label><span>Outline — translate Y</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="-30" max="80" step="0.5" value="10" data-var="--tw-listen-outline-ty" data-unit="%">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Scroll-Morph (Schritt 3)</legend>
+      <p style="margin:.1rem 0 .5rem;color:#6a9d8d;font-size:10px;line-height:1.4;">
+        Logo scale + offset are auto-measured per viewport — no slider
+        needed, the flight docks pixel-perfect everywhere.
+      </p>
+      <label><span>Docked logo height</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="1.25" max="5" step="0.05" value="3" data-var="--tw-brand-logo-h" data-unit="rem">
+      </label>
+      <label><span>Morph start</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="0" max="80" step="1" value="0" data-var="--tw-morph-start" data-unit="vh">
+      </label>
+      <label><span>Morph end</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="10" max="140" step="1" value="30" data-var="--tw-morph-end" data-unit="vh">
+      </label>
+      <label><span>Text start</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="0" max="160" step="1" value="25" data-var="--tw-morph-text-start" data-unit="vh">
+      </label>
+      <label><span>Text end</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="10" max="180" step="1" value="32" data-var="--tw-morph-text-end" data-unit="vh">
+      </label>
+    </fieldset>
+
+  </div>
+</aside>
+
+<section class="below" id="episodes">
+  <h2>Episodes (placeholder)</h2>
+  <p>Scroll-area below the hero — gives the scroll-morph room to run.</p>
+</section>
+
+<!-- =====================================================================
+     SCROLL-MORPH AUTO-FIT — progressive enhancement. Measures the hero
+     logo + the topbar brand slot and writes the exact blown-up start
+     state (--tw-morph-scale/-tx/-ty) into :root, so the flying logo
+     pixel-aligns with the hero logo on every viewport. Re-runs on
+     resize / font load. Keep this on migration.
+     ===================================================================== -->
+<script>
+(() => {
+  const root = document.documentElement;
+  const heroLogo = document.querySelector('.hero__logo-bubble img');
+  const brandLogo = document.querySelector('.topbar__brand img');
+  if (!heroLogo || !brandLogo) return;
+
+  const fit = () => {
+    // Measure the brand slot at its natural, un-morphed size: drop its
+    // animation for the read, then restore. getBoundingClientRect()
+    // forces a sync layout flush, so the transform is gone for the read.
+    // Preserve any value the polyfill (or anything else) set inline —
+    // resetting to '' would let the CSS keyframe animation re-take over
+    // and overwrite the polyfill's transform on the next frame.
+    const prevAnim = brandLogo.style.animationName;
+    brandLogo.style.animationName = 'none';
+    const brand = brandLogo.getBoundingClientRect();
+    brandLogo.style.animationName = prevAnim;
+
+    const hero = heroLogo.getBoundingClientRect();
+    if (!brand.height || !hero.height) return;   // safety bail if either element isn't rendered yet
+
+    // The brand is sticky-pinned to the top bar, so its viewport rect ==
+    // its scroll-0 position. The hero logo is in flow → normalise to a
+    // scroll-0 document coord so both share one frame of reference.
+    const heroTop = hero.top + window.scrollY;
+
+    // Keyframe origin is `left center`; translate is applied after scale.
+    const scale = hero.height / brand.height;
+    const tx = hero.left - brand.left;
+    const ty = (heroTop + hero.height / 2) - (brand.top + brand.height / 2);
+
+    root.style.setProperty('--tw-morph-scale', scale.toFixed(4));
+    root.style.setProperty('--tw-morph-tx', tx.toFixed(1) + 'px');
+    root.style.setProperty('--tw-morph-ty', ty.toFixed(1) + 'px');
+  };
+
+  fit();
+  addEventListener('load', fit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  // rAF-throttle keeps refits to one per frame so the flying logo tracks
+  // smoothly during continuous size changes.
+  let pending = false;
+  const schedule = () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { pending = false; fit(); });
+  };
+  // ResizeObserver instead of window.resize so the morph stays in sync
+  // when the layout changes without a viewport resize — e.g. a sidebar
+  // collapses, a parent container shrinks, the hero logo's container-
+  // query-driven width crosses a breakpoint, or the docked brand logo
+  // is restyled. Observes the shell (covers cqw-driven anchor changes)
+  // plus the two measured elements (covers any direct size change).
+  const shell = document.querySelector('.dc-shell');
+  const ro = new ResizeObserver(schedule);
+  if (shell) ro.observe(shell);
+  ro.observe(heroLogo);
+  ro.observe(brandLogo);
+  // Re-fit when the panel's docked-logo-height slider changes the slot
+  // (rAF so it runs once the panel handler has applied the new size).
+  const sizeSlider = document.querySelector('[data-var="--tw-brand-logo-h"]');
+  if (sizeSlider) sizeSlider.addEventListener('input', schedule);
+})();
+</script>
+
+<!-- =====================================================================
+     SCROLL-MORPH POLYFILL — drives the morph on browsers without native
+     `animation-timeline: scroll(root)`. Mainly for iOS Safari <26.
+     Reads the same CSS variables the native @supports block uses so the
+     morph timing and start geometry stay consistent. No-ops when native
+     scroll-driven animations are supported (Chrome 115+, Safari 26+).
+     ===================================================================== -->
+
+<script>
+(() => {
+  // Defensive: very old browsers / non-DOM contexts lack CSS.supports.
+  // Treat unknown support as "not supported" → polyfill runs.
+  const hasNativeTimeline = typeof CSS !== 'undefined'
+    && typeof CSS.supports === 'function'
+    && CSS.supports('animation-timeline', 'scroll(root block)');
+  if (hasNativeTimeline) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const root = document.documentElement;
+  const brand = document.querySelector('.topbar__brand');
+  const brandImg = brand && brand.querySelector('img');
+  const brandSpan = brand && brand.querySelector('span');
+  const heroLogo = document.querySelector('.hero__logo-bubble');
+  if (!brand || !brandImg || !brandSpan || !heroLogo) return;
+
+  // Mirror the @supports baseline: brand visible, hero logo hidden,
+  // CSS keyframe animations disabled (the polyfill drives transform
+  // and opacity directly). transform-origin: left center must match
+  // the @supports rule so the auto-fit-measured scale + offset align
+  // the flying logo with the hero logo at scroll=0.
+  brand.style.visibility = 'visible';
+  brand.style.pointerEvents = 'auto';
+  heroLogo.style.visibility = 'hidden';
+  brandImg.style.animationName = 'none';
+  brandSpan.style.animationName = 'none';
+  brandImg.style.transformOrigin = 'left center';
+
+  const readPx = (name, fallbackPx) => {
+    // CSS var values written by auto-fit are in px (`123.4px`) or unitless
+    // numbers (scale). Strip the unit and parseFloat.
+    const v = getComputedStyle(root).getPropertyValue(name).trim();
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : fallbackPx;
+  };
+  // Cubic ease-out — visual match for cubic-bezier(.2,.7,.2,1) is close
+  // enough; the morph end state is identical.
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const ramp = (s, a, b) => Math.min(Math.max((s - a) / Math.max(b - a, 1), 0), 1);
+
+  const update = () => {
+    const vh = innerHeight / 100;
+    const mS = readPx('--tw-morph-start',      0)  * vh;
+    const mE = readPx('--tw-morph-end',        30) * vh;
+    const tS = readPx('--tw-morph-text-start', 25) * vh;
+    const tE = readPx('--tw-morph-text-end',   32) * vh;
+    const s = scrollY;
+    const p = ease(ramp(s, mS, mE));
+    const q = ease(ramp(s, tS, tE));
+
+    const scale0 = readPx('--tw-morph-scale', 5.8);
+    const tx0    = readPx('--tw-morph-tx',    0);
+    const ty0    = readPx('--tw-morph-ty',    0);
+    const cs = scale0 + (1 - scale0) * p;
+    const cx = tx0    + (0 - tx0)    * p;
+    const cy = ty0    + (0 - ty0)    * p;
+    brandImg.style.transform = `translate(${cx}px, ${cy}px) scale(${cs})`;
+
+    brandSpan.style.opacity   = q;
+    brandSpan.style.transform = `translateX(${-0.6 * (1 - q)}rem)`;
+  };
+
+  let rafId = 0;
+  const schedule = () => {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => { rafId = 0; update(); });
+  };
+  addEventListener('scroll', schedule, { passive: true });
+  addEventListener('resize', schedule);
+  // Wait one frame so the auto-fit script writes --tw-morph-* first.
+  requestAnimationFrame(update);
+})();
+</script>
+
+<!-- =====================================================================
+     PARALLAX — Headphones + LISTEN UP fill/outline drift in different
+     directions so they never sit aligned. Progressive enhancement: no
+     JS = no drift (static look). Honors prefers-reduced-motion.
+     Desktop (hover: hover + pointer: fine): mouse-driven X/Y, layers
+       split apart (outline against headphones, fill with headphones but
+       weaker → outline vs fill always offset).
+     Touch / coarse pointer: scroll-driven Y only, same per-layer signs
+       so the three layers drift apart as the user scrolls into the hero.
+     Writes 6 CSS vars to :root; the layers' `translate` property reads
+     them. A rAF lerp toward a target value smooths the motion.
+     ===================================================================== -->
+
+<script>
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const root = document.documentElement;
+  const shell = document.querySelector('.dc-shell');
+  if (!shell) return;
+
+  // Per-layer magnitudes in cqw (container-width-relative, matches the
+  // rest of the header's sizing). Headphones move in lockstep with the
+  // outline (treated as one composite "outline + headphones" element);
+  // fill drifts mirrored against them.
+  const M = {
+    hp:      { x: -0.8, y: -0.5 },
+    outline: { x: -0.8, y: -0.5 },
+    fill:    { x:  0.8, y:  0.5 },
+  };
+
+  // Target (tx,ty) is set by the input handler; current (cx,cy) is
+  // lerped toward the target on each rAF tick. Both in -1..+1 range.
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+  let running = false;
+
+  const apply = () => {
+    const set = (name, v) => root.style.setProperty(name, v.toFixed(3) + 'cqw');
+    set('--dc-px-hp-x',      cx * M.hp.x);
+    set('--dc-px-hp-y',      cy * M.hp.y);
+    set('--dc-px-outline-x', cx * M.outline.x);
+    set('--dc-px-outline-y', cy * M.outline.y);
+    set('--dc-px-fill-x',    cx * M.fill.x);
+    set('--dc-px-fill-y',    cy * M.fill.y);
+  };
+
+  const tick = () => {
+    cx += (tx - cx) * 0.08;
+    cy += (ty - cy) * 0.08;
+    apply();
+    if (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) {
+      requestAnimationFrame(tick);
+    } else {
+      cx = tx; cy = ty; apply();
+      running = false;
+    }
+  };
+  const start = () => { if (!running) { running = true; requestAnimationFrame(tick); } };
+
+  const clamp1 = v => Math.max(-1, Math.min(1, v));
+
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  if (finePointer) {
+    // Map pointer position within the shell to -1..+1 on each axis.
+    shell.addEventListener('pointermove', (e) => {
+      const r = shell.getBoundingClientRect();
+      tx = clamp1((e.clientX - r.left - r.width  / 2) / (r.width  / 2));
+      ty = clamp1((e.clientY - r.top  - r.height / 2) / (r.height / 2));
+      start();
+    });
+    shell.addEventListener('pointerleave', () => { tx = 0; ty = 0; start(); });
+  } else {
+    // Touch / coarse pointer: scroll-linked Y drift. Maps the first
+    // viewport-height of scroll to 0..+1 so each layer drifts in its
+    // own magnitude direction. X stays at rest (no natural mapping).
+    const onScroll = () => {
+      ty = Math.min(1, scrollY / Math.max(innerHeight * 0.8, 1));
+      tx = 0;
+      start();
+    };
+    addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+})();
+</script>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'dc-tweak-v7';
+  const HIDDEN_KEY = 'dc-tweak-hidden';
+  const POS_KEY = 'dc-tweak-pos';
+  // Wipe older versions on load — bumped whenever a default, unit, or
+  // anchor list changes in a way that old user state would silently
+  // break. v7 drops --tw-bubble-tx / --tw-ep-arrow / --tw-ep-gap.
+  ['dc-tweak-v1','dc-tweak-v2','dc-tweak-v3','dc-tweak-v4','dc-tweak-v5','dc-tweak-v6'].forEach(k => localStorage.removeItem(k));
+
+  // -- Anchored variables ----------------------------------------------
+  // Per-property: { units, slider:[min,max,step], defaults, defaultMin?, defaultMax? }.
+  // Stored state shape: { unit, min, max, list: [{vw, val, unit}, …] }.
+  // Composer emits  clamp(MIN, calc(piecewise-linear sum), MAX)  using
+  // 100cqw ramps between consecutive anchors. No @media queries.
+  const ANCHORED = [
+    { var: '--tw-logo-tx',          label: 'Logo translate X',   units: ['%','rem','vw','svh','vh'],
+      slider: [-200, 50, 0.5],
+      defaults: [
+        {vw:1920, val:-159.5, unit:'%'},
+        {vw:1400, val:-145,   unit:'%'},
+        {vw:820,  val:-60,    unit:'%'},
+        {vw:400,  val:-30,    unit:'%'},
+      ] },
+    { var: '--tw-logo-ty',          label: 'Logo translate Y',   units: ['%','rem','vw','svh','vh'],
+      slider: [-40, 40, 0.5],
+      defaults: [
+        {vw:1024, val:2,  unit:'vh'},
+        {vw:737,  val:4,  unit:'vh'},
+        {vw:380,  val:2,  unit:'vh'},
+      ] },
+    { var: '--tw-logo-w',           label: 'Logo width',         units: ['vw','rem','%','svh','vh'],
+      slider: [0, 50, 0.5],
+      defaults: [
+        {vw:1920, val:17,   unit:'vw'},
+        {vw:1360, val:22,   unit:'vw'},
+        {vw:1070, val:22,   unit:'vw'},
+        {vw:1024, val:24,   unit:'vw'},
+        {vw:820,  val:32,   unit:'vw'},
+        {vw:400,  val:20,   unit:'vh'},
+      ],
+      defaultMin: '9rem', defaultMax: '20rem' },
+    { var: '--tw-bubble-ty',        label: 'Bubble translate Y', units: ['rem','vw','svh','vh'],
+      slider: [-25, 30, 0.25],
+      defaults: [
+        {vw:1920, val:-12,  unit:'rem'},
+        {vw:1400, val:-10,  unit:'vw'},
+        {vw:1024, val:2.5,  unit:'vh'},
+        {vw:820,  val:11,     unit:'vh'},
+        {vw:400,  val:15.5,   unit:'vh'},
+        {vw:380,  val:12.25,  unit:'vh'},
+      ] },
+    { var: '--tw-bubble-w',         label: 'Bubble width',       units: ['vw','rem','svh','vh'],
+      slider: [20, 100, 0.5],
+      defaults: [
+        {vw:1920, val:50, unit:'vw'},
+        {vw:1400, val:59, unit:'vw'},
+        {vw:1024, val:84, unit:'vw'},
+        {vw:600,  val:90, unit:'vw'},
+      ],
+      defaultMin: '26rem', defaultMax: '56rem' },
+    { var: '--tw-h1',               label: 'H1 size',            units: ['rem','em','vw','%','svh','vh'],
+      slider: [1.5, 10, 0.05],
+      defaults: [
+        {vw:1920, val:7,   unit:'rem'},
+        {vw:1024, val:6,   unit:'rem'},
+        {vw:400,  val:3.5, unit:'rem'},
+      ],
+      defaultMin: '2.5rem', defaultMax: '9rem' },
+    { var: '--tw-subtitle',         label: 'Subtitle size',      units: ['rem','em','vw','%','svh','vh'],
+      slider: [0.8, 2.5, 0.02],
+      defaults: [
+        {vw:1920, val:1.55, unit:'rem'},
+        {vw:400,  val:1.06, unit:'rem'},
+      ],
+      defaultMin: '1.06rem', defaultMax: '1.55rem' },
+    { var: '--tw-bubble-inset-top', label: 'Bubble inset top',   units: ['%','rem','svh','vh'],
+      slider: [0, 40, 0.5],
+      defaults: [
+        {vw:1920, val:22, unit:'%'},
+        {vw:1400, val:24, unit:'%'},
+        {vw:820,  val:12, unit:'%'},
+      ] },
+    { var: '--tw-hp-w',             label: 'Headphones width',   units: ['vw','rem','%','svh','vh','cqw'],
+      slider: [10, 80, 0.5],
+      defaults: [
+        {vw:1920, val:30, unit:'vw'},
+        {vw:1024, val:50, unit:'vh'},
+        {vw:400,  val:26, unit:'vh'},
+      ],
+      defaultMin: '5rem', defaultMax: '32rem' },
+    { var: '--tw-hp-bottom',        label: 'Headphones bottom',  units: ['vh','svh','rem','%','vw'],
+      slider: [-10, 40, 0.5],
+      defaults: [
+        {vw:1024, val:13, unit:'vw'},
+        {vw:400,  val:11, unit:'vw'},
+        {vw:380,  val:9,  unit:'vh'},
+      ] },
+    { var: '--tw-hp-right',         label: 'Headphones right',   units: ['%','rem','vw','cqw'],
+      slider: [-10, 20, 0.5],
+      defaults: [
+        {vw:1024, val:0, unit:'%'},
+        {vw:380,  val:2, unit:'rem'},
+      ] },
+    { var: '--tw-ep-size',          label: 'Episodes size',       units: ['rem','em','vw','%','svh','vh','cqw'],
+      slider: [0.5, 8, 0.05],
+      defaults: [
+        {vw:1030, val:2.5,  unit:'rem'},
+        {vw:1024, val:5.15, unit:'cqw'},
+      ],
+      defaultMin: '1rem', defaultMax: '7rem' },
+    { var: '--tw-ep-tracking',      label: 'Episodes tracking',   units: ['em','rem','%'],
+      slider: [-0.1, 0.2, 0.005],
+      defaults: [
+        {vw:1920, val:0.04,   unit:'em'},
+        {vw:820,  val:-0.045, unit:'em'},
+      ] },
+    { var: '--tw-ep-right',         label: 'Episodes right',      units: ['rem','vw','%','cqw'],
+      slider: [-2, 10, 0.1],
+      defaults: [
+        {vw:1920, val:1.5, unit:'rem'},
+        {vw:1024, val:5.3, unit:'cqw'},
+      ] },
+    { var: '--tw-ep-bottom',        label: 'Episodes bottom',     units: ['rem','vh','svh','%','cqw'],
+      slider: [-2, 30, 0.5],
+      defaults: [
+        {vw:1030, val:1.5, unit:'rem'},
+        {vw:1024, val:16,  unit:'cqw'},
+      ] },
+    { var: '--tw-hero-min-h',       label: 'Hero min height',    units: ['rem','svh','vh','%'],
+      slider: [0, 80, 1],
+      defaults: [
+        {vw:1400, val:50, unit:'rem'},
+        {vw:820,  val:50, unit:'rem'},
+        {vw:400,  val:0,  unit:'rem'},
+      ],
+      defaultMin: 'calc(100svh - var(--tw-topbar-h, 5rem))' },
+    { var: '--tw-topbar-h',         label: 'Topbar height',      units: ['rem','vh','svh','%'],
+      slider: [3, 10, 0.25],
+      defaults: [
+        {vw:1920, val:7,   unit:'rem'},
+        {vw:1024, val:6,   unit:'rem'},
+        {vw:820,  val:7.5, unit:'rem'},
+      ] },
+  ];
+
+  // Sum-of-ramps composer. Each anchor carries its own unit; when all
+  // anchors share a unit we emit the compact delta form (just numbers),
+  // otherwise we emit the explicit subtraction form `(b - a) * ramp` so
+  // CSS calc can resolve mixed-unit deltas (e.g. `60vw - 50svh`) at use
+  // time. The `defaultUnit` argument is the fallback when an anchor
+  // doesn't carry an own unit (legacy state).
+  const composeInner = (list, defaultUnit) => {
+    if (!list || !list.length) return null;
+    const sorted = [...list].sort((a, b) => a.vw - b.vw);
+    const num = n => Number.isInteger(n) ? n.toString() : n.toFixed(4).replace(/\.?0+$/, '');
+    const unitOf = a => a.unit || defaultUnit;
+    const fmt = a => `${num(a.val)}${unitOf(a)}`;
+    if (sorted.length === 1) return fmt(sorted[0]);
+
+    const allSame = sorted.every(a => unitOf(a) === unitOf(sorted[0]));
+    if (allSame) {
+      const unit = unitOf(sorted[0]);
+      const parts = [`${num(sorted[0].val)}${unit}`];
+      for (let i = 1; i < sorted.length; i++) {
+        const prev = sorted[i-1], cur = sorted[i];
+        const delta = cur.val - prev.val;
+        const span = cur.vw - prev.vw;
+        if (delta === 0 || span <= 0) continue;
+        const ramp = `clamp(0, (100cqw - ${prev.vw}px) / ${span}px, 1)`;
+        parts.push(`${delta < 0 ? '- ' : '+ '}${num(Math.abs(delta))}${unit} * ${ramp}`);
+      }
+      return `calc(${parts.join(' ')})`;
+    }
+
+    // Mixed units — emit explicit (cur - prev) deltas. CSS calc
+    // resolves mixed-unit subtractions to a single computed length.
+    const parts = [fmt(sorted[0])];
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = sorted[i-1], cur = sorted[i];
+      const span = cur.vw - prev.vw;
+      if (span <= 0) continue;
+      const ramp = `clamp(0, (100cqw - ${prev.vw}px) / ${span}px, 1)`;
+      parts.push(`+ (${fmt(cur)} - ${fmt(prev)}) * ${ramp}`);
+    }
+    return `calc(${parts.join(' ')})`;
+  };
+
+  // Wrap the inner expression with optional min/max bounds.
+  const composeFull = (a) => {
+    const inner = composeInner(a.list, a.unit);
+    if (!inner) return null;
+    const mn = (a.min || '').trim();
+    const mx = (a.max || '').trim();
+    if (mn && mx) return `clamp(${mn}, ${inner}, ${mx})`;
+    if (mn)       return `max(${mn}, ${inner})`;
+    if (mx)       return `min(${inner}, ${mx})`;
+    return inner;
+  };
+
+  // -- State ------------------------------------------------------------
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  const state = {
+    anchors: {},   // var -> { unit, min, max, list }
+    singles: {},   // var -> css string
+  };
+  const clone = x => JSON.parse(JSON.stringify(x));
+  // Each anchor carries `unit` so users can mix units across viewports.
+  // `state.anchors[var].unit` is the property-level default used when an
+  // anchor doesn't have its own (legacy state, or when adding a new
+  // anchor before the user picks a unit).
+  const freshAnchorState = (spec) => ({
+    unit: spec.units[0],
+    min:  spec.defaultMin || '',
+    max:  spec.defaultMax || '',
+    list: clone(spec.defaults).map(a => ({ ...a, unit: a.unit || spec.units[0] })),
+  });
+  ANCHORED.forEach(spec => {
+    const s = saved.anchors?.[spec.var];
+    if (s && Array.isArray(s.list)) {
+      const propUnit = spec.units.includes(s.unit) ? s.unit : spec.units[0];
+      state.anchors[spec.var] = {
+        unit: propUnit,
+        min:  s.min || '',
+        max:  s.max || '',
+        list: clone(s.list).map(a => ({ ...a, unit: a.unit || propUnit })),
+      };
+    } else {
+      state.anchors[spec.var] = freshAnchorState(spec);
+    }
+  });
+  if (saved.singles) Object.assign(state.singles, saved.singles);
+
+  const persist = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+  const applyAnchored = (varName) => {
+    const css = composeFull(state.anchors[varName]);
+    if (css) document.documentElement.style.setProperty(varName, css);
+    else document.documentElement.style.removeProperty(varName);
+  };
+
+  // -- Anchor group rendering ------------------------------------------
+  const updateOutput = (spec) => {
+    const host = document.querySelector(`[data-anchor-group="${spec.var}"]`);
+    if (!host) return;
+    const out = host.querySelector('.anchor-group__output');
+    if (!out) return;
+    out.textContent = composeFull(state.anchors[spec.var]) || '(none)';
+  };
+
+  const renderAnchorGroup = (spec) => {
+    const host = document.querySelector(`[data-anchor-group="${spec.var}"]`);
+    if (!host) return;
+    const a = state.anchors[spec.var];
+    host.innerHTML = '';
+
+    // --- Head: label + add button (per-anchor unit lives on each row) ---
+    const head = document.createElement('div');
+    head.className = 'anchor-group__head';
+    const title = document.createElement('span');
+    title.textContent = spec.label;
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'anchor-add';
+    addBtn.title = 'Add anchor';
+    addBtn.textContent = '+';
+    addBtn.addEventListener('click', () => {
+      const sorted = [...a.list].sort((x, y) => x.vw - y.vw);
+      let newVw, newVal, newUnit;
+      if (sorted.length === 0) { newVw = 1024; newVal = 0; newUnit = a.unit; }
+      else if (sorted.length === 1) {
+        newVw = Math.max(320, sorted[0].vw - 400);
+        newVal = sorted[0].val;
+        newUnit = sorted[0].unit || a.unit;
+      }
+      else {
+        let gap = 0, idx = 1;
+        for (let i = 1; i < sorted.length; i++) {
+          const g = sorted[i].vw - sorted[i-1].vw;
+          if (g > gap) { gap = g; idx = i; }
+        }
+        newVw = Math.round((sorted[idx-1].vw + sorted[idx].vw) / 2);
+        newVal = +(((sorted[idx-1].val + sorted[idx].val) / 2)).toFixed(2);
+        // Inherit the unit of the lower-vw anchor of the gap we just split.
+        newUnit = sorted[idx-1].unit || a.unit;
+      }
+      a.list.push({ vw: newVw, val: newVal, unit: newUnit });
+      persist(); applyAnchored(spec.var); renderAnchorGroup(spec);
+    });
+    head.append(title, addBtn);
+    host.appendChild(head);
+
+    // --- Bounds: min / max (free-form CSS length strings) ---
+    const bounds = document.createElement('div');
+    bounds.className = 'anchor-group__bounds';
+    bounds.innerHTML = `
+      <span>min</span><input type="text" class="anchor-min" spellcheck="false" placeholder="e.g. 13rem">
+      <span>max</span><input type="text" class="anchor-max" spellcheck="false" placeholder="e.g. 24rem">
+    `;
+    const minInput = bounds.querySelector('.anchor-min');
+    const maxInput = bounds.querySelector('.anchor-max');
+    minInput.value = a.min;
+    maxInput.value = a.max;
+    minInput.addEventListener('input', () => {
+      a.min = minInput.value;
+      persist(); applyAnchored(spec.var); updateOutput(spec);
+    });
+    maxInput.addEventListener('input', () => {
+      a.max = maxInput.value;
+      persist(); applyAnchored(spec.var); updateOutput(spec);
+    });
+    host.appendChild(bounds);
+
+    // --- Anchor rows (each anchor carries its own unit) ---
+    const sorted = [...a.list].sort((x, y) => x.vw - y.vw);
+    const unitOptions = spec.units.map(u => `<option value="${u}">${u}</option>`).join('');
+    sorted.forEach(anchor => {
+      const row = document.createElement('div');
+      row.className = 'anchor-row';
+      row.innerHTML = `
+        <span>@</span>
+        <input type="number" class="anchor-vw" step="10" min="200" max="3000">
+        <span>px</span>
+        <input type="number" class="anchor-val" step="${spec.slider[2]}">
+        <select class="anchor-unit-select" title="Unit">${unitOptions}</select>
+        <button type="button" class="anchor-remove" title="Remove">×</button>
+        <input type="range" class="anchor-slider"
+               min="${spec.slider[0]}" max="${spec.slider[1]}" step="${spec.slider[2]}">
+      `;
+      const vwInput = row.querySelector('.anchor-vw');
+      const valInput = row.querySelector('.anchor-val');
+      const unitSel = row.querySelector('.anchor-unit-select');
+      const slider = row.querySelector('.anchor-slider');
+      vwInput.value = anchor.vw;
+      valInput.value = anchor.val;
+      unitSel.value = anchor.unit || a.unit;
+      slider.value = anchor.val;
+
+      const commitVal = (src) => {
+        const v = parseFloat(src.value);
+        if (Number.isNaN(v)) return;
+        anchor.val = v;
+        if (src === slider) valInput.value = v;
+        else slider.value = v;
+        persist(); applyAnchored(spec.var); updateOutput(spec);
+      };
+      const commitVw = () => {
+        const v = parseFloat(vwInput.value);
+        if (Number.isNaN(v)) return;
+        anchor.vw = v;
+        persist(); applyAnchored(spec.var); updateOutput(spec);
+      };
+      vwInput.addEventListener('input', commitVw);
+      vwInput.addEventListener('change', () => renderAnchorGroup(spec)); // resort
+      valInput.addEventListener('input', () => commitVal(valInput));
+      slider.addEventListener('input', () => commitVal(slider));
+      unitSel.addEventListener('change', () => {
+        anchor.unit = unitSel.value;
+        persist(); applyAnchored(spec.var); updateOutput(spec);
+      });
+      row.querySelector('.anchor-remove').addEventListener('click', () => {
+        const idx = a.list.indexOf(anchor);
+        if (idx !== -1) a.list.splice(idx, 1);
+        persist(); applyAnchored(spec.var); renderAnchorGroup(spec);
+      });
+
+      host.appendChild(row);
+    });
+
+    const output = document.createElement('pre');
+    output.className = 'anchor-group__output';
+    host.appendChild(output);
+    updateOutput(spec);
+  };
+
+  ANCHORED.forEach(spec => { applyAnchored(spec.var); renderAnchorGroup(spec); });
+
+  // -- Single-value sliders (size / tracking / offsets) ----------------
+  const panel = document.getElementById('tweak');
+  const toggle = document.getElementById('tweak-toggle');
+  const singles = panel.querySelectorAll('input[type=range][data-var]');
+  const singleDefaults = {};
+  singles.forEach(input => {
+    const varName = input.dataset.var;
+    const unit = input.dataset.unit || '';
+    const text = input.parentElement.querySelector('.tweak-value');
+    const sliderDefault = input.value + unit;
+    singleDefaults[varName] = { num: input.value, unit, css: sliderDefault };
+
+    const savedVal = state.singles[varName];
+    if (savedVal != null) {
+      text.value = savedVal;
+      document.documentElement.style.setProperty(varName, savedVal);
+      const re = new RegExp('^(-?\\d+(?:\\.\\d+)?)' + unit.replace('%', '\\%') + '$');
+      const m = savedVal.match(re);
+      if (m) input.value = m[1];
+    } else {
+      text.value = sliderDefault;
+    }
+
+    input.addEventListener('input', () => {
+      const v = input.value + unit;
+      text.value = v;
+      document.documentElement.style.setProperty(varName, v);
+      state.singles[varName] = v;
+      persist();
+    });
+    text.addEventListener('input', () => {
+      const v = text.value.trim();
+      if (!v) {
+        document.documentElement.style.removeProperty(varName);
+        delete state.singles[varName];
+        persist();
+        return;
+      }
+      document.documentElement.style.setProperty(varName, v);
+      state.singles[varName] = v;
+      persist();
+      const n = parseFloat(v);
+      if (!Number.isNaN(n)) input.value = n;
+    });
+  });
+
+  // -- Reset / Copy ----------------------------------------------------
+  panel.querySelector('[data-action=reset]').addEventListener('click', () => {
+    state.singles = {};
+    ANCHORED.forEach(spec => {
+      state.anchors[spec.var] = freshAnchorState(spec);
+      applyAnchored(spec.var);
+      renderAnchorGroup(spec);
+    });
+    singles.forEach(input => {
+      const def = singleDefaults[input.dataset.var];
+      input.value = def.num;
+      const text = input.parentElement.querySelector('.tweak-value');
+      if (text) text.value = def.css;
+      document.documentElement.style.removeProperty(input.dataset.var);
+    });
+    persist();
+  });
+
+  panel.querySelector('[data-action=copy]').addEventListener('click', async (e) => {
+    // Migration-safe export: anchors always reflect the composed
+    // calc() the page is using; singles only ship when the user
+    // actually touched them (state.singles is the source of truth).
+    const lines = [':root {'];
+    ANCHORED.forEach(spec => {
+      const css = composeFull(state.anchors[spec.var]);
+      if (css) lines.push(`  ${spec.var}: ${css};`);
+    });
+    singles.forEach(input => {
+      const varName = input.dataset.var;
+      if (!(varName in state.singles)) return;
+      lines.push(`  ${varName}: ${state.singles[varName]};`);
+    });
+    lines.push('}');
+    const out = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(out);
+      e.target.textContent = '✓';
+    } catch {
+      console.log(out);
+      e.target.textContent = '(console)';
+    }
+    setTimeout(() => (e.target.textContent = 'Copy'), 1200);
+  });
+
+  // -- Hide / show / drag ----------------------------------------------
+  const setHidden = (hidden) => {
+    panel.hidden = hidden;
+    toggle.hidden = !hidden;
+    localStorage.setItem(HIDDEN_KEY, hidden ? '1' : '0');
+  };
+  panel.querySelector('[data-action=hide]').addEventListener('click', () => setHidden(true));
+  toggle.addEventListener('click', () => setHidden(false));
+  setHidden(localStorage.getItem(HIDDEN_KEY) === '1');
+
+  const savedPos = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
+  const applyPos = (p) => {
+    panel.style.left = p.left + 'px';
+    panel.style.top = p.top + 'px';
+    panel.style.right = 'auto';
+  };
+  if (savedPos) applyPos(savedPos);
+
+  // Persist size across reloads (CSS `resize: both` provides the handle).
+  const SIZE_KEY = 'dc-tweak-size';
+  const savedSize = JSON.parse(localStorage.getItem(SIZE_KEY) || 'null');
+  if (savedSize && savedSize.width && savedSize.height) {
+    panel.style.width  = savedSize.width  + 'px';
+    panel.style.height = savedSize.height + 'px';
+  }
+  let sizeSaveTimer = null;
+  new ResizeObserver(() => {
+    clearTimeout(sizeSaveTimer);
+    sizeSaveTimer = setTimeout(() => {
+      const r = panel.getBoundingClientRect();
+      localStorage.setItem(SIZE_KEY, JSON.stringify({
+        width:  Math.round(r.width),
+        height: Math.round(r.height),
+      }));
+    }, 150);
+  }).observe(panel);
+  const header = panel.querySelector('header');
+  let drag = null;
+  header.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button')) return;
+    const r = panel.getBoundingClientRect();
+    drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+    header.setPointerCapture(e.pointerId);
+  });
+  header.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const w = panel.offsetWidth;
+    const left = Math.max(0, Math.min(window.innerWidth - w, e.clientX - drag.dx));
+    const top = Math.max(0, Math.min(window.innerHeight - 32, e.clientY - drag.dy));
+    applyPos({ left, top });
+  });
+  header.addEventListener('pointerup', () => {
+    if (!drag) return;
+    drag = null;
+    const r = panel.getBoundingClientRect();
+    localStorage.setItem(POS_KEY, JSON.stringify({ left: r.left, top: r.top }));
+  });
+})();
+</script>
+
+</body>
+</html>
