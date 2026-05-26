@@ -1,4 +1,5 @@
 {% extends "./base.html" %}
+{% load static %}
 {% load wagtailcore_tags %}
 {% load wagtailimages_tags %}
 {% load dc_filters %}
@@ -9,8 +10,12 @@
   <link rel="expect" href="#episode-index-main" blocking="render">
 {% endblock render_expect %}
 
+{% block javascript %}
+  {{ block.super }}
+  <script defer src="{% static 'django_chat/js/show-hero.js' %}?v=show-hero-1"></script>
+{% endblock javascript %}
+
 {% block content %}
-  {% load static %}
   <section class="show-hero" id="top" aria-labelledby="show-hero-title" data-show-hero-shell>
     <picture class="show-hero-bg" aria-hidden="true">
       <source
