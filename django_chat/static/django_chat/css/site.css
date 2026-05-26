@@ -955,10 +955,13 @@ body:has([data-show-hero-shell]) .brand {
   letter-spacing: var(--show-hero-ep-tracking);
   text-decoration: none;
   /* Soft dark-green drop on the whole hook — applies to both the text
-     and the inline-SVG triangle, so a single declaration covers both.
-     Also doubles as the legibility halo over LISTEN UP and the
-     bottom-blend gradient that the SVG used to have on its own. */
-  filter: drop-shadow(0 0.15em 0.5em var(--dc-accent-dark));
+     and the inline-SVG triangle. A stacked second shadow tightens the
+     contrast right around the glyph edges so the main soft halo has
+     something to bloom off, giving the hook visible lift without
+     dialling either layer to a hard shadow. */
+  filter:
+    drop-shadow(0 0.25em 0.7em var(--dc-accent-dark))
+    drop-shadow(0 0.05em 0.2em var(--dc-surface-deep));
 }
 .show-hero-episodes svg {
   width: 1.75rem;
