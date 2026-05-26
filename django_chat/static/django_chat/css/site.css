@@ -708,6 +708,24 @@ body:has([data-show-hero-shell]) .brand {
     color-mix(in srgb, var(--dc-surface-deep) 55%, transparent));
 }
 
+/* Bottom-edge blend — fades the last 60 px of the hero from transparent
+   into the solid --dc-surface-deep so the hero seamlessly merges into
+   the dark platform-band below. Painted at z 1 same as the wash, but
+   later in DOM order, so it stacks on top of the wash at the bottom
+   sliver. LISTEN UP (z 3) and Episodes (z 4) still paint above the
+   blend, so foreground content stays legible. */
+.show-hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, var(--dc-surface-deep));
+}
+
 .show-hero-headphones {
   position: absolute;
   right: var(--show-hero-hp-right);
@@ -1097,11 +1115,10 @@ body:has([data-show-hero-shell]) .brand {
   margin-bottom: var(--s3);
   padding: clamp(0.625rem, 4vw - 0.625rem, 2.5rem) max(var(--dc-gutter), calc(50vw - var(--dc-container-max) / 2)) clamp(2rem, 4vw + 1rem, 3rem);
   /* Dark variant — visually continues the topbar + show-hero surface
-     so the dark family flows topbar → hero → platform-band, then the
-     mint hairline below mirrors the topbar's own bottom rule and marks
-     the transition into the paper-textured episode list. */
+     so the dark family flows topbar → hero → platform-band. No bottom
+     hairline; the transition into the paper-textured episode list is
+     carried by the surface change alone. */
   background-color: var(--dc-surface-deep);
-  border-bottom: 1px solid #41fcb9;
   color: var(--dc-paper);
   position: relative;
   z-index: 2;
@@ -1110,6 +1127,9 @@ body:has([data-show-hero-shell]) .brand {
 .platform-band h2 {
   margin: var(--s-2) 0 var(--s-1);
   text-wrap: balance;
+  /* Brand-green heading on the dark surface — picks up the same accent
+     as the hero H1 so the two dark sections rhyme. */
+  color: var(--dc-django);
 }
 
 .platform-band p {
