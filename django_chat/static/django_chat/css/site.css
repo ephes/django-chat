@@ -945,9 +945,12 @@ body:has([data-show-hero-shell]) .brand {
   flex-direction: column;
   align-items: flex-end;
   gap: .1em;
-  color: var(--show-hero-accent);
+  color: var(--dc-paper);
   font-weight: var(--weight-bold);
-  font-size: var(--show-hero-ep-size);
+  /* Match the platform-band H2 size so the hero's bottom-right hook
+     reads at the same visual weight as the headline of the section
+     it points at. */
+  font-size: var(--text-h2);
   line-height: 1;
   letter-spacing: var(--show-hero-ep-tracking);
   text-decoration: none;
@@ -956,8 +959,8 @@ body:has([data-show-hero-shell]) .brand {
   width: 1.75rem;
   height: 1.75rem;
   fill: currentColor;
-  /* Halo so the arrow stays visible if it overlaps LISTEN UP's outline
-     at narrow widths (both are accent-green). */
+  /* Halo so the arrow stays visible over LISTEN UP's outline at narrow
+     widths and over the bottom-blend gradient. */
   filter: drop-shadow(0 0 .15em var(--dc-surface-deep));
 }
 
