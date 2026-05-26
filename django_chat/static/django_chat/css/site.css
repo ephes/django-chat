@@ -42,7 +42,7 @@
 :root {
   /* ---------- Color tokens ---------- */
   --dc-ink: #0d0d0d;
-  --dc-paper: #f8f7f4;
+  --dc-paper: #f9f9f9;
   --dc-player-surface: transparent;
   --dc-muted: #5f635d;
   --dc-line: #d8d8d8;
@@ -273,8 +273,12 @@ body > .site-content {
   /* Paper-textured surface scoped to the content area (between header and
      footer). Kept off `body` so iOS Safari's overscroll/toolbar zone shows
      the dark `<html>` background instead of bleeding white via the fixed
-     attachment. */
-  background-color: var(--dc-paper);
+     attachment. Background-color is literal pure white (not --dc-paper)
+     because the texture overlay carries the warmth/tint — laying it over
+     the off-white --dc-paper would shift the result too cool. The
+     intended visual is "paper white" matching --dc-paper after the
+     texture has rendered on top. */
+  background-color: #ffffff;
   background-image: var(--dc-paper-texture);
   background-attachment: fixed;
 }
