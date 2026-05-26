@@ -1096,10 +1096,13 @@ body:has([data-show-hero-shell]) .brand {
   margin-top: -1px;
   margin-bottom: var(--s3);
   padding: clamp(0.625rem, 4vw - 0.625rem, 2.5rem) max(var(--dc-gutter), calc(50vw - var(--dc-container-max) / 2)) clamp(2rem, 4vw + 1rem, 3rem);
-  background-color: var(--dc-surface-django-tint);
-  background-image: var(--dc-paper-texture);
-  background-attachment: fixed;
-  border-bottom: 1px solid var(--dc-line);
+  /* Dark variant — visually continues the topbar + show-hero surface
+     so the dark family flows topbar → hero → platform-band, then the
+     mint hairline below mirrors the topbar's own bottom rule and marks
+     the transition into the paper-textured episode list. */
+  background-color: var(--dc-surface-deep);
+  border-bottom: 1px solid #41fcb9;
+  color: var(--dc-paper);
   position: relative;
   z-index: 2;
 }
@@ -1111,7 +1114,16 @@ body:has([data-show-hero-shell]) .brand {
 
 .platform-band p {
   margin: 0;
-  color: var(--dc-muted);
+  /* Inherit --dc-paper from .platform-band rather than the global
+     --dc-muted, which would read as a dim grey-on-dark-green. */
+  color: inherit;
+}
+
+/* The site-wide .eyebrow ships with --dc-muted (designed for light
+   backgrounds). On the dark platform-band, lighten it to a paper tint
+   so it still reads as the subdued lead-in to the section heading. */
+.platform-band .eyebrow {
+  color: color-mix(in srgb, var(--dc-paper) 70%, transparent);
 }
 
 .platform-band-links {
@@ -1130,13 +1142,30 @@ body:has([data-show-hero-shell]) .brand {
   min-width: clamp(8.75rem, 22vw, 11.25rem);
   max-inline-size: clamp(8.75rem, 22vw, 11.25rem);
   padding-inline: clamp(0.875rem, 0.6vw + 0.6875rem, 1.125rem);
-  border: 1px solid var(--dc-line);
-  color: var(--dc-ink);
+  /* Ghost button on the dark surface: faded-paper outline + white
+     text. The platform icons read currentColor via mask-image, so
+     they also paint white. Hover (see override below) inverts to a
+     filled white pill with dark ink text. */
+  border: 1px solid color-mix(in srgb, var(--dc-paper) 35%, transparent);
+  color: var(--dc-paper);
   font-size: var(--text-platform-link);
   font-weight: var(--weight-bold);
   background-color: transparent;
   white-space: nowrap;
   transition: var(--dc-transition-colors);
+}
+
+/* Override the shared ghost-pill hover (which goes to a light-green
+   tint with dark text — designed for the rest of the site's light
+   surfaces) so the dark platform-band pills flip the other way:
+   filled paper background with ink text. Source-order beats the
+   shared rule at L1031 because the selectors have equal specificity. */
+.platform-band-links a:hover,
+.platform-band-links a:focus,
+.platform-band-links a:focus-visible {
+  background: var(--dc-paper);
+  border-color: var(--dc-paper);
+  color: var(--dc-ink);
 }
 
 .platform-band-links a > span:last-child {
