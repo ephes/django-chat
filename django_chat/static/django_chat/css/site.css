@@ -954,14 +954,16 @@ body:has([data-show-hero-shell]) .brand {
   line-height: 1;
   letter-spacing: var(--show-hero-ep-tracking);
   text-decoration: none;
+  /* Soft dark-green drop on the whole hook — applies to both the text
+     and the inline-SVG triangle, so a single declaration covers both.
+     Also doubles as the legibility halo over LISTEN UP and the
+     bottom-blend gradient that the SVG used to have on its own. */
+  filter: drop-shadow(0 0.15em 0.5em var(--dc-accent-dark));
 }
 .show-hero-episodes svg {
   width: 1.75rem;
   height: 1.75rem;
   fill: currentColor;
-  /* Halo so the arrow stays visible over LISTEN UP's outline at narrow
-     widths and over the bottom-blend gradient. */
-  filter: drop-shadow(0 0 .15em var(--dc-surface-deep));
 }
 
 /* Below 1200cqw: stack the hero composition. Threshold literal — container
