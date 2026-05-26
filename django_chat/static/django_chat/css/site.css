@@ -119,10 +119,14 @@
   --dc-container: min(var(--dc-container-max), 100% - 2 * var(--dc-gutter));
   /* Reserved height for the sticky site topbar. Consumed by sticky surfaces
      (episode sidebar, sponsor stickies) and by `scroll-padding-top` so
-     anchor jumps land below the bar. Bumped to 5rem to cover the new
-     topbar's tallest desktop step; the topbar component itself owns the
-     responsive composed value and may override this in `:root` per range. */
-  --dc-topbar-h: 5rem;
+     anchor jumps land below the bar. Matches the topbar's desktop height;
+     the mobile 2-row state uses `height: auto` and is slightly taller, but
+     sticky consumers can absorb the small offset. */
+  --dc-topbar-h: 7rem;
+  /* Brand-dark surface, used for the site topbar and footer. Distinct from
+     `--dc-ink` (neutral dark for text/shadows) — `--dc-surface-deep` is
+     slightly greenish to match the show-hero family. */
+  --dc-surface-deep: #09201D;
 
   /* ---------- Typography tokens ----------
      Font-family tokens use the long fallback chain so a missing primary
@@ -401,7 +405,7 @@ button.share-pill,
 }
 
 .site-footer {
-  background: var(--dc-ink);
+  background: var(--dc-surface-deep);
   color: var(--dc-paper);
 }
 
@@ -428,6 +432,100 @@ button.share-pill,
 .page-content {
   width: var(--dc-container);
   margin: 0 auto;
+}
+
+/* Sticky site topbar. Container-query host so the mobile 2-row breakpoint
+   resolves against the bar's own inline size (matches narrow embeds and
+   zoom). The brand stays visible by default; on the show-hero page the
+   morph script in show-hero.js takes over to fly the hero logo into the
+   brand slot — without JS the brand simply remains static. */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--dc-surface-deep);
+  color: var(--dc-paper);
+  /* Mint hairline — component-local accent, only used by this header
+     family (and re-used by the hero's LISTEN UP outline). */
+  border-bottom: 1px solid #41fcb9;
+  container-type: inline-size;
+  container-name: topbar;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-1);
+  height: var(--dc-topbar-h);
+  padding-inline: clamp(1rem, 3cqw, 2rem);
+  margin: 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: var(--dc-tap);
+  color: var(--dc-paper);
+  text-decoration: none;
+}
+
+.brand-mark {
+  height: var(--show-hero-brand-logo-h, 3rem);
+  width: auto;
+  display: block;
+}
+
+.brand-name {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+  font-size: 1.05rem;
+  letter-spacing: -.01em;
+}
+
+.nav-links {
+  display: flex;
+  gap: clamp(1rem, 2.5cqw, 2rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.95rem;
+  font-weight: var(--weight-medium);
+}
+
+.nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--dc-tap);
+  color: var(--dc-paper);
+  text-decoration: none;
+}
+
+.nav-links a:hover,
+.nav-links a:focus-visible,
+.nav-links a[aria-current="page"] {
+  color: var(--dc-django);
+  /* Optical compensation: brand green on --dc-ink appears thinner than
+     the white idle state due to halation asymmetry. A 0.5px same-colour
+     glow visually thickens the glyphs without changing the layout box
+     (a font-weight bump would reflow the nav). */
+  text-shadow: 0 0 .5px currentColor;
+}
+
+/* Below 1200 cqw stack to two centered rows (nav above, brand below).
+   Threshold is literal because container queries don't accept var(). */
+@container topbar (max-width: 75em) {
+  .site-nav {
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--s-2);
+    height: auto;
+    padding-block: var(--s-1);
+  }
+
+  .nav-links { order: 0; }
+  .brand { order: 1; }
 }
 
 }  /* end @layer base */
