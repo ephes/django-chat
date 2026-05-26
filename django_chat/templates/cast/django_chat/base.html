@@ -84,7 +84,7 @@
       <nav class="site-nav" aria-label="Primary">
         <a class="brand" href="{% url 'django_chat_episode_index' %}" aria-label="Django Chat" data-show-hero-brand>
           <img class="brand-mark" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="53" height="48" alt="" data-show-hero-brand-logo>
-          <span class="brand-name">Django Chat</span>
+          <span class="brand-name" data-show-hero-brand-name>Django Chat</span>
         </a>
         <ul class="nav-links">
           <li><a href="{% url 'django_chat_episode_index' %}#all-episodes"{% if request.resolver_match.url_name == 'django_chat_episode_index' %} aria-current="page"{% endif %}>Episodes</a></li>
@@ -126,7 +126,6 @@
     </footer>
     {% block javascript %}
       <script defer src="{% static 'django_chat/js/date-picker.js' %}?v=date-picker-3"></script>
-      <script defer src="{% static 'django_chat/js/show-hero.js' %}?v=show-hero-1"></script>
     {% endblock javascript %}
   </body>
 </html>

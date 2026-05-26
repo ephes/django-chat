@@ -4,9 +4,9 @@
   const shell = document.querySelector('[data-show-hero-shell]');
   const brand = document.querySelector('[data-show-hero-brand]');
   const brandLogo = document.querySelector('[data-show-hero-brand-logo]');
+  const brandName = document.querySelector('[data-show-hero-brand-name]');
   const heroLogo = document.querySelector('[data-show-hero-hero-logo]');
   const heroLogoImg = heroLogo && heroLogo.querySelector('img');
-  const brandName = brand && brand.querySelector('.brand-name');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hasNativeTimeline =
     typeof CSS !== 'undefined' &&
@@ -138,9 +138,11 @@
   // ---- 3. Parallax ----
   // Headphones + LISTEN UP fill/outline drift in different directions
   // so the three layers never sit aligned. Mouse on fine pointer,
-  // scroll on touch. Writes 6 CSS vars on :root; the layers' `translate`
-  // property reads them. rAF lerp toward target for smooth motion.
-  // Skips on reduced-motion and on pages without the hero.
+  // scroll on touch. Writes 6 CSS vars on the shell (NOT :root) so the
+  // per-frame style invalidation stays scoped to the hero subtree
+  // instead of bouncing through the whole document. rAF lerp toward
+  // target for smooth motion. Skips on reduced-motion and on pages
+  // without the hero.
   if (!reduced && shell) {
     // Per-layer magnitudes in cqw (container-width-relative, matches
     // the rest of the hero's sizing). Headphones move in lockstep with
@@ -158,7 +160,7 @@
     let running = false;
 
     const apply = () => {
-      const set = (name, v) => root.style.setProperty(name, v.toFixed(3) + 'cqw');
+      const set = (name, v) => shell.style.setProperty(name, v.toFixed(3) + 'cqw');
       set('--show-hero-px-hp-x',      cx * M.hp.x);
       set('--show-hero-px-hp-y',      cy * M.hp.y);
       set('--show-hero-px-outline-x', cx * M.outline.x);
