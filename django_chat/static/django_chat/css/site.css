@@ -516,6 +516,69 @@ button.share-pill,
   text-shadow: 0 0 .5px currentColor;
 }
 
+/* Scroll-morph: on a show-hero page the brand starts hidden so the hero
+   logo can fly into its slot. With native scroll-driven animations + no
+   reduced-motion preference, the @supports block below reveals + animates
+   the brand and hides the hero logo. Browsers without
+   `animation-timeline: scroll(root)` (mainly iOS Safari <26) hit the
+   show-hero.js polyfill, which sets the same state via inline styles.
+   With reduced-motion the brand stays hidden — the hero logo is the
+   only mark, matching the sandbox's static fallback. On subpages
+   without [data-show-hero-shell] the :has() rule doesn't match and the
+   brand stays visible. */
+body:has([data-show-hero-shell]) .brand {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll(root block)) {
+    body:has([data-show-hero-shell]) .brand {
+      visibility: visible;
+      pointer-events: auto;
+    }
+    body:has([data-show-hero-shell]) .brand-mark {
+      transform-origin: left center;
+      animation-name: show-hero-logo-morph;
+      animation-fill-mode: both;
+      animation-timing-function: cubic-bezier(.2, .7, .2, 1);
+      animation-timeline: scroll(root block);
+      animation-range:
+        var(--show-hero-morph-start, 0vh)
+        var(--show-hero-morph-end, 30vh);
+    }
+    body:has([data-show-hero-shell]) .brand-name {
+      animation-name: show-hero-brand-text;
+      animation-fill-mode: both;
+      animation-timing-function: cubic-bezier(.2, .7, .2, 1);
+      animation-timeline: scroll(root block);
+      animation-range:
+        var(--show-hero-morph-text-start, 25vh)
+        var(--show-hero-morph-text-end, 32vh);
+    }
+    /* Keep visibility (not display) so the bubble composition stays put
+       and auto-fit can still measure the slot. */
+    body:has([data-show-hero-shell]) .show-hero-logo-bubble {
+      visibility: hidden;
+    }
+  }
+}
+
+@keyframes show-hero-logo-morph {
+  from {
+    transform:
+      translate(var(--show-hero-morph-tx, 6vw), var(--show-hero-morph-ty, 15.2vh))
+      scale(var(--show-hero-morph-scale, 5.8));
+  }
+  to {
+    transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes show-hero-brand-text {
+  from { opacity: 0; transform: translateX(-0.6rem); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 /* Below 1200 cqw stack to two centered rows (nav above, brand below).
    Threshold is literal because container queries don't accept var(). */
 @container topbar (max-width: 75em) {
