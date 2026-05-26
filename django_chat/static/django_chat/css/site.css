@@ -48,17 +48,17 @@
   --dc-line: #d8d8d8;
   --dc-accent: #2d8260;
   --dc-accent-dark: #14513a;
-  --dc-django: #48a04e;
+  --dc-django: #0ea342;
   /* Translucent django-green tints used for hover/focus surfaces. Derived
      via `color-mix` so changing `--dc-django` flows through automatically.
      Other percentages (12 %, 15 %, 35 %, …) appear inline at single-use
      sites; promote to a token only once a second consumer needs the same
      value. The literal `rgb()` declaration immediately above each
      `color-mix()` is a Safari 16.0/16.1 fallback (color-mix landed in 16.2);
-     keep the literal in sync with `--dc-django` (#48a04e → 72 160 78). */
-  --dc-django-soft: rgb(72 160 78 / 0.08);
+     keep the literal in sync with `--dc-django` (#0ea342 → 14 163 66). */
+  --dc-django-soft: rgb(14 163 66 / 0.08);
   --dc-django-soft: color-mix(in srgb, var(--dc-django) 8%, transparent);
-  --dc-django-tint: rgb(72 160 78 / 0.1);
+  --dc-django-tint: rgb(14 163 66 / 0.1);
   --dc-django-tint: color-mix(in srgb, var(--dc-django) 10%, transparent);
   /* Opaque pale-green surface tint. Distinct from the translucent
      `--dc-django-soft/-tint` because consumers paint it on a base that
@@ -445,6 +445,9 @@ button.share-pill,
   z-index: 50;
   background: var(--dc-surface-deep);
   color: var(--dc-paper);
+  /* Ubuntu cascades to brand-name and nav-links — same as the sandbox's
+     body-level font-family. */
+  font-family: var(--font-heading);
   /* Mint hairline — component-local accent, only used by this header
      family (and re-used by the hero's LISTEN UP outline). */
   border-bottom: 1px solid #41fcb9;
@@ -458,6 +461,7 @@ button.share-pill,
   justify-content: space-between;
   gap: var(--s-1);
   height: var(--dc-topbar-h);
+  padding-block: var(--s-2);
   padding-inline: clamp(1rem, 3cqw, 2rem);
   margin: 0;
 }
@@ -478,7 +482,6 @@ button.share-pill,
 }
 
 .brand-name {
-  font-family: var(--font-heading);
   font-weight: var(--weight-bold);
   font-size: 1.05rem;
   letter-spacing: -.01em;
@@ -519,9 +522,10 @@ button.share-pill,
   .site-nav {
     flex-direction: column;
     justify-content: center;
-    gap: var(--s-2);
-    height: auto;
-    padding-block: var(--s-1);
+    align-items: center;
+    gap: 0.4rem;
+    height: 7.5rem;
+    padding-block: 0.6rem;
   }
 
   .nav-links { order: 0; }
@@ -549,6 +553,351 @@ button.share-pill,
   border-radius: 0;
   box-shadow: none;
   filter: drop-shadow(0.3125rem 0.375rem 3px color-mix(in srgb, var(--dc-ink), transparent 55%));
+}
+
+/* ===== Show-Hero — episode index brand hero =====
+   Composition: bg image + wash gradient (z 0–1), headphones illustration
+   (2), LISTEN UP backdrop (3), Episodes hook (4), white speech bubble (5),
+   green logo bubble piercing the topbar (60).
+
+   Responsive sizing flows through 17 anchored custom properties scoped to
+   .show-hero. Each is a pre-composed sum-of-ramps calc() built from the
+   sandbox tuning snapshot (see frontend/sandbox/tweak-snapshot.json) by
+   the same composer the sandbox runtime uses — so the layout adapts to
+   container width without any JS. show-hero.js layers the scroll-morph
+   and parallax on top; without JS the hero still renders correctly at
+   every viewport, just without those entrance effects. */
+.show-hero {
+  --show-hero-accent: #41fcb9;
+  --show-hero-listen-up-size: clamp(3rem, 23cqw, 29rem);
+  --show-hero-ease-out: cubic-bezier(.2, .7, .2, 1);
+  /* Rendered-text-width / font-size ratio for the H1 in Ubuntu Bold.
+     Used by the >1200cqw logo calc-rule. If the H1 text content ever
+     changes, remeasure: range.getBoundingClientRect().width /
+     parseFloat(getComputedStyle(h1).fontSize). */
+  --show-hero-h1-text-ratio: 5.568;
+
+  --show-hero-logo-tx:          calc(-30% - 30% * clamp(0, (100cqw - 400px) / 420px, 1) - 85% * clamp(0, (100cqw - 820px) / 580px, 1) - 14.5% * clamp(0, (100cqw - 1400px) / 520px, 1));
+  --show-hero-logo-ty:          calc(2vh + 2vh * clamp(0, (100cqw - 380px) / 357px, 1) - 2vh * clamp(0, (100cqw - 737px) / 287px, 1));
+  --show-hero-logo-w:           clamp(9rem, calc(20vh + (32vw - 20vh) * clamp(0, (100cqw - 400px) / 420px, 1) + (24vw - 32vw) * clamp(0, (100cqw - 820px) / 204px, 1) + (22vw - 24vw) * clamp(0, (100cqw - 1024px) / 46px, 1) + (17vw - 22vw) * clamp(0, (100cqw - 1360px) / 560px, 1)), 20rem);
+  --show-hero-bubble-ty:        calc(12.25vh + (15.5vh - 12.25vh) * clamp(0, (100cqw - 380px) / 20px, 1) + (11vh - 15.5vh) * clamp(0, (100cqw - 400px) / 420px, 1) + (2.5vh - 11vh) * clamp(0, (100cqw - 820px) / 204px, 1) + (-10vw - 2.5vh) * clamp(0, (100cqw - 1024px) / 376px, 1) + (-12rem - -10vw) * clamp(0, (100cqw - 1400px) / 520px, 1));
+  --show-hero-bubble-w:         clamp(26rem, calc(90vw - 6vw * clamp(0, (100cqw - 600px) / 424px, 1) - 25vw * clamp(0, (100cqw - 1024px) / 376px, 1) - 9vw * clamp(0, (100cqw - 1400px) / 520px, 1)), 56rem);
+  --show-hero-h1:               clamp(2.5rem, calc(3.5rem + 2.5rem * clamp(0, (100cqw - 400px) / 624px, 1) + 1rem * clamp(0, (100cqw - 1024px) / 896px, 1)), 9rem);
+  --show-hero-subtitle:         clamp(1.06rem, calc(1.06rem + 0.49rem * clamp(0, (100cqw - 400px) / 1520px, 1)), 1.55rem);
+  --show-hero-bubble-inset-top: calc(12% + 12% * clamp(0, (100cqw - 820px) / 580px, 1) - 2% * clamp(0, (100cqw - 1400px) / 520px, 1));
+  --show-hero-hp-w:             clamp(5rem, calc(26vh + (50vh - 26vh) * clamp(0, (100cqw - 400px) / 624px, 1) + (30vw - 50vh) * clamp(0, (100cqw - 1024px) / 896px, 1)), 32rem);
+  --show-hero-hp-bottom:        calc(9vh + (11vw - 9vh) * clamp(0, (100cqw - 380px) / 20px, 1) + (13vw - 11vw) * clamp(0, (100cqw - 400px) / 624px, 1));
+  --show-hero-hp-right:         calc(2rem + (0% - 2rem) * clamp(0, (100cqw - 380px) / 644px, 1));
+  --show-hero-ep-size:          clamp(1rem, calc(5.15cqw + (2.5rem - 5.15cqw) * clamp(0, (100cqw - 1024px) / 6px, 1)), 7rem);
+  --show-hero-ep-tracking:      calc(-0.045em + 0.085em * clamp(0, (100cqw - 820px) / 1100px, 1));
+  --show-hero-ep-right:         calc(5.3cqw + (1.5rem - 5.3cqw) * clamp(0, (100cqw - 1024px) / 896px, 1));
+  --show-hero-ep-bottom:        calc(16cqw + (1.5rem - 16cqw) * clamp(0, (100cqw - 1024px) / 6px, 1));
+  --show-hero-min-h:            max(calc(100svh - var(--dc-topbar-h)), calc(50rem * clamp(0, (100cqw - 400px) / 420px, 1)));
+
+  position: relative;
+  overflow-x: clip;
+  overflow-y: visible;
+  min-height: min(var(--show-hero-min-h), calc(100svh - var(--dc-topbar-h)));
+  max-height: calc(100svh - var(--dc-topbar-h));
+  padding-block: 0 clamp(5rem, 14vh, 11rem);
+  color: var(--dc-paper);
+  background-color: var(--dc-surface-deep);
+  /* Ubuntu + browser-default line-height cascade through all hero text,
+     mirroring the sandbox body baseline. Children that own their leading
+     (h1, subtitle, listen-up, episodes) already set their own
+     line-height, so this only takes effect on the subscribe button which
+     would otherwise inherit body's --leading-body (1.55) and read taller
+     than the sandbox. */
+  font-family: var(--font-heading);
+  line-height: normal;
+  container-type: inline-size;
+  container-name: show-hero;
+}
+
+/* Bg image + wash overlay. The picture is its own layer so the
+   <img> keeps srcset/sizes/fetchpriority semantics for LCP. */
+.show-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.show-hero-bg img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.show-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* Safari 16.0/16.1 fallback for color-mix — literal rgba derived from
+     --dc-surface-deep (#09201D). Re-derive if the token changes. */
+  background: linear-gradient(180deg, rgba(9,32,29,.45), rgba(9,32,29,.55));
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--dc-surface-deep) 45%, transparent),
+    color-mix(in srgb, var(--dc-surface-deep) 55%, transparent));
+}
+
+.show-hero-headphones {
+  position: absolute;
+  right: var(--show-hero-hp-right);
+  bottom: var(--show-hero-hp-bottom);
+  width: var(--show-hero-hp-w);
+  height: auto;
+  z-index: 2;
+  color: var(--show-hero-accent);
+  pointer-events: none;
+  /* Separate `translate` so the parallax script can drive motion without
+     clobbering any future transform. */
+  translate: var(--show-hero-px-hp-x, 0) var(--show-hero-px-hp-y, 0);
+}
+.show-hero-headphones path {
+  stroke: currentColor;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  fill: none;
+}
+
+.show-hero-listen-up-stage {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--show-hero-listen-up-size);
+  z-index: 3;
+  pointer-events: none;
+}
+.show-hero-listen-up {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  font-weight: var(--weight-bold);
+  font-size: var(--show-hero-listen-up-size);
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+  user-select: none;
+  text-align: center;
+}
+.show-hero-listen-up--fill {
+  color: rgba(14, 163, 66, .35);
+  color: color-mix(in srgb, var(--dc-django) 35%, transparent);
+  transform: translate(-49.5%, 5%);
+  translate: var(--show-hero-px-fill-x, 0) var(--show-hero-px-fill-y, 0);
+}
+.show-hero-listen-up--outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--show-hero-accent);
+          text-stroke: 1px var(--show-hero-accent);
+  transform: translate(-50.5%, -1%);
+  translate: var(--show-hero-px-outline-x, 0) var(--show-hero-px-outline-y, 0);
+}
+
+.show-hero-center {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-items: start;
+  margin-inline: auto;
+  width: min(100%, calc(var(--show-hero-bubble-w) + var(--show-hero-logo-w) * .4));
+  padding-inline: clamp(1rem, 3cqw, 2rem);
+}
+.show-hero-bubble,
+.show-hero-logo-bubble {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* White speech bubble. Vertical insets compensate for the bubble's
+   aspect ratio so the % values read as "% of bubble height". */
+.show-hero-bubble {
+  position: relative;
+  z-index: 5;
+  width: var(--show-hero-bubble-w);
+  aspect-ratio: 1039 / 908;
+  transform: translateY(var(--show-hero-bubble-ty));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-block:
+    calc(var(--show-hero-bubble-inset-top) * (908 / 1039))
+    calc(15% * (908 / 1039));
+  padding-inline: 8.5%;
+}
+.show-hero-bubble > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 30px 40px rgba(0,0,0,.25));
+}
+.show-hero-bubble-content {
+  /* Own stacking context — the bubble's drop-shadow filter would otherwise
+     paint over the text. */
+  position: relative;
+  z-index: 1;
+  max-width: min(100%, calc(100cqw - 2rem));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(.75rem, 1.5cqw, 1.75rem);
+  text-align: center;
+  color: var(--dc-ink);
+}
+.show-hero-bubble-content h1 {
+  margin: 0;
+  color: var(--dc-django);
+  font-weight: var(--weight-bold);
+  font-size: var(--show-hero-h1);
+  letter-spacing: -0.025em;
+  line-height: .92;
+  white-space: nowrap;
+}
+.show-hero-bubble-content p {
+  margin: 0;
+  /* Override the .show-hero Ubuntu cascade for body text: the project
+     ships only Ubuntu 700, so a 400-weight subtitle would render as
+     Ubuntu 700 (synthesis fallback) and look entirely bold. Roboto has
+     the full variable weight range, so the subtitle reads as 400 and
+     the `<a>` names stand out in 700. */
+  font-family: var(--font-body);
+  font-size: var(--show-hero-subtitle);
+  line-height: 1.45;
+}
+.show-hero-bubble-content p a {
+  font-weight: var(--weight-bold);
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color .15s ease;
+}
+.show-hero-bubble-content p a:hover {
+  border-bottom-color: var(--dc-django);
+}
+
+/* Subscribe pill — inverse of the site's .button-primary. Lives in the
+   white bubble, so colours flip: light-green idle (dark text), dark-green
+   hover (paper text). Font clamps to 1rem (= 16px = WCAG normal text)
+   at narrow widths, so white-on-light-green would fail AA — keep
+   --dc-ink on the idle state. */
+.show-hero-subscribe {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding:
+    clamp(.8rem, 1.2cqw, 1.1rem)
+    clamp(2rem, 3.8cqw, 4.1rem);
+  border-radius: var(--dc-radius-pill);
+  border: 1px solid var(--dc-django);
+  background: var(--dc-django);
+  color: var(--dc-ink);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.04em;
+  font-size: clamp(1rem, 1.4cqw, 1.4rem);
+  text-decoration: none;
+  transition:
+    transform    .15s var(--show-hero-ease-out),
+    background   .15s var(--show-hero-ease-out),
+    border-color .15s var(--show-hero-ease-out),
+    color        .15s var(--show-hero-ease-out);
+}
+.show-hero-subscribe:hover,
+.show-hero-subscribe:focus-visible {
+  background: var(--dc-accent-dark);
+  border-color: var(--dc-accent-dark);
+  color: var(--dc-paper);
+  transform: translateY(-1px);
+}
+.show-hero-subscribe:focus-visible {
+  outline: 2px solid var(--show-hero-accent);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .show-hero-subscribe { transition: none; }
+  .show-hero-subscribe:hover,
+  .show-hero-subscribe:focus-visible { transform: none; }
+}
+.show-hero-subscribe svg {
+  width: 1.1em;
+  height: 1.1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: 0 0 auto;
+}
+.show-hero-subscribe svg circle { fill: currentColor; stroke: none; }
+
+/* Green logo bubble — pierces the sticky topbar (z 60 > 50). The
+   side-by-side desktop rule derives X/Y from the H1 width and bubble
+   Y offset; the mobile stack uses the anchored logo-tx/-ty. */
+.show-hero-logo-bubble {
+  position: relative;
+  width: var(--show-hero-logo-w);
+  aspect-ratio: 442 / 399;
+  transform: translate(var(--show-hero-logo-tx), var(--show-hero-logo-ty));
+  z-index: 60;
+}
+.show-hero-logo-bubble img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.show-hero-episodes {
+  position: absolute;
+  right: var(--show-hero-ep-right);
+  bottom: var(--show-hero-ep-bottom);
+  z-index: 4;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .1em;
+  color: var(--show-hero-accent);
+  font-weight: var(--weight-bold);
+  font-size: var(--show-hero-ep-size);
+  line-height: 1;
+  letter-spacing: var(--show-hero-ep-tracking);
+  text-decoration: none;
+}
+.show-hero-episodes svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  fill: currentColor;
+  /* Halo so the arrow stays visible if it overlaps LISTEN UP's outline
+     at narrow widths (both are accent-green). */
+  filter: drop-shadow(0 0 .15em var(--dc-surface-deep));
+}
+
+/* Below 1200cqw: stack the hero composition. Threshold literal — container
+   queries don't accept var(). The matching topbar 2-row stack lives on
+   @container topbar in @layer base. */
+@container show-hero (max-width: 75em) {
+  .show-hero-center { width: 100%; }
+  .show-hero-logo-bubble { translate: 0 -1rem; }
+}
+
+/* Above 1200cqw: derive the logo position from the H1 width + bubble Y,
+   keeping logo and bubble centers exactly 8.5rem apart at every width. */
+@container show-hero (min-width: 75.0625em) {
+  .show-hero-logo-bubble {
+    transform: translate(
+      calc(-0.5 * var(--show-hero-h1) * var(--show-hero-h1-text-ratio) - 2vw - 0.5 * var(--show-hero-logo-w)),
+      calc(
+        var(--show-hero-bubble-ty)
+        - 8.5rem
+        + 0.5 * (var(--show-hero-bubble-w) * 908 / 1039 - var(--show-hero-logo-w) * 399 / 442)
+      )
+    );
+  }
 }
 
 /* ---------- Layout primitives ----------

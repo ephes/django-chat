@@ -11,6 +11,70 @@
 
 {% block content %}
   {% load static %}
+  <section class="show-hero" id="top" aria-labelledby="show-hero-title" data-show-hero-shell>
+    <picture class="show-hero-bg" aria-hidden="true">
+      <source
+        type="image/avif"
+        srcset="{% static 'django_chat/img/show-hero-bg.avif' %} 1584w, {% static 'django_chat/img/show-hero-bg@2x.avif' %} 3168w"
+        sizes="100vw"
+      >
+      <source
+        type="image/webp"
+        srcset="{% static 'django_chat/img/show-hero-bg.webp' %} 1584w, {% static 'django_chat/img/show-hero-bg@2x.webp' %} 3168w"
+        sizes="100vw"
+      >
+      <img
+        src="{% static 'django_chat/img/show-hero-bg.jpg' %}"
+        srcset="{% static 'django_chat/img/show-hero-bg.jpg' %} 1584w, {% static 'django_chat/img/show-hero-bg@2x.jpg' %} 3168w"
+        sizes="100vw"
+        width="1584"
+        height="1007"
+        alt=""
+        fetchpriority="high"
+        decoding="async"
+      >
+    </picture>
+
+    <svg class="show-hero-headphones" viewBox="0 0 521.99 658.19" aria-hidden="true" focusable="false" data-show-hero-headphones>
+      <path d="M208.4,626.42c-36.79,71.44-228.62,5.66-129.48-45.95,78.27-40.74,218.51,142.67,299.45-35.33,29.72-46.66,74.05-119.41,76.36-177.07,1.46-36.35-50.97-16.69-75.01,8.8-27.19,28.84-53.65,81.86-28.4,93.21,20.39,9.17,51.35-20.1,64.08-37.14,50.43-67.46,44.75-175.65-29.46-116.73-182.82,145.15-4.46,328.85,91.72,104.08,14.08-32.9,23.36-79.73-7.62-102.65-80.21-41.58-231.67,160.95-115.08,214.75,49.46,22.83,112.03-6.39,148.38-91.11,22.96-53.5,11.71-99.01-5.1-114.86-20.27-19.11-7.98-63.04,7.03-44.23,13.24,16.58-18.74,76.86-37.7,57.49-20.39-20.82,10-77.86,14.39-104.05C514.11,43.68,218.6-62.25,124.06,158.92c-6.1,14.27-18.07,5.62-14.1-5.42C196.11-86.47,537.63,3.64,502.66,251.81c-1.65,11.68,12.89,17,14.94,5.64C561.79,12.25,228.82-104.14,105.48,120.17c-27.19,49.45,21.55,95.57-8.68,102.9C-1.31,246.86,3.21,443.89,89.08,476.42c108,40.92,139.03-201.56,52.9-250.94C72.94,185.9,9.31,247.13,1.59,335.5c-2.73,31.26-2.78,69.32,21.38,108.11,68.94,110.73,150.51-56.89,122.55-137.66-8.5-24.55-42.8-42.52-51.87,45.19-5.2,50.31,19.68,96.65,44.52,77.32,26.3-20.45,51.41-170.8-15.48-181.99-77.55-12.98-82.68,193.42-15.06,217.52,52.75,18.8,136.63,86.52,100.77,162.41Z"/>
+    </svg>
+
+    <div class="show-hero-listen-up-stage" aria-hidden="true">
+      <span class="show-hero-listen-up show-hero-listen-up--fill" data-show-hero-listen-up-fill>LISTEN UP</span>
+      <span class="show-hero-listen-up show-hero-listen-up--outline" data-show-hero-listen-up-outline>LISTEN UP</span>
+    </div>
+
+    <div class="show-hero-center">
+      <div class="show-hero-logo-bubble" data-show-hero-hero-logo>
+        <img src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="442" height="399" alt="" decoding="async">
+      </div>
+
+      <div class="show-hero-bubble">
+        <svg viewBox="0 0 1039.04 908.39" aria-hidden="true" focusable="false">
+          <path fill="#fff" d="M1039.04,409.13C1039.04,183.18,806.45,0,519.52,0S0,183.18,0,409.13s232.6,409.13,519.52,409.13c40.84,0,80.58-3.71,118.7-10.73,11.12-2.05,22.49-.26,32.79,5.19l180.92,95.67-33.41-145.11c-2.28-9.92,1.66-20.38,9.35-24.85,128.09-74.51,211.16-194.26,211.16-329.3Z"/>
+        </svg>
+        <div class="show-hero-bubble-content">
+          <h1 id="show-hero-title">{{ page.title }}</h1>
+          <p>A biweekly podcast on the Django Web Framework<br>
+            by&nbsp;<a href="https://wsvincent.com/">Will Vincent</a> and <a href="https://noumenal.es/">Carlton Gibson</a>.</p>
+          <a class="show-hero-subscribe" href="{% url 'cast:feed_detail' slug=podcast.slug %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M4 11a9 9 0 0 1 9 9"/>
+              <path d="M4 4a16 16 0 0 1 16 16"/>
+              <circle cx="5" cy="19" r="2.2"/>
+            </svg>
+            Subscribe
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <a class="show-hero-episodes" href="#all-episodes">
+      <span>Episodes</span>
+      <svg viewBox="0 0 12 10" aria-hidden="true" focusable="false"><polygon points="0,0 12,0 6,9"/></svg>
+    </a>
+  </section>
+
   <div id="episode-index-main" class="page-content" data-vt-page="episode-index">
 
     {% if source_metadata %}
@@ -39,7 +103,7 @@
       {% endwith %}
     {% endif %}
 
-    <h2 class="episode-section-heading">All Episodes</h2>
+    <h2 class="episode-section-heading" id="all-episodes">All Episodes</h2>
 
     {% if filterset %}
       {% include "./_filter_form.html" with form=filterset.form %}
