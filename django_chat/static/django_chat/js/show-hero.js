@@ -147,11 +147,14 @@
     // Per-layer magnitudes in cqw (container-width-relative, matches
     // the rest of the hero's sizing). Headphones move in lockstep with
     // the outline (treated as one composite "outline + headphones");
-    // fill drifts mirrored against them.
+    // fill drifts mirrored against them. Tuned subtle on purpose — the
+    // split between fill and outline still reads as drift apart, but
+    // the absolute travel stays small enough not to compete with the
+    // bubble + logo as the eye-catch.
     const M = {
-      hp:      { x: -0.8, y: -0.5 },
-      outline: { x: -0.8, y: -0.5 },
-      fill:    { x:  0.8, y:  0.5 },
+      hp:      { x: -0.4, y: -0.25 },
+      outline: { x: -0.4, y: -0.25 },
+      fill:    { x:  0.4, y:  0.25 },
     };
 
     // Target (tx,ty) set by the input handler; current (cx,cy) lerped
