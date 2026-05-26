@@ -502,6 +502,7 @@ button.share-pill,
   list-style: none;
   font-size: 0.95rem;
   font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
 }
 
 .nav-links a {
@@ -958,13 +959,14 @@ body:has([data-show-hero-shell]) .brand {
   line-height: 1;
   letter-spacing: var(--show-hero-ep-tracking);
   text-decoration: none;
-  /* Soft dark-green drop on the whole hook — applies to both the text
-     and the inline-SVG triangle. A stacked second shadow tightens the
-     contrast right around the glyph edges so the main soft halo has
-     something to bloom off, giving the hook visible lift without
-     dialling either layer to a hard shadow. */
+  /* Soft drop on the whole hook — applies to both the text and the
+     inline-SVG triangle. Both layers use --dc-surface-deep (the
+     deepest of the brand greens) so the off-white glyphs feel
+     embedded in the surface rather than floating above it; the tight
+     second shadow firms up the glyph edges so the wider soft halo
+     has something to bloom off. */
   filter:
-    drop-shadow(0 0.25em 0.7em var(--dc-accent-dark))
+    drop-shadow(0 0.25em 0.7em var(--dc-surface-deep))
     drop-shadow(0 0.05em 0.2em var(--dc-surface-deep));
 }
 .show-hero-episodes svg {
