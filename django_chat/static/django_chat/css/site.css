@@ -1113,7 +1113,7 @@ body:has([data-show-hero-shell]) .brand {
   margin-right: calc(50% - 50vw);
   margin-top: -1px;
   margin-bottom: var(--s3);
-  padding: clamp(0.625rem, 4vw - 0.625rem, 2.5rem) max(var(--dc-gutter), calc(50vw - var(--dc-container-max) / 2)) clamp(2rem, 4vw + 1rem, 3rem);
+  padding: clamp(2.5rem, 5vw, 5rem) max(var(--dc-gutter), calc(50vw - var(--dc-container-max) / 2));
   /* Dark variant — visually continues the topbar + show-hero surface
      so the dark family flows topbar → hero → platform-band. No bottom
      hairline; the transition into the paper-textured episode list is
