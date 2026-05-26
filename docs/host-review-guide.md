@@ -68,7 +68,9 @@ To create another staging transcript during review, sign into Wagtail admin,
 edit the episode page, and use the **Generate transcript** page action button.
 That action queues a `cast_transcripts` task for
 `django-chat-db-worker.service`; after it completes, the public episode page
-should link to `/episodes/<slug>/transcript/`.
+should link to `/episodes/<slug>/transcript/`. The deployed Django/Wagtail host
+running that worker must be able to reach the Tailscale network where the
+Voxhelm API is exposed.
 
 ## Review URLs
 

@@ -259,6 +259,9 @@ and language in `deploy/secrets/staging.sops.yml` as
 `cast_voxhelm_language`; `deploy/group_vars/django_chat.yml` renders them into
 the deployed `.env`. The matching producer token must also be present in the
 Voxhelm deployment secrets and rendered into `VOXHELM_BEARER_TOKENS`.
+Voxhelm transcription also requires the host running Django/Wagtail and
+`django-chat-db-worker.service` to reach the Tailscale network where the
+Voxhelm API is exposed; browser access to Wagtail admin is not enough.
 
 To create a transcript from Wagtail admin:
 

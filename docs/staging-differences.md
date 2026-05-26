@@ -157,7 +157,8 @@ resulting django-cast artifacts from staging with
 In Wagtail admin, edit an episode page and use the **Generate transcript** page
 action to request another transcript. The action requires editable episode and
 audio permissions, copied podcast audio, and the active
-`django-chat-db-worker.service` worker.
+`django-chat-db-worker.service` worker. The deployed Django/Wagtail host must
+also be able to reach the Tailscale network where the Voxhelm API is exposed.
 
 ## Production Migration Boundary
 
