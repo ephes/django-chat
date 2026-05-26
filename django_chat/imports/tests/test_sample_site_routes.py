@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 from typing import Any
 
 import pytest
@@ -63,12 +62,11 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     assert "Episode 200:" in content
     assert ">EP</span>" not in content
 
-    show_actions = _html_between(content, 'class="show-actions ', "</div>")
-    assert re.search(r">\s*Subscribe\s*</a>", show_actions)
-    assert f'href="{feed_detail_path()}"' in show_actions
-    assert '<circle cx="5" cy="19" r="2.2"/>' in show_actions
-    assert "Apple Podcasts" not in show_actions
-    assert "button-secondary" not in show_actions
+    subscribe = _html_between(content, 'class="show-hero-subscribe"', "</a>")
+    assert "Subscribe" in subscribe
+    assert f'href="{feed_detail_path()}"' in subscribe
+    assert '<circle cx="5" cy="19" r="2.2"/>' in subscribe
+    assert "Apple Podcasts" not in subscribe
 
     platform_band = _html_between(content, '<section class="platform-band"', "</section>")
     assert "Listen on podcast apps and video platforms" in platform_band

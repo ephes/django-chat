@@ -89,7 +89,7 @@ def test_episode_index_loads_view_transition_script_and_hooks(client: Client) ->
     assert 'defer src="/static/django_chat/js/view-transitions.js' in body
     assert 'type="module" src="/static/django_chat/js/view-transitions.js"' not in body
     assert '<link rel="expect" href="#episode-index-main" blocking="render">' in body
-    hero_picture_attrs = tag_attrs(body, "picture", {"class": "show-hero-media"})
+    hero_picture_attrs = tag_attrs(body, "picture", {"class": "show-hero-bg"})
     assert hero_picture_attrs is not None
     assert hero_picture_attrs["aria-hidden"] == "true"
     assert "/static/django_chat/img/show-hero-bg.avif 1584w" in body
@@ -99,7 +99,7 @@ def test_episode_index_loads_view_transition_script_and_hooks(client: Client) ->
         {"src": "/static/django_chat/img/show-hero-bg.jpg"},
     )
     assert hero_image_attrs is not None
-    assert hero_image_attrs["sizes"] == "(max-width: 900px) 100vw, 120vw"
+    assert hero_image_attrs["sizes"] == "100vw"
     assert hero_image_attrs["fetchpriority"] == "high"
     assert hero_image_attrs["decoding"] == "async"
     assert '<div id="episode-index-main" class="page-content" data-vt-page="episode-index">' in body
@@ -158,7 +158,7 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert "--dc-muted: #5f635d;" in css
     assert "--dc-accent: #2d8260;" in css
     assert "--dc-accent-dark: #14513a;" in css
-    assert "--dc-django: #48a04e;" in css
+    assert "--dc-django: #0ea342;" in css
     assert "--dc-surface-django-tint: #dfeede;" in css
     assert "--dc-error: #c0392b;" in css
     assert "--dc-player-surface: transparent;" in css
