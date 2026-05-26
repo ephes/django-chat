@@ -77,12 +77,16 @@
     display: inline-flex;
     align-items: center;
     gap: .6rem;
-    /* Landing slot for the scroll-morph (Schritt 3). Reserves space so
-       the animation can fade/slide in without shifting the nav. */
+    /* Hidden by default; the @supports block (native scroll-driven
+       animations) and the JS polyfill (older browsers) both promote
+       it to opacity:1 as part of the scroll-morph reveal. If JS is
+       fully off AND the browser lacks animation-timeline, the brand
+       stays hidden and the hero logo remains visible — the layout
+       still works, only the morph is missing. */
     opacity: 0;
     pointer-events: none;
   }
-  .topbar__brand img { height: 1.75rem; width: auto; display: block; }
+  .topbar__brand img { height: var(--tw-brand-logo-h, 3rem); width: auto; display: block; }
   .topbar__brand span {
     font-weight: 700;
     letter-spacing: -.01em;
@@ -299,13 +303,55 @@
   .hero__subscribe svg circle { fill: currentColor; stroke: none; }
 
   /* Green logo bubble — upper-left, pulled up to overlap the topbar.
-     z-index above the topbar; everything else panel-driven. */
+     z-index above the topbar.
+
+     On side-by-side layouts (>1200 cqw) the X-position is derived
+     entirely from the H1 font-size: the rendered "Django Chat" in
+     Ubuntu Bold is consistently 5.568 × font-size wide (empirically
+     measured, constant across viewports), so we can compute the H1
+     text width without measuring. The formula:
+
+       translate.x = -(h1_text_w / 2 + 2vw + logo_w / 2)
+
+     starts from the cell center (logo is `justify-self: center`) and
+     shifts the logo left by half the H1 text width plus a 2vw gap plus
+     half the logo's own width — putting its right edge exactly the gap
+     to the left of the H1's left edge. No JS measurement needed.
+
+     The `--tw-logo-tx` anchor is only used on mobile/tablet
+     (≤1200 cqw) where the layout is stacked and a calc-based
+     clearance doesn't apply. */
   .hero__logo-bubble {
     position: relative;
     width: var(--tw-logo-w, 14rem);
     aspect-ratio: 442 / 399;
     transform: translate(var(--tw-logo-tx, -60%), var(--tw-logo-ty, -10%));
     z-index: 60;
+  }
+  @container dc (min-width: 1201px) {
+    .hero__logo-bubble {
+      /* X: H1 text width is derived purely from font-size: empirically
+         the rendered "Django Chat" in Ubuntu Bold is consistently
+         5.568 × font-size wide at every viewport, so we don't need to
+         measure with JS. If the H1 text content ever changes, remeasure
+         once and update the ratio.
+
+         Y: anchored to the bubble's vertical position so the logo
+         tracks the bubble when its `--tw-bubble-ty` shifts at different
+         viewports. The constant -8.5rem keeps the logo's CENTER
+         8.5rem above the bubble's CENTER (matches the original look
+         at the 1440 reference). The size-difference term compensates
+         for bubble/logo height delta so center-to-center stays exact
+         regardless of how much wider the bubble is than the logo. */
+      transform: translate(
+        calc(-0.5 * var(--tw-h1, 5.5rem) * 5.568 - 2vw - 0.5 * var(--tw-logo-w, 14rem)),
+        calc(
+          var(--tw-bubble-ty, 0px)
+          - 8.5rem
+          + 0.5 * (var(--tw-bubble-w, 50rem) * 908 / 1039 - var(--tw-logo-w, 14rem) * 399 / 442)
+        )
+      );
+    }
   }
   .hero__logo-bubble img {
     width: 100%;
@@ -345,10 +391,32 @@
   /* Narrow shell: every fluid dimension is panel-driven; only the
      full-width hero__center and the centered mobile nav remain
      query-bound — but now via @container, not @media. */
-  @container dc (max-width: 820px) {
+  @container dc (max-width: 1200px) {
     .hero__center { width: 100%; }
-    .topbar { justify-content: center; }
-    .topbar__brand { display: none; }
+    /* Mobile/tablet topbar: two rows stacked, both centered. Nav on top,
+       the morphing logo + wordmark docks below. Brand stays in flow so
+       the scroll-morph runs here too (auto-fit measures both elements
+       and writes pixel-perfect start geometry for the flying logo).
+       Threshold raised to 1200 so the side-by-side hero layout (calc
+       rule, see below) only activates when there's enough room for
+       both logo + bubble + text without the logo running off the left
+       edge of the viewport. */
+    .topbar {
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 0.4rem;
+      padding-block: 0.6rem;
+    }
+    .topbar__nav { order: 0; }
+    .topbar__brand { order: 1; }
+    /* Lift the logo a touch in the mobile/tablet range. The hero-logo
+       container's bbox (incl. the speech-bubble tail's whitespace
+       quadrant) clips into the h1's bbox near the 1200 boundary; this
+       keeps the two bboxes apart so automated overlap checks stay
+       clean and the tail visibly clears the H1's left edge at short
+       heights too. */
+    .hero__logo-bubble { translate: 0 -1rem; }
   }
 
   /* below content placeholder so the page is long enough to scroll.
@@ -362,6 +430,90 @@
     background: linear-gradient(180deg, #0b1a17 0%, #050908 100%);
   }
   .below h2 { color: var(--accent); }
+
+  /* =====================================================================
+     SCROLL-MORPH — the hero logo hands off to the topbar brand as you
+     scroll. The flight is a single travelling element: .topbar__brand img.
+
+       · .topbar__brand img  is the flying logo: it starts blown up
+         (scale --tw-morph-scale) and offset (--tw-morph-tx/ty) so it
+         sits exactly on top of the hero logo, then flies + shrinks onto
+         its natural topbar slot over [--tw-morph-start, --tw-morph-end].
+       · .topbar__brand span ("Django Chat") fades in once the logo has
+         docked, over [--tw-morph-text-start, --tw-morph-text-end].
+       · .hero__logo-bubble  has `visibility: hidden` while the morph is
+         active. The flying logo is pixel-aligned on top of it at
+         scroll=0 (auto-fit), so the user sees a single logo that just
+         shrinks into the topbar — no cross-fade.
+
+     The transform on the flying logo only changes its VISUAL — the
+     `--tw-brand-logo-h` img layout box never moves, so the nav never
+     shifts and the docked click target stays put.
+     `--tw-morph-scale / -tx / -ty` (the blown-up start state) are
+     measured per viewport by the auto-fit script below (CSS cannot
+     read another element's rendered geometry); the keyframe `from`
+     values are just sane fallbacks if that script fails to write them.
+
+     This block wraps in prefers-reduced-motion + @supports for native
+     scroll-driven animations (Chrome/Edge 115+, Safari 26+). On other
+     browsers a JS polyfill (further down) drives the same morph using
+     the same CSS variables. With prefers-reduced-motion: reduce, both
+     paths bail and the static layout (hero logo visible, brand hidden)
+     remains.
+     ===================================================================== */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: scroll(root)) {
+      .topbar__brand {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      /* Flying logo — blown-up start state shrinks onto the topbar slot. */
+      .topbar__brand img {
+        transform-origin: left center;
+        animation-name: dc-logo-morph;
+        animation-fill-mode: both;
+        animation-timing-function: var(--ease-out);
+        animation-timeline: scroll(root block);
+        animation-range:
+          var(--tw-morph-start, 0vh)
+          var(--tw-morph-end, 30vh);
+      }
+      /* Wordmark — fades in next to the logo once it has docked. */
+      .topbar__brand span {
+        animation-name: dc-brand-text;
+        animation-fill-mode: both;
+        animation-timing-function: var(--ease-out);
+        animation-timeline: scroll(root block);
+        animation-range:
+          var(--tw-morph-text-start, 25vh)
+          var(--tw-morph-text-end, 32vh);
+      }
+      /* Hero logo stays hidden — the flying .topbar__brand img sits at
+         the same pixel position at scroll=0 (auto-fit) and is the only
+         visible logo, so it just shrinks into the topbar without any
+         cross-fade. visibility:hidden keeps the layout box intact so
+         the bubble composition (grid cell, sizing) is unaffected. */
+      .hero__logo-bubble {
+        visibility: hidden;
+      }
+    }
+  }
+
+  @keyframes dc-logo-morph {
+    from {
+      transform:
+        translate(var(--tw-morph-tx, 6vw), var(--tw-morph-ty, 15.2vh))
+        scale(var(--tw-morph-scale, 5.8));
+    }
+    to {
+      transform: translate(0, 0) scale(1);
+    }
+  }
+  @keyframes dc-brand-text {
+    from { opacity: 0; transform: translateX(-0.6rem); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
 
   /* =====================================================================
      TWEAK PANEL — sandbox-only, remove before migrating to production
@@ -769,6 +921,29 @@
       </label>
     </fieldset>
 
+    <fieldset>
+      <legend>Scroll-Morph (Schritt 3)</legend>
+      <p style="margin:.1rem 0 .5rem;color:#6a9d8d;font-size:10px;line-height:1.4;">
+        Logo scale + offset are auto-measured per viewport — no slider
+        needed, the flight docks pixel-perfect everywhere.
+      </p>
+      <label><span>Docked logo height</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="1.25" max="5" step="0.05" value="3" data-var="--tw-brand-logo-h" data-unit="rem">
+      </label>
+      <label><span>Morph start</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="0" max="80" step="1" value="0" data-var="--tw-morph-start" data-unit="vh">
+      </label>
+      <label><span>Morph end</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="10" max="140" step="1" value="30" data-var="--tw-morph-end" data-unit="vh">
+      </label>
+      <label><span>Text start</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="0" max="160" step="1" value="25" data-var="--tw-morph-text-start" data-unit="vh">
+      </label>
+      <label><span>Text end</span><input type="text" class="tweak-value" spellcheck="false">
+        <input type="range" min="10" max="180" step="1" value="32" data-var="--tw-morph-text-end" data-unit="vh">
+      </label>
+    </fieldset>
+
   </div>
 </aside>
 
@@ -777,14 +952,163 @@
   <p>Scroll-area below the hero. Step 3 will animate the logo + wordmark into the top bar as you scroll past the hero.</p>
 </section>
 
+<!-- =====================================================================
+     SCROLL-MORPH AUTO-FIT (Schritt 3) — progressive enhancement.
+     CSS cannot read another element's rendered geometry, so this tiny
+     script measures the hero logo + the topbar brand slot and writes the
+     exact blown-up start state (--tw-morph-scale / -tx / -ty) into :root.
+     The flight itself stays 100% CSS (scroll-driven). Without this script
+     the keyframe fallbacks still run — just not pixel-perfect off the
+     tuned viewport. Re-runs on resize / font load so every viewport
+     docks perfectly. Keep this on migration; the tweak panel below does
+     not. ==================================================================== -->
 <script>
 (() => {
-  const STORAGE_KEY = 'dc-tweak-v5';
+  const root = document.documentElement;
+  const heroLogo = document.querySelector('.hero__logo-bubble img');
+  const brandLogo = document.querySelector('.topbar__brand img');
+  if (!heroLogo || !brandLogo) return;
+
+  const fit = () => {
+    // Measure the brand slot at its natural, un-morphed size: drop its
+    // animation for the read, then restore. getBoundingClientRect()
+    // forces a sync layout flush, so the transform is gone for the read.
+    // Preserve any value the polyfill (or anything else) set inline —
+    // resetting to '' would let the CSS keyframe animation re-take over
+    // and overwrite the polyfill's transform on the next frame.
+    const prevAnim = brandLogo.style.animationName;
+    brandLogo.style.animationName = 'none';
+    const brand = brandLogo.getBoundingClientRect();
+    brandLogo.style.animationName = prevAnim;
+
+    const hero = heroLogo.getBoundingClientRect();
+    if (!brand.height || !hero.height) return;   // safety bail if either element isn't rendered yet
+
+    // The brand is sticky-pinned to the top bar, so its viewport rect ==
+    // its scroll-0 position. The hero logo is in flow → normalise to a
+    // scroll-0 document coord so both share one frame of reference.
+    const heroTop = hero.top + window.scrollY;
+
+    // Keyframe origin is `left center`; translate is applied after scale.
+    const scale = hero.height / brand.height;
+    const tx = hero.left - brand.left;
+    const ty = (heroTop + hero.height / 2) - (brand.top + brand.height / 2);
+
+    root.style.setProperty('--tw-morph-scale', scale.toFixed(4));
+    root.style.setProperty('--tw-morph-tx', tx.toFixed(1) + 'px');
+    root.style.setProperty('--tw-morph-ty', ty.toFixed(1) + 'px');
+  };
+
+  fit();
+  addEventListener('load', fit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  // rAF-throttle (was 120ms setTimeout — caused visible snapping in stages
+  // during continuous resize). Runs at most once per frame, so the flying
+  // logo tracks the hero logo smoothly as the viewport changes.
+  let pending = false;
+  addEventListener('resize', () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { pending = false; fit(); });
+  });
+  // Re-fit after the panel's docked-logo-height slider resizes the slot
+  // (rAF so it runs once the panel handler has applied the new size).
+  const sizeSlider = document.querySelector('[data-var="--tw-brand-logo-h"]');
+  if (sizeSlider) sizeSlider.addEventListener('input', () => requestAnimationFrame(fit));
+})();
+</script>
+
+<!-- =====================================================================
+     SCROLL-MORPH POLYFILL — drives the morph on browsers without native
+     `animation-timeline: scroll(root)`. Mainly for iOS Safari <26.
+     Reads the same CSS variables the native @supports block uses so the
+     morph timing and start geometry stay consistent. No-ops when native
+     scroll-driven animations are supported (Chrome 115+, Safari 26+).
+     ===================================================================== -->
+
+<script>
+(() => {
+  if (CSS.supports('animation-timeline', 'scroll(root block)')) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const root = document.documentElement;
+  const brand = document.querySelector('.topbar__brand');
+  const brandImg = brand && brand.querySelector('img');
+  const brandSpan = brand && brand.querySelector('span');
+  const heroLogo = document.querySelector('.hero__logo-bubble');
+  if (!brand || !brandImg || !brandSpan || !heroLogo) return;
+
+  // Mirror the @supports block's static state so the morph has the same
+  // visual baseline: brand visible, hero logo hidden (the polyfill drives
+  // the flight in place of the CSS scroll-driven animation). Also disable
+  // the CSS keyframe animations — the browser may have parsed and run them
+  // even though CSS.supports() returned false (e.g. native support exists
+  // but we choose to override). The polyfill owns transform/opacity now.
+  // transform-origin must match the @supports block (left center) so the
+  // auto-fit-measured scale + offset still align the flying logo with the
+  // hero logo at scroll=0 — on browsers where @supports doesn't apply,
+  // the default origin (50% 50%) would put it in the wrong place.
+  brand.style.opacity = '1';
+  brand.style.pointerEvents = 'auto';
+  heroLogo.style.visibility = 'hidden';
+  brandImg.style.animationName = 'none';
+  brandSpan.style.animationName = 'none';
+  brandImg.style.transformOrigin = 'left center';
+
+  const readPx = (name, fallbackPx) => {
+    // CSS var values written by auto-fit are in px (`123.4px`) or unitless
+    // numbers (scale). Strip the unit and parseFloat.
+    const v = getComputedStyle(root).getPropertyValue(name).trim();
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : fallbackPx;
+  };
+  // Cubic ease-out — visual match for cubic-bezier(.2,.7,.2,1) is close
+  // enough; the morph end state is identical.
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const ramp = (s, a, b) => Math.min(Math.max((s - a) / Math.max(b - a, 1), 0), 1);
+
+  const update = () => {
+    const vh = innerHeight / 100;
+    const mS = readPx('--tw-morph-start',      0)  * vh;
+    const mE = readPx('--tw-morph-end',        30) * vh;
+    const tS = readPx('--tw-morph-text-start', 25) * vh;
+    const tE = readPx('--tw-morph-text-end',   32) * vh;
+    const s = scrollY;
+    const p = ease(ramp(s, mS, mE));
+    const q = ease(ramp(s, tS, tE));
+
+    const scale0 = readPx('--tw-morph-scale', 5.8);
+    const tx0    = readPx('--tw-morph-tx',    0);
+    const ty0    = readPx('--tw-morph-ty',    0);
+    const cs = scale0 + (1 - scale0) * p;
+    const cx = tx0    + (0 - tx0)    * p;
+    const cy = ty0    + (0 - ty0)    * p;
+    brandImg.style.transform = `translate(${cx}px, ${cy}px) scale(${cs})`;
+
+    brandSpan.style.opacity   = q;
+    brandSpan.style.transform = `translateX(${-0.6 * (1 - q)}rem)`;
+  };
+
+  let rafId = 0;
+  const schedule = () => {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => { rafId = 0; update(); });
+  };
+  addEventListener('scroll', schedule, { passive: true });
+  addEventListener('resize', schedule);
+  // Wait one frame so the auto-fit script writes --tw-morph-* first.
+  requestAnimationFrame(update);
+})();
+</script>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'dc-tweak-v6';
   const HIDDEN_KEY = 'dc-tweak-hidden';
   const POS_KEY = 'dc-tweak-pos';
-  // Wipe older versions so cleaned defaults + cqw-based composition take
-  // over on first load (v4 had vw-based calc + stale single-slider values).
-  ['dc-tweak-v1','dc-tweak-v2','dc-tweak-v3','dc-tweak-v4'].forEach(k => localStorage.removeItem(k));
+  // Wipe older versions so the current defaults take over on first
+  // load. The version key is bumped whenever a default value or unit
+  // changes in a way that old user state would silently break.
+  ['dc-tweak-v1','dc-tweak-v2','dc-tweak-v3','dc-tweak-v4','dc-tweak-v5'].forEach(k => localStorage.removeItem(k));
 
   // -- Anchored variables ----------------------------------------------
   // Each property:
@@ -804,14 +1128,12 @@
       defaults: [
         {vw:1920, val:-159.5, unit:'%'},
         {vw:1400, val:-145,   unit:'%'},
-        {vw:1024, val:-90,    unit:'%'},
         {vw:820,  val:-60,    unit:'%'},
         {vw:400,  val:-30,    unit:'%'},
       ] },
     { var: '--tw-logo-ty',          label: 'Logo translate Y',   units: ['%','rem','vw','svh','vh'],
       slider: [-40, 40, 0.5],
       defaults: [
-        {vw:1400, val:-6, unit:'vh'},
         {vw:1024, val:2,  unit:'vh'},
         {vw:737,  val:4,  unit:'vh'},
         {vw:380,  val:2,  unit:'vh'},
@@ -819,32 +1141,34 @@
     { var: '--tw-logo-w',           label: 'Logo width',         units: ['vw','rem','%','svh','vh'],
       slider: [0, 50, 0.5],
       defaults: [
-        {vw:1920, val:17, unit:'vw'},
-        {vw:1360, val:22, unit:'vw'},
-        {vw:820,  val:32, unit:'vw'},
-        {vw:400,  val:20, unit:'vh'},
+        {vw:1920, val:17,   unit:'vw'},
+        {vw:1360, val:22,   unit:'vw'},
+        {vw:1070, val:22,   unit:'vw'},
+        {vw:1024, val:24,   unit:'vw'},
+        {vw:820,  val:32,   unit:'vw'},
+        {vw:400,  val:20,   unit:'vh'},
       ],
-      defaultMin: '9rem', defaultMax: '35rem' },
+      defaultMin: '9rem', defaultMax: '20rem' },
     { var: '--tw-bubble-tx',        label: 'Bubble translate X', units: ['%','rem','vw','svh','vh'],
       slider: [-20, 25, 0.5],
       defaults: [{vw:1024, val:0, unit:'%'}] },
-    { var: '--tw-bubble-ty',        label: 'Bubble translate Y', units: ['%','rem','vw','svh','vh'],
+    { var: '--tw-bubble-ty',        label: 'Bubble translate Y', units: ['rem','vw','svh','vh'],
       slider: [-25, 30, 0.25],
       defaults: [
-        {vw:1920, val:-22,  unit:'%'},
+        {vw:1920, val:-12,  unit:'rem'},
         {vw:1400, val:-10,  unit:'vw'},
         {vw:1024, val:2.5,  unit:'vh'},
         {vw:820,  val:11,     unit:'vh'},
         {vw:400,  val:15.5,   unit:'vh'},
         {vw:380,  val:12.25,  unit:'vh'},
       ] },
-    { var: '--tw-bubble-w',         label: 'Bubble width',       units: ['vw','rem','%','svh','vh'],
+    { var: '--tw-bubble-w',         label: 'Bubble width',       units: ['vw','rem','svh','vh'],
       slider: [20, 100, 0.5],
       defaults: [
         {vw:1920, val:50, unit:'vw'},
         {vw:1400, val:59, unit:'vw'},
-        {vw:1024, val:84, unit:'%'},
-        {vw:600,  val:90, unit:'%'},
+        {vw:1024, val:84, unit:'vw'},
+        {vw:600,  val:90, unit:'vw'},
       ],
       defaultMin: '26rem', defaultMax: '56rem' },
     { var: '--tw-h1',               label: 'H1 size',            units: ['rem','em','vw','%','svh','vh'],
@@ -932,8 +1256,9 @@
     { var: '--tw-topbar-h',         label: 'Topbar height',      units: ['rem','vh','svh','%'],
       slider: [3, 10, 0.25],
       defaults: [
-        {vw:1920, val:7, unit:'rem'},
-        {vw:1024, val:6, unit:'rem'},
+        {vw:1920, val:7,   unit:'rem'},
+        {vw:1024, val:6,   unit:'rem'},
+        {vw:820,  val:7.5, unit:'rem'},
       ] },
   ];
   const SPEC_BY_VAR = Object.fromEntries(ANCHORED.map(s => [s.var, s]));
