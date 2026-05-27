@@ -46,7 +46,8 @@ def test_sponsor_page_renders(client: Client) -> None:
     ]
     content = response.content.decode()
     # Subpage header speech bubble is rendered via the shared partial.
-    assert "page-header-shape" in content
+    assert "page-header-bubble" in content
+    assert "page-header-bubble-fade" in content
     assert "Sponsor Django Chat" in content
     # All four slot names from the source doc.
     for slot in ("Pre-roll", "Mid-roll", "Out-roll", "Show Notes"):

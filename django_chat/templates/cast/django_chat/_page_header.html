@@ -1,23 +1,40 @@
 {# Reusable subpage header. Required vars: eyebrow, heading. Optional: tagline. #}
+{% comment %}
+  Keep .page-header-bubble's direct children with no whitespace between them
+  (svg + fade + content on one line). Flex would otherwise turn the
+  whitespace text nodes into anonymous flex items with inherited line-height,
+  which pushes the real content down by tens of pixels per gap.
+{% endcomment %}
 <div class="page-header-wrap">
-<section class="page-header">
-  <svg class="page-header-shape"
-       viewBox="0 0 1545.62 926.99"
-       preserveAspectRatio="none"
-       aria-hidden="true" focusable="false">
-    <defs>
-      <linearGradient id="page-header-bubble-gradient" x1="0" y1="0" x2="0.2" y2="1">
-        <stop offset="0" stop-color="#14513a"/>
-        <stop offset="0.55" stop-color="#14513a"/>
-        <stop offset="1" stop-color="#0ea342"/>
-      </linearGradient>
-    </defs>
-    <path d="M1545.62,413.83C1545.62,185.28,1199.62,0,772.81,0S0,185.28,0,413.83c0,160.34,170.28,299.38,419.29,368.09,9.69,2.67,14.9,13.17,11.19,22.51l-48.6,122.56,212.97-102.11c8.91-4.27,18.83-5.97,28.65-4.94,33.35,3.5,67.48,5.84,102.22,6.96,11.83.78,23.67,1.18,35.5,1.18,7.43,0,14.83-.16,22.21-.46,421.92-3.04,762.19-187.14,762.19-413.79Z" fill="url(#page-header-bubble-gradient)"/>
-  </svg>
-  <div class="page-header-inner">
-    <p class="eyebrow">{{ eyebrow }}</p>
-    <h1>{{ heading }}</h1>
-    {% if tagline %}<p class="page-header-tagline">{{ tagline }}</p>{% endif %}
-  </div>
-</section>
+  <section class="page-header">
+    <div class="page-header-bubble"><svg viewBox="0 0 1039.04 908.39" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="page-header-bubble-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0b3b2a"/>
+            <stop offset="0.35" stop-color="#14513a"/>
+            <stop offset="0.75" stop-color="#118b3c"/>
+            <stop offset="1" stop-color="#0ea342"/>
+          </linearGradient>
+          <filter id="page-header-bubble-inset-shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feComponentTransfer in="SourceAlpha">
+              <feFuncA type="table" tableValues="1 0"/>
+            </feComponentTransfer>
+            <feGaussianBlur stdDeviation="14"/>
+            <feOffset dx="0" dy="-10" result="offsetBlur"/>
+            <feFlood flood-color="#04130f" flood-opacity="0.55"/>
+            <feComposite in2="offsetBlur" operator="in"/>
+            <feComposite in2="SourceAlpha" operator="in"/>
+            <feMerge>
+              <feMergeNode in="SourceGraphic"/>
+              <feMergeNode/>
+            </feMerge>
+          </filter>
+        </defs>
+        <path filter="url(#page-header-bubble-inset-shadow)" fill="url(#page-header-bubble-gradient)" d="M1039.04,409.13C1039.04,183.18,806.45,0,519.52,0S0,183.18,0,409.13s232.6,409.13,519.52,409.13c40.84,0,80.58-3.71,118.7-10.73,11.12-2.05,22.49-.26,32.79,5.19l180.92,95.67-33.41-145.11c-2.28-9.92,1.66-20.38,9.35-24.85,128.09-74.51,211.16-194.26,211.16-329.3Z"/>
+      </svg><div class="page-header-bubble-fade" aria-hidden="true"></div><div class="page-header-bubble-content">
+        <p class="eyebrow">{{ eyebrow }}</p>
+        <h1>{{ heading }}</h1>
+        {% if tagline %}<p class="page-header-tagline">{{ tagline }}</p>{% endif %}
+      </div></div>
+  </section>
 </div>

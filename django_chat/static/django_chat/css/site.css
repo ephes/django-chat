@@ -1917,20 +1917,64 @@ body:has([data-show-hero-shell]) .brand {
 }
 
 .page-header {
-  --page-header-min-height: 21.875rem;
-  --page-header-shape-width: 91.875rem;
-  --page-header-shape-height: 41.5625rem;
-  --page-header-shape-offset: 21.875rem;
+  /* Subpage header — reuses the show-hero speech-bubble composition
+     but recoloured to a dark-green gradient (#14513a → #0ea342) and
+     filled with subpage-specific eyebrow + h1 + tagline. The bubble
+     pierces the sticky topbar (z 60 > topbar z 50). The SVG keeps its
+     native aspect ratio; extra content height grows the layout box and
+     shifts the bottom-anchored bubble downward instead of stretching
+     the shape. */
+
+  /* Above 660 px the bubble tracks the container width (capped at
+     66rem). Below 660 px it shrinks too — but only by a fraction of
+     the missing viewport (15 %), so the bubble stays slightly wider
+     than the viewport and gets gently clipped on both sides without
+     pushing the tail out of view. */
+  --page-header-bubble-w: min(
+    calc(100cqw + max(0px, calc((41.25rem - 100cqw) * 0.15))),
+    66rem
+  );
+  --page-header-bubble-h: calc(var(--page-header-bubble-w) * (908.39 / 1039.04));
+  /* Wide viewports: pull up by 50 % so the bubble's vertical centre
+     sits at the topbar's bottom edge. At the narrowest widths the
+     pull-up eases down to 15 %. Between 320 and 660 px it ramps in two
+     stages: enough lift above ~400 px to avoid an oversized lower
+     safety zone, while preserving the extra-low 320 px phone layout. */
+  --page-header-bubble-translate-up: calc(
+    var(--page-header-bubble-h) *
+    clamp(
+      0.15,
+      calc(
+        0.15
+        + 0.1 * clamp(0, (100cqw - 20rem) / 10rem, 1)
+        + 0.25 * clamp(0, (100cqw - 30rem) / 11.25rem, 1)
+      ),
+      0.5
+    )
+  );
+  /* Distance from the topbar's bottom edge to the content's first
+     line. Independent of `translate-up` — the padding formula on
+     `.page-header-bubble` compensates, so pulling the bubble up or
+     down does not move the text. */
+  --page-header-bubble-content-top:  2rem;
+  --page-header-bubble-content-bottom: calc(var(--page-header-bubble-h) * 0.1);
+  --page-header-bubble-fade-tail: 4rem;
+  --page-header-after-gap: 0px;
 
   position: relative;
   width: 100%;
-  min-height: var(--page-header-min-height);
   display: flex;
+  justify-content: center;
   align-items: flex-start;
-  color: var(--dc-paper);
-  overflow: hidden;
+  padding-block: 0 var(--page-header-after-gap);
+  /* Clip the bubble's horizontal overflow at the viewport edges below
+     660 px, where the bubble is wider than the container — keeps
+     overflow-y visible so the bubble can still pierce the topbar. */
+  overflow-x: clip;
+  overflow-y: visible;
   isolation: isolate;
 }
+
 
 /* Opt-in tinted backdrop. Pages that follow the page-header with a green
    section (currently `.sponsor-page`) wrap the include in this element so
@@ -1941,103 +1985,201 @@ body:has([data-show-hero-shell]) .brand {
   background: rgb(14 163 66 / 0.14);
 }
 
-/* Narrow viewports: a dark-green gradient pseudo behind the bubble ensures
-   any text that overflows the bubble's path sits on a dark backdrop instead
-   of the light tint. Dark green at the top fades to transparent so it
-   blends invisibly into the bubble's top colour (same #14513a). Z-index
-   -1 keeps it behind the bubble. Disabled at tablet+ where the bubble's
-   path covers the visible area well enough on its own. */
-@container page-header (max-width: 43.6875em) {
-  .page-header::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: linear-gradient(
-      to bottom,
-      var(--dc-accent-dark) 0%,
-      var(--dc-accent-dark) 25%,
-      rgb(20 81 58 / 0) 70%
-    );
-    pointer-events: none;
-  }
-}
-
-@container page-header (max-width: 55em) {
-  .page-header {
-    --page-header-min-height: 18.125rem;
-    --page-header-shape-width: 70.625rem;
-    --page-header-shape-height: 29.375rem;
-    --page-header-shape-offset: 16.625rem;
-  }
-}
-
-@container page-header (max-width: 28.125em) {
-  .page-header {
-    --page-header-shape-width: 56.25rem;
-    --page-header-shape-offset: 13.5rem;
-  }
-}
-
-.page-header-shape {
+/* Narrow-header fade sitting on the bubble composition (between SVG and
+   content). It paints the top of the header solid dark green and fades out
+   over the rounded bubble arch, hiding the gap that appears when the
+   aspect-ratio-stable bubble has to sit lower behind wrapped content. */
+.page-header-bubble-fade {
+  display: none;
   position: absolute;
-  width: var(--page-header-shape-width);
-  height: var(--page-header-shape-height);
-  /* Bottom-anchored so the bubble's curve always sits at the section
-     seam below and the bubble follows downward whenever content makes
-     the page header taller than the shape's intrinsic height — at
-     standard widths this matches the prior `top: var(...)` look because
-     min-height equals the shape's intended position; at narrower
-     widths it ensures the bubble keeps backing the text instead of
-     leaving a tint-coloured gap under its curve. */
-  bottom: 0;
-  /* Anchored to `var(--dc-container)`'s left edge: centered once the
-     viewport is wide enough, pinned to `--dc-gutter` below the
-     centering threshold. The breakpoint moves with `--dc-gutter`
-     (`--dc-container-max` + 2*gutter px) — no separate constant to update. */
-  left: calc(max(var(--dc-gutter), (100% - var(--dc-container-max)) / 2) - var(--page-header-shape-offset));
-  z-index: 0;
+  top: var(--page-header-bubble-translate-up);
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: var(--page-header-bubble-fade-tail);
+  background: linear-gradient(
+    to bottom,
+    #14513a 0%,
+    #14513a 35%,
+    rgb(20 81 58 / 0) 100%
+  );
   pointer-events: none;
 }
 
-.page-header-inner {
-  position: relative;
-  z-index: 2;
-  width: var(--dc-container);
-  margin: 0 auto;
-  /* `padding-bottom: 6.25rem` (100 px) is page-header chrome that
-     extends below the headline before content begins — deliberately
-     off-scale, much taller than any scale step. */
-  padding: var(--s2) 0 6.25rem;
+@container page-header (max-width: 37.5rem) {
+  .page-header-bubble-fade {
+    display: block;
+  }
 }
 
-.page-header .eyebrow,
-.page-header h1,
-.page-header-tagline {
+@container page-header (max-width: 34.375rem) {
+  .page-header {
+    --page-header-bubble-fade-tail: 7rem;
+  }
+}
+
+@container page-header (max-width: 32.5rem) {
+  .page-header {
+    --page-header-after-gap: clamp(
+      1.25rem,
+      calc(1.25rem + (32.5rem - 100cqw) * 0.08),
+      2.25rem
+    );
+    --page-header-bubble-fade-tail: clamp(
+      7rem,
+      calc(7rem + (32.5rem - 100cqw) * 0.8),
+      9.5rem
+    );
+  }
+}
+
+@container page-header (max-width: 25rem) {
+  .page-header {
+    --page-header-bubble-fade-tail: clamp(
+      10rem,
+      calc(10rem + (25rem - 100cqw) * 0.4),
+      11.5rem
+    );
+  }
+}
+
+.page-header-bubble {
+  position: relative;
+  z-index: 60;
+  width: var(--page-header-bubble-w);
+  /* The bubble is a flex item of `.page-header`; without this, the
+     default `flex-shrink: 1` would squash the bubble to the section
+     width on narrow viewports instead of letting it overflow and be
+     clipped by `overflow-x: clip`. */
+  flex-shrink: 0;
+  min-height: var(--page-header-bubble-h);
+  /* Pull the bubble up into the topbar area via negative margin (not
+     transform): the section sizes itself to the bubble's effective
+     bounds, so the section always ends exactly at the visible bubble
+     bottom — no explicit height needed. */
+  margin-top: calc(-1 * var(--page-header-bubble-translate-up));
+  /* Overscroll-safety clip — only the portion above doc Y 0 needs
+     clipping (the topbar covers [0, topbar-h] visually, and the
+     bubble is supposed to pierce into that band). */
+  clip-path: inset(
+    max(0px, calc(var(--page-header-bubble-translate-up) - var(--dc-topbar-h)))
+    -100vmax -100vmax -100vmax
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Content top-anchored (not centered): padding-top compensates the
+     translate-up so the content's first line lands
+     `--page-header-bubble-content-top` below the topbar at every
+     bubble width and every translate-up override. */
+  justify-content: flex-start;
+  padding-block:
+    calc(var(--page-header-bubble-translate-up) + var(--page-header-bubble-content-top))
+    var(--page-header-bubble-content-bottom);
+  /* Slim inline padding so the text column matches the bubble's
+     cutoff width near its widest point. */
+  padding-inline: 1.5%;
+}
+
+@container page-header (max-width: 20rem) {
+  .page-header {
+    /* At the narrowest phone widths, the headline/tagline wrap enough
+       that the original lower curve safety zone gets too thin. Increase
+       only the layout padding; the SVG remains aspect-ratio-stable and
+       bottom-anchored, so the whole bubble shape moves down with it. */
+    --page-header-bubble-content-bottom: max(
+      calc(var(--page-header-bubble-h) * 0.1),
+      5.5rem
+    );
+    --page-header-bubble-fade-tail: clamp(
+      11.5rem,
+      calc(11.5rem + (20rem - 100cqw) * 3.5),
+      15.75rem
+    );
+  }
+}
+
+.page-header-bubble > svg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: var(--page-header-bubble-h);
+  pointer-events: none;
+  /* Inner shadow lives inside the SVG (filter on the path itself) so it
+     follows the bubble's irregular silhouette; no outer drop-shadow. */
+}
+
+.page-header-bubble-content {
+  /* Own stacking context — the bubble's drop-shadow filter would
+     otherwise paint over the text. */
+  position: relative;
+  z-index: 2;
+  /* Constrain the whole content block to the visible viewport (minus
+     a small breathing margin), so the text never overflows the screen
+     when the bubble itself extends past the viewport edges. The
+     tagline below adds its own narrower cap for the rounded-side
+     protection. */
+  max-width: calc(100cqw - 2rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(.4rem, 1cqw, .9rem);
+  text-align: center;
   color: var(--dc-paper);
 }
 
-.page-header h1 {
-  margin: var(--s-3) 0 var(--s-1);
+
+.page-header-bubble-content .eyebrow {
+  margin: 0;
+  color: var(--dc-paper);
 }
 
-.page-header-tagline {
-  max-width: var(--dc-measure);
+.page-header-bubble-content h1 {
   margin: 0;
+  /* Larger than the site-wide --text-h1 token: the bubble has its own
+     generous canvas (caps at 66 rem) and the headline is the visual
+     anchor of the subpage hero, so it scales noticeably past --text-h1.
+     The mobile floor matches --text-h1's 2.4 rem floor so narrow
+     viewports stay aligned with the rest of the type scale; the
+     ≤30 rem override below shrinks the floor further. */
+  font-size: clamp(2.4rem, 3.5vw + 1.5rem, 4.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: var(--dc-paper);
+}
+
+/* Below 480 px the viewport-bound content container is narrower than the
+   site-wide --text-h1 floor (2.4rem) needs for "Sponsor Django Chat" on
+   one line. Reduce the floor here so the headline stays single-line —
+   that saves the ~2.5rem of content height that would otherwise push
+   the aspect-ratio-stable bubble farther down. */
+@container page-header (max-width: 30rem) {
+  .page-header-bubble-content h1 {
+    font-size: clamp(1.85rem, 6vw, var(--text-h1));
+  }
+}
+
+.page-header-bubble-content .page-header-tagline {
+  margin: 0;
+  /* Tighter of: classic reading measure or 60% of bubble width — so the
+     tagline wraps before its longest line touches the bubble's lower
+     rounded sides, while the h1 above can still span the full content
+     area on one line. */
+  max-width: min(var(--dc-measure), calc(var(--page-header-bubble-w) * 0.6));
   font-size: var(--text-md);
   line-height: var(--leading-body);
+  color: var(--dc-paper);
 }
 
-/* When the site-nav switches to its centered phone layout (≤ 540 px),
-   mirror that in the page header so the eyebrow, headline and tagline
-   read as a single centered column. */
-@container page-header (max-width: 33.75em) {
-  .page-header-inner {
-    text-align: center;
-  }
-
-  .page-header-tagline {
-    margin-inline: auto;
+/* Below 500 px the bubble overflows the viewport and the rounded sides
+   are off-screen, so the rounded-side cap is no longer needed — let
+   the tagline use the full content-column width (which is itself
+   capped at viewport minus 2 rem). */
+@container page-header (max-width: 31.1875rem) {
+  .page-header-bubble-content .page-header-tagline {
+    max-width: none;
   }
 }
 
