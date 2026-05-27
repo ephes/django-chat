@@ -230,8 +230,11 @@
 html {
   -webkit-font-smoothing: antialiased;
   text-size-adjust: 100%;
-  /* iOS Safari paints overscroll and URL-bar gaps with the root background. */
-  background-color: var(--dc-ink);
+  /* iOS Safari paints overscroll and URL-bar gaps with the root background.
+     Use --dc-surface-deep (not --dc-ink) so the rubber-band area at the
+     top and bottom of the page blends with the topbar and footer, which
+     paint the same dark-green surface. */
+  background-color: var(--dc-surface-deep);
   /* Mobile Safari does not reliably propagate `overflow-x: clip` from body to
      the viewport, which lets full-bleed sections (`.platform-band`, …) cause
      horizontal rubber-band scroll. Clip on the root too so the viewport itself
@@ -251,8 +254,8 @@ body {
      and pushed below the fold on long ones (no position: sticky needed).
      `100svh` (small viewport) is used instead of `100dvh` so the body does
      not extend behind the iOS Safari bottom toolbar/home-indicator zone —
-     the area below the body shows the dark `<html>` background instead of
-     the white paper-textured `.site-content`. */
+     the area below the body shows the `<html>` background instead of the
+     white paper-textured `.site-content`. */
   min-height: 100svh;
   /* Full-bleed sections (`.platform-band`, stats band, …) use `width: 100vw`,
      which includes the vertical scrollbar's width and thus overflows the body
