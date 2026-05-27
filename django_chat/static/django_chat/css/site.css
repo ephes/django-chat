@@ -590,8 +590,10 @@ body:has([data-show-hero-shell]) .brand {
   to   { opacity: 1; transform: translateX(0); }
 }
 
-/* Below 1200 cqw stack to two centered rows (nav above, brand below).
-   Threshold is literal because container queries don't accept var(). */
+/* Below 1200 cqw stack to two centered rows (brand above, nav below)
+   — DOM order is brand-first, so no explicit `order` is needed in
+   the stacked state. Threshold is literal because container queries
+   don't accept var(). */
 @container topbar (max-width: 75em) {
   .site-nav {
     flex-direction: column;
@@ -601,9 +603,6 @@ body:has([data-show-hero-shell]) .brand {
     height: 7.5rem;
     padding-block: 0.6rem;
   }
-
-  .nav-links { order: 0; }
-  .brand { order: 1; }
 }
 
 }  /* end @layer base */
