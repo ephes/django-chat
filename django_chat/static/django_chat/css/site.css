@@ -497,8 +497,7 @@ button.share-pill,
 
 .brand-name {
   font-weight: var(--weight-bold);
-  font-size: 1.2rem;
-  text-transform: uppercase;
+  font-size: 1.4rem;
   letter-spacing: 0.03em;
   /* Explicit so a:hover (which paints links --dc-accent-dark) can't
      pull the brand text into the dark-green hover colour. */
