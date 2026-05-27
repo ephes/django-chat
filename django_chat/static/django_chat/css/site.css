@@ -810,6 +810,20 @@ body:has([data-show-hero-shell]) .brand {
   width: var(--show-hero-bubble-w);
   aspect-ratio: 1039 / 908;
   transform: translateY(var(--show-hero-bubble-ty));
+  /* Clip the bubble at its in-flow top so its negative translateY can
+     never paint pixels above that line. In normal viewing the topbar
+     (z 50) already covers the bubble (z 5) in this area, so the
+     composition is unchanged. The fix is for overscroll-at-top: when
+     the sticky topbar momentarily detaches from the viewport edge
+     during a fast upward fling, the gap that briefly opens used to
+     expose the bubble's translated-up pixels. With this clip those
+     pixels simply don't exist, so the gap shows the canvas background
+     instead. Top inset only — sides/bottom kept large-negative so the
+     SVG's drop-shadow is preserved. */
+  clip-path: inset(
+    calc(-1 * var(--show-hero-bubble-ty))
+    -100vmax -100vmax -100vmax
+  );
   display: flex;
   flex-direction: column;
   align-items: center;
