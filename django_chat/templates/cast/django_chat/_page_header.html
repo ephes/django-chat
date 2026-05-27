@@ -1,19 +1,20 @@
 {# Reusable subpage header. Required vars: eyebrow, heading. Optional: tagline. #}
 {% comment %}
-  Keep .page-header-bubble's direct children with no whitespace between them
-  (svg + fade + content on one line). Flex would otherwise turn the
-  whitespace text nodes into anonymous flex items with inherited line-height,
-  which pushes the real content down by tens of pixels per gap.
+  The SVG <defs> use fixed IDs (`page-header-bubble-gradient`,
+  `page-header-bubble-inset-shadow`). The partial is assumed to be included
+  at most once per document; including it more than once would produce
+  duplicate IDs in the DOM.
 {% endcomment %}
 <div class="page-header-wrap">
   <section class="page-header">
-    <div class="page-header-bubble"><svg viewBox="0 0 1039.04 908.39" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <div class="page-header-bubble">
+      <svg viewBox="0 0 1039.04 908.39" aria-hidden="true" focusable="false">
         <defs>
           <linearGradient id="page-header-bubble-gradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#0b3b2a"/>
-            <stop offset="0.35" stop-color="#14513a"/>
+            <stop offset="0.35" style="stop-color: var(--dc-accent-dark)"/>
             <stop offset="0.75" stop-color="#118b3c"/>
-            <stop offset="1" stop-color="#0ea342"/>
+            <stop offset="1" style="stop-color: var(--dc-django)"/>
           </linearGradient>
           <filter id="page-header-bubble-inset-shadow" x="-10%" y="-10%" width="120%" height="120%">
             <feComponentTransfer in="SourceAlpha">
@@ -31,10 +32,13 @@
           </filter>
         </defs>
         <path filter="url(#page-header-bubble-inset-shadow)" fill="url(#page-header-bubble-gradient)" d="M1039.04,409.13C1039.04,183.18,806.45,0,519.52,0S0,183.18,0,409.13s232.6,409.13,519.52,409.13c40.84,0,80.58-3.71,118.7-10.73,11.12-2.05,22.49-.26,32.79,5.19l180.92,95.67-33.41-145.11c-2.28-9.92,1.66-20.38,9.35-24.85,128.09-74.51,211.16-194.26,211.16-329.3Z"/>
-      </svg><div class="page-header-bubble-fade" aria-hidden="true"></div><div class="page-header-bubble-content">
+      </svg>
+      <div class="page-header-bubble-fade" aria-hidden="true"></div>
+      <div class="page-header-bubble-content">
         <p class="eyebrow">{{ eyebrow }}</p>
         <h1>{{ heading }}</h1>
         {% if tagline %}<p class="page-header-tagline">{{ tagline }}</p>{% endif %}
-      </div></div>
+      </div>
+    </div>
   </section>
 </div>

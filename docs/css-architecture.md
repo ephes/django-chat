@@ -99,7 +99,7 @@ Examples:
   `--tracking-*`, `--font-*`): a small, self-contained type system; the
   prefix encodes the role (`--text-` for size, `--leading-` for
   line-height) and the short names compose well with component overrides.
-- **Component-local variables** (`--page-header-shape-width`,
+- **Component-local variables** (`--page-header-bubble-width`,
   `--episode-cover-size`, `--episode-sticky-gap`, `--player-*`,
   `--cluster-space`, `--cluster-justify`, `--stack-space`, `--grid-min`,
   `--grid-space`, `--platform-icon-url`, …): these are scoped to one
