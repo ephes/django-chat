@@ -32,17 +32,24 @@
       const prevTransform = brandLogo.style.transform;
       brandLogo.style.animationName = 'none';
       brandLogo.style.transform = 'none';
+      // Batch all layout reads together so they share one forced reflow.
+      // Previously the brand-style restore happened between the two
+      // getBoundingClientRect() calls, which invalidated layout and made
+      // the hero-logo read trigger a second flush (~24 ms on the
+      // staging Lighthouse run). Window.scrollY is read here too — once
+      // layout is current the read is free.
       const b = brandLogo.getBoundingClientRect();
+      const h = heroLogoImg.getBoundingClientRect();
+      const sy = window.scrollY;
       brandLogo.style.transform = prevTransform;
       brandLogo.style.animationName = prevAnim;
 
-      const h = heroLogoImg.getBoundingClientRect();
       if (!b.height || !h.height) return;
 
       // Brand is sticky-pinned at scroll-0; hero logo is in flow.
       // Normalise the hero rect to a scroll-0 document coord. Keyframe
       // origin is `left center` and translate runs before scale.
-      const heroTop = h.top + window.scrollY;
+      const heroTop = h.top + sy;
       const scale = h.height / b.height;
       const tx = h.left - b.left;
       const ty = (heroTop + h.height / 2) - (b.top + b.height / 2);
@@ -158,9 +165,16 @@
     };
 
     // Target (tx,ty) set by the input handler; current (cx,cy) lerped
-    // toward target each tick. Both in -1..+1 range.
+    // toward target each tick. Both in -1..+1 range. `sampleTarget` is
+    // a per-frame hook the coarse path uses to read `scrollY` inside
+    // the rAF tick — reading scroll position from a scroll-event
+    // handler forces a layout flush whenever the previous tick has
+    // dirtied styles (the parallax writes 6 CSS vars on the shell),
+    // and Lighthouse flagged it at ~14 ms. Inside the rAF the browser
+    // has already laid out for the frame, so the read is free.
     let tx = 0, ty = 0, cx = 0, cy = 0;
     let running = false;
+    let sampleTarget = null;
 
     const apply = () => {
       const set = (name, v) => shell.style.setProperty(name, v.toFixed(3) + 'cqw');
@@ -173,6 +187,7 @@
     };
 
     const tick = () => {
+      if (sampleTarget) sampleTarget();
       cx += (tx - cx) * 0.08;
       cy += (ty - cy) * 0.08;
       apply();
@@ -201,14 +216,18 @@
     } else {
       // Coarse pointer / touch: scroll-linked Y drift. Maps the first
       // ~0.8 viewport-heights of scroll to 0..+1 so each layer drifts
-      // in its own magnitude direction. X stays at rest.
-      const onScroll = () => {
+      // in its own magnitude direction. X stays at rest. Sample scrollY
+      // inside the rAF tick (via sampleTarget) instead of in the scroll
+      // event handler — see `sampleTarget` comment above. The scroll
+      // listener only kicks the rAF; the tick reads scrollY when layout
+      // is already current.
+      sampleTarget = () => {
         ty = Math.min(1, scrollY / Math.max(innerHeight * 0.8, 1));
         tx = 0;
-        start();
       };
-      addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
+      addEventListener('scroll', start, { passive: true });
+      sampleTarget();
+      start();
     }
   }
 
