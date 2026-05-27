@@ -472,7 +472,10 @@ button.share-pill,
   gap: var(--s-1);
   height: var(--dc-topbar-h);
   padding-block: var(--s-2);
-  padding-inline: clamp(1rem, 3cqw, 2rem);
+  /* Low floor lets the nav-links use almost the full topbar width on
+     phones (≤~340 px); ramps up to a comfortable 2 rem on wide
+     viewports. */
+  padding-inline: clamp(0.4rem, 3cqw, 2rem);
   margin: 0;
 }
 
@@ -486,24 +489,43 @@ button.share-pill,
 }
 
 .brand-mark {
-  height: var(--show-hero-brand-logo-h, 3rem);
+  height: var(--show-hero-brand-logo-h, 3.8rem);
   width: auto;
   display: block;
+  margin-bottom: -0.5rem;
 }
 
 .brand-name {
   font-weight: var(--weight-bold);
-  font-size: 1.05rem;
-  letter-spacing: -.01em;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  /* Explicit so a:hover (which paints links --dc-accent-dark) can't
+     pull the brand text into the dark-green hover colour. */
+  color: var(--dc-paper);
+}
+
+/* Mirror the nav-links hover treatment on the brand text so the
+   topbar's interactive states feel consistent. The text-shadow
+   thickens the brand-green glyphs without changing the layout box. */
+.brand:hover .brand-name,
+.brand:focus-visible .brand-name {
+  color: var(--dc-django);
+  text-shadow: 0 0 .5px currentColor;
 }
 
 .nav-links {
   display: flex;
-  gap: clamp(1rem, 2.5cqw, 2rem);
+  gap: clamp(0.5rem, 2.5cqw, 2rem);
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 0.95rem;
+  /* Hold full size down to ~480 px topbar width and then shrink
+     gently so all three links still fit on a 320 px viewport. The
+     reduced .site-nav padding-inline above provides most of the
+     extra room — the font only needs to give up a sliver.
+     Letter-spacing is in `em`, so it tracks the font automatically. */
+  font-size: clamp(0.82rem, 1.5cqw + 0.5rem, 0.95rem);
   font-weight: var(--weight-medium);
   letter-spacing: 0.04em;
 }
@@ -2605,27 +2627,18 @@ body:has([data-show-hero-shell]) .brand {
   font-size: clamp(1rem, 17cqi, 2.2rem);
   line-height: var(--leading-flat);
   color: var(--dc-accent-dark);
-  opacity: 1;
-  transform: scale(1);
-  transition: opacity 600ms ease-out 200ms, transform 600ms ease-out 200ms;
 }
 
+/* JS-enabled animation surface: the ring fill starts empty and fills on
+   intersection. The number text is visible from page load (no opacity
+   or scale transition) so the section's layout doesn't pop in — only
+   the ring fill and the count-up below animate. */
 .has-js-stats .sponsor-stat .sponsor-stat-ring-fill {
   stroke-dashoffset: 276.46;
 }
 
-.has-js-stats .sponsor-stat .sponsor-stat-value {
-  opacity: 0;
-  transform: scale(0.85);
-}
-
 .has-js-stats .sponsor-stat.is-revealed .sponsor-stat-ring-fill {
   stroke-dashoffset: 0;
-}
-
-.has-js-stats .sponsor-stat.is-revealed .sponsor-stat-value {
-  opacity: 1;
-  transform: scale(1);
 }
 
 .sponsor-stat-label {

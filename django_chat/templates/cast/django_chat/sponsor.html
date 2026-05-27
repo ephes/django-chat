@@ -43,6 +43,19 @@
           </ul>
         </div>
       </section>
+      <script>
+        // Pre-paint reset: when JS animation is enabled, swap each stat
+        // value's textContent to "0" (preserving prefix/suffix) before
+        // the browser paints, so the count-up on intersection doesn't
+        // visibly jump from the SSR final value down to 0 first.
+        if (document.documentElement.classList.contains('has-js-stats')) {
+          document.querySelectorAll('.sponsor-stat-value').forEach(function (el) {
+            var raw = el.dataset.statValue || el.textContent;
+            var m = raw.match(/^([^\d-]*)(-?[\d,.]+)(.*)$/);
+            if (m) el.textContent = m[1] + '0' + m[3];
+          });
+        }
+      </script>
     {% endif %}
 
     {% if slots %}
@@ -148,5 +161,5 @@
 
 {% block javascript %}
   {{ block.super }}
-  <script defer src="{% static 'django_chat/js/sponsor-stats.js' %}?v=sponsor-stats-1"></script>
+  <script defer src="{% static 'django_chat/js/sponsor-stats.js' %}?v=sponsor-stats-3"></script>
 {% endblock javascript %}
