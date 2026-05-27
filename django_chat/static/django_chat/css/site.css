@@ -2183,6 +2183,10 @@ body:has([data-show-hero-shell]) .brand {
 
 .page-header-bubble-content .page-header-tagline {
   margin: 0;
+  /* Extra breathing room between the h1 and the tagline at wider
+     widths — adds on top of the content's flex `gap`. Mobile floors
+     to 0 (the gap alone is fine for narrow viewports). */
+  margin-top: clamp(0px, 1.1cqw - 0.3rem, 0.65rem);
   /* Tighter of: classic reading measure or 60 % of bubble width — so
      the tagline wraps before its longest line touches the bubble's
      lower rounded sides, while the h1 above can still span the full
