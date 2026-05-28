@@ -775,8 +775,6 @@ body:has([data-show-hero-shell]) .brand {
      parseFloat(getComputedStyle(h1).fontSize). */
   --show-hero-h1-text-ratio: 5.568;
 
-  --show-hero-logo-tx:          calc(-30% - 30% * clamp(0, (100cqw - 400px) / 420px, 1) - 85% * clamp(0, (100cqw - 820px) / 580px, 1) - 14.5% * clamp(0, (100cqw - 1400px) / 520px, 1));
-  --show-hero-logo-ty:          calc(2vh + 2vh * clamp(0, (100cqw - 380px) / 357px, 1) - 2vh * clamp(0, (100cqw - 737px) / 287px, 1));
   /* Monotonic, width-only size curve (no vh/vw mixing, so it never grows as
      the viewport shrinks and isn't height-dependent). Each ramp adds a
      positive delta as width grows, with shrinking slope toward the wide end:
@@ -1134,14 +1132,21 @@ body:has([data-show-hero-shell]) .brand {
 }
 .show-hero-subscribe svg circle { fill: currentColor; stroke: none; }
 
-/* Green logo bubble — pierces the sticky topbar (z 60 > 50). The
-   side-by-side desktop rule derives X/Y from the H1 width and bubble
-   Y offset; the mobile stack uses the anchored logo-tx/-ty. */
+/* Green logo bubble — pierces the sticky topbar (z 60 > 50).
+   The transform here is the FALLBACK for browsers without basic-shape
+   offset-path (mainly older iOS Safari): a static translate fitted to the
+   measured offset-path flight (dx ≈ -22cqw phone → -29cqw mid; dy ≈ -4cqw
+   desktop → +13cqw phone) so the logo lands in roughly the same spot and
+   never cuts into the bubble content. The @supports (offset-path) rule below
+   overrides this with the continuous ellipse ride where supported. */
 .show-hero-logo-bubble {
   position: relative;
   width: var(--show-hero-logo-w);
   aspect-ratio: 442 / 399;
-  transform: translate(var(--show-hero-logo-tx), var(--show-hero-logo-ty));
+  transform: translate(
+    calc(-22cqw - 7cqw * clamp(0, (100cqw - 393px) / 631px, 1) + 2cqw * clamp(0, (100cqw - 1024px) / 656px, 1)),
+    calc(13cqw - 17cqw * clamp(0, (100cqw - 393px) / 1047px, 1))
+  );
   z-index: 60;
 }
 .show-hero-logo-bubble img {
@@ -1198,34 +1203,8 @@ body:has([data-show-hero-shell]) .brand {
   .show-hero-center {
     width: 100%;
   }
-  /* Anchor the logo to the bubble's top edge: its vertical offset is
-     derived from the bubble's own translate so the logo's bottom always
-     overlaps the bubble top by a constant amount (~2rem) — it pops out the
-     same way at every width and rises with the bubble, instead of a fixed
-     counter-offset that let it sink into the bubble on tablet.
-     logo height = --show-hero-logo-w * 399/442. */
-  .show-hero-logo-bubble {
-    translate: none;
-    transform: translate(
-      var(--show-hero-logo-tx),
-      calc(var(--show-hero-bubble-ty) + 2rem - var(--show-hero-logo-w) * 399 / 442)
-    );
-  }
-}
-
-/* Above 1200cqw: derive the logo position from the H1 width + bubble Y,
-   keeping logo and bubble centers exactly 8.5rem apart at every width. */
-@container show-hero (min-width: 75.0625em) {
-  .show-hero-logo-bubble {
-    transform: translate(
-      calc(-0.5 * var(--show-hero-h1) * var(--show-hero-h1-text-ratio) - 2vw - 0.5 * var(--show-hero-logo-w) + 1rem),
-      calc(
-        var(--show-hero-bubble-ty)
-        - 6.5rem
-        + 0.5 * (var(--show-hero-bubble-w) * 908 / 1039 - var(--show-hero-logo-w) * 399 / 442)
-      )
-    );
-  }
+  /* (Logo position is the static fallback on .show-hero-logo-bubble, overridden
+     by the offset-path ride below where supported — no per-zone rule needed.) */
 }
 
 /* CALIBRATION: ride the logo along an ellipse that approximates the white
