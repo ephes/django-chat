@@ -4,6 +4,7 @@
   const shell = document.querySelector('[data-show-hero-shell]');
   const brand = document.querySelector('[data-show-hero-brand]');
   const brandLogo = document.querySelector('[data-show-hero-brand-logo]');
+  const brandFly = document.querySelector('[data-show-hero-brand-fly]');
   const brandName = document.querySelector('[data-show-hero-brand-name]');
   const heroLogo = document.querySelector('[data-show-hero-hero-logo]');
   const heroLogoImg = heroLogo && heroLogo.querySelector('img');
@@ -14,62 +15,58 @@
     CSS.supports('animation-timeline', 'scroll(root block)');
 
   // ---- 1. Auto-fit ----
-  // Measure the hero logo + the topbar brand slot and write the exact
-  // blown-up start geometry of the flying logo into :root. Both the CSS
-  // @supports path and the polyfill below read these vars so the morph
-  // pixel-aligns with the hero logo at every viewport. Runs on every
-  // hero page (subpages early-return on the heroLogo guard).
-  if (heroLogo && brandLogo && heroLogoImg) {
+  // Measure the crisp fly-twin's natural (render-size) box, the hero logo,
+  // and the docked mark's slot, then write the flight's two endpoints into
+  // :root: `from` overlays the hero logo (the twin scaled DOWN to match),
+  // `to` overlays the docked mark. Both the CSS @supports path and the
+  // polyfill below read these so the flight pixel-aligns at every viewport.
+  // Runs on every hero page (subpages early-return on the heroLogo guard).
+  if (heroLogo && brandLogo && brandFly && heroLogoImg) {
     const fit = () => {
-      // Drop the CSS animation AND the polyfill's inline transform for
-      // the read so getBoundingClientRect() sees the brand at its
-      // un-morphed natural slot. Without clearing the transform, a refit
-      // mid-polyfill (font swap, ResizeObserver) would measure the
-      // already-flying brand and rewrite the morph vars to near-identity,
-      // collapsing the next scroll tick onto the docked position.
-      // Preserve and restore both so the polyfill state survives the read.
-      const prevAnim = brandLogo.style.animationName;
-      const prevTransform = brandLogo.style.transform;
-      brandLogo.style.animationName = 'none';
-      brandLogo.style.transform = 'none';
+      // Drop the fly's flight transform for the read so getBoundingClientRect()
+      // sees its un-morphed natural box. Preserve/restore so a refit mid-flight
+      // (font swap, ResizeObserver) doesn't measure the already-flying twin.
+      const prevAnim = brandFly.style.animationName;
+      const prevTransform = brandFly.style.transform;
+      brandFly.style.animationName = 'none';
+      brandFly.style.transform = 'none';
       // Batch all layout reads together so they share one forced reflow.
-      // Previously the brand-style restore happened between the two
-      // getBoundingClientRect() calls, which invalidated layout and made
-      // the hero-logo read trigger a second flush (~24 ms on the
-      // staging Lighthouse run). Window.scrollY is read here too — once
-      // layout is current the read is free.
-      const b = brandLogo.getBoundingClientRect();
-      const h = heroLogoImg.getBoundingClientRect();
+      const f = brandFly.getBoundingClientRect();   // fly twin, render size
+      const b = brandLogo.getBoundingClientRect();  // docked mark slot
+      const h = heroLogoImg.getBoundingClientRect(); // hero logo (offset-path)
       const sy = window.scrollY;
-      brandLogo.style.transform = prevTransform;
-      brandLogo.style.animationName = prevAnim;
+      brandFly.style.transform = prevTransform;
+      brandFly.style.animationName = prevAnim;
 
-      if (!b.height || !h.height) return;
+      if (!f.height || !h.height || !b.height) return;
 
-      // Brand is sticky-pinned at scroll-0; hero logo is in flow.
-      // Normalise the hero rect to a scroll-0 document coord. Keyframe
-      // origin is `left center` and translate runs before scale.
+      // Fly twin is sticky-pinned at scroll-0; hero logo is in flow — normalise
+      // its rect to a scroll-0 doc coord. Origin is `left center`, so align
+      // left edges (x) and vertical centres (y); scale is the height ratio.
       const heroTop = h.top + sy;
-      const scale = h.height / b.height;
-      const tx = h.left - b.left;
-      const ty = (heroTop + h.height / 2) - (b.top + b.height / 2);
+      const fromScale = h.height / f.height;
+      const fromTx = h.left - f.left;
+      const fromTy = (heroTop + h.height / 2) - (f.top + f.height / 2);
+      const toScale = b.height / f.height;
+      const toTx = b.left - f.left;
+      const toTy = (b.top + b.height / 2) - (f.top + f.height / 2);
 
-      root.style.setProperty('--show-hero-morph-scale', scale.toFixed(4));
-      root.style.setProperty('--show-hero-morph-tx', tx.toFixed(1) + 'px');
-      root.style.setProperty('--show-hero-morph-ty', ty.toFixed(1) + 'px');
+      root.style.setProperty('--show-hero-fly-from-scale', fromScale.toFixed(4));
+      root.style.setProperty('--show-hero-fly-from-tx', fromTx.toFixed(1) + 'px');
+      root.style.setProperty('--show-hero-fly-from-ty', fromTy.toFixed(1) + 'px');
+      root.style.setProperty('--show-hero-fly-to-scale', toScale.toFixed(4));
+      root.style.setProperty('--show-hero-fly-to-tx', toTx.toFixed(1) + 'px');
+      root.style.setProperty('--show-hero-fly-to-ty', toTy.toFixed(1) + 'px');
     };
 
     fit();
     addEventListener('load', fit);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
 
-    // ResizeObserver on the shell covers cqw-driven layout changes
-    // (hero-logo resizes with the container) plus parent resizes that
-    // wouldn't fire a window resize. heroLogoImg is observed directly to
-    // catch font-load reflows of the bubble. brandLogo is NOT observed:
-    // its height is static (`3rem` literal, no panel slider in prod), so
-    // a watcher would never fire and only burns one ObserverEntry slot.
-    // rAF-throttled to one fit per frame.
+    // ResizeObserver on the shell covers cqw-driven layout changes (hero logo
+    // + docked mark resize with the container) plus parent resizes that
+    // wouldn't fire a window resize. heroLogoImg is observed directly to catch
+    // font-load reflows. rAF-throttled to one fit per frame.
     let pending = false;
     const schedule = () => {
       if (pending) return;
@@ -82,23 +79,32 @@
   }
 
   // ---- 2. Scroll-morph polyfill ----
-  // Drives the morph on browsers without native
-  // `animation-timeline: scroll(root)` — mainly iOS Safari < 26. Reads
-  // the same CSS vars as the @supports CSS block so timing + start
-  // geometry stay consistent. No-ops when reduced-motion is on or
-  // native scroll-driven animations are supported.
-  if (!hasNativeTimeline && !reduced && brand && brandLogo && brandName && heroLogo) {
-    // Mirror the @supports baseline: brand visible, hero logo hidden,
-    // CSS keyframe animations off (the polyfill drives transform +
-    // opacity directly). transform-origin: left center must match the
-    // @supports rule so the auto-fit-measured offset + scale align the
-    // flying logo with the hero logo at scroll=0.
+  // Drives the flight on browsers without native
+  // `animation-timeline: scroll(root)` — mainly iOS Safari < 26. Reads the
+  // same CSS vars as the @supports block. Activates the fly twin inline (the
+  // @supports layout rules didn't apply here) and drives its transform plus
+  // the fly-out / dock-in opacity hand-off. No-ops under reduced-motion or
+  // when native scroll-driven animations are supported.
+  if (!hasNativeTimeline && !reduced && brand && brandLogo && brandFly && brandName && heroLogo) {
     brand.style.visibility = 'visible';
     brand.style.pointerEvents = 'auto';
     heroLogo.style.visibility = 'hidden';
-    brandLogo.style.animationName = 'none';
     brandName.style.animationName = 'none';
-    brandLogo.style.transformOrigin = 'left center';
+    // Mirror the @supports fly-twin layout (absolute, render-tall, centred).
+    Object.assign(brandFly.style, {
+      display: 'block',
+      position: 'absolute',
+      left: '0',
+      top: '50%',
+      height: 'var(--show-hero-brand-render-h, 18rem)',
+      marginTop: 'calc(var(--show-hero-brand-render-h, 18rem) / -2)',
+      width: 'auto',
+      transformOrigin: 'left center',
+      pointerEvents: 'none',
+      zIndex: '61',
+    });
+    // Mark starts hidden; the hand-off fades it in as the twin fades out.
+    brandLogo.style.opacity = '0';
 
     const readPx = (name, fallbackPx) => {
       const v = getComputedStyle(root).getPropertyValue(name).trim();
@@ -111,21 +117,28 @@
 
     const update = () => {
       const vh = innerHeight / 100;
-      const mS = readPx('--show-hero-morph-start',      0)  * vh;
-      const mE = readPx('--show-hero-morph-end',       30) * vh;
+      const mS = readPx('--show-hero-morph-start',       0) * vh;
+      const mE = readPx('--show-hero-morph-end',        30) * vh;
+      const dS = readPx('--show-hero-morph-dock-start', 27) * vh;
       const tS = readPx('--show-hero-morph-text-start', 25) * vh;
       const tE = readPx('--show-hero-morph-text-end',   32) * vh;
       const s = scrollY;
-      const p = ease(ramp(s, mS, mE));
-      const q = ease(ramp(s, tS, tE));
+      const p = ease(ramp(s, mS, mE));   // flight progress
+      const d = ramp(s, dS, mE);         // hand-off progress (linear)
+      const q = ease(ramp(s, tS, tE));   // brand-name progress
 
-      const scale0 = readPx('--show-hero-morph-scale', 5.8);
-      const tx0    = readPx('--show-hero-morph-tx',    0);
-      const ty0    = readPx('--show-hero-morph-ty',    0);
-      const cs = scale0 + (1 - scale0) * p;
-      const cx = tx0    + (0 - tx0)    * p;
-      const cy = ty0    + (0 - ty0)    * p;
-      brandLogo.style.transform = `translate(${cx}px, ${cy}px) scale(${cs})`;
+      const fS = readPx('--show-hero-fly-from-scale', 1);
+      const fTx = readPx('--show-hero-fly-from-tx', 0);
+      const fTy = readPx('--show-hero-fly-from-ty', 0);
+      const tScale = readPx('--show-hero-fly-to-scale', 0.16);
+      const tTx = readPx('--show-hero-fly-to-tx', 0);
+      const tTy = readPx('--show-hero-fly-to-ty', 0);
+      const cs = fS  + (tScale - fS)  * p;
+      const cx = fTx + (tTx - fTx) * p;
+      const cy = fTy + (tTy - fTy) * p;
+      brandFly.style.transform = `translate(${cx}px, ${cy}px) scale(${cs})`;
+      brandFly.style.opacity = (1 - d).toFixed(3);
+      brandLogo.style.opacity = d.toFixed(3);
 
       brandName.style.opacity = q;
       brandName.style.transform = `translateX(${-0.6 * (1 - q)}rem)`;
@@ -138,7 +151,7 @@
     };
     addEventListener('scroll', schedule, { passive: true });
     addEventListener('resize', schedule);
-    // Wait one frame so auto-fit writes --show-hero-morph-* first.
+    // Wait one frame so auto-fit writes --show-hero-fly-* first.
     requestAnimationFrame(update);
   }
 
