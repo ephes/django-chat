@@ -466,6 +466,9 @@ button.share-pill,
   border-bottom: 1px solid var(--dc-django);
   container-type: inline-size;
   container-name: topbar;
+  /* Render size of the scroll-morph fly-twin (.brand-mark-fly); it scales
+     DOWN from this along the flight, which keeps it crisp. */
+  --show-hero-brand-render-h: 18rem;
 }
 
 .site-nav {
@@ -497,9 +500,6 @@ button.share-pill,
 
 .brand-mark-fly {
   display: none;
-}
-.site-header {
-  --show-hero-brand-render-h: 18rem;
 }
 
 .brand-name {
@@ -681,7 +681,6 @@ body:has([data-show-hero-shell]) .brand {
   --show-hero-accent: #41fcb9;
   --show-hero-listen-up-size: clamp(3rem, 23cqw, 29rem);
   --show-hero-ease-out: cubic-bezier(.2, .7, .2, 1);
-  --show-hero-h1-text-ratio: 5.568;
   --show-hero-logo-w:           clamp(8rem, calc(9rem + 3.5rem * clamp(0, (100cqw - 400px) / 368px, 1) + 3.5rem * clamp(0, (100cqw - 768px) / 512px, 1) + 3rem * clamp(0, (100cqw - 1280px) / 640px, 1)), 19rem);
   --show-hero-bubble-ty:        calc(12.25vh + (15.5vh - 12.25vh) * clamp(0, (100cqw - 380px) / 20px, 1) + (11vh - 15.5vh) * clamp(0, (100cqw - 400px) / 420px, 1) + (2.5vh - 11vh) * clamp(0, (100cqw - 820px) / 204px, 1) + (-10vw - 2.5vh) * clamp(0, (100cqw - 1024px) / 376px, 1) + (-12rem - -10vw) * clamp(0, (100cqw - 1400px) / 520px, 1));
   --show-hero-bubble-w:         max(22rem, min(calc(var(--show-hero-h1) * (7.5 - 0.7 * clamp(0, (1500px - 100cqw) / 600px, 1))), calc(100cqw - 2 * var(--dc-gutter) + 10px)));
@@ -695,7 +694,6 @@ body:has([data-show-hero-shell]) .brand {
   --show-hero-ep-tracking:      calc(-0.045em + 0.085em * clamp(0, (100cqw - 820px) / 1100px, 1));
   --show-hero-ep-right:         calc(5.3cqw + (1.5rem - 5.3cqw) * clamp(0, (100cqw - 1024px) / 896px, 1));
   --show-hero-ep-bottom:        calc(16cqw + (1.5rem - 16cqw) * clamp(0, (100cqw - 1024px) / 6px, 1));
-  --show-hero-min-h:            max(calc(100svh - var(--dc-topbar-h)), calc(50rem * clamp(0, (100cqw - 400px) / 420px, 1)));
   --show-hero-descend:          calc(clamp(0px, (100svh - var(--dc-topbar-h) - 950px) * 0.65, 15rem) * clamp(0, (100cqw - 1200px) / 240px, 1));
   --show-hero-mobile-lift:      calc(2.5vh * clamp(0, (640px - 100cqw) / 220px, 1));
   --show-hero-logo-od:          calc(53% + 14% * clamp(0, (1500px - 100cqw) / 1100px, 1));
@@ -708,7 +706,7 @@ body:has([data-show-hero-shell]) .brand {
   align-items: center;
   overflow-x: clip;
   overflow-y: visible;
-  min-height: min(var(--show-hero-min-h), calc(100svh - var(--dc-topbar-h)));
+  min-height: calc(100svh - var(--dc-topbar-h));
   max-height: calc(100svh - var(--dc-topbar-h));
   padding-block: 0 clamp(5rem, 14vh, 11rem);
   color: var(--dc-paper);
@@ -942,7 +940,9 @@ body:has([data-show-hero-shell]) .brand {
 }
 .show-hero-subscribe svg circle { fill: currentColor; stroke: none; }
 
-/* Static fallback for browsers without basic-shape offset-path support. */
+/* Base logo box. The transform is the static fallback (translate fitted to the
+   measured ellipse ride); the @supports rule below overrides it with the real
+   offset-path ride where basic-shape offset-path is supported. */
 .show-hero-logo-bubble {
   position: relative;
   width: var(--show-hero-logo-w);
