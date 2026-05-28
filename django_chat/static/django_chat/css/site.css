@@ -549,11 +549,11 @@ body:has([data-show-hero-shell]) .brand {
 
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: scroll(root block)) {
-    body:has([data-show-hero-shell]) .brand {
+    body:has([data-show-hero-shell][data-show-hero-morph]) .brand {
       visibility: visible;
       pointer-events: auto;
     }
-    body:has([data-show-hero-shell]) .brand-mark {
+    body:has([data-show-hero-shell][data-show-hero-morph]) .brand-mark {
       opacity: 0;
       animation-name: show-hero-mark-dock-in;
       animation-fill-mode: both;
@@ -563,7 +563,7 @@ body:has([data-show-hero-shell]) .brand {
         var(--show-hero-morph-dock-start, 27vh)
         var(--show-hero-morph-end, 30vh);
     }
-    body:has([data-show-hero-shell]) .brand-mark-fly {
+    body:has([data-show-hero-shell][data-show-hero-morph]) .brand-mark-fly {
       display: block;
       position: absolute;
       left: 0;
@@ -582,7 +582,7 @@ body:has([data-show-hero-shell]) .brand {
         var(--show-hero-morph-start, 0vh) var(--show-hero-morph-end, 30vh),
         var(--show-hero-morph-dock-start, 27vh) var(--show-hero-morph-end, 30vh);
     }
-    body:has([data-show-hero-shell]) .brand-name {
+    body:has([data-show-hero-shell][data-show-hero-morph]) .brand-name {
       animation-name: show-hero-brand-text;
       animation-fill-mode: both;
       animation-timing-function: cubic-bezier(.2, .7, .2, 1);
@@ -591,7 +591,7 @@ body:has([data-show-hero-shell]) .brand {
         var(--show-hero-morph-text-start, 25vh)
         var(--show-hero-morph-text-end, 32vh);
     }
-    body:has([data-show-hero-shell]) .show-hero-logo-bubble {
+    body:has([data-show-hero-shell][data-show-hero-morph]) .show-hero-logo-bubble {
       visibility: hidden;
     }
   }
@@ -1205,9 +1205,10 @@ body:has([data-show-hero-shell]) .brand {
    dodge the em-in-container-query gotcha. */
 @container (max-width: 600px) {
   .platform-band-links {
+    --platform-mobile-gap: clamp(0.875rem, 3vw, 1.125rem);
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: clamp(0.875rem, 3vw, 1.125rem);
+    gap: var(--platform-mobile-gap);
   }
   .platform-band-links a {
     min-width: 0;
@@ -1215,11 +1216,12 @@ body:has([data-show-hero-shell]) .brand {
   }
   /* Odd count ⇒ the last link wraps alone. Span both columns but hold it to a
      single column's width and centre it, so it stays the same size as the
-     others instead of sitting left in column 1. */
+     others instead of sitting left in column 1. Width uses the same gap as the
+     grid so it matches the paired columns exactly. */
   .platform-band-links a:last-child:nth-child(odd) {
     grid-column: 1 / -1;
     justify-self: center;
-    width: calc((100% - var(--cluster-space)) / 2);
+    width: calc((100% - var(--platform-mobile-gap)) / 2);
   }
 }
 

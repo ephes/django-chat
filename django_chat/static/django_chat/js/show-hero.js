@@ -30,7 +30,7 @@
       brandFly.style.transform = prevTransform;
       brandFly.style.animationName = prevAnim;
 
-      if (!f.height || !h.height || !b.height) return;
+      if (!f.height || !h.height || !b.height) return false;
 
       // The hero mark is in flow; normalize it to a scroll-0 document position.
       const heroTop = h.top + sy;
@@ -47,18 +47,33 @@
       root.style.setProperty('--show-hero-fly-to-scale', toScale.toFixed(4));
       root.style.setProperty('--show-hero-fly-to-tx', toTx.toFixed(1) + 'px');
       root.style.setProperty('--show-hero-fly-to-ty', toTy.toFixed(1) + 'px');
+      return true;
     };
 
-    fit();
-    addEventListener('load', fit);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    // The [data-show-hero-morph] marker gates the @supports scroll-morph AND
+    // lays out .brand-mark-fly (display:block) so fit() can measure it. Set it
+    // for the attempt, then roll it back if measuring failed (and it wasn't
+    // already established) — so a no-JS / pre-measure render keeps the static
+    // hero fallback instead of flashing an oversized, unmeasured fly. Marker
+    // and fit run in one task, so a successful first reveal never paints the
+    // intermediate state.
+    const reveal = () => {
+      if (!shell) { fit(); return; }
+      const established = shell.hasAttribute('data-show-hero-morph');
+      if (!established) shell.setAttribute('data-show-hero-morph', '');
+      if (!fit() && !established) shell.removeAttribute('data-show-hero-morph');
+    };
 
-    // rAF-throttle ResizeObserver bursts to one fit per frame.
+    reveal();
+    addEventListener('load', reveal);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(reveal);
+
+    // rAF-throttle ResizeObserver bursts to one reveal per frame.
     let pending = false;
     const schedule = () => {
       if (pending) return;
       pending = true;
-      requestAnimationFrame(() => { pending = false; fit(); });
+      requestAnimationFrame(() => { pending = false; reveal(); });
     };
     const ro = new ResizeObserver(schedule);
     if (shell) ro.observe(shell);
