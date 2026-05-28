@@ -453,24 +453,16 @@ button.share-pill,
   margin: 0 auto;
 }
 
-/* Sticky site topbar. Container-query host so the mobile 2-row breakpoint
-   resolves against the bar's own inline size (matches narrow embeds and
-   zoom). The brand stays visible by default; on the show-hero page the
-   morph script in show-hero.js takes over to fly the hero logo into the
-   brand slot — without JS the brand simply remains static. */
+/* Sticky site topbar. On the episode index, show-hero.js can animate the hero
+   logo into the brand slot; without JS the static brand remains usable. */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 50;
   background: var(--dc-surface-deep);
   color: var(--dc-paper);
-  /* Ubuntu + browser-default line-height cascade to brand-name and
-     nav-links, mirroring the sandbox's body-level typography. Without
-     `line-height: normal` here the brand-name span inherits body's
-     --leading-body (1.55) and renders ~7px taller than the sandbox. */
   font-family: var(--font-heading);
   line-height: normal;
-  /* Brand-green hairline under the topbar. */
   border-bottom: 1px solid var(--dc-django);
   container-type: inline-size;
   container-name: topbar;
@@ -483,9 +475,6 @@ button.share-pill,
   gap: var(--s-1);
   height: var(--dc-topbar-h);
   padding-block: var(--s-2);
-  /* Low floor lets the nav-links use almost the full topbar width on
-     phones (≤~340 px); ramps up to a comfortable 2 rem on wide
-     viewports. */
   padding-inline: clamp(0.4rem, 3cqw, 2rem);
   margin: 0;
 }
@@ -506,9 +495,6 @@ button.share-pill,
   margin-bottom: -0.5rem;
 }
 
-/* High-res twin for the scroll-morph flight (episode index only). Off by
-   default; the morph rules (CSS @supports + JS polyfill) turn it on. Rendered
-   tall so it stays crisp when scaled down along the flight. */
 .brand-mark-fly {
   display: none;
 }
@@ -520,14 +506,9 @@ button.share-pill,
   font-weight: var(--weight-bold);
   font-size: 1.4rem;
   letter-spacing: 0.03em;
-  /* Explicit so a:hover (which paints links --dc-accent-dark) can't
-     pull the brand text into the dark-green hover colour. */
   color: var(--dc-paper);
 }
 
-/* Mirror the nav-links hover treatment on the brand text so the
-   topbar's interactive states feel consistent. The text-shadow
-   thickens the brand-green glyphs without changing the layout box. */
 .brand:hover .brand-name,
 .brand:focus-visible .brand-name {
   color: var(--dc-django);
@@ -540,11 +521,6 @@ button.share-pill,
   margin: 0;
   padding: 0;
   list-style: none;
-  /* Hold full size down to ~480 px topbar width and then shrink
-     gently so all three links still fit on a 320 px viewport. The
-     reduced .site-nav padding-inline above provides most of the
-     extra room — the font only needs to give up a sliver.
-     Letter-spacing is in `em`, so it tracks the font automatically. */
   font-size: clamp(0.82rem, 1.5cqw + 0.5rem, 0.95rem);
   font-weight: var(--weight-medium);
   letter-spacing: 0.04em;
@@ -562,23 +538,10 @@ button.share-pill,
 .nav-links a:focus-visible,
 .nav-links a[aria-current="page"] {
   color: var(--dc-django);
-  /* Optical compensation: brand green on --dc-ink appears thinner than
-     the white idle state due to halation asymmetry. A 0.5px same-colour
-     glow visually thickens the glyphs without changing the layout box
-     (a font-weight bump would reflow the nav). */
   text-shadow: 0 0 .5px currentColor;
 }
 
-/* Scroll-morph: on a show-hero page the brand starts hidden so the hero
-   logo can fly into its slot. With native scroll-driven animations + no
-   reduced-motion preference, the @supports block below reveals + animates
-   the brand and hides the hero logo. Browsers without
-   `animation-timeline: scroll(root)` (mainly iOS Safari <26) hit the
-   show-hero.js polyfill, which sets the same state via inline styles.
-   With reduced-motion the brand stays hidden — the hero logo is the
-   only mark, matching the sandbox's static fallback. On subpages
-   without [data-show-hero-shell] the :has() rule doesn't match and the
-   brand stays visible. */
+/* Scroll-morph setup for the episode-index hero. */
 body:has([data-show-hero-shell]) .brand {
   visibility: hidden;
   pointer-events: none;
@@ -590,9 +553,6 @@ body:has([data-show-hero-shell]) .brand {
       visibility: visible;
       pointer-events: auto;
     }
-    /* The small in-flow mark is the DOCKED logo (crisp, no scaling). It stays
-       hidden through the flight and fades in only at the very end, where the
-       crisp fly-twin has shrunk to the same size + spot — a seamless handoff. */
     body:has([data-show-hero-shell]) .brand-mark {
       opacity: 0;
       animation-name: show-hero-mark-dock-in;
@@ -603,11 +563,6 @@ body:has([data-show-hero-shell]) .brand {
         var(--show-hero-morph-dock-start, 27vh)
         var(--show-hero-morph-end, 30vh);
     }
-    /* The fly-twin renders large (high-res) and scales DOWN along the flight,
-       so it never rasterises blurry the way scaling the small mark up did.
-       Absolute + out of flow ⇒ the topbar layout (incl. the mobile-stacked
-       centring) is untouched. Two scroll-driven animations: the flight
-       (0→morph-end) and a fade-out at the end so the docked mark takes over. */
     body:has([data-show-hero-shell]) .brand-mark-fly {
       display: block;
       position: absolute;
@@ -636,18 +591,13 @@ body:has([data-show-hero-shell]) .brand {
         var(--show-hero-morph-text-start, 25vh)
         var(--show-hero-morph-text-end, 32vh);
     }
-    /* Keep visibility (not display) so the bubble composition stays put
-       and auto-fit can still measure the slot. */
     body:has([data-show-hero-shell]) .show-hero-logo-bubble {
       visibility: hidden;
     }
   }
 }
 
-/* Flight of the crisp fly-twin: both endpoints (scale + translate) are
-   measured by show-hero.js and written as vars. `from` = pixel-aligned over
-   the hero logo (scaled DOWN from the render size); `to` = aligned over the
-   docked mark's measured slot. */
+/* Flight endpoints are measured by show-hero.js. */
 @keyframes show-hero-logo-fly {
   from {
     transform:
@@ -667,51 +617,27 @@ body:has([data-show-hero-shell]) .brand {
   to   { opacity: 1; transform: translateX(0); }
 }
 
-/* Stack to two centered rows (brand above, nav below) only once the brand
-   and nav can no longer sit side by side. Measured fit point ≈ 612px
-   (brand 215 + nav 321 + gap + padding); 42em (672px) adds a little
-   breathing room. Above this, tablets/desktop keep the brand beside the
-   nav. DOM order is brand-first, so no explicit `order` is needed.
-   Threshold is literal because container queries don't accept var(). */
+/* Stack the topbar once brand and nav no longer fit side by side. */
 @container topbar (max-width: 42em) {
   .site-nav {
     flex-direction: column;
     align-items: stretch;
-    /* Gap between the brand and the nav band, scaling with width — enough
-       that the logo's speech-bubble tail clears the band. */
     gap: clamp(0.6rem, 1.6cqi, 1rem);
-    /* Auto height keeps the bar only as tall as its content. Just a slim
-       dynamic top inset (grows on tablet); no bottom padding so the nav
-       band stays flush with the header's bottom edge. Inline gutter moves
-       to the children so the band can full-bleed. */
     height: auto;
     padding: clamp(0.4rem, 1.6cqi, 1rem) 0 0;
   }
 
-  /* Centre the whole brand unit (logo + wordmark) horizontally; it sits
-     just below the slim top inset. */
   .brand {
     width: 100%;
     justify-content: center;
     padding-inline: var(--dc-gutter);
   }
 
-  /* Shrink only the image mark on phones (not the wordmark); ramps back
-     to the full 3.8rem by tablet width (~730px), so it's fluid with no
-     extra media query. */
   .brand-mark {
     height: clamp(3rem, 3.5cqi + 2.2rem, 3.8rem);
-    /* Smaller downward optical nudge for the smaller mobile mark, so the
-       "django" wordmark inside the logo lines up with "Django Chat". */
     margin-bottom: -0.4rem;
   }
 
-  /* Stacked state: the nav row spreads across the full content width and
-     its label size tracks the available space (container-relative cqw).
-     A slightly lighter band backs the links, full-bleed and bottom-flush
-     with the header edge; the links sit slim inside, with vertical padding
-     that scales with the topbar width (cqi) so the band grows a touch on
-     tablet. Inline gutter keeps the labels aligned with the content. */
   .nav-links {
     width: 100%;
     justify-content: space-between;
@@ -722,9 +648,6 @@ body:has([data-show-hero-shell]) .brand {
     padding-inline: var(--dc-gutter);
   }
 
-  /* Slimmer tap height inside the band (still well above the WCAG AA
-     24px target-size floor) so the band can sit low without the 44px
-     tap target inflating it. */
   .nav-links a {
     min-height: 2.25rem;
   }
@@ -753,47 +676,15 @@ body:has([data-show-hero-shell]) .brand {
   filter: drop-shadow(0.3125rem 0.375rem 3px color-mix(in srgb, var(--dc-ink), transparent 55%));
 }
 
-/* ===== Show-Hero — episode index brand hero =====
-   Composition: bg image + wash gradient (z 0–1), headphones illustration
-   (2), LISTEN UP backdrop (3), Episodes hook (4), white speech bubble (5),
-   green logo bubble piercing the topbar (60).
-
-   Responsive sizing flows through 17 anchored custom properties scoped to
-   .show-hero. Each is a pre-composed sum-of-ramps calc() built from the
-   sandbox tuning snapshot (see frontend/sandbox/tweak-snapshot.json) by
-   the same composer the sandbox runtime uses — so the layout adapts to
-   container width without any JS. show-hero.js layers the scroll-morph
-   and parallax on top; without JS the hero still renders correctly at
-   every viewport, just without those entrance effects. */
+/* ===== Show-Hero — episode index brand hero ===== */
 .show-hero {
   --show-hero-accent: #41fcb9;
   --show-hero-listen-up-size: clamp(3rem, 23cqw, 29rem);
   --show-hero-ease-out: cubic-bezier(.2, .7, .2, 1);
-  /* Rendered-text-width / font-size ratio for the H1 in Ubuntu Bold.
-     Used by the >1200cqw logo calc-rule. If the H1 text content ever
-     changes, remeasure: range.getBoundingClientRect().width /
-     parseFloat(getComputedStyle(h1).fontSize). */
   --show-hero-h1-text-ratio: 5.568;
-
-  /* Monotonic, width-only size curve (no vh/vw mixing, so it never grows as
-     the viewport shrinks and isn't height-dependent). Each ramp adds a
-     positive delta as width grows, with shrinking slope toward the wide end:
-     fast shrink on phones, gentle on desktop. Continuous, no reversal. */
   --show-hero-logo-w:           clamp(8rem, calc(9rem + 3.5rem * clamp(0, (100cqw - 400px) / 368px, 1) + 3.5rem * clamp(0, (100cqw - 768px) / 512px, 1) + 3rem * clamp(0, (100cqw - 1280px) / 640px, 1)), 19rem);
   --show-hero-bubble-ty:        calc(12.25vh + (15.5vh - 12.25vh) * clamp(0, (100cqw - 380px) / 20px, 1) + (11vh - 15.5vh) * clamp(0, (100cqw - 400px) / 420px, 1) + (2.5vh - 11vh) * clamp(0, (100cqw - 820px) / 204px, 1) + (-10vw - 2.5vh) * clamp(0, (100cqw - 1024px) / 376px, 1) + (-12rem - -10vw) * clamp(0, (100cqw - 1400px) / 520px, 1));
-  /* Content-driven at every width: the bubble is sized off the H1 (the
-     content's scale driver) so it shrinks continuously with the headline
-     across desktop → tablet → phone, with no clamp bump. `max(22rem, …)`
-     floors the shrink on the narrowest phones; the viewport term caps it so
-     phones stay snug (only binds below ~500px, where side-clipping is OK).
-     The H1-multiplier sets the inner safe-padding ratio: 7.5 on big screens
-     (roomy, looks great), easing to 6.8 by ~900px so the padding stops
-     feeling oversized on large tablets / small desktops. */
   --show-hero-bubble-w:         max(22rem, min(calc(var(--show-hero-h1) * (7.5 - 0.7 * clamp(0, (1500px - 100cqw) / 600px, 1))), calc(100cqw - 2 * var(--dc-gutter) + 10px)));
-  /* On narrow phones, cap the H1 at 12cqw (≈12vw, ~2/3 of the viewport)
-     instead of letting it balloon toward full width. It meets the clamp's
-     3.5rem floor at ~467px, so the two blend with no jump; above that the
-     clamp takes over unchanged (tablet/desktop untouched). */
   --show-hero-h1:               min(12cqw, clamp(2.5rem, calc(3.5rem + 2.5rem * clamp(0, (100cqw - 400px) / 624px, 1) + 1rem * clamp(0, (100cqw - 1024px) / 896px, 1)), 9rem));
   --show-hero-subtitle:         clamp(1.06rem, calc(1.06rem + 0.49rem * clamp(0, (100cqw - 400px) / 1520px, 1)), 1.55rem);
   --show-hero-bubble-inset-top: calc(12% + 12% * clamp(0, (100cqw - 820px) / 580px, 1) - 2% * clamp(0, (100cqw - 1400px) / 520px, 1));
@@ -805,38 +696,13 @@ body:has([data-show-hero-shell]) .brand {
   --show-hero-ep-right:         calc(5.3cqw + (1.5rem - 5.3cqw) * clamp(0, (100cqw - 1024px) / 896px, 1));
   --show-hero-ep-bottom:        calc(16cqw + (1.5rem - 16cqw) * clamp(0, (100cqw - 1024px) / 6px, 1));
   --show-hero-min-h:            max(calc(100svh - var(--dc-topbar-h)), calc(50rem * clamp(0, (100cqw - 400px) / 420px, 1)));
-  /* Downward drift applied to the (top-anchored) composition on large screens
-     only, so the spare height below the bubble gets used instead of leaving a
-     dead gap at the bottom. Two gates multiply:
-       - height: zero until the hero box is taller than a laptop offers
-         (~950px), then grows; capped at 14rem.
-       - width:  zero on phones/tablets (≤75em ≈ 1200px) so a narrow-but-tall
-         viewport keeps its top-anchor (Anschnitt) and never drifts down;
-         ramps in across 1200→1440px.
-     On a laptop both gates leave it at 0 ⇒ unchanged top framing. */
   --show-hero-descend:          calc(clamp(0px, (100svh - var(--dc-topbar-h) - 950px) * 0.65, 15rem) * clamp(0, (100cqw - 1200px) / 240px, 1));
-  /* Small upward nudge on phones only (fades out by ~640px width), so the
-     composition crops a touch more under the menu. Folded into
-     .show-hero-center's top alongside --show-hero-descend. */
   --show-hero-mobile-lift:      calc(2.5vh * clamp(0, (640px - 100cqw) / 220px, 1));
-  /* Position of the logo along the bubble ellipse (see the offset-path rule).
-     0% = 3 o'clock, clockwise; 9 o'clock = 50%, 12 o'clock = 75%. Rides from
-     ~55% (just above 9 o'clock, wide desktop) toward ~66% (~11 o'clock,
-     phone) as the viewport narrows and the bubble sinks; never reaches 12. */
   --show-hero-logo-od:          calc(53% + 14% * clamp(0, (1500px - 100cqw) / 1100px, 1));
-  /* Push the logo's centre this far outside the bubble edge so ~1/3 of the
-     logo sits inside the bubble and ~2/3 pops out (logo_w/6 ≈ that ratio). */
   --show-hero-logo-pop:         calc(var(--show-hero-logo-w) / 6);
-  /* Small rightward nudge of the logo on phones only (3px ≤400px, fading to 0
-     by ~600px). Applied in the offset-path rule; the fly-twin follows. */
   --show-hero-logo-nudge-x:     calc(3px * clamp(0, (600px - 100cqw) / 200px, 1));
 
   position: relative;
-  /* Flex column so the in-flow composition (.show-hero-center) can be
-     vertically re-anchored at ≤75em without a transform (which would trap
-     the logo's z-index and let the wash paint over the bubble). The
-     decorative layers are absolute and unaffected; default justify-content
-     keeps the desktop top-anchor. */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -847,20 +713,13 @@ body:has([data-show-hero-shell]) .brand {
   padding-block: 0 clamp(5rem, 14vh, 11rem);
   color: var(--dc-paper);
   background-color: var(--dc-surface-deep);
-  /* Ubuntu + browser-default line-height cascade through all hero text,
-     mirroring the sandbox body baseline. Children that own their leading
-     (h1, subtitle, listen-up, episodes) already set their own
-     line-height, so this only takes effect on the subscribe button which
-     would otherwise inherit body's --leading-body (1.55) and read taller
-     than the sandbox. */
   font-family: var(--font-heading);
   line-height: normal;
   container-type: inline-size;
   container-name: show-hero;
 }
 
-/* Bg image + wash overlay. The picture is its own layer so the
-   <img> keeps srcset/sizes/fetchpriority semantics for LCP. */
+/* Hero image and wash overlay. */
 .show-hero-bg {
   position: absolute;
   inset: 0;
@@ -879,20 +738,13 @@ body:has([data-show-hero-shell]) .brand {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  /* Safari 16.0/16.1 fallback for color-mix — literal rgba derived from
-     --dc-surface-deep (#09201D). Re-derive if the token changes. */
   background: linear-gradient(180deg, rgba(9,32,29,.45), rgba(9,32,29,.55));
   background: linear-gradient(180deg,
     color-mix(in srgb, var(--dc-surface-deep) 45%, transparent),
     color-mix(in srgb, var(--dc-surface-deep) 55%, transparent));
 }
 
-/* Bottom-edge blend — fades the last 60 px of the hero from transparent
-   into the solid --dc-surface-deep so the hero seamlessly merges into
-   the dark platform-band below. Painted at z 1 same as the wash, but
-   later in DOM order, so it stacks on top of the wash at the bottom
-   sliver. LISTEN UP (z 3) and Episodes (z 4) still paint above the
-   blend, so foreground content stays legible. */
+/* Fade the hero into the dark platform band. */
 .show-hero::after {
   content: "";
   position: absolute;
@@ -914,8 +766,6 @@ body:has([data-show-hero-shell]) .brand {
   z-index: 2;
   color: var(--show-hero-accent);
   pointer-events: none;
-  /* Separate `translate` so the parallax script can drive motion without
-     clobbering any future transform. */
   translate: var(--show-hero-px-hp-x, 0) var(--show-hero-px-hp-y, 0);
 }
 .show-hero-headphones path {
@@ -967,9 +817,6 @@ body:has([data-show-hero-shell]) .brand {
   justify-items: center;
   align-items: start;
   margin-inline: auto;
-  /* Top-anchored at every width; on large screens --show-hero-descend lets it
-     settle down into the spare height (zero on laptops and narrow viewports),
-     while --show-hero-mobile-lift nudges it up a touch on phones. */
   top: calc(var(--show-hero-descend, 0px) - var(--show-hero-mobile-lift, 0px));
   width: min(100%, calc(var(--show-hero-bubble-w) + var(--show-hero-logo-w) * .4));
   padding-inline: clamp(1rem, 3cqw, 2rem);
@@ -980,31 +827,13 @@ body:has([data-show-hero-shell]) .brand {
   grid-row: 1;
 }
 
-/* White speech bubble. Vertical insets compensate for the bubble's
-   aspect ratio so the % values read as "% of bubble height". */
 .show-hero-bubble {
   position: relative;
   z-index: 5;
   width: var(--show-hero-bubble-w);
   aspect-ratio: 1039 / 908;
   transform: translateY(var(--show-hero-bubble-ty));
-  /* Clip the bubble at its in-flow top so its negative translateY can
-     never paint pixels above that line. In normal viewing the topbar
-     (z 50) already covers the bubble (z 5) in this area, so the
-     composition is unchanged. The fix is for overscroll-at-top: when
-     the sticky topbar momentarily detaches from the viewport edge
-     during a fast upward fling, the gap that briefly opens used to
-     expose the bubble's translated-up pixels. With this clip those
-     pixels simply don't exist, so the gap shows the canvas background
-     instead. Top inset only — sides/bottom kept large-negative so the
-     SVG's drop-shadow is preserved.
-
-     The clip line must sit at the hero's top edge (the menu line), not at a
-     fixed offset from the bubble box — otherwise it travels downward with the
-     composition once --show-hero-descend pushes it into the spare height and
-     visibly crops the bubble's crown. So fold in the composition's own
-     vertical offset (descend up, mobile-lift down): when the bubble sits
-     below the top edge the inset goes negative (outset ⇒ no clip). */
+  /* Prevent overscroll from exposing translated bubble pixels above the topbar. */
   clip-path: inset(
     calc(-1 * (var(--show-hero-bubble-ty) + var(--show-hero-descend, 0px) - var(--show-hero-mobile-lift, 0px)))
     -100vmax -100vmax -100vmax
@@ -1026,8 +855,6 @@ body:has([data-show-hero-shell]) .brand {
   filter: drop-shadow(0 30px 40px rgba(0,0,0,.25));
 }
 .show-hero-bubble-content {
-  /* Own stacking context — the bubble's drop-shadow filter would otherwise
-     paint over the text. */
   position: relative;
   z-index: 1;
   max-width: min(100%, calc(100cqw - 2rem));
@@ -1049,18 +876,9 @@ body:has([data-show-hero-shell]) .brand {
 }
 .show-hero-bubble-content p {
   margin: 0;
-  /* Override the .show-hero Ubuntu cascade for body text: the project
-     ships only Ubuntu 700, so a 400-weight subtitle would render as
-     Ubuntu 700 (synthesis fallback) and look entirely bold. Roboto has
-     the full variable weight range, so the subtitle reads as 400 and
-     the `<a>` names stand out in 700. */
   font-family: var(--font-body);
   font-size: var(--show-hero-subtitle);
   line-height: 1.45;
-  /* Cap the measure so the intro wraps after "…Web Framework" (replacing
-     the old hard <br>). `ch` scales with the font, so the break point stays
-     consistent across viewports and the bubble no longer widens to fit one
-     long line on desktop/large tablets. */
   max-width: 47ch;
 }
 .show-hero-bubble-content p a {
@@ -1074,19 +892,11 @@ body:has([data-show-hero-shell]) .brand {
   border-bottom-color: var(--dc-django);
 }
 
-/* Subscribe pill — inverse of the site's .button-primary. Lives in the
-   white bubble, so colours flip: light-green idle (dark text), dark-green
-   hover (paper text). Font clamps to 1rem (= 16px = WCAG normal text)
-   at narrow widths, so white-on-light-green would fail AA — keep
-   --dc-ink on the idle state. */
 .show-hero-subscribe {
   justify-self: center;
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  /* Floors are tighter than the cqw-scaled values, so lowering them only
-     affects narrow/mobile widths (where the floor binds); desktop scales via
-     cqw and is untouched. */
   padding:
     clamp(.85rem, 1.2cqw, 1.1rem)
     clamp(1rem, 3.8cqw, 4.1rem);
@@ -1132,13 +942,7 @@ body:has([data-show-hero-shell]) .brand {
 }
 .show-hero-subscribe svg circle { fill: currentColor; stroke: none; }
 
-/* Green logo bubble — pierces the sticky topbar (z 60 > 50).
-   The transform here is the FALLBACK for browsers without basic-shape
-   offset-path (mainly older iOS Safari): a static translate fitted to the
-   measured offset-path flight (dx ≈ -22cqw phone → -29cqw mid; dy ≈ -4cqw
-   desktop → +13cqw phone) so the logo lands in roughly the same spot and
-   never cuts into the bubble content. The @supports (offset-path) rule below
-   overrides this with the continuous ellipse ride where supported. */
+/* Static fallback for browsers without basic-shape offset-path support. */
 .show-hero-logo-bubble {
   position: relative;
   width: var(--show-hero-logo-w);
@@ -1166,19 +970,10 @@ body:has([data-show-hero-shell]) .brand {
   gap: .1em;
   color: var(--dc-paper);
   font-weight: var(--weight-bold);
-  /* Match the platform-band H2 size so the hero's bottom-right hook
-     reads at the same visual weight as the headline of the section
-     it points at. */
   font-size: var(--text-h2);
   line-height: 1;
   letter-spacing: var(--show-hero-ep-tracking);
   text-decoration: none;
-  /* Soft drop on the whole hook — applies to both the text and the
-     inline-SVG triangle. Both layers use --dc-surface-deep (the
-     deepest of the brand greens) so the off-white glyphs feel
-     embedded in the surface rather than floating above it; the tight
-     second shadow firms up the glyph edges so the wider soft halo
-     has something to bloom off. */
   filter:
     drop-shadow(0 0.25em 0.7em var(--dc-surface-deep))
     drop-shadow(0 0.05em 0.2em var(--dc-surface-deep));
@@ -1189,35 +984,16 @@ body:has([data-show-hero-shell]) .brand {
   fill: currentColor;
 }
 
-/* Below 1200cqw: stack the hero composition. Threshold literal — container
-   queries don't accept var(). The matching topbar 2-row stack lives on
-   @container topbar in @layer base. */
+/* Below 1200cqw: stack the hero composition. */
 @container show-hero (max-width: 75em) {
-  /* Stacked composition spans the full content width. It stays top-anchored
-     (no centring): the logo hugs the menu and the bubble flows down from
-     there, so on tall-but-narrow viewports the composition crops at the top
-     (Anschnitt) and the spare height falls to the bottom, instead of floating
-     into the middle. The bubble's own --show-hero-bubble-ty (positive vh on
-     narrow widths) sets how far below the menu it sits, scaling with height
-     so it always reads as "near the top." */
   .show-hero-center {
     width: 100%;
   }
-  /* (Logo position is the static fallback on .show-hero-logo-bubble, overridden
-     by the offset-path ride below where supported — no per-zone rule needed.) */
 }
 
-/* CALIBRATION: ride the logo along an ellipse that approximates the white
-   bubble (tail ignored). Single offset-distance slides it from ~9 o'clock
-   (desktop) toward ~11 o'clock (mobile). Overrides the translate branches
-   above where supported; older browsers keep those as the hard fallback. */
+/* Ride the logo along the speech-bubble ellipse where supported. */
 @supports (offset-path: ellipse(50% 50%)) {
   .show-hero-logo-bubble {
-    /* Ellipse matches the bubble's round BODY (tail ignored): from the SVG
-       path the body is centred at (519.5, 409.1) in the 1039×908 viewBox, so
-       rx = 0.5·bubble_w, ry = 0.39376·bubble_w, and the body centre sits ry
-       below the box top (= 45% of box height, the lower ~10% being the tail).
-       --show-hero-logo-pop pushes the logo's centre outside the edge. */
     offset-path: ellipse(
       calc(var(--show-hero-bubble-w) * 0.5 + var(--show-hero-logo-pop, 0px))
       calc(var(--show-hero-bubble-w) * 0.39376 + var(--show-hero-logo-pop, 0px))
@@ -1225,8 +1001,6 @@ body:has([data-show-hero-shell]) .brand {
     );
     offset-distance: var(--show-hero-logo-od, 75%);
     offset-rotate: 0deg;
-    /* Tiny rightward nudge on phones (fades out by ~600px); composes on top of
-       the offset-path position. The fly-twin tracks this via auto-fit. */
     transform: translateX(var(--show-hero-logo-nudge-x, 0px));
   }
 }
@@ -1361,10 +1135,6 @@ body:has([data-show-hero-shell]) .brand {
   margin-top: -1px;
   margin-bottom: var(--s3);
   padding: clamp(2.5rem, 5vw, 5rem) max(var(--dc-gutter), calc(50vw - var(--dc-container-max) / 2));
-  /* Dark variant — visually continues the topbar + show-hero surface
-     so the dark family flows topbar → hero → platform-band. No bottom
-     hairline; the transition into the paper-textured episode list is
-     carried by the surface change alone. */
   background-color: var(--dc-surface-deep);
   color: var(--dc-paper);
   position: relative;
@@ -1374,21 +1144,14 @@ body:has([data-show-hero-shell]) .brand {
 .platform-band h2 {
   margin: var(--s-2) 0 var(--s-1);
   text-wrap: balance;
-  /* Brand-green heading on the dark surface — picks up the same accent
-     as the hero H1 so the two dark sections rhyme. */
   color: var(--dc-django);
 }
 
 .platform-band p {
   margin: 0;
-  /* Inherit --dc-paper from .platform-band rather than the global
-     --dc-muted, which would read as a dim grey-on-dark-green. */
   color: inherit;
 }
 
-/* The site-wide .eyebrow ships with --dc-muted (designed for light
-   backgrounds). On the dark platform-band, lighten it to a paper tint
-   so it still reads as the subdued lead-in to the section heading. */
 .platform-band .eyebrow {
   color: color-mix(in srgb, var(--dc-paper) 70%, transparent);
 }
@@ -1403,16 +1166,9 @@ body:has([data-show-hero-shell]) .brand {
   justify-content: center;
   gap: clamp(0.375rem, 0.3vw + 0.3125rem, 0.625rem);
   min-height: clamp(2.375rem, 0.7vw + 2.125rem, 2.875rem);
-  /* min-width and max-inline-size share the same clamp so every wrapped
-     button has a fixed, identical inline-size; longer labels truncate
-     instead of widening the button and reshuffling the wrap. */
   min-width: clamp(8.75rem, 22vw, 11.25rem);
   max-inline-size: clamp(8.75rem, 22vw, 11.25rem);
   padding-inline: clamp(0.875rem, 0.6vw + 0.6875rem, 1.125rem);
-  /* Ghost button on the dark surface: faded-paper outline + white
-     text. The platform icons read currentColor via mask-image, so
-     they also paint white. Hover (see override below) inverts to a
-     filled white pill with dark ink text. */
   border: 1px solid color-mix(in srgb, var(--dc-paper) 35%, transparent);
   color: var(--dc-paper);
   font-size: var(--text-platform-link);
@@ -1422,14 +1178,6 @@ body:has([data-show-hero-shell]) .brand {
   transition: var(--dc-transition-colors);
 }
 
-/* Override the shared ghost-pill hover (which goes to a light-green
-   tint with dark text — designed for the rest of the site's light
-   surfaces) so the dark platform-band pills get a soft hover instead:
-   the idle 35 %-paper outline brightens to full paper, the background
-   picks up a subtle 12 %-paper tint, and the text stays white. The
-   transition token on .platform-band-links a fades all three over
-   150 ms. Source order beats the shared rule at L1031 because the
-   selectors have equal specificity. */
 .platform-band-links a:hover,
 .platform-band-links a:focus,
 .platform-band-links a:focus-visible {
@@ -1444,12 +1192,6 @@ body:has([data-show-hero-shell]) .brand {
   text-overflow: ellipsis;
 }
 
-/* Threshold matches `--dc-container-max` (1120 px); keep the literal in
-   sync with the token. Two CSS-level constraints make this the one
-   remaining px call site: container-queries cannot read `var()` in the
-   threshold, and converting to `em` would shift the trigger because
-   `.platform-band` inherits body's `1.06rem` font-size (so `70em` would
-   resolve to ~1187 px content-box, not 1120). */
 @container (min-width: 1120px) {
   .platform-band-links a {
     min-width: 8.75rem;
@@ -1457,8 +1199,39 @@ body:has([data-show-hero-shell]) .brand {
   }
 }
 
-/* Shared 18 × 18 icon size for the inline mask / SVG icons that ride
-   along inline-flex labels (platform, feed, mastodon, share-pill). */
+/* Phones: drop the fixed pill width and lay the links out as two equal
+   full-width columns so they span the content (the edge gutter is the band's
+   own inline padding) instead of sitting narrow + centered. Literal px to
+   dodge the em-in-container-query gotcha. */
+@container (max-width: 600px) {
+  .platform-band-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--cluster-space);
+  }
+  .platform-band-links a {
+    min-width: 0;
+    max-inline-size: none;
+  }
+  /* Odd count ⇒ the last link wraps alone. Span both columns but hold it to a
+     single column's width and centre it, so it stays the same size as the
+     others instead of sitting left in column 1. */
+  .platform-band-links a:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc((100% - var(--cluster-space)) / 2);
+  }
+}
+
+/* A touch more breathing room above/below the band on phones (the 5vw term of
+   the base padding bottoms out at 2.5rem down here). Media query because a
+   container can't size its own padding off its own @container. */
+@media (max-width: 600px) {
+  .platform-band {
+    padding-block: 3.5rem;
+  }
+}
+
 .platform-icon,
 .feed-action-icon,
 .footer-mastodon-icon,
@@ -1486,20 +1259,11 @@ body:has([data-show-hero-shell]) .brand {
   margin: var(--s-2) 0 var(--s0);
 }
 
-/* Episode card titles in the list run smaller on phones than the generic
-   --text-h2 (which governs section/band headings). Only the clamp min is
-   lowered, so the preferred/max terms — and thus everything above ~750px —
-   stay identical to the shared --text-h2 ramp. */
 h2[data-vt-episode-title] {
   font-size: clamp(1.4rem, 1.6vw + 0.8rem, 2.2rem);
 }
 
-/* CQ host for .filter-form. The form itself breaks out of the centered
-   <main> with `width: 100vw`, so it can't act as its own container — the
-   wrap stays inside the centered flow and supplies the container scope
-   for the form's responsive states. Container width tracks the centered
-   container width (= viewport − 32 px on narrow screens), so the
-   breakpoints below are ~32 px earlier than the prior @media values. */
+/* CQ host for the full-bleed filter form. */
 .filter-form-wrap {
   container-type: inline-size;
   container-name: filter-form;
@@ -1514,10 +1278,6 @@ h2[data-vt-episode-title] {
   padding: 0 max(var(--dc-gutter), calc(50vw - var(--dc-container-max) / 2));
   scroll-margin-top: var(--s5);
 }
-
-/* `.filter-extras-toggle` is the no-JS accordion trigger checkbox — hidden
-   visually but still receives focus. Shares the `.visually-hidden` recipe
-   defined further below. */
 
 .filter-more-toggle {
   display: inline-flex;
@@ -1557,17 +1317,11 @@ h2[data-vt-episode-title] {
   align-items: center;
 }
 
-/* Narrowest: hide extras until toggle is checked. `:where()` zeros the
-   `:not(:has(...))` specificity so the wider-CQ show-rule below wins
-   with a plain `.filter-form .filter-extras` selector. */
 .filter-form:where(:not(:has(.filter-extras-toggle:checked))) .filter-extras {
   display: none;
 }
 
-/* Medium and up: extras always visible as a wrapping flex row, toggle hidden.
-   Threshold chosen so the extras always fit on a single row (measured wrap point
-   ~720–45.3125rem with Clear visible) — below this we keep the accordion to avoid a
-   three-row glitch between two-row and collapsed layouts. */
+/* Medium and up: extras are visible as a wrapping row. */
 @container filter-form (min-width: 46.25em) {
   .filter-more-toggle {
     display: none;
@@ -1596,7 +1350,6 @@ h2[data-vt-episode-title] {
   }
 }
 
-/* Wide: search and extras share a single row. */
 @container filter-form (min-width: 62.5em) {
   .filter-form {
     grid-template-columns: minmax(13.75rem, 2fr) auto;
@@ -1996,11 +1749,7 @@ h2[data-vt-episode-title] {
 .episode-list {
   --episode-badge-size: clamp(4.5rem, 9vw, 9rem);
   display: grid;
-  /* deliberate off-scale: 3.5rem (56 px) bottom buffer before footer. */
   padding: 0 0 3.5rem;
-  /* Drives the narrow-row container query for .episode-row below — the
-     row layout switches off the list's own width rather than viewport
-     width, so the rule fires correctly in narrow embeds / zoom. */
   container-type: inline-size;
   container-name: episode-list;
 }
@@ -2043,13 +1792,9 @@ h2[data-vt-episode-title] {
   display: grid;
   font-family: var(--font-body);
   font-size: clamp(2.25rem, 4.5vw, 4.5rem);
-  /* Heavy display weight for the badge numerals — off-scale, paired
-     with the number-overlap stacking below. */
   font-weight: 900;
   height: var(--episode-badge-size);
   justify-items: center;
-  /* Off-scale ultra-tight leading so the episode number visually stacks
-     onto the `#` glyph behind it; not a typographic line-height choice. */
   line-height: 0.64;
   overflow: hidden;
   padding: var(--s-3);
@@ -2084,8 +1829,6 @@ h2[data-vt-episode-title] {
   --episode-badge-size: var(--episode-cover-size);
   display: inline-grid;
   font-size: clamp(4rem, 9vw, 6.5rem);
-  /* Off-scale ultra-tight leading paired with the same number-overlap
-     stacking trick — visual effect, not text rhythm. */
   line-height: 0.78;
 }
 

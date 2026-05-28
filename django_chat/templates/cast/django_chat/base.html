@@ -64,7 +64,7 @@
     </style>
     <script defer src="{% static 'django_chat/js/view-transitions.js' %}?v=vt-prototype-13"></script>
     {% block render_expect %}{% endblock render_expect %}
-    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=new-header-122">
+    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=new-header-124">
     {% comment %}
       Hide JS-only modal enhancements (Copy-to-clipboard, "Start at" timecode,
       Mastodon instance prompt) when scripting is disabled, leaving the
@@ -84,12 +84,11 @@
       <nav class="site-nav" aria-label="Primary">
         <a class="brand" href="{% url 'django_chat_episode_index' %}" aria-label="Django Chat" data-show-hero-brand>
           <img class="brand-mark" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="53" height="48" alt="" data-show-hero-brand-logo>
-          {# High-res twin for the scroll-morph flight (scaled down, stays crisp). #}
           <img class="brand-mark-fly" src="{% static 'django_chat/img/django-chat-logo.svg' %}" width="442" height="399" alt="" aria-hidden="true" data-show-hero-brand-fly>
           <span class="brand-name" data-show-hero-brand-name>Django Chat</span>
         </a>
         <ul class="nav-links">
-          <li><a href="{% url 'django_chat_episode_index' %}#all-episodes" data-show-hero-all-episodes-link>All Episodes</a></li>
+          <li><a href="{% url 'django_chat_episode_index' %}#all-episodes" data-show-hero-all-episodes-link>All episodes</a></li>
           {% if source_metadata %}
             {% for link in source_metadata.visible_menu_links %}
               {% if link.name == "Sponsor Us" %}
