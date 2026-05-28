@@ -66,7 +66,7 @@ def test_episode_index_exposes_filterset_form_fields(client: Client) -> None:
     assert '<label class="visually-hidden" for="id_date_1">End date</label>' in body
     date_facets_attrs = tag_attrs(body, "select", {"name": "date_facets"})
     assert date_facets_attrs is not None
-    assert date_facets_attrs["aria-label"] == "Date facets"
+    assert date_facets_attrs["aria-label"] == "Date range"
     assert date_facets_attrs["autocomplete"] == "off"
     ordering_attrs = tag_attrs(body, "select", {"name": "o"})
     assert ordering_attrs is not None

@@ -60,7 +60,7 @@
         </svg>
         <div class="show-hero-bubble-content">
           <h1 id="show-hero-title">{{ page.title }}</h1>
-          <p>A biweekly podcast on the Django Web Framework
+          <p>A biweekly podcast about the Django web framework
             by&nbsp;<a href="https://wsvincent.com/">Will&nbsp;Vincent</a> and <a href="https://noumenal.es/">Carlton&nbsp;Gibson</a>.</p>
           <a class="show-hero-subscribe" href="{% url 'cast:feed_detail' slug=podcast.slug %}">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -87,9 +87,9 @@
         {% if distribution_links %}
           <section class="platform-band" aria-labelledby="platform-band-title">
             <div class="platform-band-copy">
-              <p class="eyebrow">External platforms</p>
+              <p class="eyebrow">Listen elsewhere</p>
               <h2 id="platform-band-title">Listen on podcast apps and video platforms</h2>
-              <p>These links open Django Chat on third-party services such as podcast directories, podcast apps, and YouTube.</p>
+              <p>Open Django Chat on the platforms where you already listen or watch.</p>
             </div>
             <div class="platform-band-links cluster">
               {% for link in distribution_links|split_amazon_audible|youtube_first %}
@@ -108,7 +108,7 @@
       {% endwith %}
     {% endif %}
 
-    <h2 class="episode-section-heading">All Episodes</h2>
+    <h2 class="episode-section-heading">All episodes</h2>
 
     {% if filterset %}
       {% include "./_filter_form.html" with form=filterset.form %}

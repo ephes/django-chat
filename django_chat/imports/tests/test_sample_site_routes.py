@@ -37,7 +37,7 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     ]
     content = response.content.decode()
     assert "Django Chat" in content
-    assert "A biweekly podcast on the Django Web Framework" in content
+    assert "A biweekly podcast about the Django web framework" in content
     assert "Django Tasks - Jake Howard" in content
     assert episode_detail_path("django-tasks-jake-howard") in content
     assert 'rel="alternate" type="application/rss+xml"' in content
@@ -70,10 +70,7 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
 
     platform_band = _html_between(content, '<section class="platform-band"', "</section>")
     assert "Listen on podcast apps and video platforms" in platform_band
-    assert (
-        "These links open Django Chat on third-party services such as podcast directories,"
-        in platform_band
-    )
+    assert "Open Django Chat on the platforms where you already listen or watch." in platform_band
     assert "Apple Podcasts" in platform_band
     assert "https://itunes.apple.com/us/podcast/django-chat/id1451536459" in platform_band
 
