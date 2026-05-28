@@ -26,6 +26,16 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Ubuntu";
+  src: url("/static/fonts/Ubuntu-Medium.woff2") format("woff2");
+  /* Medium (500) — used by the topbar nav links so they read a step
+     lighter than the Bold brand. Latin subset (nav labels are ASCII). */
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
 @view-transition {
   navigation: auto;
 }
@@ -269,6 +279,7 @@ body {
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: var(--leading-body);
+  text-wrap: pretty;
 }
 
 body > .site-content {
@@ -327,6 +338,7 @@ h3 {
   font-weight: var(--weight-bold);
   line-height: var(--leading-heading);
   margin: 0;
+  text-wrap: balance;
 }
 
 h1 {
@@ -458,9 +470,8 @@ button.share-pill,
      --leading-body (1.55) and renders ~7px taller than the sandbox. */
   font-family: var(--font-heading);
   line-height: normal;
-  /* Mint hairline — component-local accent, only used by this header
-     family (and re-used by the hero's LISTEN UP outline). */
-  border-bottom: 1px solid #41fcb9;
+  /* Brand-green hairline under the topbar. */
+  border-bottom: 1px solid var(--dc-django);
   container-type: inline-size;
   container-name: topbar;
 }
@@ -611,18 +622,66 @@ body:has([data-show-hero-shell]) .brand {
   to   { opacity: 1; transform: translateX(0); }
 }
 
-/* Below 1200 cqw stack to two centered rows (brand above, nav below)
-   — DOM order is brand-first, so no explicit `order` is needed in
-   the stacked state. Threshold is literal because container queries
-   don't accept var(). */
-@container topbar (max-width: 75em) {
+/* Stack to two centered rows (brand above, nav below) only once the brand
+   and nav can no longer sit side by side. Measured fit point ≈ 612px
+   (brand 215 + nav 321 + gap + padding); 42em (672px) adds a little
+   breathing room. Above this, tablets/desktop keep the brand beside the
+   nav. DOM order is brand-first, so no explicit `order` is needed.
+   Threshold is literal because container queries don't accept var(). */
+@container topbar (max-width: 42em) {
   .site-nav {
     flex-direction: column;
+    align-items: stretch;
+    /* Gap between the brand and the nav band, scaling with width — enough
+       that the logo's speech-bubble tail clears the band. */
+    gap: clamp(0.6rem, 1.6cqi, 1rem);
+    /* Auto height keeps the bar only as tall as its content. Just a slim
+       dynamic top inset (grows on tablet); no bottom padding so the nav
+       band stays flush with the header's bottom edge. Inline gutter moves
+       to the children so the band can full-bleed. */
+    height: auto;
+    padding: clamp(0.4rem, 1.6cqi, 1rem) 0 0;
+  }
+
+  /* Centre the whole brand unit (logo + wordmark) horizontally; it sits
+     just below the slim top inset. */
+  .brand {
+    width: 100%;
     justify-content: center;
-    align-items: center;
-    gap: 0.4rem;
-    height: 7.5rem;
-    padding-block: 0.6rem;
+    padding-inline: var(--dc-gutter);
+  }
+
+  /* Shrink only the image mark on phones (not the wordmark); ramps back
+     to the full 3.8rem by tablet width (~730px), so it's fluid with no
+     extra media query. */
+  .brand-mark {
+    height: clamp(3rem, 3.5cqi + 2.2rem, 3.8rem);
+    /* Smaller downward optical nudge for the smaller mobile mark, so the
+       "django" wordmark inside the logo lines up with "Django Chat". */
+    margin-bottom: -0.4rem;
+  }
+
+  /* Stacked state: the nav row spreads across the full content width and
+     its label size tracks the available space (container-relative cqw).
+     A slightly lighter band backs the links, full-bleed and bottom-flush
+     with the header edge; the links sit slim inside, with vertical padding
+     that scales with the topbar width (cqi) so the band grows a touch on
+     tablet. Inline gutter keeps the labels aligned with the content. */
+  .nav-links {
+    width: 100%;
+    justify-content: space-between;
+    gap: clamp(0.5rem, 2cqw, 1.5rem);
+    font-size: clamp(0.95rem, 4.5cqw, 1.25rem);
+    background: color-mix(in srgb, var(--dc-surface-deep), #ffffff 8%);
+    padding-block: clamp(0.15rem, 0.5cqi, 0.5rem);
+    padding-inline: var(--dc-gutter);
+  }
+
+  /* Slimmer tap height inside the band (still well above the WCAG AA
+     24px target-size floor) so the band can sit low without the 44px
+     tap target inflating it. */
+  .nav-links a {
+    min-height: 2.25rem;
   }
 }
 
@@ -675,8 +734,20 @@ body:has([data-show-hero-shell]) .brand {
   --show-hero-logo-ty:          calc(2vh + 2vh * clamp(0, (100cqw - 380px) / 357px, 1) - 2vh * clamp(0, (100cqw - 737px) / 287px, 1));
   --show-hero-logo-w:           clamp(9rem, calc(20vh + (32vw - 20vh) * clamp(0, (100cqw - 400px) / 420px, 1) + (24vw - 32vw) * clamp(0, (100cqw - 820px) / 204px, 1) + (22vw - 24vw) * clamp(0, (100cqw - 1024px) / 46px, 1) + (17vw - 22vw) * clamp(0, (100cqw - 1360px) / 560px, 1)), 20rem);
   --show-hero-bubble-ty:        calc(12.25vh + (15.5vh - 12.25vh) * clamp(0, (100cqw - 380px) / 20px, 1) + (11vh - 15.5vh) * clamp(0, (100cqw - 400px) / 420px, 1) + (2.5vh - 11vh) * clamp(0, (100cqw - 820px) / 204px, 1) + (-10vw - 2.5vh) * clamp(0, (100cqw - 1024px) / 376px, 1) + (-12rem - -10vw) * clamp(0, (100cqw - 1400px) / 520px, 1));
-  --show-hero-bubble-w:         clamp(26rem, calc(90vw - 6vw * clamp(0, (100cqw - 600px) / 424px, 1) - 25vw * clamp(0, (100cqw - 1024px) / 376px, 1) - 9vw * clamp(0, (100cqw - 1400px) / 520px, 1)), 56rem);
-  --show-hero-h1:               clamp(2.5rem, calc(3.5rem + 2.5rem * clamp(0, (100cqw - 400px) / 624px, 1) + 1rem * clamp(0, (100cqw - 1024px) / 896px, 1)), 9rem);
+  /* Content-driven at every width: the bubble is sized off the H1 (the
+     content's scale driver) so it shrinks continuously with the headline
+     across desktop → tablet → phone, with no clamp bump. `max(22rem, …)`
+     floors the shrink on the narrowest phones; the viewport term caps it so
+     phones stay snug (only binds below ~500px, where side-clipping is OK).
+     The H1-multiplier sets the inner safe-padding ratio: 7.5 on big screens
+     (roomy, looks great), easing to 6.8 by ~900px so the padding stops
+     feeling oversized on large tablets / small desktops. */
+  --show-hero-bubble-w:         max(22rem, min(calc(var(--show-hero-h1) * (7.5 - 0.7 * clamp(0, (1500px - 100cqw) / 600px, 1))), calc(100cqw - 2 * var(--dc-gutter) + 10px)));
+  /* On narrow phones, cap the H1 at 12.5cqw (≈12.5vw, ~70% of the viewport)
+     instead of letting it balloon toward full width. It meets the clamp's
+     3.5rem floor at ~448px, so the two blend with no jump; above that the
+     clamp takes over unchanged (tablet/desktop untouched). */
+  --show-hero-h1:               min(12.5cqw, clamp(2.5rem, calc(3.5rem + 2.5rem * clamp(0, (100cqw - 400px) / 624px, 1) + 1rem * clamp(0, (100cqw - 1024px) / 896px, 1)), 9rem));
   --show-hero-subtitle:         clamp(1.06rem, calc(1.06rem + 0.49rem * clamp(0, (100cqw - 400px) / 1520px, 1)), 1.55rem);
   --show-hero-bubble-inset-top: calc(12% + 12% * clamp(0, (100cqw - 820px) / 580px, 1) - 2% * clamp(0, (100cqw - 1400px) / 520px, 1));
   --show-hero-hp-w:             clamp(5rem, calc(26vh + (50vh - 26vh) * clamp(0, (100cqw - 400px) / 624px, 1) + (30vw - 50vh) * clamp(0, (100cqw - 1024px) / 896px, 1)), 32rem);
@@ -689,6 +760,14 @@ body:has([data-show-hero-shell]) .brand {
   --show-hero-min-h:            max(calc(100svh - var(--dc-topbar-h)), calc(50rem * clamp(0, (100cqw - 400px) / 420px, 1)));
 
   position: relative;
+  /* Flex column so the in-flow composition (.show-hero-center) can be
+     vertically re-anchored at ≤75em without a transform (which would trap
+     the logo's z-index and let the wash paint over the bubble). The
+     decorative layers are absolute and unaffected; default justify-content
+     keeps the desktop top-anchor. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   overflow-x: clip;
   overflow-y: visible;
   min-height: min(var(--show-hero-min-h), calc(100svh - var(--dc-topbar-h)));
@@ -895,6 +974,11 @@ body:has([data-show-hero-shell]) .brand {
   font-family: var(--font-body);
   font-size: var(--show-hero-subtitle);
   line-height: 1.45;
+  /* Cap the measure so the intro wraps after "…Web Framework" (replacing
+     the old hard <br>). `ch` scales with the font, so the break point stays
+     consistent across viewports and the bubble no longer widens to fit one
+     long line on desktop/large tablets. */
+  max-width: 47ch;
 }
 .show-hero-bubble-content p a {
   font-weight: var(--weight-bold);
@@ -1016,8 +1100,38 @@ body:has([data-show-hero-shell]) .brand {
    queries don't accept var(). The matching topbar 2-row stack lives on
    @container topbar in @layer base. */
 @container show-hero (max-width: 75em) {
-  .show-hero-center { width: 100%; }
-  .show-hero-logo-bubble { translate: 0 -1rem; }
+  /* Center-anchor the composition vertically (tablet-safe) instead of
+     top-anchoring, then lift it into the upper two-thirds. Done on the
+     descendant (a container query can't style its own container): absolute
+     within the position:relative .show-hero, centred via top/left 50% and
+     then raised by --show-hero-rise. */
+  .show-hero-center {
+    width: 100%;
+    /* Centre vertically via auto margins (flex), then lift with a relative
+       top offset — no transform, so .show-hero-center stays out of the
+       stacking-context business and the logo keeps piercing the topbar. */
+    margin-block: auto;
+    top: calc(-1 * var(--show-hero-rise));
+    /* (bubble width is now defined globally on .show-hero — content-driven
+       at every width, so no stacked-only override is needed here.) */
+    /* Upward lift from centre — larger on phones, gentler on tablet.
+       Capped so the logo (which rides above the bubble) stays clear of the
+       menu bar. */
+    --show-hero-rise: calc(15vh - 12vh * clamp(0, (100cqw - 400px) / 350px, 1));
+  }
+  /* Anchor the logo to the bubble's top edge: its vertical offset is
+     derived from the bubble's own translate so the logo's bottom always
+     overlaps the bubble top by a constant amount (~2rem) — it pops out the
+     same way at every width and rises with the bubble, instead of a fixed
+     counter-offset that let it sink into the bubble on tablet.
+     logo height = --show-hero-logo-w * 399/442. */
+  .show-hero-logo-bubble {
+    translate: none;
+    transform: translate(
+      var(--show-hero-logo-tx),
+      calc(var(--show-hero-bubble-ty) + 2rem - var(--show-hero-logo-w) * 399 / 442)
+    );
+  }
 }
 
 /* Above 1200cqw: derive the logo position from the H1 width + bubble Y,
@@ -1288,6 +1402,14 @@ body:has([data-show-hero-shell]) .brand {
 
 .episode-section-heading {
   margin: var(--s-2) 0 var(--s0);
+}
+
+/* Episode card titles in the list run smaller on phones than the generic
+   --text-h2 (which governs section/band headings). Only the clamp min is
+   lowered, so the preferred/max terms — and thus everything above ~750px —
+   stay identical to the shared --text-h2 ramp. */
+h2[data-vt-episode-title] {
+  font-size: clamp(1.4rem, 1.6vw + 0.8rem, 2.2rem);
 }
 
 /* CQ host for .filter-form. The form itself breaks out of the centered
