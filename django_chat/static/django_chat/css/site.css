@@ -2207,6 +2207,10 @@ h2[data-vt-episode-title] {
   container-name: subscribe-page;
 }
 
+.subscribe-header .page-header {
+  --page-header-bottom-gap: 0px;
+}
+
 .subscribe-page {
   /* deliberate off-scale section padding: 2.75rem (44 px) / 4.5rem
      (72 px). The 44 px top-gap is tuned together with `.subscribe-why`'s
@@ -2222,6 +2226,12 @@ h2[data-vt-episode-title] {
   grid-template-columns: minmax(0, 1fr);
   /* deliberate off-scale: 2.5rem (40 px) sits between --s2 and --s3. */
   gap: 2.5rem;
+}
+
+@container subscribe-page (max-width: 48.624em) {
+  .subscribe-page {
+    padding-top: var(--s0);
+  }
 }
 
 /* Pair the track's 0-min above with the item's own 0-min so nowrap

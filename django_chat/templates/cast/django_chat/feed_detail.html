@@ -2,7 +2,9 @@
 {% load static %}
 
 {% block page_header %}
-  {% include "./_page_header.html" with eyebrow="Podcast RSS" heading="Subscribe via RSS" tagline="Bring Django Chat into your favorite podcast or feed reader — no account, no platform required." %}
+  <div class="subscribe-header">
+    {% include "./_page_header.html" with eyebrow="Podcast RSS" heading="Subscribe via RSS" tagline="Bring Django Chat into your favorite podcast or feed reader — no account, no platform required." %}
+  </div>
 {% endblock page_header %}
 
 {% block content %}
