@@ -1207,7 +1207,7 @@ body:has([data-show-hero-shell]) .brand {
   .platform-band-links {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--cluster-space);
+    gap: clamp(0.875rem, 3vw, 1.125rem);
   }
   .platform-band-links a {
     min-width: 0;
