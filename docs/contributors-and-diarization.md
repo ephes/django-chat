@@ -111,22 +111,316 @@ real contributors so the labels survive sanitization:
    here has no voice labels, so only Podlove + DOTe actually change.) The Wagtail
    transcript admin also offers a speaker→contributor mapping form for this step.
 
+### Identifying who is who (Django Chat heuristics)
+
+Diarization separates voices but does not name them, and it tends to lump the
+fast host intro banter into one label. Reliable text-only cues for Django Chat:
+
+- **Will Vincent** consistently reads the sponsor spot and the outro
+  ("…we're on YouTube, links in the show notes, we'll see you next time"). The
+  label that carries the outro is Will.
+- The **guest** is named in the episode title (`Topic - Guest Name`), is
+  introduced by name, and is usually the dominant non-host voice.
+- The remaining substantive host label is **Carlton Gibson**.
+- Leave pre-recorded ad-only labels and spurious low-count labels (1–2 segments
+  from diarizer over-segmentation) **unmapped** — with no matching contributor
+  they are sanitized out of public output, which is preferable to a wrong name.
+
+Host (Will vs Carlton) identification from text alone is best-effort and can
+occasionally swap; a swap is a one-line `rewrite_speaker_labels` fix.
+
+> **Known limitation — labels can lag turn changes by a second or two.** Voxhelm
+> labels whole multi-second ASR segments with a single dominant speaker, so a
+> segment that straddles a fast exchange (e.g. a host's "Welcome, Mia" at the
+> start of the guest's first segment) carries one label until the next segment
+> boundary. The displayed speaker can therefore be approximate right at turn
+> changes. This is transcription-backend segmentation granularity, not a
+> django-chat or label-mapping issue, and re-mapping changes only *which* name a
+> segment shows, not where boundaries fall. Documented upstream in django-cast:
+> `docs/media/audio-and-transcripts.rst` ("Voxhelm Integration").
+
+### Voice references and the known-speaker engine
+
+Seed an approved `ContributorVoiceReference` source-range (≈30s clean solo
+passage) per contributor so Voxhelm's known-speaker engine can auto-identify
+them later. Source-ranges store only `source_audio` + start/end seconds (no
+uploaded file), are **private** (never exposed publicly or committed), and must
+be `status=APPROVED` + `consent_confirmed=True` to be usable:
+
+```python
+ContributorVoiceReference.objects.create(
+    contributor=contrib, source_audio=audio,
+    start_seconds=Decimal("136.4"), end_seconds=Decimal("166.4"),
+    status=ContributorVoiceReference.Status.APPROVED, consent_confirmed=True,
+)
+```
+
+`build_known_speaker_references(episode)` assembles the payload from the
+episode's assigned contributors' approved references. With
+`CAST_VOXHELM_KNOWN_SPEAKER_ENABLED=true`, `generate_transcripts` sends it to
+Voxhelm, which returns a private `Transcript.speakers` suggestion sidecar;
+`Transcript.apply_known_speaker_suggestions()` then writes the confident
+suggestions into public Podlove/DOTe (Podlove/DOTe only — not WebVTT).
+
+> **Status (2026-05-29): known-speaker auto-ID is blocked at the Voxhelm
+> server.** A known-speaker regeneration of audio 1 sent a valid payload (Will,
+> Carlton, Jake — one reference each) but Voxhelm returned **no `speakers`
+> artifact** (empty suggestion sidecar), i.e. the `pyannote_known_speaker`
+> engine is not active for this deployment. Enabling it requires Voxhelm-server
+> changes (`VOXHELM_DIARIZATION_BACKEND=pyannote`, a Hugging Face token, the
+> CloudFront media host allow-listed) plus `CAST_VOXHELM_KNOWN_SPEAKER_ENABLED`
+> in the staging env — see python-podcast's known-speaker runbook. Until then,
+> the manual label-mapping above is the working path; the seeded voice
+> references are ready for when the engine is enabled.
+
+## Operator runbook: diarizing additional episodes
+
+End-to-end recipe for diarizing and labeling more episodes on staging. It is
+written so a fresh agent (no prior session context) can pick the work up. All of
+it is **staging-database data work** — no app-code change and no redeploy is
+needed (code changes would need `just deploy-staging`; these steps do not).
+
+### 0. Connecting and running management commands on staging
+
+SSH works as `root` (the staging host's root shell is **fish**, so pipe a bash
+script in). Run Django commands as the `django-chat` app user with the env
+sourced. Reusable wrapper:
+
+```bash
+ssh -o BatchMode=yes root@djangochat.staging.django-cast.com 'bash -s' <<'EOF'
+sudo -u django-chat bash -lc '
+  cd /home/django-chat/site
+  set -a; . ./.env 2>/dev/null; set +a
+  export DJANGO_SETTINGS_MODULE=config.settings.production
+  .venv/bin/python manage.py <command...>
+'
+EOF
+```
+
+- Site lives at `/home/django-chat/site`; services are `django-chat.service`
+  (gunicorn) and `django-chat-db-worker.service` (transcript worker).
+- Voxhelm creds come from SOPS into the env; the VPS reaches the Voxhelm host
+  over Tailscale, so diarization works server-side. The CloudFront media host is
+  already fetchable by Voxhelm (it fetched episode audio for diarization).
+
+### 1. Pick episodes and enable per-audio diarization
+
+List candidates and note `audio.pk`, the episode `pk` (post id), and the title
+(the title encodes the guest(s) as `Topic - Guest` or `Topic - Guest A & Guest B`):
+
+```python
+from cast.models import Episode, Transcript
+for ep in Episode.objects.filter(live=True, podcast_audio__isnull=False).order_by("-visible_date")[:8]:
+    a = ep.podcast_audio
+    print(ep.visible_date.date(), "audio", a.pk, "post", ep.pk,
+          "t" if Transcript.objects.filter(audio=a).exists() else "-", "|", ep.title)
+```
+
+Enable diarization per audio (scoped; no global setting change):
+
+```python
+from cast.models import Audio
+for pk in [<AUDIO_IDS>]:
+    a = Audio.objects.get(pk=pk); a.transcript_diarization_mode = "enabled"
+    a.save(update_fields=["transcript_diarization_mode"])
+```
+
+### 2. Generate diarized transcripts
+
+Run in the background with a raised poll timeout (long episodes take minutes):
+
+```bash
+export CAST_VOXHELM_POLL_TIMEOUT=7200 CAST_VOXHELM_POLL_INTERVAL=5
+nohup .venv/bin/python manage.py generate_transcripts \
+  --audio-id A --audio-id B ... --force > /home/django-chat/diarize.log 2>&1 &
+```
+
+> **Gotcha — buffered log.** Under `nohup`, Python block-buffers stdout, so
+> `diarize.log` stays empty until the process exits. Track progress via the DB
+> instead: poll `Transcript.objects.get(audio_id=pk).get_speaker_labels()` until
+> non-empty for each audio, or wait for the final `processed=...` line.
+
+`--force` regenerates even if a transcript already exists. Diarization yields
+generic labels `Speaker 1`, `Speaker 2`, …; some episodes over-segment into a
+spurious extra label (1–2 segments) or a separate ad-reader voice.
+
+### 3. Identify which label is which person
+
+Pull evidence per transcript and map labels with the
+[heuristics above](#identifying-who-is-who-django-chat-heuristics):
+
+```python
+from collections import Counter
+from cast.models import Transcript
+t = Transcript.objects.get(audio_id=<AUDIO_ID>)
+pd = t.podlove_data.get("transcripts", [])
+print("counts:", dict(Counter(s.get("speaker") for s in pd)))
+for s in pd[:10]:  print(s.get("start"), "|", s.get("speaker"), "|", s.get("text")[:90])  # intro
+for s in pd[-6:]: print(s.get("start"), "|", s.get("speaker"), "|", s.get("text")[:90])  # outro (Will)
+print(t.get_speaker_samples(limit=2))  # representative excerpts per label
+```
+
+Anchors that work for Django Chat: **Will** = the sponsor/outro label; **guest**
+= named in the title, dominant non-host, on-topic; **Carlton** = the remaining
+substantive host; **leave ad-only and 1–2-segment labels unmapped**.
+
+#### Two (or more) guests
+
+When the title is `Topic - Guest A & Guest B`, expect four real voices (Will,
+Carlton, A, B) and possibly 5–6 labels after over-segmentation. To separate the
+two guests from each other:
+
+- The intro usually names them in order ("…joined by **A** and **B**"); the
+  first new non-host voice after that is typically A.
+- Match each guest label to the **topic each speaks to** (e.g. one guest covers
+  the conf program, the other covers tooling) using `get_speaker_samples`.
+- By elimination: the two substantive labels that are neither the Will
+  (outro/sponsor) label nor the Carlton label are the two guests.
+- If two guest voices are genuinely indistinguishable from text, label the
+  confident one and leave the other unmapped (sanitized out) rather than risk a
+  wrong name — or label both best-effort and note it. A guest↔guest swap is a
+  one-line `rewrite_speaker_labels` fix.
+
+Create a `Contributor` for **each** guest and assign all of them to the episode.
+
+### 4. Create/assign contributors and rewrite labels
+
+```python
+from cast.models import Episode, Transcript, Contributor, EpisodeContributor
+will = Contributor.objects.get(slug="will-vincent")
+carlton = Contributor.objects.get(slug="carlton-gibson")
+ep = Episode.objects.get(podcast_audio_id=<AUDIO_ID>)
+guest, _ = Contributor.objects.get_or_create(
+    slug="<guest-slug>",
+    defaults=dict(display_name="<Guest Name>", visible=True,
+                  default_role="guest", short_bio="<role>"))
+for c, role in [(will, EpisodeContributor.ROLE_HOST),
+                (carlton, EpisodeContributor.ROLE_HOST),
+                (guest, EpisodeContributor.ROLE_GUEST)]:
+    EpisodeContributor.objects.get_or_create(episode=ep, contributor=c, role=role)
+t = Transcript.objects.get(audio_id=<AUDIO_ID>)
+t.rewrite_speaker_labels({"Speaker 1": "Will Vincent", "Speaker 3": "Carlton Gibson",
+                          "Speaker 2": "<Guest Name>"})
+print(t.get_speaker_labels(), [a.display_name for a in ep.visible_contributor_assignments])
+```
+
+> **Gotcha — exact match.** The sanitizer keeps a label only if it equals a
+> visible contributor's `display_name` exactly. Spurious/ad labels left out of
+> the mapping stay as `Speaker N` and are dropped from public output.
+>
+> **Gotcha — non-ASCII names.** Names like `Mia Bajić` get mangled by nested
+> `ssh → bash → python` single-quoting. Use a Python unicode escape
+> (`"Mia Bajić"`) or write a small `.py` file on the server and run it,
+> rather than inlining the character in a `-c` string. The contributor
+> `display_name` and the rewritten label must match byte-for-byte.
+
+### 5. Seed voice references (voiceprints) — optional, for future known-speaker
+
+For each contributor, store an approved private source-range into a clean solo
+passage (~30s). Hosts only need seeding once (reuse across episodes); seed each
+new guest from their own episode.
+
+```python
+from decimal import Decimal
+from cast.models import Transcript, Contributor, Audio
+from cast.models.contributors import ContributorVoiceReference
+
+def longest_run(pd, name, cap=30.0, min_len=8.0):
+    best=None; i=0; n=len(pd)
+    while i < n:
+        if pd[i].get("speaker")==name and pd[i].get("start_ms") is not None:
+            j=i
+            while j+1<n and pd[j+1].get("speaker")==name and pd[j+1].get("end_ms") is not None:
+                j+=1
+            s=pd[i]["start_ms"]/1000.0; e=pd[j]["end_ms"]/1000.0
+            if best is None or (e-s)>(best[1]-best[0]): best=(s,e)
+            i=j+1
+        else: i+=1
+    if best is None or (best[1]-best[0])<min_len: return None
+    return (round(best[0],3), round(min(best[1], best[0]+cap),3))
+
+def seed(slug, audio_pk, name):
+    c=Contributor.objects.get(slug=slug); t=Transcript.objects.get(audio_id=audio_pk)
+    rng=longest_run(t.podlove_data.get("transcripts",[]), name)
+    if not rng: print("no clean run for", name); return
+    ContributorVoiceReference.objects.get_or_create(
+        contributor=c, source_audio=Audio.objects.get(pk=audio_pk),
+        start_seconds=Decimal(str(rng[0])), end_seconds=Decimal(str(rng[1])),
+        defaults=dict(status=ContributorVoiceReference.Status.APPROVED,
+                      consent_confirmed=True, title="seed %s" % name))
+```
+
+Voice references are **private** (DB + protected storage only) — never commit,
+expose, or serialize them. They are ready for the known-speaker engine but do
+nothing until it is enabled (see status note above).
+
+### 6. Verify
+
+Public checks (no auth):
+
+```bash
+BASE=https://djangochat.staging.django-cast.com
+curl -s "$BASE/api/audios/podlove/<AUDIO>/post/<POST>/" | python3 -c \
+ 'import sys,json;d=json.load(sys.stdin);from collections import Counter;\
+print(Counter(s.get("speaker") for s in d["transcripts"]));print([c["name"] for c in d["contributors"]])'
+curl -s "$BASE/episodes/<slug>/transcript/" | grep -c "<Guest Name>"
+```
+
+Browser-level (required as real evidence — route/text checks are not enough).
+The parametrized helper `.playwright-verify/verify_speakers.py` (local,
+git-ignored) takes a slug + expected names and asserts the contributor strip,
+the **Podlove player transcript tab**, and the transcript detail page, saving
+screenshots:
+
+```bash
+uv run python .playwright-verify/verify_speakers.py <slug> "Will Vincent" "Carlton Gibson" "<Guest>"
+```
+
+If the script is missing, recreate it from these Podlove selectors: click
+`[data-django-chat-player-placeholder]`, get `podlove-player iframe` →
+`content_frame()`, wait `#app.loaded`, click `[data-test="tab-trigger--transcripts"]`,
+read `#tab-transcripts` text, and match names **case-insensitively** (Podlove
+uppercases speaker names via CSS).
+
+### Gotchas (consolidated)
+
+- `nohup` buffers stdout — track diarization progress via the DB, not the log.
+- `--force` **overwrites** existing labels with a fresh diarization. If you test
+  the known-speaker path on an already-labeled episode, **back up** the
+  `podlove`/`dote`/`vtt` bytes first and restore on failure (the new run's
+  `Speaker N` numbering differs, so you cannot just re-apply the old mapping).
+- Non-ASCII names: escape or use a `.py` file (see step 4).
+- Sanitizer is exact-match; leave ad/spurious labels unmapped.
+- `transcript_diarization_mode='enabled'` persists on the audio (shared across
+  episodes that reuse it) — intended.
+
 ## Staging verification (2026-05-29)
 
 Deployed via `just deploy-staging` (rsync of the local checkout, `uv sync`,
-migrate, collectstatic, service restart). Reference episode:
-`breaking-django` (audio 202), diarized into 2 speakers and mapped to
-**Will Vincent** + **Carlton Gibson**.
+migrate, collectstatic, service restart).
+
+Six episodes are diarized and labeled (Will Vincent + Carlton Gibson + guest):
+`breaking-django` (hosts only) plus the five newest —
+`deploy-on-day-one-calvin-hendryx-parker` (Calvin Hendryx-Parker),
+`europython-2026-mia-baji` (Mia Bajić),
+`djangocon-europe-recap-other-news-jeff-triplett` (Jeff Triplett),
+`django-tasks-jake-howard` (Jake Howard), and
+`boost-your-github-dx-adam-johnson` (Adam Johnson). Approved voice references
+are seeded for both hosts and all five guests.
 
 Browser-level evidence (Playwright DOM assertions + screenshots, see
 `.playwright-verify/`, gitignored) confirmed on
-`https://djangochat.staging.django-cast.com`:
+`https://djangochat.staging.django-cast.com` for `breaking-django`,
+`boost-your-github-dx-adam-johnson`, and
+`djangocon-europe-recap-other-news-jeff-triplett`:
 
 - Episode detail page renders the "Hosts and Guests" contributor strip.
 - Podlove player **transcript tab** shows the speaker labels (Podlove uppercases
   them via CSS).
-- `/episodes/breaking-django/transcript/` shows the speaker labels in the
-  themed transcript layout.
+- The `/transcript/` detail page shows the speaker labels in the themed layout.
+
+Public Podlove API + transcript-page checks pass for all six episodes; spurious
+ad/over-segmentation labels are correctly sanitized out.
 
 ## Operational follow-ups
 
@@ -136,6 +430,12 @@ Browser-level evidence (Playwright DOM assertions + screenshots, see
   `VoxhelmSettings` / env once a broad rollout is desired.
 - Contributor avatars are optional; the partial falls back to an initial chip.
   Add avatars in Wagtail when host/guest portraits are available.
-- Known-speaker voice references (`ContributorVoiceReference`, migration `0070`)
-  are available upstream but unused here; revisit if automatic speaker
-  identification is wanted instead of manual label mapping.
+- **Enable known-speaker auto-ID** to remove the manual label-mapping step:
+  configure the Voxhelm server (`pyannote` backend + HF token + CloudFront host
+  allow-listed) and set `CAST_VOXHELM_KNOWN_SPEAKER_ENABLED` in the staging env,
+  then regenerate. Voice references are already seeded for both hosts and the
+  five guests, so the payload is ready; today the engine returns no `speakers`
+  artifact (see status note above).
+- Verify/correct the best-effort host (Will vs Carlton) attributions by ear if
+  precise per-segment accuracy matters; corrections are one-line
+  `rewrite_speaker_labels` calls.
