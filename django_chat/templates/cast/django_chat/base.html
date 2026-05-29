@@ -63,8 +63,22 @@
       }
     </style>
     <script defer src="{% static 'django_chat/js/view-transitions.js' %}?v=vt-prototype-13"></script>
+    {# Set the reveal gate pre-paint so card-reveal.js's start offset never flashes.
+       Guard on reduced-motion + IntersectionObserver so unsupported / opted-out
+       visitors keep the static resting layout. #}
+    <script>
+      (function () {
+        try {
+          if (!matchMedia('(prefers-reduced-motion: reduce)').matches &&
+              'IntersectionObserver' in window) {
+            document.documentElement.classList.add('js-reveal');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script defer src="{% static 'django_chat/js/card-reveal.js' %}?v=card-reveal-7"></script>
     {% block render_expect %}{% endblock render_expect %}
-    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=new-header-127">
+    <link rel="stylesheet" href="{% static 'django_chat/css/site.css' %}?v=new-header-135">
     {% comment %}
       Hide JS-only modal enhancements (Copy-to-clipboard, "Start at" timecode,
       Mastodon instance prompt) when scripting is disabled, leaving the

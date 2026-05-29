@@ -2199,6 +2199,42 @@ h2[data-vt-episode-title] {
   transform: translateY(-1px);
 }
 
+/* Reveal-on-view: targets rise into place when they enter the viewport and
+   reset when they leave, replaying on re-entry. An IntersectionObserver
+   (card-reveal.js) toggles `.is-in-view`, so each rise is a time-based
+   transition that plays to completion regardless of scroll speed — unlike a
+   scrubbed scroll timeline, nothing gets stranded mid-rise on a tall screen
+   where everything is already visible at once. Drives `translate` only, so it
+   composes with the `:hover` `transform` lift. Gated by `html.js-reveal` (set
+   pre-paint by an inline head script) so no-JS and reduced-motion users get the
+   resting layout with no offset. Review cards are excluded — they live in a
+   horizontal scroller.
+
+   card-reveal.js keys `.is-in-view` to a central band (not the full viewport),
+   so a card rises when it scrolls into the middle of the screen and settles
+   back when it leaves — re-arming on the band is what lets the cards near the
+   top of the page replay every time they're scrolled past, since they rarely
+   leave the viewport completely. Both states carry a `translate` transition so
+   the motion is animated in BOTH directions: it rises slowly and leisurely
+   (0.95s ease-in-out — soft start, quicker middle, soft settle) on entry and
+   sinks back quicker (0.32s ease-in) on exit — no hard snap. The reset is
+   deliberately faster than the rise so a quick scroll-reversal spends little
+   time mid-sink, keeping re-reveals close to the full travel. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js-reveal :is(.sponsor-slot, .sponsor-tier, .sponsor-callout, .subscribe-feature, .audio-feed) {
+    translate: 0 2rem;
+    transition:
+      translate 0.32s ease-in,
+      transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+  html.js-reveal :is(.sponsor-slot, .sponsor-tier, .sponsor-callout, .subscribe-feature, .audio-feed).is-in-view {
+    translate: 0 0;
+    transition:
+      translate 0.95s cubic-bezier(0.65, 0, 0.35, 1),
+      transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+}
+
 /* ---------- Subscribe page ----------
    Mirrors the #episode-detail-main / .episode-detail pattern: the outer
    `<div id="subscribe-main" class="page-content">` supplies the container
