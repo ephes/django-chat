@@ -385,8 +385,12 @@ print(t.get_speaker_labels(), [a.display_name for a in ep.visible_contributor_as
 > **Gotcha — non-ASCII names.** Names like `Mia Bajić` get mangled by nested
 > `ssh → bash → python` single-quoting. Use a Python unicode escape
 > (`"Mia Bajić"`) or write a small `.py` file on the server and run it,
-> rather than inlining the character in a `-c` string. The contributor
-> `display_name` and the rewritten label must match byte-for-byte.
+> rather than inlining the character in a `-c` string. The byte-for-byte match
+> requirement applies **only to the label ↔ `display_name` pair** — that is what
+> the sanitizer compares. Free-text fields such as `short_bio` are never matched
+> against anything, so non-ASCII there is harmless; keep it ASCII only to dodge
+> the shell-quoting trap, not for correctness (e.g. write "La Suite numerique" in
+> the bio while the guest's `display_name` stays exactly as it must appear).
 
 ### 5. Seed voice references (voiceprints) — optional, for future known-speaker
 
@@ -427,6 +431,85 @@ def seed(slug, audio_pk, name):
 Voice references are **private** (DB + protected storage only) — never commit,
 expose, or serialize them. They are ready for the known-speaker engine but do
 nothing until it is enabled (see status note above).
+
+### 4+5 consolidated: one idempotent apply-and-seed script
+
+In practice steps 4 and 5 are best run as a **single standalone `.py` on the
+server**, driven by `sys.argv` so non-ASCII names and JSON mappings survive the
+`ssh → bash → python` chain (note: `manage.py shell -c` does **not** forward
+argv, so this must be a real script, not `-c`). It is idempotent —
+`get_or_create` for the guest/assignments and a skip-if-exists guard for the
+voice ref — so re-running is safe. Drop it at e.g. `/home/django-chat/diar_apply.py`:
+
+```python
+import sys; sys.path.insert(0, "/home/django-chat/site")
+import os, json, django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.production"); django.setup()
+from decimal import Decimal
+from cast.models import Episode, Transcript, Contributor, EpisodeContributor, Audio
+from cast.models.contributors import ContributorVoiceReference
+
+# argv: <audio_id> '<mapping_json>' [<guest_slug> <Guest Name> <bio>]...
+audio_id = int(sys.argv[1]); mapping = json.loads(sys.argv[2])
+guests = [tuple(sys.argv[3:][i:i+3]) for i in range(0, len(sys.argv[3:]), 3)]
+
+ep = Episode.objects.get(podcast_audio_id=audio_id)
+will = Contributor.objects.get(slug="will-vincent")
+carlton = Contributor.objects.get(slug="carlton-gibson")
+assigns = [(will, EpisodeContributor.ROLE_HOST), (carlton, EpisodeContributor.ROLE_HOST)]
+for slug, name, bio in guests:
+    g, created = Contributor.objects.get_or_create(
+        slug=slug, defaults=dict(display_name=name, visible=True,
+                                 default_role="guest", short_bio=bio))
+    if not created and g.display_name != name:
+        print("WARN existing", slug, repr(g.display_name), "!=", repr(name))
+    assigns.append((g, EpisodeContributor.ROLE_GUEST))
+for c, role in assigns:
+    EpisodeContributor.objects.get_or_create(episode=ep, contributor=c, role=role)
+
+t = Transcript.objects.get(audio_id=audio_id); t.rewrite_speaker_labels(mapping)
+print("labels:", t.get_speaker_labels(),
+      "| visible:", [a.display_name for a in ep.visible_contributor_assignments])
+
+def longest_run(pd, name, cap=30.0, min_len=8.0):
+    best=None; i=0; n=len(pd)
+    while i < n:
+        if pd[i].get("speaker")==name and pd[i].get("start_ms") is not None:
+            j=i
+            while j+1<n and pd[j+1].get("speaker")==name and pd[j+1].get("end_ms") is not None: j+=1
+            s=pd[i]["start_ms"]/1000.0; e=pd[j]["end_ms"]/1000.0
+            if best is None or (e-s)>(best[1]-best[0]): best=(s,e)
+            i=j+1
+        else: i+=1
+    if best is None or (best[1]-best[0])<min_len: return None
+    return (round(best[0],3), round(min(best[1], best[0]+cap),3))
+
+pd = t.podlove_data.get("transcripts", [])
+for slug, name, bio in guests:  # seed only new guests; hosts already seeded once
+    c = Contributor.objects.get(slug=slug)
+    if ContributorVoiceReference.objects.filter(contributor=c, source_audio_id=audio_id).exists():
+        print("voiceref exists for", name); continue
+    rng = longest_run(pd, name)
+    if not rng: print("NO clean run for", name); continue
+    ContributorVoiceReference.objects.create(
+        contributor=c, source_audio=Audio.objects.get(pk=audio_id),
+        start_seconds=Decimal(str(rng[0])), end_seconds=Decimal(str(rng[1])),
+        status=ContributorVoiceReference.Status.APPROVED, consent_confirmed=True,
+        title="seed %s" % name)
+    print("seeded", name, rng)
+```
+
+Run it (only the title-mapped speakers; leave spurious/empty labels out so they
+sanitize):
+
+```bash
+.venv/bin/python /home/django-chat/diar_apply.py 205 \
+  '{"Speaker 1": "Will Vincent", "Speaker 2": "Samuel Paccoud", "Speaker 3": "Carlton Gibson"}' \
+  samuel-paccoud "Samuel Paccoud" "DINUM; building La Suite, an open-source productivity suite"
+```
+
+It is a throwaway operator artifact (delete it after — it is not part of the
+app), but recreating it each run is wasted effort; keep this copy.
 
 ### 6. Verify
 
@@ -544,9 +627,9 @@ Browser-level evidence (Playwright DOM assertions + screenshots, see
 Public Podlove API + transcript-page checks pass for all seven episodes;
 spurious ad/over-segmentation labels are correctly sanitized out.
 
-### Additional batch (2026-05-29) — five more episodes, DB-only
+### Additional batch (2026-05-29) — eight more episodes, DB-only
 
-A second pass diarized and labeled seven more previously-undiarized episodes
+A second pass diarized and labeled eight more previously-undiarized episodes
 using only the staging-database runbook below (no app-code change, no redeploy).
 Each was identified from transcript evidence (host self-IDs, sponsor/outro
 reader, guest naming/biography — never order-guessed), labels rewritten via
@@ -564,11 +647,12 @@ page):
 | `building-a-django-api-framework-faster-than-fastapi` | 12 / 14 | Farhan Ali Raza | Carlton self-ID; Will sponsor/outro; guest "following Carlton for years" + GSoC |
 | `django-20-years-later-adrian-holovaty-g7z78kc0` | 16 / 18 | Adrian Holovaty | Will self-ID + sponsor/outro; guest = Django creator running Soundslice; a 5-segment `Speaker 4` over-segmentation label left **unmapped** (sanitizes out) |
 | `from-bootcamp-to-project-manager-keanya-phelps` | 13 / 15 | Keanya Phelps | Will self-ID + outro; guest names both hosts ("Carlton and Will"); Carlton = remaining host (sponsor reader) by elimination + Will's 3rd-person "Carlton was in the audience" |
+| `how-france-ditched-microsoft-samuel-paccoud` | 205 / 212 | Samuel Paccoud | Will self-ID + sponsor/outro; guest = DINUM / La Suite (French govt), massively dominant (1356 segs); Carlton = remaining host (Django-contribution advocacy). Added as a follow-on one-off. |
 
 Host roles vary per episode (Will or Carlton may read the sponsor/do the intro),
 so the **self-identification in the intro** ("I'm Will Vincent…" / "I'm Carlton
 Gibson…") was the decisive anchor, corroborated by who addresses whom and
-biography. Approved voice references seeded for all five new guests.
+biography. Approved voice references seeded for all eight new guests.
 
 > **Not every episode diarizes.** `freelancing-community-andrew-miller`
 > (audio 5) was attempted and **dropped**: Voxhelm completed the job but returned
