@@ -199,10 +199,17 @@
       });
       shell.addEventListener('pointerleave', () => { tx = 0; ty = 0; start(); });
     } else {
-      // Coarse pointer / touch: scroll-linked Y drift.
+      // Coarse pointer / touch: no hover to drive the parallax, so feed the
+      // same counter-spread from scroll position instead. tx/ty are pushed past
+      // the desktop [-1, 1] range on purpose — a fraction of a cqw is ~1px on a
+      // phone and reads as no motion at all, so we amplify the shared M factors
+      // here rather than touch the desktop-tuned M values.
+      const TOUCH_GAIN = 7;     // amplitude multiplier vs. the desktop pointer
+      const TOUCH_RANGE = 0.55; // spread completes after this fraction of a viewport scrolled
       sampleTarget = () => {
-        ty = Math.min(1, scrollY / Math.max(innerHeight * 0.8, 1));
-        tx = 0;
+        const p = Math.min(1, scrollY / Math.max(innerHeight * TOUCH_RANGE, 1));
+        tx = p * TOUCH_GAIN;
+        ty = p * TOUCH_GAIN;
       };
       addEventListener('scroll', start, { passive: true });
       sampleTarget();

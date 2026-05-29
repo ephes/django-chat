@@ -765,6 +765,7 @@ body:has([data-show-hero-shell]) .brand {
   color: var(--show-hero-accent);
   pointer-events: none;
   translate: var(--show-hero-px-hp-x, 0) var(--show-hero-px-hp-y, 0);
+  will-change: translate;
 }
 .show-hero-headphones path {
   stroke: currentColor;
@@ -799,6 +800,7 @@ body:has([data-show-hero-shell]) .brand {
   color: color-mix(in srgb, var(--dc-django) 35%, transparent);
   transform: translate(-49.5%, 5%);
   translate: var(--show-hero-px-fill-x, 0) var(--show-hero-px-fill-y, 0);
+  will-change: translate;
 }
 .show-hero-listen-up--outline {
   color: transparent;
@@ -806,6 +808,7 @@ body:has([data-show-hero-shell]) .brand {
           text-stroke: 1px var(--show-hero-accent);
   transform: translate(-50.5%, -1%);
   translate: var(--show-hero-px-outline-x, 0) var(--show-hero-px-outline-y, 0);
+  will-change: translate;
 }
 
 .show-hero-center {
