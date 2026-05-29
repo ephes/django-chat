@@ -238,6 +238,18 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert "#0dcaf0" not in normalized_css
 
 
+def test_topbar_current_nav_link_contrasts_on_dark_surfaces() -> None:
+    css_path = settings.ROOT_DIR / "django_chat/static/django_chat/css/site.css"
+    css = css_path.read_text()
+    current_nav_block = _css_blocks(css, '.nav-links a[aria-current="page"]')[-1]
+    current_color = _css_color_value(current_nav_block)
+    surface_deep = _css_var_hex(css, "--dc-surface-deep")
+    stacked_nav_surface = _mix_srgb(surface_deep, "#ffffff", 0.08)
+
+    assert _contrast_ratio(current_color, surface_deep) >= 4.5
+    assert _contrast_ratio(current_color, stacked_nav_surface) >= 4.5
+
+
 @pytest.mark.django_db
 def test_episode_detail_uses_svg_logo_when_cover_image_is_imported(
     client: Client,
@@ -421,3 +433,49 @@ def _css_blocks(css: str, selector: str) -> list[str]:
         end = css.index("}", start)
         blocks.append(css[start : end + 1])
         search_from = end + 1
+
+
+def _css_var_hex(css: str, name: str) -> str:
+    match = re.search(rf"{re.escape(name)}:\s*(#[0-9a-fA-F]{{6}});", css)
+    assert match is not None
+    return match.group(1)
+
+
+def _css_color_value(block: str) -> str:
+    match = re.search(r"\n\s*color:\s*(#[0-9a-fA-F]{6});", block)
+    assert match is not None
+    return match.group(1)
+
+
+def _mix_srgb(color_a: str, color_b: str, color_b_weight: float) -> str:
+    a_channels = _hex_channels(color_a)
+    b_channels = _hex_channels(color_b)
+    channels = [
+        round(a * (1 - color_b_weight) + b * color_b_weight)
+        for a, b in zip(a_channels, b_channels, strict=True)
+    ]
+    return "#" + "".join(f"{channel:02x}" for channel in channels)
+
+
+def _contrast_ratio(color_a: str, color_b: str) -> float:
+    luminance_a = _relative_luminance(color_a)
+    luminance_b = _relative_luminance(color_b)
+    lighter = max(luminance_a, luminance_b)
+    darker = min(luminance_a, luminance_b)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def _relative_luminance(color: str) -> float:
+    red, green, blue = [_linear_channel(channel) for channel in _hex_channels(color)]
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+
+
+def _linear_channel(channel: int) -> float:
+    value = channel / 255
+    if value <= 0.03928:
+        return value / 12.92
+    return ((value + 0.055) / 1.055) ** 2.4
+
+
+def _hex_channels(color: str) -> tuple[int, int, int]:
+    return int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)

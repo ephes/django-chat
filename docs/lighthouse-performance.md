@@ -114,6 +114,13 @@ variant under the current `sizes="100vw"` rule (the new-header migration on
 2026-05-26 dropped the legacy `120vw` overshoot — the hero now fills the
 section width via `object-fit: cover`).
 
+Accessibility follow-up on 2026-05-29: the primary navigation's
+`aria-current="page"` link state now uses a brighter green than the hover/focus
+state so it keeps WCAG AA text contrast on both the desktop topbar surface and
+the slightly lighter stacked mobile navigation background. The CSS template test
+calculates that contrast directly; re-run Lighthouse after deployment before
+recording new scores.
+
 Current scores after CSS minification deployed to staging:
 
 Measured on 2026-05-19 with Lighthouse 13.3.0. Reports are in
