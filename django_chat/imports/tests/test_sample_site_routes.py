@@ -254,6 +254,11 @@ def test_imported_sample_episode_surfaces_attached_generated_transcript(
         episode = Episode.objects.get(slug="django-tasks-jake-howard")
         assert episode.podcast_audio is not None
         transcript = _create_generated_transcript(episode.podcast_audio)
+        # django-cast develop only exposes a transcript speaker label publicly
+        # when a visible Contributor with that exact display name is assigned to
+        # the live episode (cast.transcript_sanitization). Assign "Host" so the
+        # diarized speaker label survives sanitization in public output.
+        _assign_contributor(episode, display_name="Host", slug="host")
 
         detail_response = client.get(episode_detail_path("django-tasks-jake-howard"))
         transcript_response = client.get(transcript_path("django-tasks-jake-howard"))
@@ -268,6 +273,10 @@ def test_imported_sample_episode_surfaces_attached_generated_transcript(
     detail_content = detail_response.content.decode()
     assert f'href="{absolute_url(transcript_path("django-tasks-jake-howard"))}"' in detail_content
     assert "<podlove-player" in detail_content
+    # Contributors render in the django-chat theme via cast/contributors.html.
+    assert 'class="episode-contributors"' in detail_content
+    assert "Hosts and Guests" in detail_content
+    assert "Host" in detail_content
     assert f'data-template="{reverse("django_chat_podlove_player_template")}"' in detail_content
     assert 'data-transcript-overlay="true"' not in detail_content
     assert 'class="audio-transcript-toggle"' not in detail_content
@@ -285,6 +294,9 @@ def test_imported_sample_episode_surfaces_attached_generated_transcript(
     transcript_content = transcript_response.content.decode()
     assert "Transcript: Django Tasks - Jake Howard" in transcript_content
     assert "Generated transcript segment for an imported episode." in transcript_content
+    # The diarized speaker label renders on the transcript detail page because a
+    # matching visible contributor ("Host") is assigned to the live episode.
+    assert "Host" in transcript_content
 
     assert podlove_response.status_code == 200
     podlove_data = podlove_response.json()
@@ -356,6 +368,22 @@ class FakeAudioDownloader:
 def _transcript_count() -> int:
     transcript = apps.get_model("cast", "Transcript")
     return transcript.objects.count()
+
+
+def _assign_contributor(episode: Episode, *, display_name: str, slug: str) -> Any:
+    contributor_model = apps.get_model("cast", "Contributor")
+    episode_contributor_model = apps.get_model("cast", "EpisodeContributor")
+    contributor = contributor_model.objects.create(
+        display_name=display_name,
+        slug=slug,
+        visible=True,
+    )
+    episode_contributor_model.objects.create(
+        episode=episode,
+        contributor=contributor,
+        role=episode_contributor_model.ROLE_HOST,
+    )
+    return contributor
 
 
 def _create_generated_transcript(audio: Audio) -> Any:

@@ -107,6 +107,26 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       matching the public episode index so recent episodes do not sink below
       older pages just because import or edit timestamps differ from publish
       dates.
+- [x] **9h. Episode contributors + diarized speaker labels** — django-cast
+      upgraded from PyPI `0.2.56` to the `develop` branch (pinned commit
+      `d6ce2c79`, reports `0.2.58`) for `Contributor`/`EpisodeContributor`
+      snippets and the diarized transcript speaker-label workflow (neither is in
+      any PyPI release). Migrations `0066`–`0071` applied. Episode detail pages
+      render visible contributors via django-cast's `cast/contributors.html`
+      partial, themed as a "Hosts and Guests" strip. The contributor HTML never
+      enters list/feed output because the partial is included only by the
+      detail-only `episode.html` template (feed bodies use `post_body.html`, the
+      index uses card markup); the only feed change is
+      additive Podcasting 2.0 `<podcast:person>` tags emitted by django-cast for
+      episodes that have contributors (verified safe: channel + non-contributor
+      episodes unchanged, feed still valid, item count 204). Public speaker
+      labels are gated on the episode's
+      visible contributors via `cast.transcript_sanitization`, identically for
+      the Podlove player API and the transcript detail page. Staging episode
+      `breaking-django` (audio 202) diarized via Voxhelm into Will Vincent +
+      Carlton Gibson; browser-verified (Playwright) in the player transcript tab
+      and the transcript detail page. See
+      [`docs/contributors-and-diarization.md`](contributors-and-diarization.md).
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -246,13 +266,12 @@ with 202 items.
    production migration risks + pre-review UI polish in place, the staging site
    is ready for host review. Send hosts the URL + `host-review-admin`
    credential.
-2. **Transcript detail page design repair.** The transcript route is functional
-   and verified, but the dedicated `/episodes/<slug>/transcript/` page now
-   looks broken after the surrounding visual polish. Give it a dedicated design
-   pass before treating transcript handling as host-review/production-ready:
-   align it with the current episode-detail layout, make speaker/timestamp
-   segments readable, preserve useful navigation back to the episode, and check
-   mobile and desktop views.
+2. **Transcript detail page design.** Addressed during the contributors +
+   diarization slice (9h): the `/episodes/<slug>/transcript/` page reuses the
+   episode-detail grid/sidebar, renders bold speaker names + green mono
+   timestamps per segment, and keeps a "Back to Show Notes" link. Verified
+   readable on staging via Playwright for `breaking-django`. Re-check mobile
+   spacing if the segment list grows much longer.
 3. **Episode tags/taxonomy import decision.** Decide whether source keywords
    should also become Wagtail/taggit episode tags. Do not blindly mirror generic
    RSS keywords into public tags without a UI/editor use case and a preservation

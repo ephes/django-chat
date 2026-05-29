@@ -53,3 +53,6 @@ deploy/secrets/*.plain.yaml
 
 # Superpowers brainstorm scratch directory
 .superpowers/
+
+# Ad-hoc Playwright staging verification artifacts (scripts + screenshots)
+.playwright-verify/

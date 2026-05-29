@@ -158,8 +158,8 @@ wheels = [
 
 [[package]]
 name = "django-cast"
-version = "0.2.56"
-source = { registry = "https://pypi.org/simple" }
+version = "0.2.58"
+source = { git = "https://github.com/ephes/django-cast?rev=d6ce2c7980baaece847d8495d22832208cd73f88#d6ce2c7980baaece847d8495d22832208cd73f88" }
 dependencies = [
     { name = "crispy-bootstrap4" },
     { name = "django" },
@@ -179,10 +179,6 @@ dependencies = [
     { name = "rich" },
     { name = "setuptools" },
     { name = "wagtail" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/36/30/c610092cd7a02a472afcd41b9bb5751f2fd54dc5f720ac093b5c1f849cc0/django_cast-0.2.56.tar.gz", hash = "sha256:e4bc21652e4d303ab683acf731406d727f3df25b8f7626ba4f341724f29ece5a", size = 376001, upload-time = "2026-05-12T12:47:54.542Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1c/7b/57be20028b372e7ac27029a6a4c8afa97093544b150d2e30b071baf7f2ce/django_cast-0.2.56-py3-none-any.whl", hash = "sha256:49779d9def517d766442cee26e19c94cd83e940b6e4ff7b14a633e42b48e322d", size = 500816, upload-time = "2026-05-12T12:47:53.112Z" },
 ]
 
 [[package]]
@@ -217,7 +213,7 @@ dev = [
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14,<5.0" },
     { name = "django", specifier = ">=6.0,<7.0" },
-    { name = "django-cast", specifier = ">=0.2.53,<0.3" },
+    { name = "django-cast", git = "https://github.com/ephes/django-cast?rev=d6ce2c7980baaece847d8495d22832208cd73f88" },
     { name = "django-environ", specifier = ">=0.13,<0.14" },
     { name = "django-storages", extras = ["s3"], specifier = ">=1.14,<2.0" },
     { name = "django-tasks", specifier = ">=0.12,<0.13" },

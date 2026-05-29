@@ -194,6 +194,11 @@ rotate it only through the agreed secure channel.
 For the current shipped/open-work picture and the next-action target, see
 [`docs/implementation-status.md`](docs/implementation-status.md).
 
+Episode contributor snippets and the diarized transcript speaker-label workflow
+(including the django-cast `develop` dependency pin, migrations, Wagtail editor
+steps, and staging verification) are documented in
+[`docs/contributors-and-diarization.md`](docs/contributors-and-diarization.md).
+
 ## Scope
 
 This slice includes a small fixture-backed database/page import, a live
