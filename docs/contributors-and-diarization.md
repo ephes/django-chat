@@ -485,7 +485,7 @@ def longest_run(pd, name, cap=30.0, min_len=8.0):
     return (round(best[0],3), round(min(best[1], best[0]+cap),3))
 
 pd = t.podlove_data.get("transcripts", [])
-for slug, name, bio in guests:  # seed only new guests; hosts already seeded once
+for slug, name, bio in guests:  # guard is per (contributor, source_audio) — see note below
     c = Contributor.objects.get(slug=slug)
     if ContributorVoiceReference.objects.filter(contributor=c, source_audio_id=audio_id).exists():
         print("voiceref exists for", name); continue
@@ -511,6 +511,76 @@ sanitize):
 It is a throwaway operator artifact (delete it after — it is not part of the
 app), but recreating it each run is wasted effort; keep this copy.
 
+> **Recurring guests accumulate a voice reference per episode.** The seed guard
+> above is keyed on `(contributor, source_audio_id)`, **not** on the contributor
+> alone — so passing an already-seeded guest (e.g. Jeff Triplett, who returns
+> across episodes) for a *new* episode seeds a **second** reference from the new
+> audio, because none exists for that audio yet. This is harmless — extra clean
+> samples can only help the known-speaker engine, and references are private — so
+> one-per-person is not required. If you want strictly one reference per person,
+> omit the guest from the seeding step (or pre-check
+> `ContributorVoiceReference.objects.filter(contributor=c).exists()`) when they
+> already have one. Hosts are passed via the host block, never the guest list, so
+> they are seeded exactly once regardless.
+
+### 5b. Contributor links (strip anchors + `podcast:person href`)
+
+Each `Contributor` has ordered `ContributorLink` rows (`service` ∈ {website,
+github, mastodon, twitter, linkedin, youtube} + `url`). Per episode,
+`EpisodeContributor.link` is an FK to one of that contributor's links — **the one
+chosen surfaces as the contributor-strip anchor and the RSS
+`<podcast:person href="…">`**. With no `EpisodeContributor.link`, the person tag
+is emitted without `href` (still valid). So two steps: create the link, then
+point the episode assignment at it.
+
+Host-link standard (apply to **every** diarized episode, not just new ones):
+
+- **Will Vincent** → `mastodon https://fosstodon.org/@wsvincent`
+- **Carlton Gibson** → `mastodon https://chaos.social/@carlton`
+  (an older `https://fosstodon.org/@carlton` is **wrong** — fix it)
+
+Guest links: prefer **Mastodon**, else an authoritative website/profile from the
+episode show notes (the episode page's external links are the best source),
+transcript, or a web search. Examples used in the 2026-05-30 batch: Paolo
+Melchiorre `fosstodon.org/@paulox`, Jeff Triplett `mastodon.social/@webology`,
+Marlene Mhangami `fosstodon.org/@Marlene`, Tim Allen `fosstodon.org/@FlipperPA`,
+Andrew Miller `indiehackers.social/@nanorepublica`, Roman Pronskiy
+`phpc.social/@pronskiy`, and — where no Mastodon exists — Jacob Walls
+`github.com/jacobtylerwalls`.
+
+Mechanics (idempotent; `service`+`contributor` identify a link, so re-running
+updates the URL in place — this is how the wrong Carlton link gets corrected):
+
+```python
+from cast.models import Episode, EpisodeContributor, Contributor, Transcript
+from cast.models.contributors import ContributorLink
+
+def ensure_link(c, service, url):  # get-or-create, update URL if changed
+    link, created = ContributorLink.objects.get_or_create(
+        contributor=c, service=service, defaults={"url": url})
+    if not created and link.url != url:
+        link.url = url; link.save(update_fields=["url"])
+    return link
+
+def set_ec_link(episode, contributor, link):
+    EpisodeContributor.objects.filter(
+        episode=episode, contributor=contributor).update(link=link)
+
+# Host links across ALL diarized episodes (run after each new episode lands):
+will = Contributor.objects.get(slug="will-vincent")
+carlton = Contributor.objects.get(slug="carlton-gibson")
+wl = ensure_link(will, "mastodon", "https://fosstodon.org/@wsvincent")
+cl = ensure_link(carlton, "mastodon", "https://chaos.social/@carlton")
+dia = [ep.pk for ep in Episode.objects.filter(live=True, podcast_audio__isnull=False)
+       if (t := Transcript.objects.filter(audio=ep.podcast_audio).first()) and t.get_speaker_labels()]
+EpisodeContributor.objects.filter(episode_id__in=dia, contributor=will).update(link=wl)
+EpisodeContributor.objects.filter(episode_id__in=dia, contributor=carlton).update(link=cl)
+```
+
+A recurring guest's link is shared across all their episodes; set
+`EpisodeContributor.link` on each of their assignments (e.g. Jeff Triplett on both
+the survey and the DjangoCon-Europe-recap episodes).
+
 ### 6. Verify
 
 Public checks (no auth):
@@ -522,6 +592,22 @@ curl -s "$BASE/api/audios/podlove/<AUDIO>/post/<POST>/" | python3 -c \
 print(Counter(s.get("speaker") for s in d["transcripts"]));print([c["name"] for c in d["contributors"]])'
 curl -s "$BASE/episodes/<slug>/transcript/" | grep -c "<Guest Name>"
 ```
+
+RSS `podcast:person href` (the **podcast feed** is the `.xml`, not the
+`/episodes/feed/` HTML subscribe page):
+
+```bash
+# Real podcast RSS with podcast:person tags:
+curl -s "$BASE/episodes/feed/podcast/mp3/rss.xml" \
+  | grep -oE '<podcast:person href="[^"]*" role="(host|guest)">[^<]*</podcast:person>' \
+  | sort | uniq -c
+# Expect host hrefs (Will=fosstodon, Carlton=chaos.social) on every diarized
+# episode, and each guest carrying their chosen link.
+```
+
+Also confirm **no public `Speaker N` leaks**: in the Podlove API JSON above, the
+speaker counter should contain only real names + possibly `None`/`""`
+(sanitized), never `Speaker 1/2/…`.
 
 Browser-level (required as real evidence — route/text checks are not enough).
 The parametrized helper `.playwright-verify/verify_speakers.py` (local,
@@ -654,18 +740,53 @@ so the **self-identification in the intro** ("I'm Will Vincent…" / "I'm Carlto
 Gibson…") was the decisive anchor, corroborated by who addresses whom and
 biography. Approved voice references seeded for all eight new guests.
 
-> **Not every episode diarizes.** `freelancing-community-andrew-miller`
-> (audio 5) was attempted and **dropped**: Voxhelm completed the job but returned
-> **all-empty speaker labels** (`{'': 689}`) — no speaker separation at all, so
-> there were no `Speaker N` labels to map. Left unlabeled with no contributors
-> (sanitizes to a normal undiarized transcript). This is recording-specific, not
-> a sponsor or pipeline issue (`inverting-the-testing-pyramid-brian-okken` uses
-> the same "Six Feet Up" sponsor and diarized cleanly).
+> **All-empty diarization can be transient — retry before giving up.**
+> `freelancing-community-andrew-miller` (audio 5) returned **all-empty speaker
+> labels** (`{'': 689}`) on its first attempt and was provisionally dropped. A
+> later `--force` re-run of the *same* audio produced **three clean labels**
+> (Will, Carlton, Andrew Miller) and the episode was completed normally (see the
+> 2026-05-30 batch below). So an all-empty result is **not necessarily
+> recording-specific** — it can be a transient Voxhelm outcome. Re-run `--force`
+> at least once before concluding an episode is undiarizable; only treat it as
+> undiarizable if it repeats. (Sponsor is irrelevant either way:
+> `inverting-the-testing-pyramid-brian-okken` shares the same "Six Feet Up"
+> sponsor and diarized cleanly.)
 >
 > **Throughput note.** The Voxhelm deployment processes diarization jobs
 > serially; ~10–15 min per ~1h episode under load. Running multiple
 > `generate_transcripts` lanes does not parallelize the backend (jobs queue), but
 > it does keep the work moving if one episode's job is slow.
+
+### Additional batch (2026-05-30) — contributor links + seven more episodes
+
+This batch added the **contributor-link layer** (see [§5b](#5b-contributor-links-strip-anchors--podcastperson-href))
+and diarized seven more previously-undiarized episodes (five required + two
+bonus), DB-only. Speaker identification used the intro self-ID as the primary
+anchor; per-episode evidence below. All browser-verified (strip + player tab +
+`/transcript/`), API-verified (no public `Speaker N`), and RSS-verified
+(`podcast:person href`).
+
+**Host links applied across all 22 diarized episodes:** Will →
+`fosstodon.org/@wsvincent`, Carlton → `chaos.social/@carlton` (the prior wrong
+`fosstodon.org/@carlton` corrected). RSS confirms 22× each host with `href`.
+
+| Episode (audio/post) | Speaker→name evidence | Guest link |
+| --- | --- | --- |
+| freelancing-community-andrew-miller-seDEJ66s (5/8) | S2=Carlton self-ID ("Carlton Gibson, joined by Will"); S1=Will (sponsor+outro); S3=Andrew "Andy" Miller ("known as NanoRepublica"). **Retry succeeded** after a prior all-empty run. | mastodon `indiehackers.social/@nanorepublica` |
+| ai-in-the-real-world-marlene-mhangami-tim-allen (15/17) | S2=Carlton self-ID; S1=Will (remaining host); S3=Marlene (self-intro, Microsoft/PSF/PyCon Africa); S4=Tim Allen (Wharton WRDS principal eng); S5 (31 segs) unmapped over-seg | Marlene mastodon `fosstodon.org/@Marlene`; Tim mastodon `fosstodon.org/@FlipperPA` |
+| django-survey-2025-jeff-triplett (17/19) | S1=Will self-ID; S2=Jeff ("good to be back", DjangoCon/DEFNA, survey); S4=Carlton (Oracle/internals); S3 (17 segs) unmapped | mastodon `mastodon.social/@webology` (also set on his recap episode 205) |
+| django-on-the-med-paolo-melchiorre (18/20) | S1=Will self-ID; S2=Paolo ("from Pescara"; "you and Carlton" 3rd-person); S3=Carlton (co-attended, Django-process) | mastodon `fosstodon.org/@paulox` |
+| django-fellow-jacob-walls (19/21) | S1=Will self-ID; S2=Jacob (greets both hosts; "first few weeks as a fellow"); S3=Carlton (reads sponsor; "Django on the Med a week away"); S4/S5 unmapped | github `github.com/jacobtylerwalls` (no Mastodon) |
+| djangocon-us-2025-recap (20/22) — **hosts-only** | S1=Will (outro signoff; "DjangoCon US which I was at"); S2=Carlton ("English revolutionary period…presbyter=elder", British); S3 (2 segs) unmapped. No guest. | — |
+| php-web-frameworks-roman-pronskiy (21/23) — bonus | S2=Will self-ID; S1=Carlton (sponsor; PHP-evolution Qs; "I'm sure Will will…" 3rd-person); S3=Roman (dominant, "collaborate with Django/Python world") | mastodon `phpc.social/@pronskiy` |
+
+Approved private voice references seeded for each new guest (Andrew, Marlene,
+Tim, Paolo, Jacob, Roman; Jeff already had one). Spurious low-count and `""`
+labels were left unmapped and sanitize out (verified: no public `Speaker N`).
+
+> **All-empty diarization is sometimes transient.** `freelancing-community-andrew-miller`
+> returned all-empty on the 2026-05-29 attempt but **3 clean labels on a
+> `--force` retry** here — retry before declaring an episode undiarizable.
 
 ## Operational follow-ups
 
@@ -678,8 +799,8 @@ biography. Approved voice references seeded for all eight new guests.
 - **Enable known-speaker auto-ID** to remove the manual label-mapping step:
   configure the Voxhelm server (`pyannote` backend + HF token + CloudFront host
   allow-listed) and set `CAST_VOXHELM_KNOWN_SPEAKER_ENABLED` in the staging env,
-  then regenerate. Voice references are already seeded for both hosts and the
-  five guests, so the payload is ready; today the engine returns no `speakers`
+  then regenerate. Voice references are already seeded for both hosts and every
+  diarized guest, so the payload is ready; today the engine returns no `speakers`
   artifact (see status note above).
 - Verify/correct the best-effort host (Will vs Carlton) attributions by ear if
   precise per-segment accuracy matters; corrections are one-line
