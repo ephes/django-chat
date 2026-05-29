@@ -5,6 +5,7 @@
   const hoverLoadAttribute = "data-django-chat-load-on-hover";
   const hoverLoadArmedAttribute = "data-django-chat-hover-load-armed";
   const playerPanelStyleId = "django-chat-player-panel-style";
+  const replayButtonA11yObserverAttribute = "data-django-chat-replay-a11y-observer";
   const playerPanelStyles = `
 [data-test="tab"] {
   background: #e6f0dc !important;
@@ -148,6 +149,23 @@
   outline: none !important;
 }
 
+/* The compact Django Chat template has only icon-sized space for the simple
+   Podlove play button. In the ended state Podlove still injects a textual
+   "Replay" label into the restart button; without this override the label
+   overflows the circular button and collides with the progress bar. The
+   iframe observer below sets an explicit aria-label/title so the icon-only
+   visual treatment still has an accessible name. */
+button#play-button--restart [data-test="play-button--label"] {
+  display: none !important;
+}
+
+button#play-button--restart > .wrapper > span {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
 [data-test^="tab-trigger--"] {
   border-radius: 8px !important;
   outline-color: #0ea342 !important;
@@ -218,6 +236,39 @@
     style.setAttribute("data-django-chat-player-style", "");
     style.textContent = playerPanelStyles;
     (iframeDocument.head || iframeDocument.documentElement).appendChild(style);
+  };
+
+  const syncReplayButtonA11y = (iframeDocument) => {
+    const iframeWindow = iframeDocument?.defaultView;
+    const restartButton = iframeDocument?.querySelector("button#play-button--restart");
+    if (!iframeWindow || !(restartButton instanceof iframeWindow.HTMLButtonElement)) {
+      return;
+    }
+
+    restartButton.setAttribute("aria-label", "Replay");
+    restartButton.setAttribute("title", "Replay");
+  };
+
+  const installReplayButtonA11y = (iframeDocument) => {
+    const root = iframeDocument?.getElementById("app");
+    if (!root || root.hasAttribute(replayButtonA11yObserverAttribute)) {
+      return;
+    }
+
+    root.setAttribute(replayButtonA11yObserverAttribute, "true");
+    syncReplayButtonA11y(iframeDocument);
+
+    const Observer = iframeDocument.defaultView?.MutationObserver || MutationObserver;
+    const observer = new Observer(() => syncReplayButtonA11y(iframeDocument));
+    // Only the explicit aria-label is authoritative for accessibility. The title is
+    // best-effort tooltip text; do not observe title/aria-label here, because our own
+    // setAttribute calls would otherwise create an attribute-mutation feedback loop.
+    observer.observe(root, {
+      attributeFilter: ["id"],
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
   };
 
   const markReady = (player) => {
@@ -336,6 +387,7 @@
           }
           return false;
         }
+        installReplayButtonA11y(iframeDocument);
         if (app.classList.contains("loaded")) {
           reveal();
           return true;

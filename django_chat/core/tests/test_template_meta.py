@@ -346,6 +346,14 @@ def test_podlove_loader_injects_iframe_panel_styles() -> None:
     assert "background-image: none !important;" in loader
     assert '[data-test="play-button"]:focus-visible {' in loader
     assert '[data-test="play-button"]:focus:not(:focus-visible) {' in loader
+    assert 'button#play-button--restart [data-test="play-button--label"] {' in loader
+    assert "button#play-button--restart > .wrapper > span {" in loader
+    assert (
+        'const replayButtonA11yObserverAttribute = "data-django-chat-replay-a11y-observer";'
+        in loader
+    )
+    assert 'restartButton.setAttribute("aria-label", "Replay");' in loader
+    assert 'restartButton.setAttribute("title", "Replay");' in loader
     assert '[data-test^="tab-trigger--"]:focus-visible,' in loader
     assert '[data-test^="tab-trigger--"][aria-selected="true"] {' in loader
     assert '[data-test^="tab-trigger--"]:focus:not(:focus-visible) {' in loader

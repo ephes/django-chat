@@ -36,13 +36,23 @@ def page(sample_site: None) -> Iterator[Page]:
 
 
 @pytest.fixture
-def long_transcript_site(tmp_path: Path) -> Iterator[None]:
+def loadable_audio_site(tmp_path: Path) -> Iterator[None]:
     with override_settings(MEDIA_ROOT=tmp_path):
         import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
-        episode = Episode.objects.get(slug="django-tasks-jake-howard")
-        assert episode.podcast_audio is not None
-        _create_generated_transcript(episode.podcast_audio)
         yield
+
+
+@pytest.fixture
+def page_with_loadable_audio(loadable_audio_site: None) -> Iterator[Page]:
+    yield from _playwright_page()
+
+
+@pytest.fixture
+def long_transcript_site(loadable_audio_site: None) -> Iterator[None]:
+    episode = Episode.objects.get(slug="django-tasks-jake-howard")
+    assert episode.podcast_audio is not None
+    _create_generated_transcript(episode.podcast_audio)
+    yield
 
 
 @pytest.fixture
@@ -335,6 +345,72 @@ def test_embed_rail_button_opens_dialog_with_iframe_snippet(
 
     dialog.locator("[data-embed-close]").click()
     expect(dialog).not_to_have_attribute("open", "")
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_player_replay_state_keeps_compact_button_icon_only(
+    live_server: Any,
+    page_with_loadable_audio: Page,
+) -> None:
+    page_with_loadable_audio.goto(f"{live_server.url}{episode_detail_path()}")
+    page_with_loadable_audio.locator("[data-django-chat-player-placeholder]").click()
+    iframe = page_with_loadable_audio.locator("podlove-player iframe").first
+    iframe.wait_for(state="attached", timeout=10_000)
+    frame = iframe.element_handle().content_frame()
+    assert frame is not None
+    frame.wait_for_selector("#app.loaded", timeout=15_000)
+
+    frame.evaluate(
+        """() => {
+            // Podlove has no public test hook for forcing the ended state; these are
+            // internal Redux action types from the v5 player runtime.
+            const store = window.PODLOVE_STORE;
+            const duration = store.getState().timepiece.duration;
+            store.dispatch({type: "PLAYER_BACKEND_PLAYTIME", payload: duration});
+            store.dispatch({type: "PLAYER_BACKEND_END"});
+        }"""
+    )
+    frame.wait_for_selector(
+        'button#play-button--restart [data-test="play-button--label"]', state="attached"
+    )
+    expect(frame.get_by_role("button", name="Replay")).to_be_attached()
+
+    metrics = frame.evaluate(
+        """() => {
+            const button = document.querySelector('button#play-button--restart');
+            const label = button.querySelector('[data-test="play-button--label"]');
+            const icon = button.querySelector('svg');
+            const inner = button.querySelector('.wrapper > span');
+            const progress = document.querySelector('[data-test="progress-bar"]');
+            const buttonRect = button.getBoundingClientRect();
+            const iconRect = icon.getBoundingClientRect();
+            const progressRect = progress.getBoundingClientRect();
+            const labelStyles = getComputedStyle(label);
+            const innerStyles = getComputedStyle(inner);
+            return {
+                buttonText: button.innerText.trim(),
+                labelDisplay: labelStyles.display,
+                innerPaddingLeft: innerStyles.paddingLeft,
+                innerPaddingRight: innerStyles.paddingRight,
+                buttonWidth: buttonRect.width,
+                iconWidth: iconRect.width,
+                iconCenterOffset: Math.abs(
+                    (iconRect.left + iconRect.right) / 2 - (buttonRect.left + buttonRect.right) / 2
+                ),
+                buttonRight: buttonRect.right,
+                progressLeft: progressRect.left,
+            };
+        }"""
+    )
+
+    assert metrics["buttonText"] == ""
+    assert metrics["labelDisplay"] == "none"
+    assert metrics["innerPaddingLeft"] == "0px"
+    assert metrics["innerPaddingRight"] == "0px"
+    assert metrics["buttonWidth"] < 70
+    assert metrics["iconWidth"] > 0
+    assert metrics["iconCenterOffset"] < 1
+    assert metrics["buttonRight"] < metrics["progressLeft"]
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
