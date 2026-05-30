@@ -173,7 +173,6 @@
   /* Component-scoped fluid sizes. */
   --text-h1: clamp(2.4rem, 4vw + 1rem, 3.5rem);
   --text-episode-hero: clamp(1.8rem, 4cqi, 2.4rem);
-  --text-tagline: clamp(1.2rem, 1.5vw, 1.5rem);
   --text-platform-link: clamp(0.82rem, 0.25vw + 0.78rem, 0.96rem);
   --text-callout: clamp(1.05rem, 0.5vw + 0.95rem, 1.2rem);
   /* Weight scale — three common steps. 900 (episode-badge numerals) and
@@ -707,7 +706,6 @@ body:has([data-show-hero-shell]) .brand {
   --show-hero-hp-w:             clamp(5rem, calc(26vh + (50vh - 26vh) * clamp(0, (100cqw - 400px) / 624px, 1) + (30vw - 50vh) * clamp(0, (100cqw - 1024px) / 896px, 1)), 32rem);
   --show-hero-hp-bottom:        calc(9vh + (11vw - 9vh) * clamp(0, (100cqw - 380px) / 20px, 1) + (13vw - 11vw) * clamp(0, (100cqw - 400px) / 624px, 1));
   --show-hero-hp-right:         calc(2rem + (0% - 2rem) * clamp(0, (100cqw - 380px) / 644px, 1));
-  --show-hero-ep-size:          clamp(1rem, calc(5.15cqw + (2.5rem - 5.15cqw) * clamp(0, (100cqw - 1024px) / 6px, 1)), 7rem);
   --show-hero-ep-tracking:      calc(-0.045em + 0.085em * clamp(0, (100cqw - 820px) / 1100px, 1));
   --show-hero-ep-right:         calc(5.3cqw + (1.5rem - 5.3cqw) * clamp(0, (100cqw - 1024px) / 896px, 1));
   --show-hero-ep-bottom:        calc(16cqw + (1.5rem - 16cqw) * clamp(0, (100cqw - 1024px) / 6px, 1));
