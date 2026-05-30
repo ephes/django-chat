@@ -157,6 +157,14 @@ MEDIA_STORAGE_BACKEND = env(
     "DJANGO_CHAT_MEDIA_STORAGE_BACKEND",
     default="filesystem",
 )
+
+CAST_POST_BODY_BLOCKS = {
+    "detail": [
+        "django_chat.show_notes.blocks.sponsor_block",
+        "django_chat.show_notes.blocks.link_list_block",
+    ],
+}
+
 if MEDIA_STORAGE_BACKEND == "s3":
     DJANGO_CHAT_S3_BUCKET_NAME = _env_required(
         "DJANGO_CHAT_S3_STORAGE_BUCKET_NAME",

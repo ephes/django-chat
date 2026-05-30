@@ -548,6 +548,48 @@ Implementation tracking should stay lightweight:
   commits/PRs, and a short "next action" section. Do not duplicate the full PRD
   in that file.
 
+## Post-Staging Research Backlog
+
+- [x] Research structured show-note blocks for Django Chat episodes.
+  - Context: django-cast now has a `CAST_POST_BODY_BLOCKS` extension point that
+    can append project-specific Wagtail blocks to the `Post.body` `overview` and
+    `detail` sections. Django Chat should use that only after the episode
+    content shape is understood from the real imported catalog.
+  - Research scope: inspect the staging episode bodies and source metadata
+    across the full catalog, not just a few hand-picked recent episodes. Count
+    recurring show-note headings, emoji prefixes, list shapes, sponsor/support
+    copy, and link patterns. Start from the existing normalizer labels in
+    `django_chat/imports/show_notes.py` (`Books`, `Links`, `Projects`,
+    `Shameless Plugs`, `YouTube`, `Groups`, `Sponsor`, `Support the Show`) and
+    check whether staging contains additional meaningful categories.
+  - Candidate structure to evaluate:
+    - a sponsor block for the `detail` section with sponsor name, URL, optional
+      callout/copy, and feed-safe rendering;
+    - whether links, projects, and books need separate blocks or can share a
+      categorized link-list block with per-kind icons, headings, item title,
+      URL, and optional description metadata;
+    - whether `YouTube`, `Groups`, `Shameless Plugs`, or `Support the Show`
+      deserve first-class blocks or should stay as generic link sections;
+    - whether any block belongs in `overview` or whether all structured
+      show-note blocks should be `detail`-only.
+  - Deliverables: write a short research note with catalog findings, sample
+    episode references, proposed block names/schema, icon choices, admin editing
+    UX, detail/feed/API template behavior, and a migration/backfill plan from
+    the currently imported paragraph HTML to structured StreamField blocks.
+    Include the django-cast dependency bump required to consume
+    `CAST_POST_BODY_BLOCKS`, tests to prove import/backfill/rendering behavior,
+    and risks around existing saved content if block names later change.
+  - Research note:
+    [`docs/structured-show-note-blocks-research.md`](docs/structured-show-note-blocks-research.md).
+    Recommendation: add `show_note_sponsor` and `show_note_link_list` as
+    `detail`-only custom blocks; use the categorized link-list block for
+    `Links`, `Projects`, `Books`, `YouTube`, `Groups`, `Shameless Plugs`,
+    `Support the Show`, plural `Sponsors`, and `Sponsoring Options`; bump
+    django-cast to `f795ed5f` or later before implementing.
+  - Done when: the next implementation slice can add the custom blocks and
+    importer/backfill with clear acceptance criteria instead of guessing from
+    anecdotal show-note examples.
+
 ## Production Migration Considerations
 
 Production migration is not just deploying the app.

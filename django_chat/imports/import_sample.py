@@ -34,7 +34,7 @@ from django_chat.imports.models import (
     PodcastSourceLink,
     PodcastSourceMetadata,
 )
-from django_chat.imports.show_notes import normalize_show_notes_html
+from django_chat.imports.show_notes import structured_show_note_detail_blocks
 from django_chat.imports.source_data import (
     EpisodeSourceData,
     RssPodcast,
@@ -1049,15 +1049,15 @@ def _episode_uuid(episode_source: EpisodeSourceData) -> UUID | None:
         return None
 
 
-def _episode_body(episode_source: EpisodeSourceData) -> list[tuple[str, list[tuple[str, str]]]]:
+def _episode_body(episode_source: EpisodeSourceData) -> list[tuple[str, list[tuple[str, Any]]]]:
     overview = _episode_summary(episode_source)
     raw_detail = _episode_description(episode_source)
-    body: list[tuple[str, list[tuple[str, str]]]] = []
+    body: list[tuple[str, list[tuple[str, Any]]]] = []
     if overview:
         body.append(("overview", [("paragraph", overview)]))
     if raw_detail and raw_detail != overview:
-        detail = normalize_show_notes_html(raw_detail)
-        body.append(("detail", [("paragraph", detail)]))
+        detail_blocks, _ = structured_show_note_detail_blocks(raw_detail)
+        body.append(("detail", detail_blocks))
     if not body and episode_source.title:
         body.append(("overview", [("paragraph", episode_source.title)]))
     return body

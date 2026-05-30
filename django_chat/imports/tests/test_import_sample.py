@@ -117,50 +117,59 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
 
 
 @pytest.mark.django_db
-def test_sample_import_normalizes_detail_show_note_section_headings() -> None:
+def test_sample_import_structures_detail_show_note_sections() -> None:
     import_django_chat_sample()
 
     latest_metadata = EpisodeSourceMetadata.objects.get(episode_number=200)
-    latest_detail = _body_block_html(latest_metadata.episode, "detail")
+    latest_detail = _body_children(latest_metadata.episode, "detail")
+    structured_types = [child["type"] for child in latest_detail]
 
-    assert "<h3>🔗 Links</h3>" in latest_detail
-    assert "<h3>📦 Projects</h3>" in latest_detail
-    assert "<h3>📚 Books</h3>" in latest_detail
-    assert "<h3>🎥 YouTube</h3>" in latest_detail
-    assert "<h3>🤝 Sponsor</h3>" in latest_detail
-    assert "<p>🔗 Links</p>" not in latest_detail
-    assert "<p>📦 Projects</p>" not in latest_detail
-    assert "<p>📚 Books</p>" not in latest_detail
-    assert "<p>🎥 YouTube</p>" not in latest_detail
-    assert "<p>🤝 Sponsor</p>" not in latest_detail
-    assert (
-        '<a href="https://github.com/RealOrangeOne/django-tasks" '
-        'rel="noopener noreferrer">django-tasks</a>'
-    ) in latest_detail
-    assert (
-        "<p>This episode was brought to you by "
-        '<a href="https://buttondown.com/django" rel="noopener noreferrer">Buttondown</a>'
-    ) in latest_detail
+    assert structured_types == [
+        "show_note_link_list",
+        "show_note_link_list",
+        "show_note_link_list",
+        "show_note_link_list",
+        "show_note_sponsor",
+    ]
+    assert [
+        child["value"]["kind"] for child in latest_detail if child["type"] == "show_note_link_list"
+    ] == ["links", "projects", "books", "youtube"]
+    links = latest_detail[0]["value"]
+    link_items = _list_values(links["items"])
+    assert links["heading"] == "Links"
+    assert link_items[0]["title"] == "django-tasks"
+    assert link_items[0]["url"] == "https://github.com/RealOrangeOne/django-tasks"
+    assert _list_values(link_items[0]["extra_links"]) == [
+        {"title": "Jake's GitHub", "url": "https://github.com/realorangeone"}
+    ]
+    books = latest_detail[2]["value"]
+    assert _list_values(books["items"])[0]["title"] == "The Passage by Justin Cronin"
+    sponsor = latest_detail[4]["value"]
+    assert sponsor["heading"] == "Sponsor"
+    assert sponsor["sponsor_name"] == "Buttondown"
+    assert sponsor["sponsor_url"] == "https://buttondown.com/django"
+    assert "This episode was brought to you by" in sponsor["copy"]
     assert "<p>🔗 Links</p>" in latest_metadata.simplecast_long_description_html
     assert "<p>🤝 Sponsor</p>" in latest_metadata.simplecast_long_description_html
 
     first_metadata = EpisodeSourceMetadata.objects.get(episode_number=1)
-    first_detail = _body_block_html(first_metadata.episode, "detail")
-    assert "<h3>SHAMELESS PLUGS</h3>" in first_detail
-    assert "<h4>SHAMELESS PLUGS</h4>" not in first_detail
+    first_detail = _body_children(first_metadata.episode, "detail")
+    assert first_detail[-1]["type"] == "show_note_link_list"
+    assert first_detail[-1]["value"]["kind"] == "shameless_plugs"
+    assert first_detail[-1]["value"]["heading"] == "Shameless Plugs"
     assert "<h4>SHAMELESS PLUGS</h4>" in first_metadata.simplecast_long_description_html
 
     second_metadata = EpisodeSourceMetadata.objects.get(episode_number=2)
-    second_detail = _body_block_html(second_metadata.episode, "detail")
-    assert "<h3>Groups</h3>" in second_detail
-    assert "<h3>SHAMELESS PLUGS</h3>" in second_detail
-    assert "<h4>Groups</h4>" not in second_detail
-    assert "<h4>SHAMELESS PLUGS</h4>" not in second_detail
+    second_detail = _body_children(second_metadata.episode, "detail")
+    assert [child["value"]["kind"] for child in second_detail[-2:]] == [
+        "groups",
+        "shameless_plugs",
+    ]
     assert "<h4>Groups</h4>" in second_metadata.simplecast_long_description_html
 
 
 @pytest.mark.django_db
-def test_show_note_normalization_preserves_existing_h3_and_ordinary_paragraphs() -> None:
+def test_show_note_structuring_preserves_existing_h3_and_ordinary_paragraphs() -> None:
     sample = load_sample_source_data()
     episode_source = sample.episodes[0]
     assert episode_source.simplecast is not None
@@ -184,18 +193,24 @@ def test_show_note_normalization_preserves_existing_h3_and_ordinary_paragraphs()
     result = import_django_chat_source_data(source_data)
 
     metadata = result.episode_metadata[0]
-    detail = _body_block_html(metadata.episode, "detail")
+    detail_blocks = _body_children(metadata.episode, "detail")
     overview = _body_block_html(metadata.episode, "overview")
-    assert detail.count("<h3>Sponsor</h3>") == 1
-    assert "<p>Intro copy stays an ordinary paragraph.</p>" in detail
+    assert detail_blocks[0] == {
+        "type": "paragraph",
+        "value": "<p>Intro copy stays an ordinary paragraph.</p>",
+        "id": detail_blocks[0]["id"],
+    }
+    assert detail_blocks[1]["type"] == "show_note_sponsor"
+    assert detail_blocks[1]["value"]["heading"] == "Sponsor"
+    assert detail_blocks[1]["value"]["sponsor_name"] == "Example"
     assert (
         '<p>This episode was brought to you by <a href="https://example.com" '
         'rel="noopener noreferrer"><strong>Example</strong></a>.</p>'
-    ) in detail
+    ) in detail_blocks[1]["value"]["copy"]
     assert (
         '<p>A normal paragraph with <a href="https://example.com/link" '
         'rel="nofollow">a link</a> stays a paragraph.</p>'
-    ) in detail
+    ) in detail_blocks[1]["value"]["copy"]
     assert metadata.simplecast_long_description_html == source_detail_html
     assert overview == episode_source.simplecast.description
 
@@ -460,14 +475,24 @@ def _transcript_count() -> int:
 
 
 def _body_block_html(episode: Any, block_type: str) -> str:
+    return "".join(
+        child["value"]
+        for child in _body_children(episode, block_type)
+        if child["type"] == "paragraph"
+    )
+
+
+def _body_children(episode: Any, block_type: str) -> list[dict[str, Any]]:
     body_data = episode.body.get_prep_value()
     for block in body_data:
         if block["type"] == block_type:
-            return "".join(
-                child["value"] for child in block["value"] if child["type"] == "paragraph"
-            )
+            return block["value"]
     msg = f"Episode body does not contain a {block_type!r} block."
     raise AssertionError(msg)
+
+
+def _list_values(value: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [item["value"] if item.get("type") == "item" else item for item in value]
 
 
 class FakeAudioDownloader:

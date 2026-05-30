@@ -1,0 +1,30 @@
+{% load wagtailcore_tags %}
+
+{% if render_for_feed %}
+  <h3>{{ value.heading }}</h3>
+  {% if value.copy %}
+    {{ value.copy|richtext }}
+  {% else %}
+    <p><a href="{{ value.sponsor_url }}">{{ value.sponsor_name }}</a></p>
+  {% endif %}
+  {% if value.coupon_code %}
+    <p>Coupon code: <strong>{{ value.coupon_code }}</strong></p>
+  {% endif %}
+{% else %}
+  <section class="show-note-block show-note-block--sponsor" data-show-note-kind="sponsor">
+    <h3 class="show-note-heading">
+      {% include "cast/django_chat/show_notes/_icon.html" with icon_name="sponsor" %}
+      <span>{{ value.heading }}</span>
+    </h3>
+    {% if value.copy %}
+      <div class="show-note-sponsor-copy">{{ value.copy|richtext }}</div>
+    {% else %}
+      <p class="show-note-sponsor-copy">
+        <a href="{{ value.sponsor_url }}">{{ value.sponsor_name }}</a>
+      </p>
+    {% endif %}
+    {% if value.coupon_code %}
+      <p class="show-note-coupon">Coupon code: <strong>{{ value.coupon_code }}</strong></p>
+    {% endif %}
+  </section>
+{% endif %}

@@ -3876,6 +3876,134 @@ h2[data-vt-episode-title] {
   color: var(--dc-accent-dark);
 }
 
+.show-note-block {
+  --show-note-accent: var(--dc-accent-dark);
+
+  margin: var(--s2) 0;
+  padding: var(--s0) 0 var(--s0) var(--s0);
+  border-left: 3px solid var(--show-note-accent);
+}
+
+.show-note-block--projects {
+  --show-note-accent: #5a5f13;
+}
+
+.show-note-block--books {
+  --show-note-accent: #7a2f5e;
+}
+
+.show-note-block--youtube {
+  --show-note-accent: #b3261e;
+}
+
+.show-note-block--groups {
+  --show-note-accent: #2f6673;
+}
+
+.show-note-block--shameless_plugs {
+  --show-note-accent: #6f4e00;
+}
+
+.show-note-block--support {
+  --show-note-accent: #8b2d42;
+}
+
+.show-note-block--sponsor,
+.show-note-block--sponsors,
+.show-note-block--sponsoring_options {
+  --show-note-accent: #5a4b8b;
+}
+
+.show-notes .show-note-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-1);
+}
+
+.show-note-icon {
+  display: inline-flex;
+  flex: 0 0 1.75rem;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--show-note-accent), transparent 68%);
+  border-radius: var(--dc-radius);
+  background: color-mix(in srgb, var(--show-note-accent), transparent 90%);
+  color: var(--show-note-accent);
+}
+
+.show-note-icon svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.show-note-intro,
+.show-note-sponsor-copy,
+.show-note-description {
+  max-width: var(--dc-measure);
+}
+
+.show-note-link-list {
+  list-style: none;
+  margin: var(--s-1) 0 0;
+  padding: 0;
+}
+
+.show-note-link-item {
+  margin: 0 0 var(--s-1);
+  padding: 0;
+}
+
+.show-note-primary-link {
+  font-weight: var(--weight-semibold);
+}
+
+.show-note-extra-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-1);
+  list-style: none;
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  font-size: var(--text-sm);
+}
+
+.show-note-extra-links li {
+  margin: 0;
+}
+
+.show-note-extra-links a {
+  color: var(--dc-muted);
+}
+
+.show-note-coupon {
+  display: inline-flex;
+  margin-top: var(--s-2);
+  padding: 0.15rem var(--s-2);
+  border: 1px solid color-mix(in srgb, var(--show-note-accent), transparent 65%);
+  border-radius: var(--dc-radius);
+  color: var(--show-note-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+@container episode-detail (max-width: 48.5625em) {
+  .show-note-block {
+    padding-left: var(--s-1);
+  }
+
+  .show-notes .show-note-heading {
+    align-items: flex-start;
+  }
+}
+
 .pagination-nav {
   display: flex;
   align-items: center;

@@ -32,12 +32,11 @@ dev = [
 package = false
 
 [tool.uv.sources]
-# django-cast Contributor snippets/episode assignments (migration 0066) and the
-# diarized transcript speaker-label workflow (VoxhelmSettings.diarization_enabled,
-# migration 0067) are not in any PyPI release (latest 0.2.57 lacks both). They
-# ship only on the develop branch, which `../python-podcast` also tracks. Pin the
-# exact commit for reproducible builds; bump deliberately when develop advances.
-django-cast = { git = "https://github.com/ephes/django-cast", rev = "d6ce2c7980baaece847d8495d22832208cd73f88" }
+# django-cast Contributor snippets/episode assignments, the diarized transcript
+# speaker-label workflow, and CAST_POST_BODY_BLOCKS currently ship from the
+# develop branch, which `../python-podcast` also tracks. Pin the exact commit for
+# reproducible builds; bump deliberately when develop advances.
+django-cast = { git = "https://github.com/ephes/django-cast", rev = "f795ed5f9dfb2d97fb40f30ad5a3827e5d6c41fb" }
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.test"

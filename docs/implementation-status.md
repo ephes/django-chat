@@ -143,6 +143,21 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       green; for consistency the sponsor-page `.sponsor-callout` outline and the
       hero subscribe button were aligned to the same token. Covered by
       `django_chat/core/tests/test_sponsor_shoutout.py`.
+- [x] **9j. Structured show-note block UI sample slice** — django-cast is pinned
+      to `f795ed5f` for `CAST_POST_BODY_BLOCKS`, and Django Chat registers
+      detail-only `show_note_sponsor` and `show_note_link_list` blocks. The
+      importer structures safe headed show-note sections into the two-block
+      schema, while feed rendering stays static (`h3`, `p`, `ul`, `li`, `a`)
+      without icon chrome. The first public UI uses inline stroke icons in
+      tinted square badges plus matching left rules; source emoji prefixes are
+      stripped from structured headings because the icon now supplies that
+      visual cue. Local browser verification covered `django-tasks-jake-howard`
+      and `djangocon-us-2025-recap` at desktop/mobile widths, with screenshots
+      in `.playwright-verify/`. Paragraph-only `Support the Show` sections
+      render as a single CTA list item to avoid duplicate links; multi-link
+      sponsor lists are preserved as paragraph HTML instead of partially
+      structuring. Link-item `description` extraction is intentionally deferred.
+      Full-catalog backfill remains deferred.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -293,14 +308,20 @@ with 202 items.
    RSS keywords into public tags without a UI/editor use case and a preservation
    policy for manual Wagtail tags; if implemented later, prefer a filtered
    source-managed tag strategy that does not wipe editor-curated tags.
-4. **Live feed parity checker.** Add a command/script that compares the current
+4. **Structured show-note full-catalog backfill.** The first two-block UI slice
+   is implemented and browser-verified on local sample episodes. A later slice
+   should add an operator-facing dry-run/write backfill command before changing
+   the broader imported catalog, including reporting skipped sections and
+   preserving unsafe paragraph HTML. The backfill slice should revisit richer
+   link-item `description` preservation from surrounding list-item text.
+5. **Live feed parity checker.** Add a command/script that compares the current
    Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
    generated or S3/CDN-served Django Chat podcast feed. It should fail on item
    count, missing/extra GUIDs, GUID order, publication-date, title, enclosure
    type, latest-episode, and copied-media byte-size regressions, with explicit
    warnings for approved differences such as moved enclosure URLs or equivalent
    duration formatting.
-5. **Performance optimization backlog.** Continue tracking concrete Lighthouse
+6. **Performance optimization backlog.** Continue tracking concrete Lighthouse
    and browser-network follow-ups in
    [`docs/lighthouse-performance.md#performance-optimization-backlog`](lighthouse-performance.md#performance-optimization-backlog).
    The HTML-discoverable `/episodes/` hero background has been verified on
@@ -308,7 +329,7 @@ with 202 items.
    JavaScript, split or critical-inline CSS, and revisit render-blocking
    `rel="expect"` hints. First-party CSS minification now runs during
    `collectstatic`.
-6. **Production VPS, DNS cutover, URL redirects, podcast directory
+7. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
    [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.

@@ -1,0 +1,48 @@
+<span class="show-note-icon show-note-icon--{{ icon_name }}" aria-hidden="true">
+  {% if icon_name == "projects" %}
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path d="M3.5 6.5h6l2 2h9v9.75a1.75 1.75 0 0 1-1.75 1.75H5.25a1.75 1.75 0 0 1-1.75-1.75Z"/>
+      <path d="M3.5 8.5V5.75C3.5 4.78 4.28 4 5.25 4h4.1l2 2H18"/>
+    </svg>
+  {% elif icon_name == "books" %}
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path d="M5 4.5h6.25A2.75 2.75 0 0 1 14 7.25V20H7.5A2.5 2.5 0 0 1 5 17.5Z"/>
+      <path d="M14 7.25A2.75 2.75 0 0 1 16.75 4.5H19V20h-5Z"/>
+      <path d="M8 8h3"/>
+      <path d="M17 8h2"/>
+    </svg>
+  {% elif icon_name == "youtube" %}
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path d="M4.5 8.25A2.75 2.75 0 0 1 7.25 5.5h9.5a2.75 2.75 0 0 1 2.75 2.75v7.5a2.75 2.75 0 0 1-2.75 2.75h-9.5a2.75 2.75 0 0 1-2.75-2.75Z"/>
+      <path d="m10.25 9 5 3-5 3Z"/>
+    </svg>
+  {% elif icon_name == "groups" %}
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+      <path d="M16.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+      <path d="M3.75 19.5a4.75 4.75 0 0 1 9.5 0"/>
+      <path d="M10.75 19.5a4.75 4.75 0 0 1 9.5 0"/>
+    </svg>
+  {% elif icon_name == "support" %}
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path d="M12 20.25s-7-4.35-7-10.15A3.85 3.85 0 0 1 12 7.85a3.85 3.85 0 0 1 7 2.25c0 5.8-7 10.15-7 10.15Z"/>
+    </svg>
+  {% elif icon_name == "shameless_plugs" %}
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path d="M4 10.25h3.5l7-4.25v12l-7-4.25H4Z"/>
+      <path d="M17 9a4.5 4.5 0 0 1 0 6"/>
+      <path d="M7.5 13.75 9 20H6.75l-1.5-6.25"/>
+    </svg>
+  {% elif icon_name == "sponsor" or icon_name == "sponsors" or icon_name == "sponsoring_options" %}
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path d="M4.75 5.25h7.5l7 7-6.5 6.5-7-7Z"/>
+      <path d="M8.25 8.75h.01"/>
+    </svg>
+  {% else %}
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path d="M9.5 14.5 14.5 9.5"/>
+      <path d="M10.5 6.5h-2a4.5 4.5 0 0 0 0 9h2"/>
+      <path d="M13.5 17.5h2a4.5 4.5 0 0 0 0-9h-2"/>
+    </svg>
+  {% endif %}
+</span>

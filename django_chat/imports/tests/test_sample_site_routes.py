@@ -175,10 +175,14 @@ def test_imported_sample_episode_detail_renders_without_copied_audio(
     assert "Django Tasks - Jake Howard" in content
     assert "Django-Mantle" in content
     assert '<h2 class="show-notes-title">Show notes</h2>' in content
-    assert "<h3>🔗 Links</h3>" in content
-    assert "<h3>📦 Projects</h3>" in content
-    assert "<h3>📚 Books</h3>" in content
-    assert "<h3>🎥 YouTube</h3>" in content
+    assert 'class="show-note-block show-note-block--links"' in content
+    assert 'class="show-note-block show-note-block--projects"' in content
+    assert 'class="show-note-block show-note-block--books"' in content
+    assert 'class="show-note-block show-note-block--youtube"' in content
+    assert "<span>Links</span>" in content
+    assert "<span>Projects</span>" in content
+    assert "<span>Books</span>" in content
+    assert "<span>YouTube</span>" in content
     assert "<p>🔗 Links</p>" not in content
     assert "Audio copy pending." in content
     assert "<audio" not in content
@@ -186,7 +190,7 @@ def test_imported_sample_episode_detail_renders_without_copied_audio(
 
 
 @pytest.mark.django_db
-def test_imported_sample_episode_detail_renders_normalized_legacy_h4_headings(
+def test_imported_sample_episode_detail_renders_structured_legacy_h4_sections(
     client: Client,
 ) -> None:
     import_django_chat_sample()
@@ -196,8 +200,10 @@ def test_imported_sample_episode_detail_renders_normalized_legacy_h4_headings(
     assert response.status_code == 200
     content = response.content.decode()
     assert '<h2 class="show-notes-title">Show notes</h2>' in content
-    assert "<h3>Groups</h3>" in content
-    assert "<h3>SHAMELESS PLUGS</h3>" in content
+    assert 'class="show-note-block show-note-block--groups"' in content
+    assert 'class="show-note-block show-note-block--shameless_plugs"' in content
+    assert "<span>Groups</span>" in content
+    assert "<span>Shameless Plugs</span>" in content
     assert "<h4>Groups</h4>" not in content
     assert "<h4>SHAMELESS PLUGS</h4>" not in content
 
