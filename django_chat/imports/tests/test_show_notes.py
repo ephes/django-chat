@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from bs4 import BeautifulSoup
 from django.apps import apps
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -335,7 +336,13 @@ def test_structured_show_notes_render_on_public_episode_detail(client: Client) -
         '<a class="show-note-primary-link" href="https://github.com/RealOrangeOne/django-tasks">'
         in content
     )
-    assert '<a href="https://github.com/realorangeone">Jake&#x27;s GitHub</a>' in content
+    soup = BeautifulSoup(content, "html.parser")
+    extra_links = soup.select(".show-note-extra-links a")
+    assert any(
+        link.get("href") == "https://github.com/realorangeone"
+        and link.get_text(strip=True) == "Jake's GitHub"
+        for link in extra_links
+    )
     assert "This episode was brought to you by" in content
     assert 'href="https://buttondown.com/django"' in content
 
