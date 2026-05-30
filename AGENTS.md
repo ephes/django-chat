@@ -61,6 +61,9 @@ Before committing or handing off work:
 
 ## Git And Commits
 
+- Use trunk-based development in the three pool: keep `main` as the integration
+  branch, keep temporary branches short-lived, and move completed work back to
+  `main` before pushing or handing it off.
 - Do not run `git commit`, `git push`, or destructive git commands unless the
   user explicitly asks for them.
 - Before committing, ensure tests and configured hooks pass, docs are current,
