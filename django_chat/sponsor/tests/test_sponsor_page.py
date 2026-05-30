@@ -72,7 +72,7 @@ def test_sponsor_page_renders(client: Client) -> None:
     ):
         assert title in content
     # PDF download surface is present and points at the Wagtail-served doc.
-    assert "Download the one-pager (PDF)" in content
+    assert "Download sponsorship PDF" in content
     assert "/documents/" in content
     # Wagtail appends a random suffix when MEDIA_ROOT already contains the
     # file (re-running the test DB build doesn't clean test-media), so match

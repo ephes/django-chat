@@ -142,8 +142,8 @@
 
     <aside class="sponsor-pdf" aria-labelledby="sponsor-pdf-heading">
       <div class="sponsor-pdf-text">
-        <h2 class="sponsor-pdf-heading" id="sponsor-pdf-heading">Prefer the original PDF?</h2>
-        <p class="sponsor-pdf-desc">Download the same one-pager you used to find on Google Docs.</p>
+        <h2 class="sponsor-pdf-heading" id="sponsor-pdf-heading">Sponsorship details as PDF</h2>
+        <p class="sponsor-pdf-desc">Want all sponsorship details in one place? Download the full PDF.</p>
       </div>
       <a class="feed-action sponsor-pdf-button"
          href="{% if page.pdf %}{% url 'wagtaildocs_serve' page.pdf.id page.pdf.filename %}{% else %}{% static 'django_chat/files/django-chat-sponsorship-kit.pdf' %}{% endif %}"
@@ -152,7 +152,7 @@
           <path d="M12 4v12m0 0-4-4m4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <span>Download the one-pager (PDF)</span>
+        <span>Download sponsorship PDF</span>
       </a>
     </aside>
   </div>
