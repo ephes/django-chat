@@ -822,14 +822,25 @@ loops (e.g. `"Aliens of Glee" ×176`).
   `VOXHELM_WHISPERCPP_MAX_CONTEXT`, `VOXHELM_WHISPERCPP_SUPPRESS_NST`. After that ships
   and is deployed to the Voxhelm host, **regenerate** affected episodes with `--force`
   (which renumbers `Speaker N`, so any existing label mapping must be redone).
+- **Status (2026-05-30): the anti-loop fix is now DEPLOYED** to the Voxhelm host
+  (Studio). So the regeneration step is unblocked — re-run `generate_transcripts
+  --force` on the candidates below and confirm the loop is gone (re-run the
+  Detect snippet; the top sentence-length cue should drop back to normal speech
+  counts). None of the candidates are contributor-mapped yet, so the
+  `Speaker N` renumbering caveat does not bite for this batch.
 
-#### Staging regeneration candidates (scan: 2026-05-30)
+#### Staging regeneration candidates (re-scanned 2026-05-30, fix now deployed)
 
-Read-only staging DB scan, exact normalized transcript cue counts across the 61
-current `Transcript` rows. Episodes without a transcript row were not assessed
-because there is no generated transcript artifact to regenerate yet.
+Read-only staging DB scan, exact normalized transcript cue counts. Re-confirmed
+against all **73** current `Transcript` rows after the audios-52–71 batch landed:
+**17 transcripts still carry an ASR repetition loop** (the list below is
+unchanged from the first scan — the batch added no new loops beyond 52/57/62,
+which were already flagged). Episodes without a transcript row are not assessed
+(no artifact to regenerate yet).
 
-Regenerate the following after the Voxhelm anti-loop fix is deployed:
+The Voxhelm anti-loop fix is **now deployed** (Studio), so regenerate these now —
+`generate_transcripts --force` per audio, then re-run the Detect snippet to
+confirm the top sentence-length cue dropped to normal counts:
 
 | audio/post | slug | top repeated cue |
 | --- | --- | --- |
@@ -850,6 +861,14 @@ Regenerate the following after the Voxhelm anti-loop fix is deployed:
 | 62 / 64 | `django-deployments-eric-matthes-ep108-replay` | `"I think that's a good point."` ×346 |
 | 203 / 209 | `deploy-on-day-one-calvin-hendryx-parker` | `"It's never been the forefront of my developer tool."` ×557 |
 | 205 / 212 | `how-france-ditched-microsoft-samuel-paccoud` | `"I think it's a good thing."` ×558; also `"And I think that's the way we're doing it."` ×126 |
+
+> **Scanner caveat — short loop cues slip a `>25`-char filter.** Audio 15
+> (`ai-in-the-real-world-marlene-mhangami-tim-allen`) loops on the **14-char**
+> cue `"Aliens of Glee" ×176` (a music/silence outro loop), so a detector that
+> only flags sentence-length cues (`len(text) > 25`) misses it. It is a genuine
+> loop and a regeneration candidate. When re-scanning, either drop the length
+> floor to ~10 or eyeball `most_common(3)` per transcript; do not treat a
+> `>25`-only scan returning 16 as "audio 15 is now clean".
 
 Borderline, spot-check before deciding whether to regenerate: audio 14
 (`django-60-natalia-bidart`, ×28), audio 20 (`djangocon-us-2025-recap`, ×20),
