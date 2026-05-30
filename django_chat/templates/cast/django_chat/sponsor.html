@@ -125,7 +125,8 @@
               aria-label="Listener reviews — use arrow keys to scroll horizontally">
             {% for review in reviews %}
             <li class="card sponsor-review stack">
-              <p class="sponsor-review-stars" aria-label="{{ review.stars }} out of 5 stars">
+              <p class="sponsor-review-stars">
+                <span class="visually-hidden">{{ review.stars }} out of 5 stars</span>
                 <span aria-hidden="true">{{ review.stars|star_glyphs }}</span>
               </p>
               <h3 class="sponsor-review-title">{{ review.title }}</h3>
