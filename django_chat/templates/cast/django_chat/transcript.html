@@ -45,16 +45,36 @@
 
           <div class="transcript-content">
             {% if transcript.transcripts %}
-              {% for segment in transcript.transcripts %}
-                <section class="transcript-segment">
-                  {% if segment.start %}
-                    <time class="transcript-segment-time" datetime="{{ segment.start }}">{{ segment.start|transcript_timestamp }}</time>
-                  {% endif %}
-                  <p class="transcript-segment-text">
-                    {% if segment.speaker %}<strong>{{ segment.speaker }}:</strong> {% endif %}{{ segment.text }}
-                  </p>
-                </section>
-              {% endfor %}
+              {% comment %}
+                Two display modes (helpers in dc_filters):
+                · Episode WITH speaker labels → script style. A cue (timestamp
+                  on its own line, name on the baseline of the first text line)
+                  is printed once per speaker run; continuation lines stay bare
+                  so the run reads as one block. `show_label` marks change rows;
+                  `--cue` switches the row to the two-line cue layout.
+                · Episode WITHOUT speaker labels → unchanged: a timestamp on
+                  every line, beside the text.
+              {% endcomment %}
+              {% with has_speakers=transcript.transcripts|has_speaker_labels %}
+                {% for segment in transcript.transcripts|with_speaker_changes %}
+                  <section class="transcript-segment{% if has_speakers and segment.show_label %} transcript-segment--cue{% endif %}">
+                    {% if has_speakers %}
+                      {% if segment.show_label %}
+                        {# New speaker → cue: timestamp on its own line, name on the first text line's baseline. #}
+                        {% if segment.start %}<time class="transcript-segment-time" datetime="{{ segment.start }}">{{ segment.start|transcript_timestamp }}</time>{% endif %}
+                        {% if segment.speaker %}<span class="transcript-segment-speaker">{{ segment.speaker }}</span>{% endif %}
+                      {% elif not segment.speaker %}
+                        {# No diarized speaker (e.g. the sponsor read) → keep a timestamp beside the text so the line is still anchored; no name. #}
+                        {% if segment.start %}<time class="transcript-segment-time" datetime="{{ segment.start }}">{{ segment.start|transcript_timestamp }}</time>{% endif %}
+                      {% endif %}
+                      {# Continuation of the same speaker → no timestamp, no name. #}
+                    {% else %}
+                      {% if segment.start %}<time class="transcript-segment-time" datetime="{{ segment.start }}">{{ segment.start|transcript_timestamp }}</time>{% endif %}
+                    {% endif %}
+                    <p class="transcript-segment-text">{{ segment.text }}</p>
+                  </section>
+                {% endfor %}
+              {% endwith %}
             {% else %}
               <p>{% translate "No transcript segments available." %}</p>
             {% endif %}

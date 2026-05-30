@@ -70,6 +70,39 @@ def transcript_timestamp(value) -> str:
 
 
 @register.filter
+def has_speaker_labels(segments) -> bool:
+    """True if any transcript segment carries a speaker label.
+
+    Reads the sanitized segment list the transcript view hands the template,
+    so an episode whose labels were stripped (no matching visible
+    contributors) reads as label-free. The template uses this to decide
+    between script-style rows (timestamp only on a speaker change) and the
+    plain timestamp-on-every-line layout."""
+    if not segments:
+        return False
+    return any(str(segment.get("speaker", "")).strip() for segment in segments)
+
+
+@register.filter
+def with_speaker_changes(segments):
+    """Yield each transcript segment annotated with ``show_label`` — True only
+    on the first segment of a new speaker run. Consecutive lines by the same
+    person (and segments with no speaker) get ``show_label = False`` so the
+    template prints a speaker cue once per run. A speaker resuming after an
+    unlabelled gap (e.g. an ad read) counts as a new run and is labelled
+    again."""
+    rows = []
+    previous = None
+    for segment in segments or []:
+        speaker = str(segment.get("speaker", "")).strip()
+        row = dict(segment)
+        row["show_label"] = bool(speaker) and speaker != previous
+        rows.append(row)
+        previous = speaker
+    return rows
+
+
+@register.filter
 def platform_icon(name) -> str:
     """Return the static URL of the platform-icon SVG for the given name, or empty string."""
     if not isinstance(name, str):

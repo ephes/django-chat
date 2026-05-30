@@ -3607,9 +3607,14 @@ h2[data-vt-episode-title] {
    own — the layout is the episode-detail's, the segments below add
    their own rhythm. */
 .transcript-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
+  /* Two shared columns (meta | text) so every segment's text lines up on
+     one left edge. Segments opt into these tracks via `subgrid`, which
+     sizes column 1 to the widest cue across the whole list — no magic
+     width, no per-segment jitter. */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  row-gap: var(--s-2);
+  column-gap: var(--s1);
   padding-top: var(--s1);
   /* Inner scrollbar so the long segment list can be flown through
      without page-scrolling. Heights match the sticky sidebar's
@@ -3636,12 +3641,13 @@ h2[data-vt-episode-title] {
    scrollbar is the breathing room around the scroller. */
 .transcript-segment {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: var(--s1);
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
   align-items: baseline;
 }
 
 .transcript-segment-time {
+  grid-column: 1;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   /* Matches the scrollbar's `--dc-django` so the navigation-aiding
@@ -3650,9 +3656,40 @@ h2[data-vt-episode-title] {
   white-space: nowrap;
 }
 
+/* Speaker cue: pulled out of the running text and set apart like a
+   play-script character name. Only rendered on a speaker change, so a run
+   of consecutive lines by one person carries a single label. */
+.transcript-segment-speaker {
+  grid-column: 1;
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  color: var(--dc-ink);
+}
+
 .transcript-segment-text {
+  grid-column: 2;
   margin: 0;
   max-width: var(--dc-measure);
+}
+
+/* Speaker-change row: timestamp on its own line above, then the name on the
+   first text line's baseline so the spoken words start level with the
+   speaker (script style). The timestamp line doubles as breathing room
+   above each new speaker's block. Non-cue rows (continuation lines, and
+   every line of a speaker-less episode) keep the single-row baseline layout
+   above — timestamp, when present, sits beside the text. */
+.transcript-segment--cue .transcript-segment-time {
+  grid-row: 1;
+}
+
+.transcript-segment--cue .transcript-segment-speaker {
+  grid-row: 2;
+}
+
+.transcript-segment--cue .transcript-segment-text {
+  grid-row: 2;
 }
 
 @container episode-detail (max-width: 48.5625em) {

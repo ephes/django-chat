@@ -6,10 +6,16 @@ import pytest
 
 from django_chat.core.templatetags.dc_filters import (
     duration_minutes,
+    has_speaker_labels,
     platform_icon,
     split_amazon_audible,
+    with_speaker_changes,
     youtube_first,
 )
+
+
+def _seg(text: str, speaker: str = "", start: str = "00:00:00.000") -> dict:
+    return {"start": start, "text": text, "speaker": speaker}
 
 
 @pytest.mark.parametrize(
@@ -82,3 +88,57 @@ def test_split_amazon_audible_is_noop_when_combined_entry_absent():
     spotify = _link("Spotify")
     result = split_amazon_audible([spotify])
     assert result == [spotify]
+
+
+@pytest.mark.parametrize(
+    "segments,expected",
+    [
+        ([], False),
+        (None, False),
+        ([_seg("hi"), _seg("there")], False),
+        ([_seg("hi"), _seg("there", speaker="  ")], False),
+        ([_seg("hi"), _seg("there", speaker="Will Vincent")], True),
+    ],
+)
+def test_has_speaker_labels(segments, expected):
+    assert has_speaker_labels(segments) is expected
+
+
+def test_with_speaker_changes_labels_only_on_change():
+    segments = [
+        _seg("intro"),  # no speaker
+        _seg("a", speaker="Carlton Gibson"),  # change -> label
+        _seg("b", speaker="Carlton Gibson"),  # same -> no label
+        _seg("c", speaker="Will Vincent"),  # change -> label
+        _seg("d", speaker="Carlton Gibson"),  # change back -> label
+    ]
+    assert [row["show_label"] for row in with_speaker_changes(segments)] == [
+        False,
+        True,
+        False,
+        True,
+        True,
+    ]
+
+
+def test_with_speaker_changes_relabels_after_unlabelled_gap():
+    # An empty-speaker segment between two runs of the same speaker counts as a
+    # gap, so the speaker is labelled again when they resume.
+    segments = [
+        _seg("a", speaker="Carlton Gibson"),
+        _seg("ad read"),  # no speaker
+        _seg("b", speaker="Carlton Gibson"),
+    ]
+    assert [row["show_label"] for row in with_speaker_changes(segments)] == [True, False, True]
+
+
+def test_with_speaker_changes_preserves_segment_fields():
+    [row] = with_speaker_changes([_seg("hello", speaker="Will Vincent", start="00:00:05.000")])
+    assert row["text"] == "hello"
+    assert row["speaker"] == "Will Vincent"
+    assert row["start"] == "00:00:05.000"
+
+
+def test_with_speaker_changes_handles_empty():
+    assert with_speaker_changes([]) == []
+    assert with_speaker_changes(None) == []
