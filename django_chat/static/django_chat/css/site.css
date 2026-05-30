@@ -3795,41 +3795,125 @@ h2[data-vt-episode-title] {
   padding: var(--s1) clamp(1.1rem, 4vw, 1.5rem);
 }
 
-/* CTA mirrors the hero subscribe button at a smaller size, on the AAA-safe
-   button green. The sponsor's own link, surfaced as a clear action. */
+/* CTA styled like a podcast transport control: the pill is split into a short
+   rounded cap on the left and the long label field on the right, both on the
+   AAA-safe button green. The gap between their straight inner edges is bridged
+   by a stylised audio wave, so the sponsor's own link reads as "press play".
+   The wrapping <a> is just the flex container + lift/focus host; the green,
+   the colour and the radii live on the cap and the field. */
 .sponsor-shoutout-cta {
   display: inline-flex;
-  align-items: center;
-  gap: var(--s-2);
+  align-items: stretch;
+  gap: 0;
   align-self: flex-end;
-  margin-top: 1.15rem;
-  padding: 0.55rem 1.35rem;
-  border-radius: var(--dc-radius-pill);
-  border: 1px solid var(--dc-django-aaa-light);
-  background: var(--dc-django-aaa-light);
   color: var(--dc-ink);
   font-weight: var(--weight-bold);
   letter-spacing: 0.04em;
   font-size: var(--text-sm);
   text-decoration: none;
-  transition:
-    transform 0.15s ease,
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
+  transition: transform 0.15s ease;
 }
 
 .sponsor-shoutout-cta:hover,
 .sponsor-shoutout-cta:focus-visible {
-  background: var(--dc-accent-dark);
-  border-color: var(--dc-accent-dark);
-  color: var(--dc-paper);
   transform: translateY(-1px);
 }
 
 .sponsor-shoutout-cta:focus-visible {
   outline: var(--dc-focus-outline);
   outline-offset: 3px;
+  border-radius: var(--dc-radius-pill);
+}
+
+/* Left cap: just the rounded pill end, cut off right after the curve — a tight
+   half-pill (~half the button height wide) with only a sliver of straight edge
+   facing the wave. */
+.sponsor-shoutout-cta-cap {
+  flex: 0 0 auto;
+  width: 1.35rem;
+  background: var(--dc-django-aaa-light);
+  border: 1px solid var(--dc-django-aaa-light);
+  border-radius: var(--dc-radius-pill) 0 0 var(--dc-radius-pill);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+/* Right field: the long pill, flat where it faces the wave, rounded outward. */
+.sponsor-shoutout-cta-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  /* Tighter on the straight (cut) edge so the label sits close to it; more air
+     on the rounded end. */
+  padding-block: 0.55rem;
+  padding-inline: 0.8rem 1.35rem;
+  background: var(--dc-django-aaa-light);
+  border: 1px solid var(--dc-django-aaa-light);
+  border-radius: 0 var(--dc-radius-pill) var(--dc-radius-pill) 0;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+/* The gap: an audio wave bridging the two straight edges — five plain capsule
+   bars at varied heights (the voice-memo look). Real elements, so the rounded
+   ends stay crisp; the tallest reaches the full button height. The bars carry
+   the pill green and invert to the dark hover colour with the rest. */
+.sponsor-shoutout-cta-wave {
+  flex: 0 0 auto;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Same gap on the outer edges as between the bars, so the cap and the field
+     sit as close to the wave as the bars sit to each other. */
+  gap: 0.18rem;
+  padding-inline: 0.18rem;
+}
+
+.sponsor-shoutout-cta-wave i {
+  display: block;
+  width: 0.28rem;
+  border-radius: var(--dc-radius-pill);
+  background: var(--dc-django-aaa-light);
+  transition: background 0.15s ease;
+}
+
+.sponsor-shoutout-cta-wave i:nth-child(1) {
+  height: 40%;
+}
+.sponsor-shoutout-cta-wave i:nth-child(2) {
+  height: 76%;
+}
+.sponsor-shoutout-cta-wave i:nth-child(3) {
+  height: 100%;
+}
+.sponsor-shoutout-cta-wave i:nth-child(4) {
+  height: 58%;
+}
+.sponsor-shoutout-cta-wave i:nth-child(5) {
+  height: 46%;
+}
+
+.sponsor-shoutout-cta-arrow {
+  font-size: 1.05em;
+  line-height: 0;
+}
+
+/* Hover/focus: cap, field and wave all flip to the dark accent together. */
+.sponsor-shoutout-cta:hover .sponsor-shoutout-cta-cap,
+.sponsor-shoutout-cta:focus-visible .sponsor-shoutout-cta-cap,
+.sponsor-shoutout-cta:hover .sponsor-shoutout-cta-field,
+.sponsor-shoutout-cta:focus-visible .sponsor-shoutout-cta-field {
+  background: var(--dc-accent-dark);
+  border-color: var(--dc-accent-dark);
+}
+
+.sponsor-shoutout-cta:hover .sponsor-shoutout-cta-wave i,
+.sponsor-shoutout-cta:focus-visible .sponsor-shoutout-cta-wave i {
+  background: var(--dc-accent-dark);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3842,19 +3926,17 @@ h2[data-vt-episode-title] {
   }
 }
 
-.sponsor-shoutout-cta-arrow {
-  font-size: 1.05em;
-  line-height: 0;
-}
-
 /* `.show-notes a` (0,1,1) would otherwise tint the CTA label green and tank
-   its contrast on the green button; keep the ink-on-green (AAA) treatment. */
-.sponsor-shoutout-msg .sponsor-shoutout-cta {
+   its contrast on the green field; keep the ink-on-green (AAA) treatment. */
+.sponsor-shoutout-msg .sponsor-shoutout-cta,
+.sponsor-shoutout-msg .sponsor-shoutout-cta .sponsor-shoutout-cta-field {
   color: var(--dc-ink);
 }
 
 .sponsor-shoutout-msg .sponsor-shoutout-cta:hover,
-.sponsor-shoutout-msg .sponsor-shoutout-cta:focus-visible {
+.sponsor-shoutout-msg .sponsor-shoutout-cta:focus-visible,
+.sponsor-shoutout-msg .sponsor-shoutout-cta:hover .sponsor-shoutout-cta-field,
+.sponsor-shoutout-msg .sponsor-shoutout-cta:focus-visible .sponsor-shoutout-cta-field {
   color: var(--dc-paper);
 }
 

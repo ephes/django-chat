@@ -97,7 +97,7 @@ def wrap_sponsor_shoutout(html: str) -> str:
     for tag in body_tags:
         msg.append(tag.extract())
 
-    if url:
+    if url and label:
         cta = soup.new_tag(
             "a",
             href=url,
@@ -107,12 +107,30 @@ def wrap_sponsor_shoutout(html: str) -> str:
                 "target": "_blank",
             },
         )
-        cta.append(f"{label} ")
+        # The CTA reads like a podcast control: a small rounded cap on the left,
+        # an audio-wave bridge in the gap, then the long field with the label +
+        # arrow on the right. The cap and the wave are purely decorative; the
+        # field carries the accessible label and the arrow.
+        cap = soup.new_tag(
+            "span", attrs={"class": "sponsor-shoutout-cta-cap", "aria-hidden": "true"}
+        )
+        cta.append(cap)
+        wave = soup.new_tag(
+            "span", attrs={"class": "sponsor-shoutout-cta-wave", "aria-hidden": "true"}
+        )
+        for _bar in range(5):
+            wave.append(soup.new_tag("i"))
+        cta.append(wave)
+        field = soup.new_tag("span", attrs={"class": "sponsor-shoutout-cta-field"})
+        label_span = soup.new_tag("span", attrs={"class": "sponsor-shoutout-cta-label"})
+        label_span.string = label
+        field.append(label_span)
         arrow = soup.new_tag(
             "span", attrs={"class": "sponsor-shoutout-cta-arrow", "aria-hidden": "true"}
         )
         arrow.string = "→"
-        cta.append(arrow)
+        field.append(arrow)
+        cta.append(field)
         msg.append(cta)
 
     return str(soup)
