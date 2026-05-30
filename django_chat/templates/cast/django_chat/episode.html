@@ -52,6 +52,10 @@
           {% endwith %}
         </header>
 
+        {% if episode_contributors %}
+          {% include "cast/contributors.html" %}
+        {% endif %}
+
         <div class="episode-body">
           <h2 class="show-notes-title">Show notes</h2>
 

@@ -4,6 +4,7 @@ from io import StringIO
 from pathlib import Path
 
 import pytest
+from django.apps import apps
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
@@ -90,6 +91,37 @@ def test_generated_feed_emits_imported_episode_keywords(tmp_path: Path) -> None:
     assert by_guid["608e4ca7-a6b0-4e07-b138-97ad41ef17b1"].keywords == (
         "technology, web, programming, python, django"
     )
+
+
+@pytest.mark.django_db
+def test_generated_feed_emits_podcast_person_only_for_episodes_with_contributors(
+    tmp_path: Path,
+) -> None:
+    # django-cast develop emits Podcasting 2.0 <podcast:person> tags for an
+    # episode's visible contributors. Verify this feed change is additive and
+    # scoped: only the episode with an assigned contributor carries the tag.
+    contributor_model = apps.get_model("cast", "Contributor")
+    episode_contributor_model = apps.get_model("cast", "EpisodeContributor")
+
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
+        episode = EpisodeSourceMetadata.objects.get(episode_number=200).episode
+        contributor = contributor_model.objects.create(
+            display_name="Carlton Gibson", slug="carlton-gibson", visible=True
+        )
+        episode_contributor_model.objects.create(
+            episode=episode, contributor=contributor, role=episode_contributor_model.ROLE_HOST
+        )
+        response = fetch_generated_feed(
+            reverse("cast:podcast_feed_rss", args=["episodes", "mp3"]),
+            host="testserver",
+        )
+
+    assert response.status_code == 200
+    body = response.content.decode()
+    # Exactly one person tag across the 8-item feed (only episode 200 has one).
+    assert body.count("<podcast:person") == 1
+    assert "Carlton Gibson</podcast:person>" in body
 
 
 @pytest.mark.django_db

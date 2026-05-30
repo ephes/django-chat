@@ -3261,6 +3261,88 @@ h2[data-vt-episode-title] {
   }
 }
 
+/* Episode contributors ("Hosts and Guests"). Renders django-cast's
+   `cast/contributors.html` partial (class names are upstream); the theme
+   styles it as a horizontal credit strip between the player and show notes.
+   Speaker labels in the transcript are gated on these same contributors via
+   cast.transcript_sanitization, so the credit list doubles as the public
+   speaker allow-list. */
+.episode-contributors {
+  margin: 0 0 var(--s1);
+  padding-top: var(--s1);
+  border-top: 1px solid var(--dc-line);
+}
+
+.episode-contributors__heading {
+  margin: 0 0 var(--s0);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--dc-muted);
+}
+
+.episode-contributors__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s1);
+}
+
+.episode-contributors__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.episode-contributors__identity {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--dc-ink);
+  text-decoration: none;
+}
+
+.episode-contributors__identity--link:hover .episode-contributors__name,
+.episode-contributors__identity--link:focus-visible .episode-contributors__name {
+  color: var(--dc-accent-dark);
+  text-decoration: underline;
+}
+
+.episode-contributors__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--dc-radius-pill);
+  object-fit: cover;
+  background: var(--dc-surface-django-tint);
+}
+
+.episode-contributors__avatar--placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--dc-accent-dark);
+  background: var(--dc-surface-django-tint);
+}
+
+.episode-contributors__name {
+  font-weight: 600;
+}
+
+.episode-contributors__role {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--dc-accent-dark);
+  background: var(--dc-surface-django-tint);
+  border-radius: var(--dc-radius-pill);
+  padding: 0.15rem var(--s-2);
+}
+
 }  /* end @layer components */
 
 @layer podlove {
