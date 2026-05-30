@@ -654,6 +654,9 @@ uppercases speaker names via CSS).
   `start`), and `text` may be `None` — guard with `(s.get("text") or "")`.
 - **Empty speaker label `""` is normal** (diarizer gaps, not an error). Never
   map it; it carries no name and sanitizes out unnamed.
+- **A full sentence repeated on many 1.0s cues is an ASR loop, not a labeling
+  bug** — fix lives in `../voxhelm`; see "Known transcript-quality issue: ASR
+  repetition loops".
 - **Lumped vocatives mislead.** A name spoken inside a segment can be the
   *previous* speaker's hand-off straddling the boundary, so "the X-labeled
   segment says X" is not self-identification. Trust self-statements ("B and I",
@@ -755,7 +758,51 @@ biography. Approved voice references seeded for all eight new guests.
 > **Throughput note.** The Voxhelm deployment processes diarization jobs
 > serially; ~10–15 min per ~1h episode under load. Running multiple
 > `generate_transcripts` lanes does not parallelize the backend (jobs queue), but
-> it does keep the work moving if one episode's job is slow.
+> it does keep the work moving if one episode's job is slow. A 30-episode bulk run
+> (audios 22–51, 2026-05-30) averaged **~8–10 min/episode, ~4 h total**, and
+> progress was **bursty**: when several lanes hit long (~1 h) episodes at once,
+> Voxhelm went ~15–20 min with **no** completions and then several landed close
+> together. So "stuck for 15 minutes" is usually the normal inter-cluster gap, not
+> a stall — confirm the lane PIDs are alive (`ps`) before assuming a hang.
+
+### Bulk-transcribe first, label later
+
+Transcription and labeling are **separable**. Running `generate_transcripts` with
+diarization produces raw `Speaker N` labels; with no contributors assigned to the
+episode, those labels **sanitize out of public output** (the episode renders as a
+normal un-attributed transcript). So it is safe to bulk-diarize many episodes
+first and do the identify→map→link→seed→verify pass later — the intermediate state
+is never publicly wrong. The 2026-05-30 batch of 30 was a transcribe-only run
+(raw labels, no contributors yet).
+
+### Known transcript-quality issue: ASR repetition loops
+
+Whisper (Voxhelm's ASR) sometimes **hallucinates a repetition loop** on long or
+hard-to-transcribe audio: one short sentence repeated as dozens-to-hundreds of
+**exact 1.0-second cues**. Worst observed: audio 205 (`how-france-ditched-microsoft`,
+`"I think it's a good thing." ×558`) and audio 203 (`deploy-on-day-one…`, ×557) —
+each ~45–50% of the transcript. Music/silence stretches also trigger short outro
+loops (e.g. `"Aliens of Glee" ×176`).
+
+- **It is an ASR (Voxhelm/Whisper) problem, not diarization or label-mapping.** The
+  garbage text is in the stored `podlove_data` exactly as Voxhelm returned it;
+  diarization just assigns speakers to the bogus cues (so the label may flip
+  mid-loop, which looks wrong but is the labeler doing its job on bad text).
+- **Detect it:**
+  ```python
+  from collections import Counter
+  from cast.models import Transcript
+  c = Counter((s.get("text") or "") for s in Transcript.objects.get(audio_id=PK).podlove_data["transcripts"])
+  print(c.most_common(3))  # a long *sentence* repeated >=~30x = a loop
+  ```
+  A high count on short filler (`"Yeah."`, `"Okay."`) is normal speech; a high
+  count on a full sentence is a hallucination loop.
+- **Fix lives upstream in `../voxhelm`,** not in django-chat: pass anti-loop decoding
+  to the ASR backends — `condition_on_previous_text=False` (mlx) / `--max-context 0`
+  + `--suppress-nst` (whisper.cpp), gated behind `VOXHELM_MLX_CONDITION_ON_PREVIOUS_TEXT`,
+  `VOXHELM_WHISPERCPP_MAX_CONTEXT`, `VOXHELM_WHISPERCPP_SUPPRESS_NST`. After that ships
+  and is deployed to the Voxhelm host, **regenerate** affected episodes with `--force`
+  (which renumbers `Speaker N`, so any existing label mapping must be redone).
 
 ### Additional batch (2026-05-30) — contributor links + seven more episodes
 
