@@ -629,6 +629,25 @@ uppercases speaker names via CSS).
 
 - `nohup` buffers stdout — track diarization progress via the DB, not the log
   (ready poll loop in step 2).
+- **The poll SSH session is the fragile part, not the run.** A long-lived
+  `ssh … 'for i in …; do … sleep 60; done'` poll loop can be dropped by the
+  remote host mid-run (`exit 255`, "Connection closed by remote host", "Broken
+  pipe"). That kills only your *polling* connection — the `nohup`
+  `generate_transcripts` lanes keep running server-side, unaffected. Reconnect
+  and re-poll the DB; it is not a lost run.
+- **A CLI poll-timeout is a distinct, retry-worthy failure — not the same as
+  all-empty.** In a multi-`--audio-id` lane, one audio can fail with
+  `error audio=<pk>: Timed out waiting for Voxhelm job <uuid>` (the lane prints
+  `errors=1` and exits non-zero) while the other audios in that lane succeed.
+  The timed-out audio writes **no `Transcript` row at all** — tell it apart from
+  an all-empty diarization by the DB: *no row* = the CLI gave up waiting (the
+  Voxhelm job may still be cooking), whereas a row with labels `{'': N}` = an
+  all-empty diarizer outcome. Both are fixed the same way: a plain `--force`
+  re-submit, which dedups by `task_ref` onto the still-running job and usually
+  lands fast (worked example: audio 68, 2026-05-30 batch — timeout → no row →
+  `--force` retry → 4 clean labels in ~6 min). Raising
+  `CAST_VOXHELM_POLL_TIMEOUT` reduces these, but a slow/queued job can still
+  outlast it, so expect the occasional one-off retry on a 20-episode bulk run.
 - `--force` **overwrites** existing labels with a fresh diarization. If you test
   the known-speaker path on an already-labeled episode, **back up** the
   `podlove`/`dote`/`vtt` bytes first and restore on failure (the new run's
@@ -804,6 +823,39 @@ loops (e.g. `"Aliens of Glee" ×176`).
   and is deployed to the Voxhelm host, **regenerate** affected episodes with `--force`
   (which renumbers `Speaker N`, so any existing label mapping must be redone).
 
+#### Staging regeneration candidates (scan: 2026-05-30)
+
+Read-only staging DB scan, exact normalized transcript cue counts across the 61
+current `Transcript` rows. Episodes without a transcript row were not assessed
+because there is no generated transcript artifact to regenerate yet.
+
+Regenerate the following after the Voxhelm anti-loop fix is deployed:
+
+| audio/post | slug | top repeated cue |
+| --- | --- | --- |
+| 1 / 4 | `django-tasks-jake-howard` | `"I think it was a lot of fun."` ×72 |
+| 15 / 17 | `ai-in-the-real-world-marlene-mhangami-tim-allen` | `"Aliens of Glee"` ×176 |
+| 19 / 21 | `django-fellow-jacob-walls` | `"So he's already got 120 commits..."` ×49 |
+| 22 / 24 | `django-deployments-in-2025-eric-matthes` | `"And then he's like, I'm going to do this."` ×95 |
+| 23 / 25 | `event-sourcing-chris-may` | `"I think that's a really good point."` ×175 |
+| 29 / 31 | `official-django-mongodb-backend-jib-adegunloye` | `"So it's that fine-tuning..."` ×50 |
+| 33 / 35 | `pretix-raphael-michel` | `"it's not about reducing complexity..."` ×51 |
+| 34 / 36 | `python-tooling-hynek-schlawack` | `"And I'm a fellow at the University of New York."` ×77 |
+| 41 / 43 | `buttondown-justin-duke` | `"I'm going to hire this guy."` ×86 |
+| 44 / 46 | `cal-uluahin-sonmez` | `"I think that's a really good point."` ×116 |
+| 45 / 47 | `django-orm-simon-charette` | `"And then you've got these two kind of like layers."` ×352 |
+| 48 / 50 | `geodjango-harout-boujakjian-and-andrew-hornstra` | `"we've been working on it for a long time..."` ×134 |
+| 52 / 54 | `understand-django-matt-layman` | `"And so we did a lot of work..."` ×38 |
+| 57 / 59 | `pycharms-year-of-django-paul-everitt` | `"I think it's a good thing."` ×195 |
+| 62 / 64 | `django-deployments-eric-matthes-ep108-replay` | `"I think that's a good point."` ×346 |
+| 203 / 209 | `deploy-on-day-one-calvin-hendryx-parker` | `"It's never been the forefront of my developer tool."` ×557 |
+| 205 / 212 | `how-france-ditched-microsoft-samuel-paccoud` | `"I think it's a good thing."` ×558; also `"And I think that's the way we're doing it."` ×126 |
+
+Borderline, spot-check before deciding whether to regenerate: audio 14
+(`django-60-natalia-bidart`, ×28), audio 20 (`djangocon-us-2025-recap`, ×20),
+audio 37 (`thibaud-colas-2025-dsf-board-nominations`, ×28), and audio 47
+(`the-future-of-python-deb-nicholson`, ×22).
+
 ### Additional batch (2026-05-30) — contributor links + seven more episodes
 
 This batch added the **contributor-link layer** (see [§5b](#5b-contributor-links-strip-anchors--podcastperson-href))
@@ -834,6 +886,34 @@ labels were left unmapped and sanitize out (verified: no public `Speaker N`).
 > **All-empty diarization is sometimes transient.** `freelancing-community-andrew-miller`
 > returned all-empty on the 2026-05-29 attempt but **3 clean labels on a
 > `--force` retry** here — retry before declaring an episode undiarizable.
+
+### Additional batch (2026-05-30) — twenty more episodes, transcribe-only
+
+A bulk transcribe-with-diarization pass over the next 20 previously-undiarized
+episodes: **audios 52–71** (2023-12-20 `understand-django-matt-layman` down to
+2023-03-01 `dev-environments-calvin-hendryx-parker`), DB-only, no app-code change
+or redeploy. Raw-label run only (per
+[Bulk-transcribe first, label later](#bulk-transcribe-first-label-later)): each
+audio set to `transcript_diarization_mode='enabled'` and run with
+`generate_transcripts --force`, leaving generic `Speaker N` labels and **no
+contributors assigned**, so nothing renders publicly until a later
+identify→map→link→seed pass. Verified by per-episode
+`Transcript.get_speaker_labels()` — all 20 non-empty (label counts 2–8; audio 56
+`becoming-a-django-fellow-natalia-bidart` over-segmented to 8, audios 63/64 to 2).
+
+- **Run shape:** 4 `nohup` lanes of 5 audios each (52–56 / 57–61 / 62–66 /
+  67–71), tracked by polling `get_speaker_labels()` in the DB (not the buffered
+  logs). Throughput matched the earlier note: ~8–10 min/episode, bursty.
+- **One retry, no skips:** audio 68 (`being-a-productive-developer-nick-janetakis`)
+  hit a CLI poll-timeout on its first lane pass (`errors=1`, **no transcript row
+  written** — a timeout, not an all-empty diarization). A single `--force`
+  re-submit landed it with 4 labels in ~6 min. No all-empty results occurred, so
+  all 20 succeeded. (See the poll-timeout and dropped-poll-session gotchas above.)
+- **ASR repetition loops to regenerate later** (acceptable for a transcribe-only
+  run; see the staging regeneration-candidates table above): audio 62
+  (`django-deployments-eric-matthes-ep108-replay`, ×346) and audio 57
+  (`pycharms-year-of-django-paul-everitt`, ×195) are badly looped; audio 52
+  (`understand-django-matt-layman`) has a minor loop (×38).
 
 ## Operational follow-ups
 
