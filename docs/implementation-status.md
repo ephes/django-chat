@@ -127,6 +127,22 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       Carlton Gibson; browser-verified (Playwright) in the player transcript tab
       and the transcript detail page. See
       [`docs/contributors-and-diarization.md`](contributors-and-diarization.md).
+- [x] **9i. Sponsor shout-out in show notes** — the show-notes "Sponsor"
+      section is highlighted at render time by the `{% sponsor_shoutout %}`
+      template tag (`django_chat/core/sponsor_shoutout.py`). The `<h3>` stays in
+      flow as an ordinary section heading; the copy beneath it moves into a
+      highlight box carrying a "Featured Partner of Django Chat" tab docked onto
+      its top-left, plus a CTA surfaced from the sponsor's own link ("Go to
+      <name>", with a domain-aware name heuristic and a neutral "Go to sponsor"
+      fallback; no link → no button). Episodes without a sponsor section are
+      returned byte-for-byte unchanged; on sponsor pages the surrounding show
+      notes are round-tripped through the HTML parser — content-preserving and
+      DOM-equivalent, though void tags / entities / attribute order may be
+      normalised. The box
+      outline, the tab and the CTA all use the AAA-safe `--dc-django-aaa-light`
+      green; for consistency the sponsor-page `.sponsor-callout` outline and the
+      hero subscribe button were aligned to the same token. Covered by
+      `django_chat/core/tests/test_sponsor_shoutout.py`.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.

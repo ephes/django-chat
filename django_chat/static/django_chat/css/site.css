@@ -2748,7 +2748,7 @@ h2[data-vt-episode-title] {
   margin: var(--s1) 0 0;
   padding: var(--s1);
   background: var(--dc-django-tint);
-  border: 2px solid var(--dc-django);
+  border: 2px solid var(--dc-django-aaa-light);
   border-radius: 0.875rem;
   color: var(--dc-ink);
 }
@@ -3752,6 +3752,110 @@ h2[data-vt-episode-title] {
 .show-notes ol {
   margin: var(--s-3) 0 var(--s0);
   padding-left: var(--s1);
+}
+
+/* Sponsor shout-out: the show-notes "Sponsor" section, restyled at render time
+   by `{% sponsor_shoutout %}`. The heading stays in flow as an ordinary section
+   marker; the copy moves into a highlight box with a "Featured Partner of Django
+   Chat" tab docked onto its top-left. No sponsor section → byte-exact no-op; on
+   sponsor pages the other show-notes render identically (DOM-equivalent). */
+.sponsor-shoutout {
+  /* A little extra air below the section heading, then a gap before whatever
+     follows (the sponsor is usually the last section). */
+  margin: calc(var(--s-1) + 0.3rem) 0 var(--s2);
+}
+
+/* Docked tab — the show's framing of the sponsor. Same green + ink as the CTA
+   button (AAA 7.26:1); horizontal padding matched to the box so the tab text
+   lines up with the copy below it. */
+.sponsor-shoutout-tab {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.85rem clamp(1.1rem, 4vw, 1.5rem);
+  background: var(--dc-django-aaa-light);
+  color: var(--dc-ink);
+  border-radius: 0.75rem 0.75rem 0 0;
+  font: var(--weight-semibold) var(--text-sm) / 1.1 var(--font-heading);
+  letter-spacing: 0.01em;
+}
+
+/* Highlight box — same outline colour and weight as the sponsor-page
+   `.sponsor-callout`, so the two highlight treatments read as a set. */
+.sponsor-shoutout-msg {
+  position: relative;
+  margin-top: -1px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: var(--dc-surface-django-tint);
+  border: 2px solid var(--dc-django-aaa-light);
+  border-radius: 0 0.9rem 0.9rem 0.9rem;
+  padding: var(--s1) clamp(1.1rem, 4vw, 1.5rem);
+}
+
+/* CTA mirrors the hero subscribe button at a smaller size, on the AAA-safe
+   button green. The sponsor's own link, surfaced as a clear action. */
+.sponsor-shoutout-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  align-self: flex-end;
+  margin-top: 1.15rem;
+  padding: 0.55rem 1.35rem;
+  border-radius: var(--dc-radius-pill);
+  border: 1px solid var(--dc-django-aaa-light);
+  background: var(--dc-django-aaa-light);
+  color: var(--dc-ink);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.04em;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.sponsor-shoutout-cta:hover,
+.sponsor-shoutout-cta:focus-visible {
+  background: var(--dc-accent-dark);
+  border-color: var(--dc-accent-dark);
+  color: var(--dc-paper);
+  transform: translateY(-1px);
+}
+
+.sponsor-shoutout-cta:focus-visible {
+  outline: var(--dc-focus-outline);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sponsor-shoutout-cta {
+    transition: none;
+  }
+  .sponsor-shoutout-cta:hover,
+  .sponsor-shoutout-cta:focus-visible {
+    transform: none;
+  }
+}
+
+.sponsor-shoutout-cta-arrow {
+  font-size: 1.05em;
+  line-height: 0;
+}
+
+/* `.show-notes a` (0,1,1) would otherwise tint the CTA label green and tank
+   its contrast on the green button; keep the ink-on-green (AAA) treatment. */
+.sponsor-shoutout-msg .sponsor-shoutout-cta {
+  color: var(--dc-ink);
+}
+
+.sponsor-shoutout-msg .sponsor-shoutout-cta:hover,
+.sponsor-shoutout-msg .sponsor-shoutout-cta:focus-visible {
+  color: var(--dc-paper);
 }
 
 .show-notes li {

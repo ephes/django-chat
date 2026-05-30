@@ -1,6 +1,7 @@
 {% extends "./base.html" %}
 {% load static %}
 {% load wagtailcore_tags %}
+{% load dc_sponsor %}
 {% load django_vite %}
 {% load dc_filters %}
 
@@ -62,13 +63,15 @@
           {% include "./_episode_share_dialogs.html" %}
 
           <div class="show-notes">
-            {% for block in page.body %}
-              <section class="block-{{ block.block_type }}">
-                {% for child_block in block.value %}
-                  {% include_block child_block %}
-                {% endfor %}
-              </section>
-            {% endfor %}
+            {% sponsor_shoutout %}
+              {% for block in page.body %}
+                <section class="block-{{ block.block_type }}">
+                  {% for child_block in block.value %}
+                    {% include_block child_block %}
+                  {% endfor %}
+                </section>
+              {% endfor %}
+            {% endsponsor_shoutout %}
           </div>
         </div>
       </div>
