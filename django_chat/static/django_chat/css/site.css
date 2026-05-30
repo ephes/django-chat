@@ -69,6 +69,13 @@
      tiers) use this slightly deeper #0a7d33 — 4.99:1 on `--dc-paper`, clearing
      WCAG AAA for large text while still reading as the vivid brand green. */
   --dc-django-aaa: #0a7d33;
+  /* Button-surface counterpart to `--dc-django-aaa`. Where the brand green is
+     the *fill* and ink text sits on top (CTA buttons: hero subscribe, sponsor
+     callout), a slightly *lighter* green is needed so small/normal-size button
+     labels clear WCAG AAA: `--dc-ink` on this reads 7.26:1 (AAA), whereas the
+     brand `--dc-django` only reaches 5.86:1 (AA) at button text sizes. The logo
+     and all brand accents keep `--dc-django`; only button fills use this. */
+  --dc-django-aaa-light: #17b650;
   /* Translucent django-green tints used for hover/focus surfaces. Derived
      via `color-mix` so changing `--dc-django` flows through automatically.
      Other percentages (12 %, 15 %, 35 %, …) appear inline at single-use
@@ -917,8 +924,8 @@ body:has([data-show-hero-shell]) .brand {
     clamp(.85rem, 1.2cqw, 1.1rem)
     clamp(1rem, 3.8cqw, 4.1rem);
   border-radius: var(--dc-radius-pill);
-  border: 1px solid var(--dc-django);
-  background: var(--dc-django);
+  border: 1px solid var(--dc-django-aaa-light);
+  background: var(--dc-django-aaa-light);
   color: var(--dc-ink);
   font-weight: var(--weight-bold);
   letter-spacing: 0.04em;
