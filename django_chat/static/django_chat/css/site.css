@@ -52,6 +52,11 @@
 :root {
   /* ---------- Color tokens ---------- */
   --dc-ink: #0d0d0d;
+  /* Dark headlines borrow the topbar's deep green (`--dc-surface-deep`) so the
+     menu's brand colour echoes through every dark heading on light surfaces.
+     White headings (on dark bands) and the bright `--dc-django` accent
+     headings keep their own colour via higher specificity. */
+  --dc-heading: var(--dc-surface-deep);
   --dc-paper: #f9f9f9;
   --dc-player-surface: transparent;
   --dc-muted: #5f635d;
@@ -59,6 +64,11 @@
   --dc-accent: #2d8260;
   --dc-accent-dark: #14513a;
   --dc-django: #0ea342;
+  /* AAA-safe sibling of `--dc-django`: the bright brand green only reaches
+     3.15:1 on paper, so large numeric figures (sponsor stat bubbles, pricing
+     tiers) use this slightly deeper #0a7d33 — 4.99:1 on `--dc-paper`, clearing
+     WCAG AAA for large text while still reading as the vivid brand green. */
+  --dc-django-aaa: #0a7d33;
   /* Translucent django-green tints used for hover/focus surfaces. Derived
      via `color-mix` so changing `--dc-django` flows through automatically.
      Other percentages (12 %, 15 %, 35 %, …) appear inline at single-use
@@ -339,6 +349,7 @@ h3 {
   line-height: var(--leading-heading);
   margin: 0;
   text-wrap: balance;
+  color: var(--dc-heading);
 }
 
 h1 {
@@ -2216,24 +2227,28 @@ h2[data-vt-episode-title] {
    resting layout with no offset. Review cards are excluded — they live in a
    horizontal scroller.
 
-   card-reveal.js keys `.is-in-view` to a central band (not the full viewport),
-   so a card rises when it scrolls into the middle of the screen and settles
-   back when it leaves — re-arming on the band is what lets the cards near the
-   top of the page replay every time they're scrolled past, since they rarely
-   leave the viewport completely. Both states carry a `translate` transition so
+   card-reveal.js keys `.is-in-view` to two nested bands (not the full
+   viewport): a card rises when it scrolls into the inner reveal band (middle
+   ~60%) and only settles back once it leaves the wider reset band (middle
+   ~90%). The gap between the bands is a hysteresis margin — wider than the
+   2rem rise below — so the reveal animation's own upward travel can never push
+   the card across the reset boundary and trigger a sink (the wobble bug). Re-
+   arming on the reset band is what lets cards near the top of the page replay
+   when they're scrolled past, since they rarely leave the viewport completely.
+   Both states carry a `translate` transition so
    the motion is animated in BOTH directions: it rises slowly and leisurely
    (0.95s ease-in-out — soft start, quicker middle, soft settle) on entry and
    sinks back quicker (0.32s ease-in) on exit — no hard snap. The reset is
    deliberately faster than the rise so a quick scroll-reversal spends little
    time mid-sink, keeping re-reveals close to the full travel. */
 @media (prefers-reduced-motion: no-preference) {
-  html.js-reveal :is(.sponsor-slot, .sponsor-tier, .sponsor-callout, .subscribe-feature, .audio-feed) {
+  html.js-reveal :is(.sponsor-slot, .sponsor-tier, .sponsor-callout, .subscribe-feature, .subscribe-why) {
     translate: 0 2rem;
     transition:
       translate 0.32s ease-in,
       transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
   }
-  html.js-reveal :is(.sponsor-slot, .sponsor-tier, .sponsor-callout, .subscribe-feature, .audio-feed).is-in-view {
+  html.js-reveal :is(.sponsor-slot, .sponsor-tier, .sponsor-callout, .subscribe-feature, .subscribe-why).is-in-view {
     translate: 0 0;
     transition:
       translate 0.95s cubic-bezier(0.65, 0, 0.35, 1),
@@ -2421,7 +2436,7 @@ h2[data-vt-episode-title] {
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
   margin: var(--s-3) 0 0;
-  color: var(--dc-ink);
+  color: var(--dc-heading);
 }
 
 .subscribe-why-list {
@@ -2497,7 +2512,7 @@ h2[data-vt-episode-title] {
 
 .sponsor-stats .sponsor-section-heading {
   margin: 0;
-  color: var(--dc-ink);
+  color: var(--dc-heading);
 }
 
 .sponsor-stats-head {
@@ -2654,7 +2669,7 @@ h2[data-vt-episode-title] {
      sizes only. */
   font-size: clamp(1rem, 17cqi, 2.2rem);
   line-height: var(--leading-flat);
-  color: var(--dc-accent-dark);
+  color: var(--dc-django-aaa);
 }
 
 /* JS-enabled animation surface: the ring fill starts empty and fills on
@@ -2774,7 +2789,7 @@ h2[data-vt-episode-title] {
   font-family: var(--font-heading);
   font-weight: var(--weight-bold);
   font-size: clamp(1.8rem, 2vw + 1rem, 2.4rem);
-  color: var(--dc-accent-dark);
+  color: var(--dc-django-aaa);
   line-height: var(--leading-flat);
 }
 
@@ -2851,6 +2866,17 @@ h2[data-vt-episode-title] {
 
 .sponsor-hosts-bio p:last-child {
   margin-bottom: 0;
+}
+
+/* On phones the `28ch` lower bound of the max-width above wins over the
+   proportional cap and strands the bio ~75% wide with a ragged right edge.
+   Let it fill the column there. (Can't fold into the clamp: full-width on
+   phones and the 66% cap on tablet aren't expressible as one monotonic
+   function, and there's no container host at this level for a @container.) */
+@media (max-width: 37.5em) {
+  .sponsor-hosts-bio {
+    max-width: none;
+  }
 }
 
 /* Reviews — Reel primitive. Horizontal scroll with snap so all five full-
@@ -3586,7 +3612,7 @@ h2[data-vt-episode-title] {
      heavier than the global `h3` rule (1.2rem = --text-lg). Snapping to
      --text-lg would collapse the visual hierarchy. */
   font-size: 1.3rem;
-  color: var(--dc-ink);
+  color: var(--dc-heading);
   margin: var(--s2) 0 var(--s-1);
 }
 
@@ -4472,7 +4498,7 @@ body:has(.share-modal:not([open]):target) {
 .embed-info-title {
   font-size: var(--text-base);
   font-weight: var(--weight-bold);
-  color: var(--dc-ink);
+  color: var(--dc-heading);
 }
 
 .embed-info-hint {
