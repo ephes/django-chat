@@ -65,7 +65,8 @@ def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     subscribe = _html_between(content, 'class="show-hero-subscribe"', "</a>")
     assert "Subscribe" in subscribe
     assert f'href="{feed_detail_path()}"' in subscribe
-    assert '<circle cx="5" cy="19" r="2.2"/>' in subscribe
+    assert 'class="show-hero-subscribe-cap"' in subscribe
+    assert '<circle cx="5" cy="19" r="2.5"/>' in subscribe
     assert "Apple Podcasts" not in subscribe
 
     platform_band = _html_between(content, '<section class="platform-band"', "</section>")
