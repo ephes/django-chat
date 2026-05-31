@@ -148,12 +148,14 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       detail-only `show_note_sponsor` and `show_note_link_list` blocks. The
       importer structures safe headed show-note sections into the two-block
       schema, while feed rendering stays static (`h3`, `p`, `ul`, `li`, `a`)
-      without icon chrome. The first public UI uses inline stroke icons in
-      tinted square badges plus matching left rules; source emoji prefixes are
-      stripped from structured headings because the icon now supplies that
-      visual cue. Local browser verification covered `django-tasks-jake-howard`
-      and `djangocon-us-2025-recap` at desktop/mobile widths, with screenshots
-      in `.playwright-verify/`. Paragraph-only `Support the Show` sections
+      without icon chrome. The public UI uses decorative dark-green circular
+      heading icons sized to match contributor avatars, with dark-green custom
+      bullets centered under the icon column and link text aligned to the
+      heading text column; source emoji prefixes are stripped from structured
+      headings because the icon now supplies that visual cue. Local browser
+      verification covered `django-tasks-jake-howard` and
+      `djangocon-us-2025-recap` at desktop/mobile widths, with screenshots in
+      `.playwright-verify/`. Paragraph-only `Support the Show` sections
       render as a single CTA list item to avoid duplicate links; multi-link
       sponsor lists are preserved as paragraph HTML instead of partially
       structuring. Link-item `description` extraction is intentionally deferred.

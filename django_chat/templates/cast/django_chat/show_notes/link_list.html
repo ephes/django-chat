@@ -1,46 +1,12 @@
 {% load wagtailcore_tags %}
 
-{% if render_for_feed %}
-  <h3>{{ value.heading }}</h3>
-  {% if value.intro %}{{ value.intro|richtext }}{% endif %}
-  <ul>
-    {% for item in value.items %}
-      <li>
-        <a href="{{ item.url }}">{{ item.title }}</a>
-        {% if item.extra_links %}
-          {% for extra_link in item.extra_links %}
-            <a href="{{ extra_link.url }}">{{ extra_link.title }}</a>{% if not forloop.last %}, {% endif %}
-          {% endfor %}
-        {% endif %}
-        {% if item.description %}{{ item.description|richtext }}{% endif %}
-      </li>
-    {% endfor %}
-  </ul>
-{% else %}
-  <section class="show-note-block show-note-block--{{ value.kind }}" data-show-note-kind="{{ value.kind }}">
-    <h3 class="show-note-heading">
-      {% include "cast/django_chat/show_notes/_icon.html" with icon_name=value.kind %}
-      <span>{{ value.heading }}</span>
-    </h3>
-    {% if value.intro %}
-      <div class="show-note-intro">{{ value.intro|richtext }}</div>
-    {% endif %}
-    <ul class="show-note-link-list">
-      {% for item in value.items %}
-        <li class="show-note-link-item">
-          <a class="show-note-primary-link" href="{{ item.url }}">{{ item.title }}</a>
-          {% if item.description %}
-            <div class="show-note-description">{{ item.description|richtext }}</div>
-          {% endif %}
-          {% if item.extra_links %}
-            <ul class="show-note-extra-links" aria-label="Related links for {{ item.title }}">
-              {% for extra_link in item.extra_links %}
-                <li><a href="{{ extra_link.url }}">{{ extra_link.title }}</a></li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  </section>
-{% endif %}
+<h3>{% if not render_for_feed %}{% include "cast/django_chat/show_notes/_icon.html" with icon_name=value.kind %}{% endif %}{{ value.heading }}</h3>
+{% if value.intro %}{{ value.intro|richtext }}{% endif %}
+<ul role="list">
+  {% for item in value.items %}
+    <li>
+      <a href="{{ item.url }}">{{ item.title }}</a>{% for extra_link in item.extra_links %}, <a href="{{ extra_link.url }}">{{ extra_link.title }}</a>{% endfor %}
+      {% if item.description %}{{ item.description|richtext }}{% endif %}
+    </li>
+  {% endfor %}
+</ul>

@@ -325,23 +325,27 @@ def test_structured_show_notes_render_on_public_episode_detail(client: Client) -
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert 'class="show-note-block show-note-block--links"' in content
+    assert "show-note-block" not in content
     assert 'class="show-note-icon show-note-icon--links"' in content
-    assert "<span>Links</span>" in content
-    assert 'class="show-note-block show-note-block--projects"' in content
-    assert 'class="show-note-block show-note-block--books"' in content
-    assert 'class="show-note-block show-note-block--youtube"' in content
-    assert 'class="show-note-block show-note-block--sponsor"' in content
-    assert (
-        '<a class="show-note-primary-link" href="https://github.com/RealOrangeOne/django-tasks">'
-        in content
-    )
+    assert 'class="show-note-icon show-note-icon--projects"' in content
+    assert 'class="show-note-icon show-note-icon--books"' in content
+    assert 'class="show-note-icon show-note-icon--youtube"' in content
+    assert 'class="show-note-icon show-note-icon--sponsor"' in content
+    assert "show-note-primary-link" not in content
+    assert "show-note-extra-links" not in content
+    assert '<ul role="list">' in content
+    assert '<a href="https://github.com/RealOrangeOne/django-tasks">django-tasks</a>' in content
     soup = BeautifulSoup(content, "html.parser")
-    extra_links = soup.select(".show-note-extra-links a")
+    show_notes = soup.select_one(".show-notes")
+    assert show_notes is not None
+    headings = [heading.get_text(strip=True) for heading in show_notes.select("h3")]
+    assert headings[:5] == ["Links", "Projects", "Books", "YouTube", "Sponsor"]
+    github_links = show_notes.select('a[href="https://github.com/realorangeone"]')
     assert any(
-        link.get("href") == "https://github.com/realorangeone"
-        and link.get_text(strip=True) == "Jake's GitHub"
-        for link in extra_links
+        link.get_text(strip=True) == "Jake's GitHub"
+        and link.parent is not None
+        and link.parent.name == "li"
+        for link in github_links
     )
     assert "This episode was brought to you by" in content
     assert 'href="https://buttondown.com/django"' in content

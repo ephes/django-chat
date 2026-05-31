@@ -308,11 +308,13 @@ For public detail pages:
   label.
 - Keep output usable when CSS or JavaScript is absent.
 
-Implementation note: the first UI slice uses small inline stroke icons inside
-lightly tinted square badges, paired with a matching left rule for each
-show-note section. Structured headings strip source emoji/punctuation prefixes
-such as `🔗`, `📦`, `📚`, `🎥`, and `🤝` because the decorative icon now carries
-that visual role; paragraph fallbacks still preserve source HTML unchanged.
+Implementation note: the first UI slice keeps structured blocks close to the
+old plain show-note HTML while adding decorative dark-green circular heading
+icons sized to match contributor avatars. List link text aligns with the
+heading text column, and dark-green custom bullets sit centered under the icon
+column. Structured headings strip source emoji/punctuation prefixes such as
+`🔗`, `📦`, `📚`, `🎥`, and `🤝` because the decorative icon now carries that
+visual role; paragraph fallbacks still preserve source HTML unchanged.
 
 For feeds and API HTML when `render_for_feed` is true:
 

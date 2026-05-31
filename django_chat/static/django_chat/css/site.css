@@ -3785,6 +3785,11 @@ h2[data-vt-episode-title] {
 }
 
 .show-notes {
+  --show-note-icon-size: 2.5rem;
+  --show-note-icon-gap: 0.5rem;
+  --show-note-text-indent: calc(var(--show-note-icon-size) + var(--show-note-icon-gap));
+  --show-note-bullet-size: 0.44rem;
+
   max-width: 45rem;
   font-size: var(--text-base);
 }
@@ -3805,6 +3810,9 @@ h2[data-vt-episode-title] {
   /* Deliberate off-scale: 1.3rem keeps show-notes section markers visibly
      heavier than the global `h3` rule (1.2rem = --text-lg). Snapping to
      --text-lg would collapse the visual hierarchy. */
+  display: flex;
+  align-items: center;
+  gap: var(--show-note-icon-gap);
   font-size: 1.3rem;
   color: var(--dc-heading);
   margin: var(--s2) 0 var(--s-1);
@@ -3821,7 +3829,18 @@ h2[data-vt-episode-title] {
 .show-notes ul,
 .show-notes ol {
   margin: var(--s-3) 0 var(--s0);
+}
+
+.show-notes ul {
+  padding-left: 0;
+}
+
+.show-notes ol {
   padding-left: var(--s1);
+}
+
+.show-notes ul {
+  list-style: none;
 }
 
 /* Sponsor shout-out: the show-notes "Sponsor" section, restyled at render time
@@ -3830,9 +3849,14 @@ h2[data-vt-episode-title] {
    Chat" tab docked onto its top-left. No sponsor section → byte-exact no-op; on
    sponsor pages the other show-notes render identically (DOM-equivalent). */
 .sponsor-shoutout {
+  --sponsor-shoutout-pad: var(--s0);
+  --sponsor-shoutout-border: 2px;
+
   /* A little extra air below the section heading, then a gap before whatever
      follows (the sponsor is usually the last section). */
-  margin: calc(var(--s-1) + 0.3rem) 0 var(--s2);
+  margin: calc(var(--s-1) + 0.3rem) 0 var(--s2)
+    calc(var(--show-note-text-indent) - var(--sponsor-shoutout-pad));
+  max-width: calc(100% - var(--show-note-text-indent) + var(--sponsor-shoutout-pad));
 }
 
 /* Docked tab — the show's framing of the sponsor. Same green + ink as the CTA
@@ -3843,7 +3867,7 @@ h2[data-vt-episode-title] {
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  padding: 0.85rem clamp(1.1rem, 4vw, 1.5rem);
+  padding: 0.85rem var(--sponsor-shoutout-pad);
   background: var(--dc-django-aaa-light);
   color: var(--dc-ink);
   border-radius: 0.75rem 0.75rem 0 0;
@@ -3860,9 +3884,10 @@ h2[data-vt-episode-title] {
   flex-direction: column;
   align-items: flex-start;
   background: var(--dc-surface-django-tint);
-  border: 2px solid var(--dc-django-aaa-light);
+  border: var(--sponsor-shoutout-border) solid var(--dc-django-aaa-light);
   border-radius: 0 0.9rem 0.9rem 0.9rem;
-  padding: var(--s1) clamp(1.1rem, 4vw, 1.5rem);
+  padding: var(--s1) var(--sponsor-shoutout-pad);
+  padding-left: calc(var(--sponsor-shoutout-pad) - var(--sponsor-shoutout-border));
 }
 
 /* CTA styled like a podcast transport control: the pill is split into a short
@@ -4006,7 +4031,23 @@ h2[data-vt-episode-title] {
 }
 
 .show-notes li {
+  position: relative;
   margin-bottom: var(--s-3);
+}
+
+.show-notes ul > li {
+  padding-left: var(--show-note-text-indent);
+}
+
+.show-notes ul > li::before {
+  content: "";
+  position: absolute;
+  top: 0.68em;
+  left: calc((var(--show-note-icon-size) - var(--show-note-bullet-size)) / 2);
+  width: var(--show-note-bullet-size);
+  height: var(--show-note-bullet-size);
+  border-radius: 50%;
+  background: var(--dc-accent-dark);
 }
 
 .show-notes li:last-child {
@@ -4023,133 +4064,45 @@ h2[data-vt-episode-title] {
   color: var(--dc-accent-dark);
 }
 
-.show-note-block {
-  --show-note-accent: var(--dc-accent-dark);
-
-  margin: var(--s2) 0;
-  padding: var(--s0) 0 var(--s0) var(--s0);
-  border-left: 3px solid var(--show-note-accent);
-}
-
-.show-note-block--projects {
-  --show-note-accent: #5a5f13;
-}
-
-.show-note-block--books {
-  --show-note-accent: #7a2f5e;
-}
-
-.show-note-block--youtube {
-  --show-note-accent: #b3261e;
-}
-
-.show-note-block--groups {
-  --show-note-accent: #2f6673;
-}
-
-.show-note-block--shameless_plugs {
-  --show-note-accent: #6f4e00;
-}
-
-.show-note-block--support {
-  --show-note-accent: #8b2d42;
-}
-
-.show-note-block--sponsor,
-.show-note-block--sponsors,
-.show-note-block--sponsoring_options {
-  --show-note-accent: #5a4b8b;
-}
-
-.show-notes .show-note-heading {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  margin: 0 0 var(--s-1);
-}
-
 .show-note-icon {
   display: inline-flex;
-  flex: 0 0 1.75rem;
+  flex: 0 0 var(--show-note-icon-size);
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: 1px solid color-mix(in srgb, var(--show-note-accent), transparent 68%);
-  border-radius: var(--dc-radius);
-  background: color-mix(in srgb, var(--show-note-accent), transparent 90%);
-  color: var(--show-note-accent);
+  width: var(--show-note-icon-size);
+  height: var(--show-note-icon-size);
+  border-radius: 50%;
+  background: var(--dc-accent-dark);
+  color: var(--dc-paper);
 }
 
 .show-note-icon svg {
-  width: 1rem;
-  height: 1rem;
+  width: 72%;
+  height: 72%;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1.8;
+  stroke-width: 1.35;
 }
 
-.show-note-intro,
-.show-note-sponsor-copy,
-.show-note-description {
-  max-width: var(--dc-measure);
+.show-note-icon--projects svg {
+  width: 66%;
+  height: 66%;
 }
 
-.show-note-link-list {
-  list-style: none;
-  margin: var(--s-1) 0 0;
-  padding: 0;
+.show-note-icon .show-note-fill {
+  fill: currentColor;
+  stroke: none;
 }
 
-.show-note-link-item {
-  margin: 0 0 var(--s-1);
-  padding: 0;
+.show-note-icon--sponsor svg,
+.show-note-icon--sponsors svg,
+.show-note-icon--sponsoring_options svg {
+  width: 76%;
+  height: 76%;
 }
 
-.show-note-primary-link {
-  font-weight: var(--weight-semibold);
-}
-
-.show-note-extra-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-3) var(--s-1);
-  list-style: none;
-  margin: var(--s-3) 0 0;
-  padding: 0;
-  font-size: var(--text-sm);
-}
-
-.show-note-extra-links li {
-  margin: 0;
-}
-
-.show-note-extra-links a {
-  color: var(--dc-muted);
-}
-
-.show-note-coupon {
-  display: inline-flex;
-  margin-top: var(--s-2);
-  padding: 0.15rem var(--s-2);
-  border: 1px solid color-mix(in srgb, var(--show-note-accent), transparent 65%);
-  border-radius: var(--dc-radius);
-  color: var(--show-note-accent);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-}
-
-@container episode-detail (max-width: 48.5625em) {
-  .show-note-block {
-    padding-left: var(--s-1);
-  }
-
-  .show-notes .show-note-heading {
-    align-items: flex-start;
-  }
-}
 
 .pagination-nav {
   display: flex;

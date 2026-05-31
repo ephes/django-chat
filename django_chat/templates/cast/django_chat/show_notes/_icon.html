@@ -1,20 +1,21 @@
 <span class="show-note-icon show-note-icon--{{ icon_name }}" aria-hidden="true">
   {% if icon_name == "projects" %}
     <svg viewBox="0 0 24 24" focusable="false">
-      <path d="M3.5 6.5h6l2 2h9v9.75a1.75 1.75 0 0 1-1.75 1.75H5.25a1.75 1.75 0 0 1-1.75-1.75Z"/>
-      <path d="M3.5 8.5V5.75C3.5 4.78 4.28 4 5.25 4h4.1l2 2H18"/>
+      <path d="M4 8h5.55l2 2H20v8.1a1.65 1.65 0 0 1-1.65 1.65H5.65A1.65 1.65 0 0 1 4 18.1Z"/>
+      <path d="M4 10.2V5.9c0-.92.73-1.65 1.65-1.65h4.65l2 2H20"/>
     </svg>
   {% elif icon_name == "books" %}
     <svg viewBox="0 0 24 24" focusable="false">
-      <path d="M5 4.5h6.25A2.75 2.75 0 0 1 14 7.25V20H7.5A2.5 2.5 0 0 1 5 17.5Z"/>
-      <path d="M14 7.25A2.75 2.75 0 0 1 16.75 4.5H19V20h-5Z"/>
-      <path d="M8 8h3"/>
-      <path d="M17 8h2"/>
+      <path d="M12 7.25v12"/>
+      <path d="M5 5.75h4.75A2.25 2.25 0 0 1 12 8v11a2.75 2.75 0 0 0-2.25-1.15H5Z"/>
+      <path d="M19 5.75h-4.75A2.25 2.25 0 0 0 12 8v11a2.75 2.75 0 0 1 2.25-1.15H19Z"/>
+      <path d="M7.25 9.25h2.25"/>
+      <path d="M14.5 9.25h2.25"/>
     </svg>
   {% elif icon_name == "youtube" %}
     <svg viewBox="0 0 24 24" focusable="false">
       <path d="M4.5 8.25A2.75 2.75 0 0 1 7.25 5.5h9.5a2.75 2.75 0 0 1 2.75 2.75v7.5a2.75 2.75 0 0 1-2.75 2.75h-9.5a2.75 2.75 0 0 1-2.75-2.75Z"/>
-      <path d="m10.25 9 5 3-5 3Z"/>
+      <path class="show-note-fill" d="m10.1 8.75 5.9 3.25-5.9 3.25Z"/>
     </svg>
   {% elif icon_name == "groups" %}
     <svg viewBox="0 0 24 24" focusable="false">
@@ -35,14 +36,13 @@
     </svg>
   {% elif icon_name == "sponsor" or icon_name == "sponsors" or icon_name == "sponsoring_options" %}
     <svg viewBox="0 0 24 24" focusable="false">
-      <path d="M4.75 5.25h7.5l7 7-6.5 6.5-7-7Z"/>
-      <path d="M8.25 8.75h.01"/>
+      <path d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
     </svg>
   {% else %}
     <svg viewBox="0 0 24 24" focusable="false">
-      <path d="M9.5 14.5 14.5 9.5"/>
-      <path d="M10.5 6.5h-2a4.5 4.5 0 0 0 0 9h2"/>
-      <path d="M13.5 17.5h2a4.5 4.5 0 0 0 0-9h-2"/>
+      <path d="M9.5 8.5h-1.5a3.5 3.5 0 0 0 0 7h2"/>
+      <path d="M14.5 8.5h1.5a3.5 3.5 0 0 1 0 7h-2"/>
+      <path d="M8.75 12h6.5"/>
     </svg>
   {% endif %}
 </span>
