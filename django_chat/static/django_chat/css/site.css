@@ -915,55 +915,125 @@ body:has([data-show-hero-shell]) .brand {
   border-bottom-color: var(--dc-django);
 }
 
+/* Subscribe = the same split podcast-player control as the sponsor CTA, sized
+   up to the hero: a rounded left cap, a voice-memo waveform in the gap, then
+   the label field with the RSS feed icon trailing the text. The <a> is just
+   the flex container + lift/focus host; the green, colour and radii live on the
+   cap and the field. */
 .show-hero-subscribe {
   justify-self: center;
   display: inline-flex;
-  align-items: center;
-  gap: var(--s-2);
-  padding:
-    clamp(.85rem, 1.2cqw, 1.1rem)
-    clamp(1rem, 3.8cqw, 4.1rem);
-  border-radius: var(--dc-radius-pill);
-  border: 1px solid var(--dc-django-aaa-light);
-  background: var(--dc-django-aaa-light);
+  align-items: stretch;
+  gap: 0;
   color: var(--dc-ink);
   font-weight: var(--weight-bold);
   letter-spacing: 0.04em;
   font-size: clamp(1rem, 1.4cqw, 1.4rem);
   text-decoration: none;
-  transition:
-    transform    .15s var(--show-hero-ease-out),
-    background   .15s var(--show-hero-ease-out),
-    border-color .15s var(--show-hero-ease-out),
-    color        .15s var(--show-hero-ease-out);
+  transition: transform .15s var(--show-hero-ease-out);
 }
 .show-hero-subscribe:hover,
 .show-hero-subscribe:focus-visible {
-  background: var(--dc-accent-dark);
-  border-color: var(--dc-accent-dark);
-  color: var(--dc-paper);
   transform: translateY(-1px);
 }
 .show-hero-subscribe:focus-visible {
   outline: 2px solid var(--show-hero-accent);
   outline-offset: 3px;
+  border-radius: var(--dc-radius-pill);
 }
 @media (prefers-reduced-motion: reduce) {
   .show-hero-subscribe { transition: none; }
   .show-hero-subscribe:hover,
   .show-hero-subscribe:focus-visible { transform: none; }
 }
-.show-hero-subscribe svg {
-  width: 1.1em;
-  height: 1.1em;
+
+/* Left cap: an extended rounded pill end that nests the RSS feed icon —
+   rounded outward, flat where it faces the wave. */
+.show-hero-subscribe-cap {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* More air on the rounded outer edge; tight on the inner edge facing the wave. */
+  padding-inline: clamp(.7rem, 1.7cqw, 1.05rem) clamp(.35rem, 1cqw, .6rem);
+  background: var(--dc-django-aaa-light);
+  border: 1px solid var(--dc-django-aaa-light);
+  border-radius: var(--dc-radius-pill) 0 0 var(--dc-radius-pill);
+  transition:
+    background   .15s var(--show-hero-ease-out),
+    border-color .15s var(--show-hero-ease-out),
+    color        .15s var(--show-hero-ease-out);
+}
+.show-hero-subscribe-cap svg {
+  width: 1.3em;
+  height: 1.3em;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.75;
+  stroke-width: 2.7;
   stroke-linecap: round;
   stroke-linejoin: round;
   flex: 0 0 auto;
 }
-.show-hero-subscribe svg circle { fill: currentColor; stroke: none; }
+.show-hero-subscribe-cap svg circle { fill: currentColor; stroke: none; }
+
+/* The gap: five capsule bars (voice-memo look); the tallest reaches the full
+   button height. Outer padding matches the inter-bar gap so the cap and field
+   sit as close to the wave as the bars sit to each other. */
+.show-hero-subscribe-wave {
+  flex: 0 0 auto;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.14em;
+  padding-inline: 0.14em;
+}
+.show-hero-subscribe-wave i {
+  display: block;
+  width: 0.18em;
+  border-radius: var(--dc-radius-pill);
+  background: var(--dc-django-aaa-light);
+  transition: background .15s var(--show-hero-ease-out);
+}
+.show-hero-subscribe-wave i:nth-child(1) { height: 40%; }
+.show-hero-subscribe-wave i:nth-child(2) { height: 76%; }
+.show-hero-subscribe-wave i:nth-child(3) { height: 100%; }
+.show-hero-subscribe-wave i:nth-child(4) { height: 58%; }
+.show-hero-subscribe-wave i:nth-child(5) { height: 46%; }
+
+/* Right field: the pill end carrying the "Subscribe" label — flat where it
+   faces the wave, rounded outward. Tighter on the cut edge, more air on the
+   rounded end. With the icon moved into the cap, this end is now shorter. */
+.show-hero-subscribe-field {
+  display: inline-flex;
+  align-items: center;
+  padding-block: clamp(.85rem, 1.2cqw, 1.1rem);
+  /* Outer (right) padding matches the cap's outer padding so "Subscribe" sits as
+     far from its rounded end as the icon sits from the cap's rounded end. */
+  padding-inline: clamp(.5rem, 1cqw, .75rem) clamp(.7rem, 1.7cqw, 1.05rem);
+  background: var(--dc-django-aaa-light);
+  border: 1px solid var(--dc-django-aaa-light);
+  border-radius: 0 var(--dc-radius-pill) var(--dc-radius-pill) 0;
+  transition:
+    background   .15s var(--show-hero-ease-out),
+    border-color .15s var(--show-hero-ease-out),
+    color        .15s var(--show-hero-ease-out);
+}
+
+/* Hover/focus: cap, field and bars flip to the dark accent together; the cap
+   icon and the label flip to paper with them. */
+.show-hero-subscribe:hover .show-hero-subscribe-cap,
+.show-hero-subscribe:focus-visible .show-hero-subscribe-cap,
+.show-hero-subscribe:hover .show-hero-subscribe-field,
+.show-hero-subscribe:focus-visible .show-hero-subscribe-field {
+  background: var(--dc-accent-dark);
+  border-color: var(--dc-accent-dark);
+  color: var(--dc-paper);
+}
+.show-hero-subscribe:hover .show-hero-subscribe-wave i,
+.show-hero-subscribe:focus-visible .show-hero-subscribe-wave i {
+  background: var(--dc-accent-dark);
+}
 
 /* Base logo box. The transform is the static fallback (translate fitted to the
    measured ellipse ride); the @supports rule below overrides it with the real
@@ -3843,7 +3913,6 @@ h2[data-vt-episode-title] {
 .sponsor-shoutout-cta-field {
   display: inline-flex;
   align-items: center;
-  gap: var(--s-2);
   /* Tighter on the straight (cut) edge so the label sits close to it; more air
      on the rounded end. */
   padding-block: 0.55rem;
@@ -3868,14 +3937,15 @@ h2[data-vt-episode-title] {
   align-items: center;
   justify-content: center;
   /* Same gap on the outer edges as between the bars, so the cap and the field
-     sit as close to the wave as the bars sit to each other. */
-  gap: 0.18rem;
-  padding-inline: 0.18rem;
+     sit as close to the wave as the bars sit to each other. em-based to match
+     the hero subscribe button's finer, tighter wave proportions. */
+  gap: 0.14em;
+  padding-inline: 0.14em;
 }
 
 .sponsor-shoutout-cta-wave i {
   display: block;
-  width: 0.28rem;
+  width: 0.18em;
   border-radius: var(--dc-radius-pill);
   background: var(--dc-django-aaa-light);
   transition: background 0.15s ease;
@@ -3895,11 +3965,6 @@ h2[data-vt-episode-title] {
 }
 .sponsor-shoutout-cta-wave i:nth-child(5) {
   height: 46%;
-}
-
-.sponsor-shoutout-cta-arrow {
-  font-size: 1.05em;
-  line-height: 0;
 }
 
 /* Hover/focus: cap, field and wave all flip to the dark accent together. */

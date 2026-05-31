@@ -63,12 +63,17 @@
           <p>A biweekly podcast about the Django web framework
             by&nbsp;<a href="https://wsvincent.com/">Will&nbsp;Vincent</a> and <a href="https://noumenal.es/">Carlton&nbsp;Gibson</a>.</p>
           <a class="show-hero-subscribe" href="{% url 'cast:feed_detail' slug=podcast.slug %}">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M4 11a9 9 0 0 1 9 9"/>
-              <path d="M4 4a16 16 0 0 1 16 16"/>
-              <circle cx="5" cy="19" r="2.2"/>
-            </svg>
-            Subscribe
+            <span class="show-hero-subscribe-cap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 11a9 9 0 0 1 9 9"/>
+                <path d="M4 4a16 16 0 0 1 16 16"/>
+                <circle cx="5" cy="19" r="2.5"/>
+              </svg>
+            </span>
+            <span class="show-hero-subscribe-wave" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i>
+            </span>
+            <span class="show-hero-subscribe-field">Subscribe</span>
           </a>
         </div>
       </div>
