@@ -198,8 +198,8 @@ and episode detail page needed small fixes:
   hood so the heavyweight embed script, player API response, and third-party
   player assets are requested only after user interaction. Django Chat renders
   its own lightweight player-shaped facade, keeps that footprint stable while
-  the iframe initializes, and starts the player on hover, focus, tap, or button
-  click.
+  the iframe initializes, preloads the player on hover or focus, and starts
+  playback after a tap or button click.
 
 ## Performance Optimization Backlog
 
@@ -268,7 +268,9 @@ Planned:
 The 2026-04-29 Lighthouse reports predate the click-to-load player facade.
 Subsequent browser network checks confirm that the third-party Podlove web
 player bundle is not requested on initial episode detail page load; it is loaded
-after the user hovers, focuses, taps, or clicks the player facade.
+after the user hovers, focuses, taps, or clicks the player facade. Hover and
+focus preload the iframe only; tap and button click preload the iframe and then
+attempt playback once the Podlove player reports ready.
 
 The root URL intentionally redirects to `/episodes/`. Lighthouse records that
 redirect but final root scores are still 98-100.

@@ -2,6 +2,8 @@
   const readyAttribute = "data-django-chat-player-ready";
   const loadingAttribute = "data-django-chat-player-loading";
   const loadStartedAttribute = "data-django-chat-player-load-started";
+  const playAfterLoadAttribute = "data-django-chat-player-play-after-load";
+  const playAttemptedAttribute = "data-django-chat-player-play-attempted";
   const hoverLoadAttribute = "data-django-chat-load-on-hover";
   const hoverLoadArmedAttribute = "data-django-chat-hover-load-armed";
   const playerPanelStyleId = "django-chat-player-panel-style";
@@ -271,6 +273,56 @@ button#play-button--restart > .wrapper > span {
     });
   };
 
+  const findInitialPlayButton = (iframeDocument) => {
+    const iframeWindow = iframeDocument?.defaultView;
+    if (!iframeWindow) {
+      return null;
+    }
+
+    const primaryButton = iframeDocument.querySelector("button#play-button--play");
+    if (primaryButton instanceof iframeWindow.HTMLButtonElement) {
+      return primaryButton;
+    }
+
+    const playButtons = iframeDocument.querySelectorAll('button[data-test="play-button"]');
+    for (const button of playButtons) {
+      if (!(button instanceof iframeWindow.HTMLButtonElement)) {
+        continue;
+      }
+
+      const label = `${button.id} ${button.getAttribute("aria-label") ?? ""} ${
+        button.getAttribute("title") ?? ""
+      } ${button.textContent ?? ""}`.toLowerCase();
+      if (label.includes("pause") || label.includes("replay") || label.includes("restart")) {
+        continue;
+      }
+
+      return button;
+    }
+
+    return null;
+  };
+
+  const playWhenReady = (player, iframeDocument) => {
+    if (
+      player.getAttribute(playAfterLoadAttribute) !== "true" ||
+      player.hasAttribute(playAttemptedAttribute)
+    ) {
+      return;
+    }
+
+    const playButton = findInitialPlayButton(iframeDocument);
+    if (!playButton || playButton.disabled) {
+      // If the readiness fallback reveals the iframe before Podlove renders the play
+      // button, the pending intent is inert; the live player remains directly usable.
+      return;
+    }
+
+    player.setAttribute(playAttemptedAttribute, "true");
+    player.removeAttribute(playAfterLoadAttribute);
+    playButton.click();
+  };
+
   const markReady = (player) => {
     player.removeAttribute(loadingAttribute);
     player.setAttribute(readyAttribute, "true");
@@ -297,7 +349,11 @@ button#play-button--restart > .wrapper > span {
       });
   };
 
-  const loadPlayer = (player) => {
+  const loadPlayer = (player, { playAfterLoad = false } = {}) => {
+    if (playAfterLoad) {
+      player.setAttribute(playAfterLoadAttribute, "true");
+    }
+
     if (player.hasAttribute(loadStartedAttribute) || player.querySelector("iframe")) {
       return;
     }
@@ -335,6 +391,7 @@ button#play-button--restart > .wrapper > span {
 
     player.setAttribute(hoverLoadArmedAttribute, "true");
     const trigger = () => loadPlayer(player);
+    const triggerAndPlay = () => loadPlayer(player, { playAfterLoad: true });
     const triggerMouseHover = (event) => {
       if (event.pointerType && event.pointerType !== "mouse") {
         return;
@@ -345,7 +402,9 @@ button#play-button--restart > .wrapper > span {
     player.addEventListener("focusin", trigger);
     player
       .querySelectorAll("[data-django-chat-player-placeholder]")
-      .forEach((placeholder) => placeholder.addEventListener("click", trigger, { once: true }));
+      .forEach((placeholder) =>
+        placeholder.addEventListener("click", triggerAndPlay, { once: true })
+      );
   };
 
   const watchIframe = (player, iframe) => {
@@ -389,6 +448,7 @@ button#play-button--restart > .wrapper > span {
         }
         installReplayButtonA11y(iframeDocument);
         if (app.classList.contains("loaded")) {
+          playWhenReady(player, iframeDocument);
           reveal();
           return true;
         }
@@ -400,6 +460,7 @@ button#play-button--restart > .wrapper > span {
         }
         appObserver = new MutationObserver(() => {
           if (app.classList.contains("loaded")) {
+            playWhenReady(player, iframeDocument);
             reveal();
           }
         });

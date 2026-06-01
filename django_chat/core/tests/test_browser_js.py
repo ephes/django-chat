@@ -414,6 +414,53 @@ def test_player_replay_state_keeps_compact_button_icon_only(
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_player_facade_tap_attempts_play_after_player_load(
+    live_server: Any,
+    page_with_loadable_audio: Page,
+) -> None:
+    page_with_loadable_audio.goto(f"{live_server.url}{episode_detail_path()}")
+    page_with_loadable_audio.locator("[data-django-chat-player-placeholder]").click()
+
+    player = page_with_loadable_audio.locator("podlove-player").first
+    expect(player).to_have_attribute("data-django-chat-player-play-attempted", "true")
+    expect(player).not_to_have_attribute("data-django-chat-player-play-after-load", "true")
+    iframe = page_with_loadable_audio.locator("podlove-player iframe").first
+    iframe.wait_for(state="attached", timeout=10_000)
+    frame = iframe.element_handle().content_frame()
+    assert frame is not None
+    frame.wait_for_selector("#app.loaded", timeout=15_000)
+    frame.wait_for_function(
+        """() => {
+            const audio = document.querySelector("audio");
+            const activeButton = document.querySelector(
+                "button#play-button--loading, button#play-button--pause"
+            );
+            return audio && !audio.paused && activeButton;
+        }"""
+    )
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_player_focus_preloads_without_attempting_playback(
+    live_server: Any,
+    page_with_loadable_audio: Page,
+) -> None:
+    page_with_loadable_audio.goto(f"{live_server.url}{episode_detail_path()}")
+    page_with_loadable_audio.locator("[data-django-chat-player-placeholder]").focus()
+
+    player = page_with_loadable_audio.locator("podlove-player").first
+    expect(player).not_to_have_attribute("data-django-chat-player-play-after-load", "true")
+    expect(player).not_to_have_attribute("data-django-chat-player-play-attempted", "true")
+    iframe = page_with_loadable_audio.locator("podlove-player iframe").first
+    iframe.wait_for(state="attached", timeout=10_000)
+    frame = iframe.element_handle().content_frame()
+    assert frame is not None
+    frame.wait_for_selector("#app.loaded", timeout=15_000)
+    expect(frame.locator("button#play-button--play")).to_be_attached()
+    expect(frame.locator("button#play-button--pause")).not_to_be_attached()
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_player_transcript_tab_uses_single_scroll_container(
     live_server: Any,
     page_with_long_transcript: Page,
