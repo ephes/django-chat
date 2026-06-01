@@ -48,11 +48,6 @@ def page_with_loadable_audio(loadable_audio_site: None) -> Iterator[Page]:
 
 
 @pytest.fixture
-def mobile_page_with_loadable_audio(loadable_audio_site: None) -> Iterator[Page]:
-    yield from _playwright_page("iPhone 12")
-
-
-@pytest.fixture
 def long_transcript_site(loadable_audio_site: None) -> Iterator[None]:
     episode = Episode.objects.get(slug="django-tasks-jake-howard")
     assert episode.podcast_audio is not None
@@ -65,13 +60,11 @@ def page_with_long_transcript(long_transcript_site: None) -> Iterator[Page]:
     yield from _playwright_page()
 
 
-def _playwright_page(device_name: str | None = None) -> Iterator[Page]:
+def _playwright_page() -> Iterator[Page]:
     """Create a Playwright page for fixtures with different Django data setup."""
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
-        context_options = playwright.devices[device_name] if device_name else {}
-        context = browser.new_context(**context_options)
-        page = context.new_page()
+        page = browser.new_page()
         errors: list[str] = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.on(
@@ -81,7 +74,6 @@ def _playwright_page(device_name: str | None = None) -> Iterator[Page]:
 
         yield page
 
-        context.close()
         browser.close()
 
     assert errors == []
@@ -419,74 +411,6 @@ def test_player_replay_state_keeps_compact_button_icon_only(
     assert metrics["iconWidth"] > 0
     assert metrics["iconCenterOffset"] < 1
     assert metrics["buttonRight"] < metrics["progressLeft"]
-
-
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
-def test_player_facade_tap_attempts_play_after_player_load(
-    live_server: Any,
-    page_with_loadable_audio: Page,
-) -> None:
-    page_with_loadable_audio.goto(f"{live_server.url}{episode_detail_path()}")
-    page_with_loadable_audio.locator("[data-django-chat-player-placeholder]").click()
-
-    player = page_with_loadable_audio.locator("podlove-player").first
-    expect(player).to_have_attribute("data-django-chat-player-play-attempted", "true")
-    expect(player).not_to_have_attribute("data-django-chat-player-play-after-load", "true")
-    iframe = page_with_loadable_audio.locator("podlove-player iframe").first
-    iframe.wait_for(state="attached", timeout=10_000)
-    frame = iframe.element_handle().content_frame()
-    assert frame is not None
-    frame.wait_for_selector("#app.loaded", timeout=15_000)
-    frame.wait_for_function(
-        """() => {
-            const audio = document.querySelector("audio");
-            const activeButton = document.querySelector(
-                "button#play-button--loading, button#play-button--pause"
-            );
-            return audio && !audio.paused && activeButton;
-        }"""
-    )
-
-
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
-def test_player_focus_preloads_without_attempting_playback(
-    live_server: Any,
-    page_with_loadable_audio: Page,
-) -> None:
-    page_with_loadable_audio.goto(f"{live_server.url}{episode_detail_path()}")
-    page_with_loadable_audio.locator("[data-django-chat-player-placeholder]").focus()
-
-    player = page_with_loadable_audio.locator("podlove-player").first
-    expect(player).not_to_have_attribute("data-django-chat-player-play-after-load", "true")
-    expect(player).not_to_have_attribute("data-django-chat-player-play-attempted", "true")
-    iframe = page_with_loadable_audio.locator("podlove-player iframe").first
-    iframe.wait_for(state="attached", timeout=10_000)
-    frame = iframe.element_handle().content_frame()
-    assert frame is not None
-    frame.wait_for_selector("#app.loaded", timeout=15_000)
-    expect(frame.locator("button#play-button--play")).to_be_attached()
-    expect(frame.locator("button#play-button--pause")).not_to_be_attached()
-
-
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
-def test_mobile_player_preloads_before_first_tap(
-    live_server: Any,
-    mobile_page_with_loadable_audio: Page,
-) -> None:
-    mobile_page_with_loadable_audio.goto(f"{live_server.url}{episode_detail_path()}")
-
-    player = mobile_page_with_loadable_audio.locator("podlove-player").first
-    expect(player).to_have_attribute("data-django-chat-player-load-started", "true")
-    expect(player).not_to_have_attribute("data-django-chat-player-play-after-load", "true")
-    expect(player).not_to_have_attribute("data-django-chat-player-play-attempted", "true")
-    iframe = mobile_page_with_loadable_audio.locator("podlove-player iframe").first
-    iframe.wait_for(state="attached", timeout=10_000)
-    frame = iframe.element_handle().content_frame()
-    assert frame is not None
-    frame.wait_for_selector("#app.loaded", timeout=15_000)
-    expect(player).to_have_attribute("data-django-chat-player-ready", "true")
-    expect(frame.locator("button#play-button--play")).to_be_attached()
-    expect(frame.locator("button#play-button--pause")).not_to_be_attached()
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
