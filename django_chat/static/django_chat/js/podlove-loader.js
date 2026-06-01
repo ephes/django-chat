@@ -227,6 +227,8 @@ button#play-button--restart > .wrapper > span {
     return h * 3600 + m * 60 + s;
   };
   const startAtSeconds = parseStartAt(window.location.search);
+  const shouldPreloadForCoarsePointer = () =>
+    Boolean(window.matchMedia?.("(hover: none), (pointer: coarse)")?.matches);
 
   const installPlayerPanelStyles = (iframeDocument) => {
     if (!iframeDocument || iframeDocument.getElementById(playerPanelStyleId)) {
@@ -529,6 +531,13 @@ button#play-button--restart > .wrapper > span {
         // A shared URL with ?t= signals intent to play from that point. Bypass the click-
         // to-load gate so the player is ready immediately; receiver-side seek wiring is
         // tracked in the file comment above.
+        loadPlayer(player);
+      } else if (shouldPreloadForCoarsePointer()) {
+        // iOS does not preserve the original tap's user activation across the async
+        // iframe load. On touch-first devices, preload the real player so the first
+        // user tap can hit Podlove's own play button directly. A very early tap
+        // during this preload window falls back to the existing play-after-load
+        // attempt, then leaves the live player usable if iOS blocks it.
         loadPlayer(player);
       }
     });

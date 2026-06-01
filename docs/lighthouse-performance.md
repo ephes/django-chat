@@ -148,6 +148,10 @@ fix deployed to staging:
 Measured on 2026-05-19 with Lighthouse 13.3.0. Reports are in
 `/tmp/django-chat-lighthouse-20260519-post-defer-minifier/`.
 
+The episode-detail mobile rows below predate the 2026-06 touch-first Podlove
+preload. Treat those mobile numbers as pre-change until a post-deploy mobile
+Lighthouse run records the new transfer, LCP, and TBT impact.
+
 | Page | Mode | Performance | Accessibility | Best Practices | SEO | FCP | LCP | CLS | TBT | Speed Index |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `/` -> `/episodes/` | desktop | 98 | 100 | 100 | 100 | 0.3 s | 0.5 s | 0.083 | 0 ms | 0.4 s |
@@ -195,11 +199,12 @@ and episode detail page needed small fixes:
   episode-number badges instead of loading the larger Roboto Flex display font
   on Lighthouse-critical pages.
 - Episode detail pages keep the Podlove player's click-to-load mode under the
-  hood so the heavyweight embed script, player API response, and third-party
-  player assets are requested only after user interaction. Django Chat renders
-  its own lightweight player-shaped facade, keeps that footprint stable while
-  the iframe initializes, preloads the player on hover or focus, and starts
-  playback after a tap or button click.
+  hood and render a lightweight player-shaped facade while the iframe
+  initializes. Hover-capable devices request the heavyweight embed script,
+  player API response, and third-party player assets after hover or focus.
+  Touch-first devices preload the iframe during page setup so iOS Safari can use
+  the first tap on Podlove's own play button instead of relying on delayed
+  programmatic playback.
 
 ## Performance Optimization Backlog
 
@@ -251,6 +256,13 @@ Done:
   the lightweight player facade visible above the initialized Podlove iframe on
   staging. A deployed staging browser probe confirmed the corrected minified
   selector matches and the facade hides when the Podlove iframe is ready.
+- 2026-06-01: Touch-first episode detail pages now preload the Podlove iframe
+  during page setup so the first iOS Safari tap can hit Podlove's own play
+  button. This intentionally trades mobile bytes for first-tap playback: mobile
+  visitors now download the heavyweight embed script, player API response, and
+  third-party player assets even if they never play the episode. Re-run mobile
+  Lighthouse after deployment before replacing the 2026-05-19 episode-detail
+  mobile scores above.
 
 Planned:
 
@@ -265,12 +277,14 @@ Planned:
 
 ## Caveats
 
-The 2026-04-29 Lighthouse reports predate the click-to-load player facade.
-Subsequent browser network checks confirm that the third-party Podlove web
-player bundle is not requested on initial episode detail page load; it is loaded
-after the user hovers, focuses, taps, or clicks the player facade. Hover and
-focus preload the iframe only; tap and button click preload the iframe and then
-attempt playback once the Podlove player reports ready.
+The 2026-04-29 Lighthouse reports predate the click-to-load player facade. The
+2026-05-19 episode-detail mobile rows predate the 2026-06 touch-first preload.
+Browser network checks confirmed that hover-capable devices do not request the
+third-party Podlove web player bundle on initial episode detail page load; they
+load it after hover, focus, tap, or click. Touch-first devices now preload the
+iframe during page setup because iOS Safari does not allow the post-load
+programmatic play attempt to reuse the original tap activation, so their mobile
+network cost must be remeasured after deployment.
 
 The root URL intentionally redirects to `/episodes/`. Lighthouse records that
 redirect but final root scores are still 98-100.
