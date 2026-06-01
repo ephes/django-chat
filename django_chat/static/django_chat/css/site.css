@@ -76,6 +76,11 @@
      brand `--dc-django` only reaches 5.86:1 (AA) at button text sizes. The logo
      and all brand accents keep `--dc-django`; only button fills use this. */
   --dc-django-aaa-light: #17b650;
+  /* Semantic alias of --dc-django-aaa-light for the brand green used as an
+     *accent* (text/icon) on dark surfaces — topbar nav + brand hover, dark
+     bands, the episode-number badge. Same value, distinct in intent from the
+     button-*fill* use above, so the two can be tuned independently. */
+  --dc-green-on-dark: var(--dc-django-aaa-light);
   /* Translucent django-green tints used for hover/focus surfaces. Derived
      via `color-mix` so changing `--dc-django` flows through automatically.
      Other percentages (12 %, 15 %, 35 %, …) appear inline at single-use
@@ -87,6 +92,13 @@
   --dc-django-soft: color-mix(in srgb, var(--dc-django) 8%, transparent);
   --dc-django-tint: rgb(14 163 66 / 0.1);
   --dc-django-tint: color-mix(in srgb, var(--dc-django) 10%, transparent);
+  /* Stronger siblings, each promoted because ≥2 sites share the value (see
+     the rule above): -hover for interactive hover/focus surfaces, -veil for
+     full-bleed section backdrops. rgb() literal = Safari 16.0/16.1 fallback. */
+  --dc-django-hover: rgb(14 163 66 / 0.12);
+  --dc-django-hover: color-mix(in srgb, var(--dc-django) 12%, transparent);
+  --dc-django-veil: rgb(14 163 66 / 0.14);
+  --dc-django-veil: color-mix(in srgb, var(--dc-django) 14%, transparent);
   /* Opaque pale-green surface tint. Distinct from the translucent
      `--dc-django-soft/-tint` because consumers paint it on a base that
      is not always `--dc-paper` (hero curve, wide bleed sections). */
@@ -114,7 +126,6 @@
   --s1:  1.5rem;    /* ~24px */
   --s2:  2rem;      /* ~32px */
   --s3:  3rem;      /* ~48px */
-  --s4:  4rem;      /* ~64px */
   --s5:  5rem;      /* ~80px */
 
   /* ---------- Geometry tokens ----------
@@ -124,10 +135,11 @@
      "infinite radius" sentinel that pill-shaped controls clamp against
      their own height, not a size that should scale with text. */
   --dc-radius: 0.25rem;        /*  ~4px */
+  --dc-radius-card: 0.75rem;   /* ~12px — card/panel corner */
   --dc-radius-pill: 999px;
   --dc-tap: 2.75rem;           /* ~44px — Apple tap-target floor */
   /* Horizontal page gutter between content and the viewport edge below
-     the container max-width. 1rem on phones; bumped to 2rem from 48em
+     the container max-width. 1rem on phones; bumped to 2rem from 48rem
      upward (≈768 px, see media query below) so tablets and narrow
      laptops sit a touch further off the edge. The `--dc-container`
      formula and every site-wide breakout pattern (`.platform-band`,
@@ -139,9 +151,9 @@
      `--dc-container` itself, by full-bleed breakout bands that align
      their interior to the centered column (`calc(50vw - max/2)`), and
      by the page-header bubble anchor. The `@container (min-width: …)`
-     query in the `.platform-band-links` block must keep the literal
-     pixel value because CSS container-queries do not accept `var()`
-     in the threshold. */
+     query in the `.platform-band-links` block inlines this as `70rem`
+     (container-query thresholds can't reference `var()`); keep the two
+     in sync. */
   --dc-container-max: 70rem;   /* ~70rem */
   --dc-container: min(var(--dc-container-max), 100% - 2 * var(--dc-gutter));
   /* Reserved height for the sticky site topbar. Consumed by sticky surfaces
@@ -154,6 +166,17 @@
      `--dc-ink` (neutral dark for text/shadows) — `--dc-surface-deep` is
      slightly greenish to match the show-hero family. */
   --dc-surface-deep: #09201D;
+
+  /* ---------- Z-index layers ----------
+     Named stacking levels for page-level chrome that must sit in a defined
+     order across components. Within-component stacks (the show-hero
+     composition, sponsor-stat figures, the page-header bubble, the Podlove
+     player) keep their own small local z-indexes and are not part of this
+     scale. */
+  --z-popover: 20;     /* filter popovers above page content */
+  --z-topbar: 50;      /* sticky site header */
+  --z-hero-morph: 60;  /* hero logo / brand-fly riding above the topbar mid-morph */
+  --z-skip-link: 100;  /* skip link — above all chrome */
 
   /* ---------- Typography tokens ----------
      Font-family tokens use the long fallback chain so a missing primary
@@ -238,10 +261,10 @@
    `--dc-gutter`; every consumer reads `var(--dc-gutter)` so the change
    flows through `--dc-container`, the platform-band/filter-form bleed
    padding, the page-header bubble's content column, and the share/embed modal
-   widths automatically. 48em ≈ 768 px at the browser default — the iPad
-   portrait floor. Using `em` so the breakpoint zooms with the user's
+   widths automatically. 48rem ≈ 768 px at the browser default — the iPad
+   portrait floor. Using `rem` so the breakpoint zooms with the user's
    root font size. */
-@media (min-width: 48em) {
+@media (min-width: 48rem) {
   :root {
     --dc-gutter: 2rem;
   }
@@ -410,7 +433,7 @@ button.share-pill,
   position: fixed;
   top: var(--s-2);
   left: var(--s-2);
-  z-index: 100;
+  z-index: var(--z-skip-link);
   padding: var(--s-2) var(--s0);
   background: var(--dc-paper);
   color: var(--dc-accent-dark);
@@ -475,7 +498,7 @@ button.share-pill,
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: var(--z-topbar);
   background: var(--dc-surface-deep);
   color: var(--dc-paper);
   font-family: var(--font-heading);
@@ -528,7 +551,7 @@ button.share-pill,
 
 .brand:hover .brand-name,
 .brand:focus-visible .brand-name {
-  color: var(--dc-django-aaa-light);
+  color: var(--dc-green-on-dark);
   text-shadow: 0 0 .5px currentColor;
 }
 
@@ -554,14 +577,8 @@ button.share-pill,
 .nav-links a:hover,
 .nav-links a:focus-visible,
 .nav-links a[aria-current="page"] {
-  color: var(--dc-django-aaa-light);
+  color: var(--dc-green-on-dark);
   text-shadow: 0 0 .5px currentColor;
-}
-
-.nav-links a[aria-current="page"] {
-  /* Brighter than --dc-django so the current item still reaches WCAG AA on
-     the slightly lighter stacked mobile-nav background. */
-  color: #6CC581;
 }
 
 /* Scroll-morph setup for the episode-index hero. */
@@ -596,7 +613,7 @@ body:has([data-show-hero-shell]) .brand {
       width: auto;
       transform-origin: left center;
       pointer-events: none;
-      z-index: 61;
+      z-index: calc(var(--z-hero-morph) + 1);
       animation-name: show-hero-logo-fly, show-hero-fly-out;
       animation-fill-mode: both, both;
       animation-timing-function: cubic-bezier(.2, .7, .2, 1), linear;
@@ -641,7 +658,7 @@ body:has([data-show-hero-shell]) .brand {
 }
 
 /* Stack the topbar once brand and nav no longer fit side by side. */
-@container topbar (max-width: 42em) {
+@container topbar (max-width: 42rem) {
   .site-nav {
     flex-direction: column;
     align-items: stretch;
@@ -706,7 +723,14 @@ body:has([data-show-hero-shell]) .brand {
   --show-hero-ease-out: cubic-bezier(.2, .7, .2, 1);
   --show-hero-logo-w:           clamp(8rem, calc(9rem + 3.5rem * clamp(0, (100cqw - 400px) / 368px, 1) + 3.5rem * clamp(0, (100cqw - 768px) / 512px, 1) + 3rem * clamp(0, (100cqw - 1280px) / 640px, 1)), 19rem);
   --show-hero-bubble-ty:        calc(12.25vh + (15.5vh - 12.25vh) * clamp(0, (100cqw - 380px) / 20px, 1) + (11vh - 15.5vh) * clamp(0, (100cqw - 400px) / 420px, 1) + (2.5vh - 11vh) * clamp(0, (100cqw - 820px) / 204px, 1) + (-10vw - 2.5vh) * clamp(0, (100cqw - 1024px) / 376px, 1) + (-12rem - -10vw) * clamp(0, (100cqw - 1400px) / 520px, 1));
-  --show-hero-bubble-w:         max(22rem, min(calc(var(--show-hero-h1) * (7.5 - 0.7 * clamp(0, (1500px - 100cqw) / 600px, 1))), calc(100cqw - 2 * var(--dc-gutter) + 10px)));
+  /* Intrinsic bubble width: sized to the h1, capped to the viewport. */
+  --show-hero-bubble-w-base:    max(22rem, min(calc(var(--show-hero-h1) * (7.5 - 0.7 * clamp(0, (1500px - 100cqw) / 600px, 1))), calc(100cqw - 2 * var(--dc-gutter) + 10px)));
+  /* On phones, grow the bubble out to a ~5px rim on each side (use the full
+     view width), fading back to the intrinsic width by 600cqw. The logo's
+     ellipse (rx/ry, anchored at the top) is derived from this width, so the
+     logo glides outward along the wider rim while the bubble keeps its aspect
+     ratio and grows only downward; nothing above the bubble top moves. */
+  --show-hero-bubble-w:         max(var(--show-hero-bubble-w-base), calc(var(--show-hero-bubble-w-base) + (100cqw - 10px - var(--show-hero-bubble-w-base)) * clamp(0, (600px - 100cqw) / 120px, 1)));
   --show-hero-h1:               min(12cqw, clamp(2.5rem, calc(3.5rem + 2.5rem * clamp(0, (100cqw - 400px) / 624px, 1) + 1rem * clamp(0, (100cqw - 1024px) / 896px, 1)), 9rem));
   --show-hero-subtitle:         clamp(1.06rem, calc(1.06rem + 0.49rem * clamp(0, (100cqw - 400px) / 1520px, 1)), 1.55rem);
   --show-hero-bubble-inset-top: calc(12% + 12% * clamp(0, (100cqw - 820px) / 580px, 1) - 2% * clamp(0, (100cqw - 1400px) / 520px, 1));
@@ -715,7 +739,14 @@ body:has([data-show-hero-shell]) .brand {
   --show-hero-hp-right:         calc(2rem + (0% - 2rem) * clamp(0, (100cqw - 380px) / 644px, 1));
   --show-hero-ep-tracking:      calc(-0.045em + 0.085em * clamp(0, (100cqw - 820px) / 1100px, 1));
   --show-hero-ep-inset:         calc(5.3cqw + (1.5rem - 5.3cqw) * clamp(0, (100cqw - 1024px) / 896px, 1));
-  --show-hero-ep-bottom:        calc(16cqw + (1.5rem + 20px - 16cqw) * clamp(0, (100cqw - 1024px) / 6px, 1));
+  /* Extra desktop lift above the 1.5rem inset endpoint (on mobile the hook
+     rides up via the 16cqw term, so this lift no longer applies). */
+  --show-hero-ep-desktop-lift:  20px;
+  --show-hero-ep-bottom:        calc(16cqw + (1.5rem + var(--show-hero-ep-desktop-lift) - 16cqw) * clamp(0, (100cqw - 1024px) / 6px, 1));
+  /* Horizontal offset of the "I" of LISTEN UP from hero centre. The text is
+     centred and scales with 23cqw, so this stays constant; used to centre the
+     mobile episode hook over the "I". */
+  --show-hero-ep-i-offset:      37.9cqw;
   --show-hero-descend:          calc(clamp(0px, (100svh - var(--dc-topbar-h) - 950px) * 0.65, 15rem) * clamp(0, (100cqw - 1200px) / 240px, 1));
   --show-hero-mobile-lift:      calc(2.5vh * clamp(0, (640px - 100cqw) / 220px, 1));
   --show-hero-logo-od:          calc(53% + 14% * clamp(0, (1500px - 100cqw) / 1100px, 1));
@@ -915,50 +946,130 @@ body:has([data-show-hero-shell]) .brand {
   border-bottom-color: var(--dc-django);
 }
 
-/* Subscribe = the same split podcast-player control as the sponsor CTA, sized
-   up to the hero: a rounded left cap, a voice-memo waveform in the gap, then
-   the label field with the RSS feed icon trailing the text. The <a> is just
-   the flex container + lift/focus host; the green, colour and radii live on the
-   cap and the field. */
-.show-hero-subscribe {
-  justify-self: center;
+/* ---------- Split player-button (shared) ----------
+   The hero "Subscribe" control and the sponsor CTA are the same split
+   podcast-transport button: a rounded cap, a five-bar voice-memo wave in the
+   gap, and the label field — all on the AAA-safe button green, flipping to the
+   dark accent on hover/focus. The shared structure lives here once; each
+   component (below, and the sponsor CTA further down) adds only what differs:
+   layout slot, font-size, cap geometry, paddings, transition easing, and the
+   hero's label-to-paper flip. */
+.show-hero-subscribe,
+.sponsor-shoutout-cta {
   display: inline-flex;
   align-items: stretch;
   gap: 0;
   color: var(--dc-ink);
   font-weight: var(--weight-bold);
   letter-spacing: 0.04em;
-  font-size: clamp(1rem, 1.4cqw, 1.4rem);
   text-decoration: none;
-  transition: transform .15s var(--show-hero-ease-out);
 }
 .show-hero-subscribe:hover,
-.show-hero-subscribe:focus-visible {
+.show-hero-subscribe:focus-visible,
+.sponsor-shoutout-cta:hover,
+.sponsor-shoutout-cta:focus-visible {
   transform: translateY(-1px);
 }
-.show-hero-subscribe:focus-visible {
-  outline: 2px solid var(--show-hero-accent);
+.show-hero-subscribe:focus-visible,
+.sponsor-shoutout-cta:focus-visible {
   outline-offset: 3px;
   border-radius: var(--dc-radius-pill);
 }
 @media (prefers-reduced-motion: reduce) {
-  .show-hero-subscribe { transition: none; }
+  .show-hero-subscribe,
+  .sponsor-shoutout-cta { transition: none; }
   .show-hero-subscribe:hover,
-  .show-hero-subscribe:focus-visible { transform: none; }
+  .show-hero-subscribe:focus-visible,
+  .sponsor-shoutout-cta:hover,
+  .sponsor-shoutout-cta:focus-visible { transform: none; }
 }
 
-/* Left cap: an extended rounded pill end that nests the RSS feed icon —
-   rounded outward, flat where it faces the wave. */
-.show-hero-subscribe-cap {
+/* Cap + field: the AAA-safe green pill ends — cap rounds left, field rounds right. */
+.show-hero-subscribe-cap,
+.sponsor-shoutout-cta-cap,
+.show-hero-subscribe-field,
+.sponsor-shoutout-cta-field {
+  background: var(--dc-django-aaa-light);
+  border: 1px solid var(--dc-django-aaa-light);
+}
+.show-hero-subscribe-cap,
+.sponsor-shoutout-cta-cap {
   flex: 0 0 auto;
+  border-radius: var(--dc-radius-pill) 0 0 var(--dc-radius-pill);
+}
+.show-hero-subscribe-field,
+.sponsor-shoutout-cta-field {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0 var(--dc-radius-pill) var(--dc-radius-pill) 0;
+}
+
+/* The gap: five capsule bars (voice-memo look); the tallest reaches the full
+   button height. Outer padding matches the inter-bar gap so the cap and field
+   sit as close to the wave as the bars sit to each other. */
+.show-hero-subscribe-wave,
+.sponsor-shoutout-cta-wave {
+  flex: 0 0 auto;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.14em;
+  padding-inline: 0.14em;
+}
+.show-hero-subscribe-wave i,
+.sponsor-shoutout-cta-wave i {
+  display: block;
+  width: 0.18em;
+  border-radius: var(--dc-radius-pill);
+  background: var(--dc-django-aaa-light);
+}
+.show-hero-subscribe-wave i:nth-child(1),
+.sponsor-shoutout-cta-wave i:nth-child(1) { height: 40%; }
+.show-hero-subscribe-wave i:nth-child(2),
+.sponsor-shoutout-cta-wave i:nth-child(2) { height: 76%; }
+.show-hero-subscribe-wave i:nth-child(3),
+.sponsor-shoutout-cta-wave i:nth-child(3) { height: 100%; }
+.show-hero-subscribe-wave i:nth-child(4),
+.sponsor-shoutout-cta-wave i:nth-child(4) { height: 58%; }
+.show-hero-subscribe-wave i:nth-child(5),
+.sponsor-shoutout-cta-wave i:nth-child(5) { height: 46%; }
+
+/* Hover/focus: cap, field and bars flip to the dark accent together. */
+.show-hero-subscribe:hover .show-hero-subscribe-cap,
+.show-hero-subscribe:focus-visible .show-hero-subscribe-cap,
+.show-hero-subscribe:hover .show-hero-subscribe-field,
+.show-hero-subscribe:focus-visible .show-hero-subscribe-field,
+.sponsor-shoutout-cta:hover .sponsor-shoutout-cta-cap,
+.sponsor-shoutout-cta:focus-visible .sponsor-shoutout-cta-cap,
+.sponsor-shoutout-cta:hover .sponsor-shoutout-cta-field,
+.sponsor-shoutout-cta:focus-visible .sponsor-shoutout-cta-field {
+  background: var(--dc-accent-dark);
+  border-color: var(--dc-accent-dark);
+}
+.show-hero-subscribe:hover .show-hero-subscribe-wave i,
+.show-hero-subscribe:focus-visible .show-hero-subscribe-wave i,
+.sponsor-shoutout-cta:hover .sponsor-shoutout-cta-wave i,
+.sponsor-shoutout-cta:focus-visible .sponsor-shoutout-cta-wave i {
+  background: var(--dc-accent-dark);
+}
+
+/* ---------- Hero "Subscribe" — per-instance skin ----------
+   Centred in the bubble, scaled up, and the cap nests the RSS feed icon. */
+.show-hero-subscribe {
+  justify-self: center;
+  font-size: clamp(1rem, 1.4cqw, 1.4rem);
+  transition: transform .15s var(--show-hero-ease-out);
+}
+.show-hero-subscribe:focus-visible {
+  outline: 2px solid var(--show-hero-accent);
+}
+.show-hero-subscribe-cap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   /* More air on the rounded outer edge; tight on the inner edge facing the wave. */
   padding-inline: clamp(.7rem, 1.7cqw, 1.05rem) clamp(.35rem, 1cqw, .6rem);
-  background: var(--dc-django-aaa-light);
-  border: 1px solid var(--dc-django-aaa-light);
-  border-radius: var(--dc-radius-pill) 0 0 var(--dc-radius-pill);
   transition:
     background   .15s var(--show-hero-ease-out),
     border-color .15s var(--show-hero-ease-out),
@@ -975,64 +1086,25 @@ body:has([data-show-hero-shell]) .brand {
   flex: 0 0 auto;
 }
 .show-hero-subscribe-cap svg circle { fill: currentColor; stroke: none; }
-
-/* The gap: five capsule bars (voice-memo look); the tallest reaches the full
-   button height. Outer padding matches the inter-bar gap so the cap and field
-   sit as close to the wave as the bars sit to each other. */
-.show-hero-subscribe-wave {
-  flex: 0 0 auto;
-  align-self: stretch;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.14em;
-  padding-inline: 0.14em;
-}
 .show-hero-subscribe-wave i {
-  display: block;
-  width: 0.18em;
-  border-radius: var(--dc-radius-pill);
-  background: var(--dc-django-aaa-light);
   transition: background .15s var(--show-hero-ease-out);
 }
-.show-hero-subscribe-wave i:nth-child(1) { height: 40%; }
-.show-hero-subscribe-wave i:nth-child(2) { height: 76%; }
-.show-hero-subscribe-wave i:nth-child(3) { height: 100%; }
-.show-hero-subscribe-wave i:nth-child(4) { height: 58%; }
-.show-hero-subscribe-wave i:nth-child(5) { height: 46%; }
-
-/* Right field: the pill end carrying the "Subscribe" label — flat where it
-   faces the wave, rounded outward. Tighter on the cut edge, more air on the
-   rounded end. With the icon moved into the cap, this end is now shorter. */
 .show-hero-subscribe-field {
-  display: inline-flex;
-  align-items: center;
-  padding-block: clamp(.85rem, 1.2cqw, 1.1rem);
   /* Outer (right) padding matches the cap's outer padding so "Subscribe" sits as
      far from its rounded end as the icon sits from the cap's rounded end. */
+  padding-block: clamp(.85rem, 1.2cqw, 1.1rem);
   padding-inline: clamp(.5rem, 1cqw, .75rem) clamp(.7rem, 1.7cqw, 1.05rem);
-  background: var(--dc-django-aaa-light);
-  border: 1px solid var(--dc-django-aaa-light);
-  border-radius: 0 var(--dc-radius-pill) var(--dc-radius-pill) 0;
   transition:
     background   .15s var(--show-hero-ease-out),
     border-color .15s var(--show-hero-ease-out),
     color        .15s var(--show-hero-ease-out);
 }
-
-/* Hover/focus: cap, field and bars flip to the dark accent together; the cap
-   icon and the label flip to paper with them. */
+/* Hero only: the cap icon and the label flip to paper with the surface. */
 .show-hero-subscribe:hover .show-hero-subscribe-cap,
 .show-hero-subscribe:focus-visible .show-hero-subscribe-cap,
 .show-hero-subscribe:hover .show-hero-subscribe-field,
 .show-hero-subscribe:focus-visible .show-hero-subscribe-field {
-  background: var(--dc-accent-dark);
-  border-color: var(--dc-accent-dark);
   color: var(--dc-paper);
-}
-.show-hero-subscribe:hover .show-hero-subscribe-wave i,
-.show-hero-subscribe:focus-visible .show-hero-subscribe-wave i {
-  background: var(--dc-accent-dark);
 }
 
 /* Base logo box. The transform is the static fallback (translate fitted to the
@@ -1046,7 +1118,7 @@ body:has([data-show-hero-shell]) .brand {
     calc(-22cqw - 7cqw * clamp(0, (100cqw - 393px) / 631px, 1) + 2cqw * clamp(0, (100cqw - 1024px) / 656px, 1)),
     calc(13cqw - 17cqw * clamp(0, (100cqw - 393px) / 1047px, 1))
   );
-  z-index: 60;
+  z-index: var(--z-hero-morph);
 }
 .show-hero-logo-bubble img {
   width: 100%;
@@ -1095,21 +1167,21 @@ body:has([data-show-hero-shell]) .brand {
   99%          { translate: 0 -0.02rem; }
 }
 
-/* Mobile: once the hook rides up the hero, center it over the "I" of
-   LISTEN UP. The text is centered (left: 50%) and scales with 23cqw, so the
-   "I" sits a constant -37.9cqw left of center. align-items:center already
-   centers the arrow + label within the block, so anchoring the block's centre
-   there lands the arrow on the "I". (The fill/outline copies drift in opposite
-   directions under parallax, so their midpoint — what we target — never moves.) */
-@container show-hero (max-width: 64em) {
+/* Mobile: once the hook rides up the hero (the 64rem / ≈1024px inset knee), center it
+   over the "I" of LISTEN UP, which sits --show-hero-ep-i-offset left of centre.
+   align-items:center already centers the arrow + label within the block, so
+   anchoring the block's centre there lands the arrow on the "I". (The fill/
+   outline copies drift in opposite directions under parallax, so their
+   midpoint — what we target — never moves.) */
+@container show-hero (max-width: 64rem) {
   .show-hero-episodes {
-    left: calc(50% - 37.9cqw);
+    left: calc(50% - var(--show-hero-ep-i-offset));
     transform: translateX(-50%);
   }
 }
 
 /* Below 1200cqw: stack the hero composition. */
-@container show-hero (max-width: 75em) {
+@container show-hero (max-width: 75rem) {
   .show-hero-center {
     width: 100%;
   }
@@ -1268,7 +1340,7 @@ body:has([data-show-hero-shell]) .brand {
 .platform-band h2 {
   margin: var(--s-2) 0 var(--s-1);
   text-wrap: balance;
-  color: var(--dc-django-aaa-light);
+  color: var(--dc-green-on-dark);
 }
 
 .platform-band p {
@@ -1316,7 +1388,7 @@ body:has([data-show-hero-shell]) .brand {
   text-overflow: ellipsis;
 }
 
-@container (min-width: 1120px) {
+@container (min-width: 70rem) {
   .platform-band-links a {
     min-width: 8.75rem;
     max-inline-size: none;
@@ -1327,7 +1399,7 @@ body:has([data-show-hero-shell]) .brand {
    full-width columns so they span the content (the edge gutter is the band's
    own inline padding) instead of sitting narrow + centered. Literal px to
    dodge the em-in-container-query gotcha. */
-@container (max-width: 600px) {
+@container (max-width: 37.5rem) {
   .platform-band-links {
     --platform-mobile-gap: clamp(0.875rem, 3vw, 1.125rem);
     display: grid;
@@ -1352,7 +1424,7 @@ body:has([data-show-hero-shell]) .brand {
 /* A touch more breathing room above/below the band on phones (the 5vw term of
    the base padding bottoms out at 2.5rem down here). Media query because a
    container can't size its own padding off its own @container. */
-@media (max-width: 600px) {
+@media (max-width: 37.5rem) {
   .platform-band {
     padding-block: 3.5rem;
   }
@@ -1448,7 +1520,7 @@ h2[data-vt-episode-title] {
 }
 
 /* Medium and up: extras are visible as a wrapping row. */
-@container filter-form (min-width: 46.25em) {
+@container filter-form (min-width: 46.25rem) {
   .filter-more-toggle {
     display: none;
   }
@@ -1476,7 +1548,7 @@ h2[data-vt-episode-title] {
   }
 }
 
-@container filter-form (min-width: 62.5em) {
+@container filter-form (min-width: 62.5rem) {
   .filter-form {
     grid-template-columns: minmax(13.75rem, 2fr) auto;
     align-items: center;
@@ -1608,7 +1680,7 @@ h2[data-vt-episode-title] {
   position: absolute;
   top: calc(100% + 0.5rem);
   left: 0;
-  z-index: 20;
+  z-index: var(--z-popover);
   display: none;
   border: 1px solid var(--dc-surface-django-tint);
   border-radius: 0.875rem;
@@ -1674,7 +1746,7 @@ h2[data-vt-episode-title] {
 .filter-date-actions button:focus,
 .filter-select-option:hover,
 .filter-select-option:focus {
-  background: color-mix(in srgb, var(--dc-django) 12%, transparent);
+  background: var(--dc-django-hover);
   outline: 0;
 }
 
@@ -1786,7 +1858,7 @@ h2[data-vt-episode-title] {
 
 .filter-search-clear:hover,
 .filter-search-clear:focus {
-  background: color-mix(in srgb, var(--dc-django) 12%, transparent);
+  background: var(--dc-django-hover);
   color: var(--dc-accent-dark);
 }
 
@@ -1865,7 +1937,7 @@ h2[data-vt-episode-title] {
   font-weight: var(--weight-bold);
 }
 
-@container filter-form (max-width: 37.4375em) {
+@container filter-form (max-width: 37.4375rem) {
   .filter-extras > button[type="submit"],
   .filter-extras > .filter-clear-all {
     width: 100%;
@@ -1902,7 +1974,7 @@ h2[data-vt-episode-title] {
   position: absolute;
   inset: 1px calc(-1 * clamp(0.5rem, 1.5vw, 1.25rem)) 0;
   background: transparent;
-  border-radius: 0.75rem;
+  border-radius: var(--dc-radius-card);
   z-index: -1;
   transition: background-color 0.15s ease;
   pointer-events: none;
@@ -1947,7 +2019,7 @@ h2[data-vt-episode-title] {
 }
 
 .episode-number-badge span:last-child {
-  color: var(--dc-django-aaa-light);
+  color: var(--dc-green-on-dark);
   z-index: 2;
 }
 
@@ -1973,7 +2045,7 @@ h2[data-vt-episode-title] {
   text-wrap: balance;
 }
 
-@container episode-list (max-width: 48em) {
+@container episode-list (max-width: 48rem) {
   .episode-row {
     align-items: start;
   }
@@ -2075,8 +2147,7 @@ h2[data-vt-episode-title] {
    below. Default page-header has a transparent background; consumers
    add the tint where it makes sense. */
 .page-header-tint {
-  background: rgb(14 163 66 / 0.14);
-  background: color-mix(in srgb, var(--dc-django) 14%, transparent);
+  background: var(--dc-django-veil);
 }
 
 /* Narrow-header fade sitting on the bubble composition (between SVG
@@ -2308,7 +2379,7 @@ h2[data-vt-episode-title] {
   padding: var(--s1) clamp(1.25rem, 3vw, 1.875rem) var(--s1);
   background: var(--dc-paper);
   border: 1px solid var(--dc-line);
-  border-radius: 0.75rem;
+  border-radius: var(--dc-radius-card);
   box-shadow: var(--dc-shadow-sm);
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
@@ -2394,7 +2465,7 @@ h2[data-vt-episode-title] {
   gap: 2.5rem;
 }
 
-@container subscribe-page (max-width: 48.624em) {
+@container subscribe-page (max-width: 48.624rem) {
   .subscribe-page {
     padding-top: var(--s0);
   }
@@ -2521,7 +2592,7 @@ h2[data-vt-episode-title] {
   padding: var(--s0);
   border-left: 0.375rem solid var(--dc-django);
   background: rgb(14 163 66 / 0.05);
-  border-radius: 0 0.75rem 0.75rem 0;
+  border-radius: 0 var(--dc-radius-card) var(--dc-radius-card) 0;
   display: grid;
   gap: var(--s-2);
   justify-items: start;
@@ -2557,7 +2628,7 @@ h2[data-vt-episode-title] {
    episode-detail sidebar. Same width/gap tokens and mobile-stack
    threshold (778 px = +1 of episode-detail's 777 max) as
    `.episode-detail`, so the two layouts feel like a pair. */
-@container subscribe-page (min-width: 48.625em) {
+@container subscribe-page (min-width: 48.625rem) {
   .subscribe-page {
     grid-template-columns: minmax(0, 1fr) var(--dc-aside-width);
     column-gap: var(--dc-aside-column-gap);
@@ -2661,7 +2732,7 @@ h2[data-vt-episode-title] {
   inset-block: 0;
   inset-inline: calc(50% - 50vw);
   z-index: -1;
-  background: rgb(14 163 66 / 0.14);
+  background: var(--dc-django-veil);
   border-bottom: 3px solid var(--dc-django);
 }
 
@@ -2684,7 +2755,7 @@ h2[data-vt-episode-title] {
   gap: clamp(0.875rem, 2vw, 1.625rem) clamp(2.5rem, 6vw, 4.5rem);
 }
 
-@container sponsor-stats (min-width: 50em) {
+@container sponsor-stats (min-width: 50rem) {
   .sponsor-stats-grid {
     grid-template-columns: repeat(4, 1fr);
     justify-content: stretch;
@@ -2816,7 +2887,7 @@ h2[data-vt-episode-title] {
   gap: var(--s0);
 }
 
-@container sponsor-slots (min-width: 60em) {
+@container sponsor-slots (min-width: 60rem) {
   .sponsor-slots-grid {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -2977,7 +3048,7 @@ h2[data-vt-episode-title] {
    Let it fill the column there. (Can't fold into the clamp: full-width on
    phones and the 66% cap on tablet aren't expressible as one monotonic
    function, and there's no container host at this level for a @container.) */
-@media (max-width: 37.5em) {
+@media (max-width: 37.5rem) {
   .sponsor-hosts-bio {
     max-width: none;
   }
@@ -3109,7 +3180,7 @@ h2[data-vt-episode-title] {
   padding: var(--s1) clamp(1.25rem, 3vw, 1.75rem);
   background: var(--dc-django-soft);
   border: 1px solid rgb(14 163 66 / 0.35);
-  border-radius: 0.75rem;
+  border-radius: var(--dc-radius-card);
 }
 
 .sponsor-pdf-text {
@@ -3300,7 +3371,7 @@ h2[data-vt-episode-title] {
    to ≤2 lines in the hero column — beyond that, a third line pushes the
    show-notes hairline below the rail hairline. The title's `4cqi` clamp
    keeps that line count stable across the full 2-column range. */
-@container episode-detail (max-width: 48.5625em) {
+@container episode-detail (max-width: 48.5625rem) {
   .episode-detail {
     grid-template-columns: 1fr;
   }
@@ -3798,7 +3869,7 @@ h2[data-vt-episode-title] {
   grid-row: 2;
 }
 
-@container episode-detail (max-width: 48.5625em) {
+@container episode-detail (max-width: 48.5625rem) {
   .transcript-content {
     /* Mobile-stack: let the page scroll naturally — no inner scroller
        that would compete with the page's overall scroll affordance. */
@@ -3893,17 +3964,17 @@ h2[data-vt-episode-title] {
 }
 
 /* Docked tab — the show's framing of the sponsor. Same green + ink as the CTA
-   button (AAA 7.26:1); horizontal padding matched to the box so the tab text
-   lines up with the copy below it. */
+   button (AAA 7.26:1); shares the box's horizontal inset (--sponsor-shoutout-pad)
+   so the tab label lines up with the copy below it. */
 .sponsor-shoutout-tab {
   position: relative;
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  padding: 1rem var(--sponsor-shoutout-pad);
+  padding: var(--s0) var(--sponsor-shoutout-pad);
   background: var(--dc-django-aaa-light);
   color: var(--dc-ink);
-  border-radius: 0.75rem 0.75rem 0 0;
+  border-radius: var(--dc-radius-card) var(--dc-radius-card) 0 0;
   font: var(--weight-semibold) var(--text-sm) / 1.1 var(--font-heading);
   letter-spacing: 0.01em;
 }
@@ -3923,130 +3994,35 @@ h2[data-vt-episode-title] {
   padding-left: calc(var(--sponsor-shoutout-pad) - var(--sponsor-shoutout-border));
 }
 
-/* CTA styled like a podcast transport control: the pill is split into a short
-   rounded cap on the left and the long label field on the right, both on the
-   AAA-safe button green. The gap between their straight inner edges is bridged
-   by a stylised audio wave, so the sponsor's own link reads as "press play".
-   The wrapping <a> is just the flex container + lift/focus host; the green,
-   the colour and the radii live on the cap and the field. */
+/* CTA = the split player button (shared rules near the hero "Subscribe"). This
+   skin pins it bottom-right, uses the show-notes text size, and gives the cap a
+   tight half-pill sliver (~half the button height, no icon). */
 .sponsor-shoutout-cta {
-  display: inline-flex;
-  align-items: stretch;
-  gap: 0;
   align-self: flex-end;
-  color: var(--dc-ink);
-  font-weight: var(--weight-bold);
-  letter-spacing: 0.04em;
   font-size: var(--text-sm);
-  text-decoration: none;
   transition: transform 0.15s ease;
 }
-
-.sponsor-shoutout-cta:hover,
-.sponsor-shoutout-cta:focus-visible {
-  transform: translateY(-1px);
-}
-
 .sponsor-shoutout-cta:focus-visible {
   outline: var(--dc-focus-outline);
-  outline-offset: 3px;
-  border-radius: var(--dc-radius-pill);
 }
-
-/* Left cap: just the rounded pill end, cut off right after the curve — a tight
-   half-pill (~half the button height wide) with only a sliver of straight edge
-   facing the wave. */
 .sponsor-shoutout-cta-cap {
-  flex: 0 0 auto;
   width: 1.35rem;
-  background: var(--dc-django-aaa-light);
-  border: 1px solid var(--dc-django-aaa-light);
-  border-radius: var(--dc-radius-pill) 0 0 var(--dc-radius-pill);
   transition:
     background 0.15s ease,
     border-color 0.15s ease;
 }
-
-/* Right field: the long pill, flat where it faces the wave, rounded outward. */
 .sponsor-shoutout-cta-field {
-  display: inline-flex;
-  align-items: center;
   /* Tighter on the straight (cut) edge so the label sits close to it; more air
      on the rounded end. */
   padding-block: 0.55rem;
   padding-inline: 0.8rem 1.35rem;
-  background: var(--dc-django-aaa-light);
-  border: 1px solid var(--dc-django-aaa-light);
-  border-radius: 0 var(--dc-radius-pill) var(--dc-radius-pill) 0;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
     color 0.15s ease;
 }
-
-/* The gap: an audio wave bridging the two straight edges — five plain capsule
-   bars at varied heights (the voice-memo look). Real elements, so the rounded
-   ends stay crisp; the tallest reaches the full button height. The bars carry
-   the pill green and invert to the dark hover colour with the rest. */
-.sponsor-shoutout-cta-wave {
-  flex: 0 0 auto;
-  align-self: stretch;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  /* Same gap on the outer edges as between the bars, so the cap and the field
-     sit as close to the wave as the bars sit to each other. em-based to match
-     the hero subscribe button's finer, tighter wave proportions. */
-  gap: 0.14em;
-  padding-inline: 0.14em;
-}
-
 .sponsor-shoutout-cta-wave i {
-  display: block;
-  width: 0.18em;
-  border-radius: var(--dc-radius-pill);
-  background: var(--dc-django-aaa-light);
   transition: background 0.15s ease;
-}
-
-.sponsor-shoutout-cta-wave i:nth-child(1) {
-  height: 40%;
-}
-.sponsor-shoutout-cta-wave i:nth-child(2) {
-  height: 76%;
-}
-.sponsor-shoutout-cta-wave i:nth-child(3) {
-  height: 100%;
-}
-.sponsor-shoutout-cta-wave i:nth-child(4) {
-  height: 58%;
-}
-.sponsor-shoutout-cta-wave i:nth-child(5) {
-  height: 46%;
-}
-
-/* Hover/focus: cap, field and wave all flip to the dark accent together. */
-.sponsor-shoutout-cta:hover .sponsor-shoutout-cta-cap,
-.sponsor-shoutout-cta:focus-visible .sponsor-shoutout-cta-cap,
-.sponsor-shoutout-cta:hover .sponsor-shoutout-cta-field,
-.sponsor-shoutout-cta:focus-visible .sponsor-shoutout-cta-field {
-  background: var(--dc-accent-dark);
-  border-color: var(--dc-accent-dark);
-}
-
-.sponsor-shoutout-cta:hover .sponsor-shoutout-cta-wave i,
-.sponsor-shoutout-cta:focus-visible .sponsor-shoutout-cta-wave i {
-  background: var(--dc-accent-dark);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sponsor-shoutout-cta {
-    transition: none;
-  }
-  .sponsor-shoutout-cta:hover,
-  .sponsor-shoutout-cta:focus-visible {
-    transform: none;
-  }
 }
 
 /* `.show-notes a` (0,1,1) would otherwise tint the CTA label green and tank
@@ -4164,7 +4140,7 @@ h2[data-vt-episode-title] {
 /* On mobile widths the Fosstodon button and the credit line stack
    vertically; center both so the footer reads as a column rather than
    a left/right split. */
-@container site-footer (max-width: 48em) {
+@container site-footer (max-width: 48rem) {
   .site-footer-inner {
     flex-direction: column;
     --cluster-justify: center;
@@ -4382,7 +4358,7 @@ h2[data-vt-episode-title] {
 /* Phone-sized episode pages: shrink the sidebar artwork and switch the
    Podlove player + facade into their compact mobile layouts. Gated on
    `.episode-detail` because all targets live inside it. */
-@container episode-detail (max-width: 47.5em) {
+@container episode-detail (max-width: 47.5rem) {
   .show-artwork {
     justify-self: start;
     max-width: 13.75rem;
@@ -4428,7 +4404,7 @@ h2[data-vt-episode-title] {
 
 @layer components {
 
-@container filter-form (max-width: 30em) {
+@container filter-form (max-width: 30rem) {
   .filter-date {
     grid-template-columns: 1fr;
   }
@@ -4726,7 +4702,7 @@ body:has(.share-modal:not([open]):target) {
   justify-content: center;
   color: var(--dc-ink);
 
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: var(--dc-transition-colors);
 }
 
 .share-modal-close:hover {
@@ -4941,7 +4917,7 @@ body:has(.share-modal:not([open]):target) {
   padding: 0 var(--s0);
 }
 
-@container share-modal (max-width: 30em) {
+@container share-modal (max-width: 30rem) {
   .share-pill {
     padding: 0 var(--s-1);
     font-size: var(--text-sm);
@@ -4966,7 +4942,7 @@ body:has(.share-modal:not([open]):target) {
   align-items: center;
   gap: var(--s0);
   padding: var(--s0);
-  border-radius: 0.75rem;
+  border-radius: var(--dc-radius-card);
   background: var(--dc-django-soft);
 }
 
@@ -5017,7 +4993,7 @@ body:has(.share-modal:not([open]):target) {
 .embed-snippet textarea {
   flex: 1;
   min-width: 0;
-  border-radius: 0.75rem;
+  border-radius: var(--dc-radius-card);
   padding: var(--s-1);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
