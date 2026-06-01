@@ -714,8 +714,8 @@ body:has([data-show-hero-shell]) .brand {
   --show-hero-hp-bottom:        calc(9vh + (11vw - 9vh) * clamp(0, (100cqw - 380px) / 20px, 1) + (13vw - 11vw) * clamp(0, (100cqw - 400px) / 624px, 1));
   --show-hero-hp-right:         calc(2rem + (0% - 2rem) * clamp(0, (100cqw - 380px) / 644px, 1));
   --show-hero-ep-tracking:      calc(-0.045em + 0.085em * clamp(0, (100cqw - 820px) / 1100px, 1));
-  --show-hero-ep-right:         calc(5.3cqw + (1.5rem - 5.3cqw) * clamp(0, (100cqw - 1024px) / 896px, 1));
-  --show-hero-ep-bottom:        calc(16cqw + (1.5rem - 16cqw) * clamp(0, (100cqw - 1024px) / 6px, 1));
+  --show-hero-ep-inset:         calc(5.3cqw + (1.5rem - 5.3cqw) * clamp(0, (100cqw - 1024px) / 896px, 1));
+  --show-hero-ep-bottom:        calc(16cqw + (1.5rem + 20px - 16cqw) * clamp(0, (100cqw - 1024px) / 6px, 1));
   --show-hero-descend:          calc(clamp(0px, (100svh - var(--dc-topbar-h) - 950px) * 0.65, 15rem) * clamp(0, (100cqw - 1200px) / 240px, 1));
   --show-hero-mobile-lift:      calc(2.5vh * clamp(0, (640px - 100cqw) / 220px, 1));
   --show-hero-logo-od:          calc(53% + 14% * clamp(0, (1500px - 100cqw) / 1100px, 1));
@@ -1056,12 +1056,12 @@ body:has([data-show-hero-shell]) .brand {
 
 .show-hero-episodes {
   position: absolute;
-  right: var(--show-hero-ep-right);
+  left: var(--show-hero-ep-inset);
   bottom: var(--show-hero-ep-bottom);
   z-index: 4;
   display: inline-flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: .1em;
   color: var(--dc-paper);
   font-weight: var(--weight-bold);
@@ -1077,6 +1077,35 @@ body:has([data-show-hero-shell]) .brand {
   width: 1.75rem;
   height: 1.75rem;
   fill: currentColor;
+}
+
+/* Scroll cue: the arrow taps down every few seconds with a damped spring
+   (down → slight overshoot back → smaller nudge → settle), resting in
+   between so it reads as a gentle hint rather than a busy loop. */
+@media (prefers-reduced-motion: no-preference) {
+  .show-hero-episodes svg {
+    animation: show-hero-episodes-tap 4s ease-in-out infinite;
+  }
+}
+@keyframes show-hero-episodes-tap {
+  0%, 77%, 100% { translate: 0 0; }      /* ~3.1s rest, then the tap */
+  83%          { translate: 0 0.45rem; }
+  88%          { translate: 0 -0.06rem; }
+  94%          { translate: 0 0.2rem; }
+  99%          { translate: 0 -0.02rem; }
+}
+
+/* Mobile: once the hook rides up the hero, center it over the "I" of
+   LISTEN UP. The text is centered (left: 50%) and scales with 23cqw, so the
+   "I" sits a constant -37.9cqw left of center. align-items:center already
+   centers the arrow + label within the block, so anchoring the block's centre
+   there lands the arrow on the "I". (The fill/outline copies drift in opposite
+   directions under parallax, so their midpoint — what we target — never moves.) */
+@container show-hero (max-width: 64em) {
+  .show-hero-episodes {
+    left: calc(50% - 37.9cqw);
+    transform: translateX(-50%);
+  }
 }
 
 /* Below 1200cqw: stack the hero composition. */
