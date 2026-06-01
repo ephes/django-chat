@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from html import escape
 from typing import Any, cast
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -49,6 +50,18 @@ STRUCTURED_SECTION_LABELS = frozenset(LINK_LIST_KIND_BY_LABEL) | frozenset({"spo
 BlockTuple = tuple[str, Any]
 
 
+class ShowNoteStructureReport:
+    def __init__(self) -> None:
+        self.changed = False
+        self.added_structured_block = False
+        self.source_detail_blocks_restored = 0
+        self.implicit_link_lists_converted = 0
+        self.implicit_link_list_headings_hidden = 0
+        self.implicit_link_lists_skipped = 0
+        self.support_copy_sections_restored = 0
+        self.raw_markdown_like = False
+
+
 def normalize_show_notes_html(html: str) -> str:
     if not html:
         return html
@@ -59,6 +72,8 @@ def normalize_show_notes_html(html: str) -> str:
     for paragraph in soup.find_all("p"):
         if _is_show_note_heading_paragraph(paragraph):
             paragraph.name = "h3"
+    for heading in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
+        _normalize_show_note_heading_text(heading)
     return str(soup)
 
 
@@ -97,22 +112,96 @@ def normalize_episode_body_show_notes(body: Any) -> tuple[Any, bool]:
     return normalized_body, changed
 
 
+def _render_legacy_markdown_notes(value: str) -> tuple[str, bool]:
+    if not _looks_like_raw_markdown_notes(value):
+        return value, False
+
+    html_parts: list[str] = []
+    list_items: list[str] = []
+
+    def flush_list() -> None:
+        if not list_items:
+            return
+        html_parts.append("<ul>")
+        html_parts.extend(list_items)
+        html_parts.append("</ul>")
+        list_items.clear()
+
+    for line in value.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        stripped = line.strip()
+        if not stripped:
+            flush_list()
+            continue
+
+        heading_match = re.match(r"^#{1,6}\s+(.+?)\s*$", stripped)
+        if heading_match is not None:
+            flush_list()
+            html_parts.append(f"<h3>{_render_inline_markdown(heading_match.group(1))}</h3>")
+            continue
+
+        bullet_match = re.match(r"^[*-]\s+(.+?)\s*$", stripped)
+        if bullet_match is not None:
+            list_items.append(f"<li>{_render_inline_markdown(bullet_match.group(1))}</li>")
+            continue
+
+        flush_list()
+        html_parts.append(f"<p>{_render_inline_markdown(stripped)}</p>")
+
+    flush_list()
+    html = "".join(html_parts)
+    return html, html != value
+
+
+def _render_inline_markdown(value: str) -> str:
+    parts: list[str] = []
+    position = 0
+    for match in re.finditer(r"\[([^\]]+)\]\(([^)]+)\)", value):
+        parts.append(escape(value[position : match.start()]))
+        label = escape(match.group(1).strip())
+        href = escape(match.group(2).strip(), quote=True)
+        parts.append(f'<a href="{href}">{label}</a>')
+        position = match.end()
+    parts.append(escape(value[position:]))
+    return "".join(parts)
+
+
 def structured_show_note_detail_blocks(html: str) -> tuple[list[BlockTuple], bool]:
     """Convert safe normalized show-note sections to structured StreamField blocks."""
-    if not html:
-        return [("paragraph", html)], False
+    blocks, report = _structured_show_note_detail_blocks(html)
+    return blocks, report.changed
 
-    normalized_html = normalize_show_notes_html(html)
+
+def _structured_show_note_detail_blocks(
+    html: str,
+) -> tuple[list[BlockTuple], ShowNoteStructureReport]:
+    report = ShowNoteStructureReport()
+    if not html:
+        return [("paragraph", html)], report
+
+    markdown_html, markdown_changed = _render_legacy_markdown_notes(html)
+    report.raw_markdown_like = markdown_changed
+    normalized_html = normalize_show_notes_html(markdown_html)
     soup = BeautifulSoup(normalized_html, "html.parser")
     nodes = list(soup.contents)
     blocks: list[BlockTuple] = []
     pending_nodes: list[PageElement] = []
-    changed = normalized_html != html
-    added_structured_block = False
+    report.changed = markdown_changed or normalized_html != html
 
     index = 0
     while index < len(nodes):
         node = nodes[index]
+        if _is_leading_implicit_link_list(node, pending_nodes, blocks):
+            structured_block = _convert_implicit_link_list(node)
+            if structured_block is not None:
+                blocks.append(structured_block)
+                report.changed = True
+                report.added_structured_block = True
+                report.implicit_link_lists_converted += 1
+                report.implicit_link_list_headings_hidden += 1
+                index += 1
+                continue
+            report.implicit_link_lists_skipped += 1
+
         label_key = _heading_label_key(node)
         if label_key in STRUCTURED_SECTION_LABELS:
             section_nodes: list[PageElement] = []
@@ -123,13 +212,17 @@ def structured_show_note_detail_blocks(html: str) -> tuple[list[BlockTuple], boo
 
             structured_block = _convert_section(label_key, section_nodes)
             if structured_block is not None:
+                if _is_support_copy_section(label_key, section_nodes, structured_block):
+                    report.support_copy_sections_restored += 1
                 _flush_paragraph_block(pending_nodes, blocks)
                 pending_nodes = []
                 blocks.append(structured_block)
-                changed = True
-                added_structured_block = True
+                report.changed = True
+                report.added_structured_block = True
                 continue
 
+            if _is_support_copy_section(label_key, section_nodes, structured_block):
+                report.support_copy_sections_restored += 1
             pending_nodes.append(node)
             pending_nodes.extend(section_nodes)
             continue
@@ -139,54 +232,133 @@ def structured_show_note_detail_blocks(html: str) -> tuple[list[BlockTuple], boo
 
     _flush_paragraph_block(pending_nodes, blocks)
 
-    if not added_structured_block:
-        return [("paragraph", normalized_html)], changed
-    return blocks, changed
+    if not report.added_structured_block:
+        return [("paragraph", normalized_html)], report
+    return blocks, report
 
 
 def structure_episode_body_show_notes(body: Any) -> tuple[Any, bool]:
-    body_value = body.get_prep_value() if hasattr(body, "get_prep_value") else body
-    if not isinstance(body_value, list):
-        return body_value, False
+    structured_body, report = structure_episode_body_show_notes_with_report(body)
+    return structured_body, report.changed
 
-    changed = False
+
+def structure_episode_body_show_notes_with_report(
+    body: Any,
+    *,
+    source_detail_html: str = "",
+) -> tuple[Any, ShowNoteStructureReport]:
+    body_value = body.get_prep_value() if hasattr(body, "get_prep_value") else body
+    report = ShowNoteStructureReport()
+    if not isinstance(body_value, list):
+        return body_value, report
+
+    source_children: list[dict[str, Any]] | None = None
+    source_report: ShowNoteStructureReport | None = None
+    if source_detail_html:
+        source_blocks, source_report = _structured_show_note_detail_blocks(source_detail_html)
+        source_children = [_stream_child(name, value) for name, value in source_blocks]
+
     structured_body = []
+    has_detail_block = False
     for block in body_value:
         if not isinstance(block, dict):
             structured_body.append(block)
             continue
 
         structured_block = dict(block)
-        if structured_block.get("type") == "detail" and isinstance(
-            structured_block.get("value"), list
-        ):
+        if structured_block.get("type") == "detail":
+            has_detail_block = True
             structured_children = []
-            for child in structured_block["value"]:
-                if (
-                    isinstance(child, dict)
-                    and child.get("type") == "paragraph"
-                    and isinstance(child.get("value"), str)
-                ):
-                    child_blocks, child_changed = structured_show_note_detail_blocks(child["value"])
-                    if len(child_blocks) == 1 and child_blocks[0][0] == "paragraph":
-                        value = child_blocks[0][1]
-                        if value != child["value"]:
-                            child = {**child, "value": value}
-                        structured_children.append(child)
-                    else:
-                        structured_children.extend(
-                            _stream_child(name, value) for name, value in child_blocks
+            current_body_report = ShowNoteStructureReport()
+            if isinstance(structured_block.get("value"), list):
+                for child in structured_block["value"]:
+                    if (
+                        isinstance(child, dict)
+                        and child.get("type") == "paragraph"
+                        and isinstance(child.get("value"), str)
+                    ):
+                        child_blocks, paragraph_report = _structured_show_note_detail_blocks(
+                            child["value"]
                         )
-                    changed = changed or child_changed
-                    continue
+                        if len(child_blocks) == 1 and child_blocks[0][0] == "paragraph":
+                            value = child_blocks[0][1]
+                            if value != child["value"]:
+                                child = {**child, "value": value}
+                            structured_children.append(child)
+                        else:
+                            structured_children.extend(
+                                _stream_child(name, value) for name, value in child_blocks
+                            )
+                        _merge_structure_report(current_body_report, paragraph_report)
+                        continue
 
-                structured_children.append(child)
+                    structured_children.append(child)
+
+            if source_children is not None:
+                if not _stream_children_match_ignoring_ids(
+                    structured_children,
+                    source_children,
+                ):
+                    structured_children = source_children
+                    report.changed = True
+                    report.source_detail_blocks_restored += 1
+                    if source_report is not None:
+                        _merge_structure_report(report, source_report)
+                elif current_body_report.changed:
+                    _merge_structure_report(report, current_body_report)
+            elif current_body_report.changed:
+                _merge_structure_report(report, current_body_report)
 
             structured_block["value"] = structured_children
 
         structured_body.append(structured_block)
 
-    return structured_body, changed
+    if source_children is not None and not has_detail_block:
+        structured_body.append(
+            {
+                "type": "detail",
+                "value": source_children,
+                "id": str(uuid4()),
+            }
+        )
+        report.changed = True
+        report.source_detail_blocks_restored += 1
+        if source_report is not None:
+            _merge_structure_report(report, source_report)
+
+    return structured_body, report
+
+
+def _merge_structure_report(
+    target: ShowNoteStructureReport, source: ShowNoteStructureReport
+) -> None:
+    target.changed = target.changed or source.changed
+    target.added_structured_block = target.added_structured_block or source.added_structured_block
+    target.source_detail_blocks_restored += source.source_detail_blocks_restored
+    target.implicit_link_lists_converted += source.implicit_link_lists_converted
+    target.implicit_link_list_headings_hidden += source.implicit_link_list_headings_hidden
+    target.implicit_link_lists_skipped += source.implicit_link_lists_skipped
+    target.support_copy_sections_restored += source.support_copy_sections_restored
+    target.raw_markdown_like = target.raw_markdown_like or source.raw_markdown_like
+
+
+def _stream_children_match_ignoring_ids(
+    left: list[dict[str, Any]],
+    right: list[dict[str, Any]],
+) -> bool:
+    return _without_stream_ids(left) == _without_stream_ids(right)
+
+
+def _without_stream_ids(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: _without_stream_ids(child_value)
+            for key, child_value in value.items()
+            if key != "id"
+        }
+    if isinstance(value, list):
+        return [_without_stream_ids(item) for item in value]
+    return value
 
 
 def _is_show_note_heading_paragraph(paragraph: Any) -> bool:
@@ -204,6 +376,29 @@ def _is_show_note_heading_paragraph(paragraph: Any) -> bool:
     if next_tag_name == "p":
         return label_key in COPY_SECTION_HEADING_LABELS
     return False
+
+
+def _normalize_show_note_heading_text(heading: Any) -> None:
+    if not _is_plain_text_tag(heading):
+        return
+
+    text = heading.get_text(" ", strip=True)
+    cleaned_text = _strip_markdown_heading_prefix(text)
+    if cleaned_text == text:
+        return
+
+    label_key = _section_label_key(cleaned_text)
+    if label_key not in STRUCTURED_SECTION_LABELS:
+        return
+
+    heading.string = cleaned_text
+
+
+def _strip_markdown_heading_prefix(value: str) -> str:
+    match = re.match(r"^\s*#{1,6}\s*(\S.*?)\s*$", value)
+    if match is None:
+        return value
+    return match.group(1)
 
 
 def _is_plain_text_tag(tag: Any) -> bool:
@@ -247,12 +442,75 @@ def _is_heading_tag(node: PageElement) -> bool:
     return isinstance(node, Tag) and node.name in {"h1", "h2", "h3", "h4", "h5", "h6"}
 
 
+def _is_leading_implicit_link_list(
+    node: PageElement,
+    pending_nodes: list[PageElement],
+    blocks: list[BlockTuple],
+) -> bool:
+    return (
+        isinstance(node, Tag)
+        and node.name in {"ul", "ol"}
+        and not blocks
+        and not any(_node_has_meaning(pending_node) for pending_node in pending_nodes)
+    )
+
+
+def _is_support_copy_section(
+    label_key: str,
+    section_nodes: list[PageElement],
+    structured_block: BlockTuple | None,
+) -> bool:
+    if label_key != "support the show":
+        return False
+
+    if structured_block is not None:
+        name, value = structured_block
+        return (
+            name == "show_note_link_list"
+            and isinstance(value, dict)
+            and value.get("kind") == "support"
+            and value.get("show_items") is False
+        )
+
+    meaningful_nodes = [node for node in section_nodes if _node_has_meaning(node)]
+    if not meaningful_nodes:
+        return False
+    if any(isinstance(node, Tag) and node.name in {"ul", "ol"} for node in meaningful_nodes):
+        return False
+    if any(
+        not (isinstance(node, NavigableString) or (isinstance(node, Tag) and node.name == "p"))
+        for node in meaningful_nodes
+    ):
+        return False
+    return bool(_links_from_nodes(meaningful_nodes))
+
+
 def _convert_section(label_key: str, section_nodes: list[PageElement]) -> BlockTuple | None:
     if label_key == "sponsor":
         return _convert_sponsor_section(label_key, section_nodes)
     if label_key in LINK_LIST_KIND_BY_LABEL:
         return _convert_link_list_section(label_key, section_nodes)
     return None
+
+
+def _convert_implicit_link_list(list_tag: PageElement) -> BlockTuple | None:
+    if not isinstance(list_tag, Tag) or list_tag.name not in {"ul", "ol"}:
+        return None
+
+    items = _link_items_from_list(list_tag)
+    if not items:
+        return None
+
+    return (
+        "show_note_link_list",
+        {
+            "heading": "Links",
+            "show_heading": False,
+            "kind": "links",
+            "intro": "",
+            "items": items,
+        },
+    )
 
 
 def _convert_sponsor_section(label_key: str, section_nodes: list[PageElement]) -> BlockTuple | None:
@@ -271,6 +529,11 @@ def _convert_sponsor_section(label_key: str, section_nodes: list[PageElement]) -
         if paragraph_nodes:
             return None
         if len(_links_from_nodes(non_paragraph_nodes)) != 1:
+            return None
+        if any(
+            isinstance(node, Tag) and node.name in {"ul", "ol"} and not _link_items_from_list(node)
+            for node in non_paragraph_nodes
+        ):
             return None
 
     sponsor_link = _first_link(section_nodes)
@@ -309,28 +572,35 @@ def _convert_link_list_section(
         else:
             return None
 
-    paragraph_support = not items and label_key == "support the show"
-    if paragraph_support:
-        items = _link_items_from_nodes(intro_nodes)
     if not items:
         return None
 
-    return (
-        "show_note_link_list",
-        {
-            "heading": CANONICAL_HEADING_BY_LABEL[label_key],
-            "kind": LINK_LIST_KIND_BY_LABEL[label_key],
-            "intro": "" if paragraph_support else _serialize_nodes(intro_nodes),
-            "items": items,
-        },
-    )
+    intro = _serialize_nodes(intro_nodes)
+    show_items = True
+    if label_key == "support the show" and _is_support_boilerplate_items(items):
+        intro = _support_boilerplate_intro(items)
+        show_items = False
+
+    value: dict[str, Any] = {
+        "heading": CANONICAL_HEADING_BY_LABEL[label_key],
+        "kind": LINK_LIST_KIND_BY_LABEL[label_key],
+        "intro": intro,
+        "items": items,
+    }
+    if not show_items:
+        value["show_items"] = False
+    return ("show_note_link_list", value)
 
 
-def _link_items_from_list(list_tag: Tag) -> list[dict[str, Any]] | None:
+def _link_items_from_list(
+    list_tag: Tag,
+) -> list[dict[str, Any]] | None:
     items: list[dict[str, Any]] = []
     for item_tag in list_tag.find_all("li", recursive=False):
         links = _links_from_anchors(item_tag.find_all("a"))
         if not links:
+            return None
+        if _list_item_has_non_link_text(item_tag):
             return None
         primary_link = links[0]
         items.append(
@@ -342,6 +612,87 @@ def _link_items_from_list(list_tag: Tag) -> list[dict[str, Any]] | None:
             }
         )
     return items
+
+
+def _is_support_boilerplate_items(items: list[dict[str, Any]]) -> bool:
+    if len(items) != 3:
+        return False
+    domains = {_support_link_domain(item.get("url", "")) for item in items}
+    return domains == {"learndjango.com", "btn.dev", "django-news.com"}
+
+
+def _support_boilerplate_intro(items: list[dict[str, Any]]) -> str:
+    learn_url = _support_item_url(items, "learndjango.com")
+    button_url = _support_item_url(items, "btn.dev")
+    news_url = _support_item_url(items, "django-news.com")
+    return (
+        "<p>This podcast does not have any ads or sponsors. To support the show, "
+        f'please consider <a href="{escape(learn_url, quote=True)}">purchasing a book</a>, '
+        f'signing up for <a href="{escape(button_url, quote=True)}">Button</a>, '
+        f'or reading the <a href="{escape(news_url, quote=True)}">'
+        "Django News newsletter</a>.</p>"
+    )
+
+
+def _support_item_url(items: list[dict[str, Any]], domain: str) -> str:
+    for item in items:
+        url = item.get("url", "")
+        if isinstance(url, str) and _support_link_domain(url) == domain:
+            return url
+    return ""
+
+
+def _support_link_domain(url: str) -> str:
+    parsed = urlparse(url)
+    return parsed.netloc.removeprefix("www.").casefold()
+
+
+def _list_item_has_non_link_text(item_tag: Tag) -> bool:
+    soup = BeautifulSoup(str(item_tag), "html.parser")
+    copied_item = soup.find("li")
+    if copied_item is None:
+        return False
+
+    for anchor in copied_item.find_all("a"):
+        if _link_from_anchor(anchor) is None:
+            anchor.unwrap()
+        else:
+            anchor.decompose()
+
+    text = _linked_paragraph_title(copied_item)
+    return bool(re.search(r"[\w']+", text))
+
+
+def _link_item_description(item_tag: Tag) -> str:
+    soup = BeautifulSoup(str(item_tag), "html.parser")
+    copied_item = soup.find("li")
+    if copied_item is None:
+        return ""
+    for anchor in copied_item.find_all("a"):
+        if _link_from_anchor(anchor) is None:
+            anchor.unwrap()
+        else:
+            anchor.decompose()
+
+    description = _linked_paragraph_title(copied_item)
+    if not description:
+        return ""
+
+    meaningful_tokens = [
+        token
+        for token in re.findall(r"[\w']+", description.casefold())
+        if token not in {"and", "or"}
+    ]
+    if not meaningful_tokens:
+        return ""
+    return description
+
+
+def _linkless_list_item_intro(item_tag: Tag) -> str:
+    text = _linked_paragraph_title(item_tag)
+    if not text:
+        return ""
+    return f"<p>{escape(text)}</p>"
 
 
 def _link_items_from_nodes(nodes: Iterable[PageElement]) -> list[dict[str, Any]]:
@@ -388,15 +739,21 @@ def _first_link(nodes: Iterable[PageElement]) -> dict[str, str] | None:
 def _links_from_anchors(anchors: Iterable[Tag]) -> list[dict[str, str]]:
     links: list[dict[str, str]] = []
     for anchor in anchors:
-        href = anchor.get("href")
-        if not isinstance(href, str):
-            continue
-        url = _canonical_http_url(href)
-        if url is None:
-            continue
-        title = anchor.get_text(" ", strip=True) or url
-        links.append({"title": title, "url": url})
+        link = _link_from_anchor(anchor)
+        if link is not None:
+            links.append(link)
     return links
+
+
+def _link_from_anchor(anchor: Tag) -> dict[str, str] | None:
+    href = anchor.get("href")
+    if not isinstance(href, str):
+        return None
+    url = _canonical_http_url(href)
+    if url is None:
+        return None
+    title = anchor.get_text(" ", strip=True) or url
+    return {"title": title, "url": url}
 
 
 def _canonical_http_url(href: str) -> str | None:
@@ -430,6 +787,10 @@ def _node_has_meaning(node: PageElement) -> bool:
     if isinstance(node, NavigableString):
         return bool(str(node).strip())
     return True
+
+
+def _looks_like_raw_markdown_notes(html: str) -> bool:
+    return bool(re.search(r"(?m)^\s*(?:[*-]\s+.*\[[^\]]+\]\([^)]+\)|#{2,6}\s+\S)", html))
 
 
 def _stream_child(name: str, value: Any) -> dict[str, Any]:

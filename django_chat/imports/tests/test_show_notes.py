@@ -15,6 +15,7 @@ from django_chat.imports.models import EpisodeSourceMetadata
 from django_chat.imports.show_notes import (
     normalize_episode_body_show_notes,
     structure_episode_body_show_notes,
+    structure_episode_body_show_notes_with_report,
     structured_show_note_detail_blocks,
 )
 from django_chat.show_notes.blocks import link_list_block, sponsor_block
@@ -112,7 +113,7 @@ def test_normalize_episode_body_show_notes_reports_unchanged_body() -> None:
     assert normalized == body
 
 
-def test_structured_show_note_detail_blocks_convert_rich_recent_sections() -> None:
+def test_structured_show_note_detail_blocks_preserve_complex_link_sections() -> None:
     html = (
         "<p>🔗 Links</p>"
         '<ul><li><a href="https://example.com/one">Primary</a> and '
@@ -131,19 +132,17 @@ def test_structured_show_note_detail_blocks_convert_rich_recent_sections() -> No
 
     assert changed is True
     assert [name for name, _value in blocks] == [
-        "show_note_link_list",
+        "paragraph",
         "show_note_link_list",
         "show_note_link_list",
         "show_note_link_list",
         "show_note_sponsor",
     ]
-    links = blocks[0][1]
-    assert links["heading"] == "Links"
-    assert links["kind"] == "links"
-    assert links["items"][0]["title"] == "Primary"
-    assert links["items"][0]["extra_links"] == [
-        {"title": "Secondary", "url": "https://example.com/two"}
-    ]
+    assert blocks[0][1] == (
+        "<h3>🔗 Links</h3>"
+        '<ul><li><a href="https://example.com/one">Primary</a> and '
+        '<a href="https://example.com/two">Secondary</a></li></ul>'
+    )
     assert blocks[1][1]["kind"] == "projects"
     assert blocks[2][1]["kind"] == "books"
     assert blocks[2][1]["items"][0]["title"] == "Book by Author"
@@ -173,27 +172,118 @@ def test_structured_show_note_detail_blocks_convert_legacy_kind_variants() -> No
 
     assert changed is True
     assert [value["kind"] for name, value in blocks if name == "show_note_link_list"] == [
-        "support",
         "shameless_plugs",
         "groups",
         "sponsors",
         "sponsoring_options",
     ]
-    support = blocks[0][1]
-    assert support["intro"] == ""
-    assert support["items"][0]["title"] == "Support us on Patreon."
-    assert support["items"][0]["url"] == "https://example.com/support"
+    support = blocks[0]
+    assert support[0] == "paragraph"
+    assert support[1] == (
+        "<h3>Support the Show</h3>"
+        '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>'
+    )
     assert blocks[-1][1]["items"][0]["url"] == "https://revsys.com"
 
 
-def test_support_paragraph_renders_without_duplicate_link() -> None:
+def test_support_paragraph_preserves_embedded_link_copy() -> None:
     blocks, changed = structured_show_note_detail_blocks(
         "<p>Support the Show</p>"
         '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>'
     )
 
     assert changed is True
-    assert blocks[0][0] == "show_note_link_list"
+    assert blocks == [
+        (
+            "paragraph",
+            "<h3>Support the Show</h3>"
+            '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>',
+        )
+    ]
+    html = blocks[0][1]
+    assert html.count('href="https://example.com/support"') == 1
+    assert BeautifulSoup(html, "html.parser").get_text(" ", strip=True) == (
+        "Support the Show Support us on Patreon ."
+    )
+
+
+def test_markdown_prefixed_support_heading_normalizes_without_hashes() -> None:
+    blocks, changed = structured_show_note_detail_blocks(
+        "<h3>###Support the Show</h3>"
+        '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>'
+    )
+
+    assert changed is True
+    assert blocks == [
+        (
+            "paragraph",
+            "<h3>Support the Show</h3>"
+            '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>',
+        )
+    ]
+
+
+def test_support_boilerplate_link_list_renders_as_icon_heading_and_copy() -> None:
+    blocks, changed = structured_show_note_detail_blocks(
+        "<h3>Support the Show</h3>"
+        "<ul>"
+        '<li><a href="http://learndjango.com">LearnDjango.com</a></li>'
+        '<li><a href="https://btn.dev/">Button</a></li>'
+        '<li><a href="https://django-news.com">Django News newsletter</a></li>'
+        "</ul>"
+    )
+
+    assert changed is True
+    assert [name for name, _value in blocks] == ["show_note_link_list"]
+    value = blocks[0][1]
+    assert value["kind"] == "support"
+    assert value["show_items"] is False
+    assert "purchasing a book" in value["intro"]
+    assert "Django News newsletter" in value["intro"]
+
+    html = render_to_string(
+        "cast/django_chat/show_notes/link_list.html",
+        {
+            "value": _template_value(value),
+            "render_for_feed": False,
+        },
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    assert soup.select_one(".show-note-icon--support") is not None
+    assert soup.find("ul") is None
+    text = soup.get_text(" ", strip=True)
+    for punct in ",.":
+        text = text.replace(f" {punct}", punct)
+    assert text == (
+        "Support the Show This podcast does not have any ads or sponsors. "
+        "To support the show, please consider purchasing a book, signing up "
+        "for Button, or reading the Django News newsletter."
+    )
+
+
+def test_unheaded_leading_list_with_surrounding_text_stays_source_html() -> None:
+    blocks, changed = structured_show_note_detail_blocks(
+        "<ul>"
+        '<li><a href="https://example.com/talk">Talk</a> - PyCon talk by Example</li>'
+        '<li>See <a href="https://example.com/profile">Profile</a></li>'
+        '<li><a href="https://example.com/one">One</a> and '
+        '<a href="https://example.com/two">Two</a></li>'
+        "</ul>"
+    )
+
+    assert changed is False
+    assert [name for name, _value in blocks] == ["paragraph"]
+    assert "PyCon talk by Example" in blocks[0][1]
+    assert "See" in blocks[0][1]
+    assert ">One</a> and <a" in blocks[0][1]
+
+
+def test_unheaded_leading_link_only_list_converts_without_visible_links_heading() -> None:
+    blocks, changed = structured_show_note_detail_blocks(
+        '<ul><li><a href="https://example.com/talk">Talk</a></li></ul>'
+    )
+
+    assert changed is True
     html = render_to_string(
         "cast/django_chat/show_notes/link_list.html",
         {
@@ -202,9 +292,132 @@ def test_support_paragraph_renders_without_duplicate_link() -> None:
         },
     )
 
-    assert 'class="show-note-intro"' not in html
-    assert html.count('href="https://example.com/support"') == 1
-    assert "Support us on Patreon." in html
+    assert html.count("Talk") == 1
+    assert "Links" not in html
+    assert html.count('href="https://example.com/talk"') == 1
+
+
+def test_unheaded_leading_list_with_linkless_item_stays_source_html() -> None:
+    blocks, changed = structured_show_note_detail_blocks(
+        "<ul>"
+        '<li><a href="https://example.com/one">One</a></li>'
+        "<li>Missing link stays legacy.</li>"
+        "</ul>"
+        "<h3>Support the Show</h3>"
+        '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>'
+    )
+
+    assert changed is False
+    assert [name for name, _value in blocks] == ["paragraph"]
+    assert blocks[0][1] == (
+        "<ul>"
+        '<li><a href="https://example.com/one">One</a></li>'
+        "<li>Missing link stays legacy.</li>"
+        "</ul>"
+        "<h3>Support the Show</h3>"
+        '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>'
+    )
+
+
+def test_unheaded_leading_list_with_no_valid_links_stays_unstructured() -> None:
+    blocks, changed = structured_show_note_detail_blocks(
+        "<ul><li>No link here.</li><li><a>Missing href.</a></li></ul>"
+    )
+
+    assert changed is False
+    assert blocks == [("paragraph", "<ul><li>No link here.</li><li><a>Missing href.</a></li></ul>")]
+
+
+def test_raw_markdown_like_notes_convert_to_structured_blocks() -> None:
+    blocks, changed = structured_show_note_detail_blocks(
+        "* [Michael Herman personal site](https://mherman.org)\n"
+        "* [TestDriven.io](https://testdriven.io)\n"
+        "\n"
+        "#### SHAMELESS PLUGS\n"
+        "* William's [books on Django](https://wsvincent.com/books)\n"
+        "* Carlton's website [Noumenal](https://noumenal.es/)"
+    )
+
+    assert changed is True
+    assert [name for name, _value in blocks] == ["show_note_link_list", "paragraph"]
+    assert blocks[0][1]["show_heading"] is False
+    assert [item["title"] for item in blocks[0][1]["items"]] == [
+        "Michael Herman personal site",
+        "TestDriven.io",
+    ]
+    assert blocks[1][1] == (
+        "<h3>SHAMELESS PLUGS</h3>"
+        "<ul><li>William's "
+        '<a href="https://wsvincent.com/books">books on Django</a></li>'
+        '<li>Carlton\'s website <a href="https://noumenal.es/">Noumenal</a></li></ul>'
+    )
+
+
+def test_structure_episode_body_show_notes_reports_repair_classes() -> None:
+    body = [
+        {
+            "type": "detail",
+            "value": [
+                {
+                    "type": "paragraph",
+                    "value": (
+                        "* [Example](https://example.com)\n"
+                        "#### SHAMELESS PLUGS\n"
+                        "* [Plug](https://example.com/plug)"
+                    ),
+                    "id": "detail-paragraph",
+                }
+            ],
+            "id": "detail",
+        },
+    ]
+
+    structured, report = structure_episode_body_show_notes_with_report(body)
+    structured_again, report_again = structure_episode_body_show_notes_with_report(structured)
+
+    assert report.changed is True
+    assert report.implicit_link_lists_converted == 1
+    assert report.implicit_link_list_headings_hidden == 1
+    assert report.implicit_link_lists_skipped == 0
+    assert report.raw_markdown_like is True
+    assert structured[0]["value"][0]["type"] == "show_note_link_list"
+    assert structured[0]["value"][1]["type"] == "show_note_link_list"
+    assert report_again.changed is False
+    assert report_again.implicit_link_lists_converted == 0
+    assert structured_again == structured
+
+
+def test_no_source_unchanged_detail_does_not_report_action_counters() -> None:
+    body = [
+        {
+            "type": "detail",
+            "value": [
+                {
+                    "type": "paragraph",
+                    "value": "<ul><li>No link here.</li></ul>",
+                    "id": "linkless-list",
+                },
+                {
+                    "type": "paragraph",
+                    "value": (
+                        "<h3>Support the Show</h3>"
+                        '<p>Support us on <a href="https://example.com">Patreon</a>.</p>'
+                    ),
+                    "id": "support-copy",
+                },
+            ],
+            "id": "detail",
+        },
+    ]
+
+    structured, report = structure_episode_body_show_notes_with_report(body)
+
+    assert structured == body
+    assert report.changed is False
+    assert report.implicit_link_lists_converted == 0
+    assert report.implicit_link_list_headings_hidden == 0
+    assert report.implicit_link_lists_skipped == 0
+    assert report.support_copy_sections_restored == 0
 
 
 def test_multi_link_sponsor_list_stays_unstructured() -> None:
@@ -334,12 +547,21 @@ def test_structured_show_notes_render_on_public_episode_detail(client: Client) -
     assert "show-note-primary-link" not in content
     assert "show-note-extra-links" not in content
     assert '<ul role="list">' in content
-    assert '<a href="https://github.com/RealOrangeOne/django-tasks">django-tasks</a>' in content
     soup = BeautifulSoup(content, "html.parser")
     show_notes = soup.select_one(".show-notes")
     assert show_notes is not None
+    assert show_notes.select_one('a[href="https://github.com/RealOrangeOne/django-tasks"]')
+    assert "django-tasks and Jake's GitHub" in show_notes.get_text(" ", strip=True)
     headings = [heading.get_text(strip=True) for heading in show_notes.select("h3")]
-    assert headings[:5] == ["Links", "Projects", "Books", "YouTube", "Sponsor"]
+    assert headings[:7] == [
+        "Episode Summary",
+        "Episode Notes",
+        "🔗 Links",
+        "Projects",
+        "Books",
+        "YouTube",
+        "Sponsor",
+    ]
     github_links = show_notes.select('a[href="https://github.com/realorangeone"]')
     assert any(
         link.get_text(strip=True) == "Jake's GitHub"
@@ -367,7 +589,7 @@ def test_structured_show_notes_render_feed_safe_html() -> None:
 
     assert "show-note-icon" not in content
     assert "show-note-block" not in content
-    assert "<h3>Links</h3>" in content
+    assert "<h3>🔗 Links</h3>" in content
     assert "django-tasks" in content
     assert "Buttondown" in content
 

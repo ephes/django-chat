@@ -1,12 +1,16 @@
 {% load wagtailcore_tags %}
 
-<h3>{% if not render_for_feed %}{% include "cast/django_chat/show_notes/_icon.html" with icon_name=value.kind %}{% endif %}{{ value.heading }}</h3>
+{% if value.show_heading != False %}
+  <h3>{% if not render_for_feed %}{% include "cast/django_chat/show_notes/_icon.html" with icon_name=value.kind %}{% endif %}{{ value.heading }}</h3>
+{% endif %}
 {% if value.intro %}{{ value.intro|richtext }}{% endif %}
-<ul role="list">
-  {% for item in value.items %}
-    <li>
-      <a href="{{ item.url }}">{{ item.title }}</a>{% for extra_link in item.extra_links %}, <a href="{{ extra_link.url }}">{{ extra_link.title }}</a>{% endfor %}
-      {% if item.description %}{{ item.description|richtext }}{% endif %}
-    </li>
-  {% endfor %}
-</ul>
+{% if value.show_items != False %}
+  <ul role="list">
+    {% for item in value.items %}
+      <li>
+        <a href="{{ item.url }}">{{ item.title }}</a>{% for extra_link in item.extra_links %}, <a href="{{ extra_link.url }}">{{ extra_link.title }}</a>{% endfor %}
+        {% if item.description %}{{ item.description|richtext }}{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

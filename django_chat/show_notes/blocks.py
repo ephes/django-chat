@@ -55,6 +55,8 @@ class ShowNoteSponsorBlock(blocks.StructBlock):
 
 class ShowNoteLinkListBlock(blocks.StructBlock):
     heading = blocks.CharBlock(default="Links")
+    show_heading = blocks.BooleanBlock(default=True, required=False)
+    show_items = blocks.BooleanBlock(default=True, required=False)
     kind = blocks.ChoiceBlock(choices=LINK_LIST_KIND_CHOICES, default="links")
     intro = blocks.RichTextBlock(features=RICH_TEXT_FEATURES, required=False)
     items = blocks.ListBlock(ShowNoteLinkItemBlock(), min_num=1)

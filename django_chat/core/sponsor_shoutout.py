@@ -10,6 +10,7 @@ from django_chat.imports.show_notes import _section_label_key
 
 _SECTION_HEADINGS = ("h1", "h2", "h3", "h4")
 _SPONSOR_KEY = "sponsor"
+_SUPPORT_KEY = "support the show"
 
 # A link whose text reads like a bare URL/domain ("sixfeetup.com",
 # "www.example.com/x", "https://…") rather than a sponsor name.
@@ -55,26 +56,34 @@ def _collect_section(heading) -> list:
 
 
 def wrap_sponsor_shoutout(html: str) -> str:
-    """Restyle a show-notes "Sponsor" section as a chat-style shout-out.
+    """Restyle selected show-note sections for episode detail pages.
 
     The ``Sponsor`` heading stays in flow as an ordinary section heading; the
     paragraph(s) beneath it move into a bubble carrying a "Featured Partner of
     Django Chat" tab and — when the copy links the sponsor — a button to it.
+    Source-preserved ``Support the Show`` headings get the same heart icon as
+    structured support blocks while keeping their authored paragraph copy.
 
-    Preservation contract: when no sponsor section is present the input string
-    is returned untouched (an exact, byte-for-byte fast path). When one *is*
-    present the markup is round-tripped through the HTML parser, which preserves
-    it as rendered (DOM-equivalent) but may normalise void elements
+    Preservation contract: when no supported section is present the input
+    string is returned untouched (an exact, byte-for-byte fast path). When one
+    *is* present the markup is round-tripped through the HTML parser, which
+    preserves it as rendered (DOM-equivalent) but may normalise void elements
     (``<br>`` → ``<br/>``), character entities or attribute order — it never
-    adds, drops or reorders content. The authored sponsor copy and every other
-    section therefore render identically; only their serialisation may differ."""
-    if not html or _SPONSOR_KEY not in html.lower():
+    adds, drops or reorders content. Authored copy and unrelated sections
+    therefore render identically; only their serialisation may differ."""
+    if not html:
+        return html
+
+    lower_html = html.lower()
+    if _SPONSOR_KEY not in lower_html and "support" not in lower_html:
         return html
 
     soup = BeautifulSoup(html, "html.parser")
+    changed = _decorate_support_headings(soup)
+
     heading = _find_sponsor_heading(soup)
     if heading is None:
-        return html
+        return str(soup) if changed else html
 
     body_tags = _collect_section(heading)[1:]
     anchors: list[tuple[str, str]] = []
@@ -129,3 +138,39 @@ def wrap_sponsor_shoutout(html: str) -> str:
         msg.append(cta)
 
     return str(soup)
+
+
+def _decorate_support_headings(soup: BeautifulSoup) -> bool:
+    changed = False
+    for heading in soup.find_all(_SECTION_HEADINGS):
+        if _section_label_key(heading.get_text(" ", strip=True)) != _SUPPORT_KEY:
+            continue
+        if heading.find(class_="show-note-icon"):
+            continue
+        heading.insert(0, _support_icon(soup))
+        changed = True
+    return changed
+
+
+def _support_icon(soup: BeautifulSoup):
+    icon = soup.new_tag(
+        "span",
+        attrs={
+            "class": "show-note-icon show-note-icon--support",
+            "aria-hidden": "true",
+        },
+    )
+    svg = soup.new_tag("svg", attrs={"viewBox": "0 0 24 24", "focusable": "false"})
+    svg.append(
+        soup.new_tag(
+            "path",
+            attrs={
+                "d": (
+                    "M12 20.25s-7-4.35-7-10.15A3.85 3.85 0 0 1 12 7.85"
+                    "a3.85 3.85 0 0 1 7 2.25c0 5.8-7 10.15-7 10.15Z"
+                ),
+            },
+        )
+    )
+    icon.append(svg)
+    return icon

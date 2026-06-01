@@ -553,7 +553,7 @@ def _update_episode_page(episode: Episode, episode_source: EpisodeSourceData) ->
 
 
 def _update_episode_page_fields(episode: Episode, episode_source: EpisodeSourceData) -> None:
-    description = _episode_description(episode_source)
+    summary = _episode_summary(episode_source)
     page = cast(Any, episode)
     page.title = episode_source.title
     page.draft_title = episode_source.title
@@ -564,7 +564,7 @@ def _update_episode_page_fields(episode: Episode, episode_source: EpisodeSourceD
         page.owner = _get_import_user()
     page.visible_date = episode_source.published_at or timezone.now()
     page.body = _episode_body(episode_source)
-    page.search_description = strip_tags(description)
+    page.search_description = _plain_text(summary)
     page.comments_enabled = False
     page.keywords = _truncate(
         _join_text(episode_source.rss.keywords if episode_source.rss else ()),
@@ -1120,6 +1120,10 @@ def _duration_seconds(episode_source: EpisodeSourceData) -> int | None:
 
 def _join_text(values: tuple[str, ...]) -> str:
     return ", ".join(values)
+
+
+def _plain_text(value: str) -> str:
+    return " ".join(strip_tags(value).split())
 
 
 def _truncate(value: str, max_length: int) -> str:

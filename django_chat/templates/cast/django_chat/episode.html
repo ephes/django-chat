@@ -66,6 +66,11 @@
             {% sponsor_shoutout %}
               {% for block in page.body %}
                 <section class="block-{{ block.block_type }}">
+                  {% if block.block_type == "overview" %}
+                    <h3 class="show-notes-section-heading show-notes-section-heading--overview">Episode Summary</h3>
+                  {% elif block.block_type == "detail" %}
+                    <h3 class="show-notes-section-heading show-notes-section-heading--detail">{% include "cast/django_chat/show_notes/_icon.html" with icon_name="links" %}Episode Notes</h3>
+                  {% endif %}
                   {% for child_block in block.value %}
                     {% include_block child_block %}
                   {% endfor %}

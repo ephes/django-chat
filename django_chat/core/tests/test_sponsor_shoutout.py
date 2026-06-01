@@ -29,9 +29,28 @@ def test_no_sponsor_section_is_returned_unchanged():
     assert wrap_sponsor_shoutout(html) == html
 
 
-def test_support_the_show_is_not_wrapped():
+def test_support_the_show_gets_icon_without_shoutout():
     html = "<h3>Support the show</h3><p>Back us on Patreon.</p>"
-    assert "sponsor-shoutout" not in wrap_sponsor_shoutout(html)
+    soup = _soup(wrap_sponsor_shoutout(html))
+
+    assert soup.select_one(".sponsor-shoutout") is None
+    support_heading = soup.find("h3")
+    assert support_heading is not None
+    assert support_heading.get_text(" ", strip=True) == "Support the show"
+    assert support_heading.select_one(".show-note-icon--support") is not None
+    assert "Back us on Patreon." in soup.get_text()
+
+
+def test_support_the_show_icon_is_not_duplicated():
+    html = (
+        '<h3><span class="show-note-icon show-note-icon--support" '
+        'aria-hidden="true"></span>Support the Show</h3>'
+        "<p>Back us on Patreon.</p>"
+    )
+
+    soup = _soup(wrap_sponsor_shoutout(html))
+
+    assert len(soup.select(".show-note-icon--support")) == 1
 
 
 # ---- structure: heading stays in flow, body becomes the shout-out ----

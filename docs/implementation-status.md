@@ -160,6 +160,36 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       sponsor lists are preserved as paragraph HTML instead of partially
       structuring. Link-item `description` extraction is intentionally deferred.
       Full-catalog backfill remains deferred.
+- [x] **9k. Show-note backfill repair** — follow-up plan documented in
+      [`docs/show-note-backfill-repair.md`](show-note-backfill-repair.md).
+      Repeatable repair where `just manage migrate` fixes existing
+      imported episode bodies and summary metadata on any deployed database,
+      fresh imports write the corrected structure directly, and an explicit
+      idempotent repair command remains available for dry-run audits and
+      re-runs. The repair converts link-only unheaded HTML lists into hidden-
+      heading episode-note link lists, keeps complex source lists as source
+      HTML when they contain prose around links, backfills `search_description`
+      from in-database episode summaries, restores visible `Episode Summary` /
+      `Episode Notes` headings on detail pages, and converts older visibly
+      legacy raw Markdown-like note bodies into rendered HTML. Follow-up
+      migrations preserve paragraph-style `Support the Show` source copy
+      instead of collapsing it into link-list items and rebuild affected detail
+      blocks from stored source metadata; staging audit found 62 affected
+      support-copy sections, and the source-vs-body text audit reports zero
+      remaining missing detail phrases. Source-preserved `Support the Show`
+      headings are decorated with the same heart icon at detail-page render
+      time, without converting their paragraph copy into link-list items. A
+      final support-boilerplate repair keeps the support heart icon while
+      rendering the 13 known three-link support lists as a CTA sentence instead
+      of bare links. Migration `0012` strips Markdown-style hash prefixes from
+      recognized show-note headings, covering the isolated
+      `boost-your-django-dx-adam-johnon` case where
+      `###Support the Show` rendered visibly. Staging deploy and post-deploy
+      dry-run on 2026-06-01 reported zero body changes, zero metadata changes,
+      zero source-detail restores, zero skipped implicit lists, and zero raw
+      Markdown-like bodies; Playwright verified the original affected pages,
+      complex-list edge cases, raw-Markdown legacy pages, already-structured
+      simple sections, and the support-boilerplate sample.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -311,11 +341,9 @@ with 202 items.
    policy for manual Wagtail tags; if implemented later, prefer a filtered
    source-managed tag strategy that does not wipe editor-curated tags.
 4. **Structured show-note full-catalog backfill.** The first two-block UI slice
-   is implemented and browser-verified on local sample episodes. A later slice
-   should add an operator-facing dry-run/write backfill command before changing
-   the broader imported catalog, including reporting skipped sections and
-   preserving unsafe paragraph HTML. The backfill slice should revisit richer
-   link-item `description` preservation from surrounding list-item text.
+   and the operator-facing dry-run/write backfill command are implemented.
+   The full-catalog repair now preserves complex list sections as source HTML
+   instead of forcing surrounding prose into link-item descriptions.
 5. **Live feed parity checker.** Add a command/script that compares the current
    Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
    generated or S3/CDN-served Django Chat podcast feed. It should fail on item

@@ -388,17 +388,23 @@ Suggested conversion map:
 
 Backfill criteria:
 
-- Convert list sections only when every item has at least one usable link.
+- Convert list sections only when every item is link-only and has at least one
+  usable link. If item text appears before, between, or after links, keep the
+  section as source HTML so the authored prose order is preserved.
 - Convert sponsor sections only when a first link can be extracted.
 - Canonicalize missing URL schemes only when safe, for example `revsys.com` to
   `https://revsys.com`.
-- If any section has unexpected nested structure, invalid URLs, or no links,
-  keep that section as paragraph HTML and report it.
-- Leave the 75 no-heading detail bodies unchanged in the first implementation.
+- If any section has unexpected nested structure, invalid URLs, no links, or
+  prose around links, keep that section as paragraph/source HTML.
+- The first implementation left the 75 no-heading detail bodies unchanged.
+  Follow-up repair planning for the unheaded leading-list and raw Markdown-like
+  cases lives in [`show-note-backfill-repair.md`](show-note-backfill-repair.md);
+  that repair is implemented through new idempotent data migrations and a
+  command rather than by editing the already-applied first migration.
 - Leave `Black Friday Sale` unchanged unless a later cleanup intentionally maps
   it to `show_note_link_list(kind="other")`.
-- Provide a dry-run command that reports planned conversions by episode slug,
-  label, target block, and skipped reason before writing anything.
+- Provide a dry-run command that reports planned conversions and source-detail
+  restores by episode slug before writing anything.
 
 The importer should use the same parser for future catalog imports so new
 episodes do not regress to paragraph-only structured show notes. Existing source

@@ -84,6 +84,11 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
 
     latest_metadata = EpisodeSourceMetadata.objects.get(episode_number=200)
     assert latest_metadata.episode.title == "Django Tasks - Jake Howard"
+    assert latest_metadata.episode.search_description == (
+        "Jake is a Senior Systems Engineer at Torchbox and the author of DEP 14, "
+        "django.tasks, the highlight feature in Django 6.0. We discuss his work "
+        "on the Django security team, work with Wagtail, AI dabblings, and more."
+    )
     assert latest_metadata.rss_guid == "2c78bb02-8162-44f0-b22d-a188f5bbdb9e"
     assert latest_metadata.simplecast_episode_id == "af752038-3231-412e-801d-c8cc3cdd90cb"
     assert latest_metadata.simplecast_slug == "django-tasks-jake-howard"
@@ -125,7 +130,7 @@ def test_sample_import_structures_detail_show_note_sections() -> None:
     structured_types = [child["type"] for child in latest_detail]
 
     assert structured_types == [
-        "show_note_link_list",
+        "paragraph",
         "show_note_link_list",
         "show_note_link_list",
         "show_note_link_list",
@@ -133,15 +138,12 @@ def test_sample_import_structures_detail_show_note_sections() -> None:
     ]
     assert [
         child["value"]["kind"] for child in latest_detail if child["type"] == "show_note_link_list"
-    ] == ["links", "projects", "books", "youtube"]
+    ] == ["projects", "books", "youtube"]
     links = latest_detail[0]["value"]
-    link_items = _list_values(links["items"])
-    assert links["heading"] == "Links"
-    assert link_items[0]["title"] == "django-tasks"
-    assert link_items[0]["url"] == "https://github.com/RealOrangeOne/django-tasks"
-    assert _list_values(link_items[0]["extra_links"]) == [
-        {"title": "Jake's GitHub", "url": "https://github.com/realorangeone"}
-    ]
+    assert "<h3>🔗 Links</h3>" in links
+    assert "django-tasks" in links
+    assert "and" in links
+    assert "Jake's GitHub" in links
     books = latest_detail[2]["value"]
     assert _list_values(books["items"])[0]["title"] == "The Passage by Justin Cronin"
     sponsor = latest_detail[4]["value"]
@@ -154,17 +156,17 @@ def test_sample_import_structures_detail_show_note_sections() -> None:
 
     first_metadata = EpisodeSourceMetadata.objects.get(episode_number=1)
     first_detail = _body_children(first_metadata.episode, "detail")
-    assert first_detail[-1]["type"] == "show_note_link_list"
-    assert first_detail[-1]["value"]["kind"] == "shameless_plugs"
-    assert first_detail[-1]["value"]["heading"] == "Shameless Plugs"
+    assert first_detail[-1]["type"] == "paragraph"
+    assert "SHAMELESS PLUGS" in first_detail[-1]["value"]
+    assert "Free tutorials and premium books" in first_detail[-1]["value"]
     assert "<h4>SHAMELESS PLUGS</h4>" in first_metadata.simplecast_long_description_html
 
     second_metadata = EpisodeSourceMetadata.objects.get(episode_number=2)
     second_detail = _body_children(second_metadata.episode, "detail")
-    assert [child["value"]["kind"] for child in second_detail[-2:]] == [
-        "groups",
-        "shameless_plugs",
-    ]
+    assert second_detail[-1]["type"] == "paragraph"
+    assert "<h3>Groups</h3>" in second_detail[-1]["value"]
+    assert "Subreddits:" in second_detail[-1]["value"]
+    assert "William's" in second_detail[-1]["value"]
     assert "<h4>Groups</h4>" in second_metadata.simplecast_long_description_html
 
 
