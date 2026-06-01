@@ -3878,7 +3878,11 @@ h2[data-vt-episode-title] {
    Chat" tab docked onto its top-left. No sponsor section → byte-exact no-op; on
    sponsor pages the other show-notes render identically (DOM-equivalent). */
 .sponsor-shoutout {
-  --sponsor-shoutout-pad: var(--s0);
+  /* Pad = the heading's icon indent, so the window/tab background reaches out
+     to the icon column on the left while the copy stays on the headline text
+     line; the same inset mirrors onto the right. */
+  --sponsor-shoutout-pad: var(--show-note-text-indent);
+  --sponsor-shoutout-pad-y: var(--s2);
   --sponsor-shoutout-border: 2px;
 
   /* A little extra air below the section heading, then a gap before whatever
@@ -3896,7 +3900,7 @@ h2[data-vt-episode-title] {
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  padding: 0.85rem var(--sponsor-shoutout-pad);
+  padding: 1rem var(--sponsor-shoutout-pad);
   background: var(--dc-django-aaa-light);
   color: var(--dc-ink);
   border-radius: 0.75rem 0.75rem 0 0;
@@ -3915,7 +3919,7 @@ h2[data-vt-episode-title] {
   background: var(--dc-surface-django-tint);
   border: var(--sponsor-shoutout-border) solid var(--dc-django-aaa-light);
   border-radius: 0 0.9rem 0.9rem 0.9rem;
-  padding: var(--s1) var(--sponsor-shoutout-pad);
+  padding: var(--sponsor-shoutout-pad-y) var(--sponsor-shoutout-pad);
   padding-left: calc(var(--sponsor-shoutout-pad) - var(--sponsor-shoutout-border));
 }
 
