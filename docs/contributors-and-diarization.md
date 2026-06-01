@@ -828,6 +828,14 @@ loops (e.g. `"Aliens of Glee" ×176`).
   Detect snippet; the top sentence-length cue should drop back to normal speech
   counts). None of the candidates are contributor-mapped yet, so the
   `Speaker N` renumbering caveat does not bite for this batch.
+- **Status (2026-06-01): RESOLVED — every looped transcript regenerated and
+  verified loop-free.** All 17 candidates below were regenerated with the
+  anti-loop ASR, plus **8 further loops found by a full-corpus rescan** (see
+  [Resolution](#resolution-2026-06-01-all-asr-loops-cleared) below). A full
+  205-transcript scan now finds **zero** sentence-length repetition loops at any
+  threshold. Several candidates *had* since been contributor-mapped by later
+  batches, so the renumbering caveat **did** bite — resolved with a deterministic
+  re-map (see below), not manual re-identification.
 
 #### Staging regeneration candidates (re-scanned 2026-05-30, fix now deployed)
 
@@ -874,6 +882,63 @@ Borderline, spot-check before deciding whether to regenerate: audio 14
 (`django-60-natalia-bidart`, ×28), audio 20 (`djangocon-us-2025-recap`, ×20),
 audio 37 (`thibaud-colas-2025-dsf-board-nominations`, ×28), and audio 47
 (`the-future-of-python-deb-nicholson`, ×22).
+
+#### Resolution (2026-06-01): all ASR loops cleared
+
+A full-corpus pass cleared every remaining ASR repetition loop on staging.
+
+**1. The 17 candidates above were already clean.** A read-only rescan of all 205
+`Transcript` rows showed the top repeated cue for each of the 17 had dropped to
+normal filler (`"Yeah."`, `"Okay."`, single-digit-to-~35 counts) — they had been
+regenerated since the 2026-05-30 table was written.
+
+**2. A deeper rescan found 8 *residual* loops — 4 of them undocumented.** The
+2026-05-30 detector keyed on `most_common(1)` with a `len > 25` filter, which
+misses loops that (a) get chunked into sub-threshold word-windows or (b) rank
+below ordinary filler. A better detector flags **any** non-filler cue (`len >=
+12`) repeated `>= 8×`, then classifies it by **timing signature** — a genuine
+loop is the same text on *consecutive ~1s cues* (high `maxrun`), whereas natural
+repetition is scattered (`maxrun ≈ 1`). That surfaced 8 genuine loops:
+
+| audio/post | slug | loop cue (×count, span) | was in 2026-05-30 list? |
+| --- | --- | --- | --- |
+| 14 / 16 | `django-60-natalia-bidart` | `"...important to highlight that and..."` ×28, ~47s | borderline |
+| 20 / 22 | `djangocon-us-2025-recap` | `"I think it's a really good point."` ×20 | borderline |
+| 37 / 39 | `thibaud-colas-2025-dsf-board-nominations` | `"Yeah, I guess we're the group..."` ~3.5 min | borderline |
+| 47 / 49 | `the-future-of-python-deb-nicholson` | `"So we're trying to match that up..."` / `"saying."` alternating ×22 | borderline |
+| 17 / 19 | `django-survey-2025-jeff-triplett` | `"And, you know, we'll develop APIs..."` ~3.7 min | **NEW** |
+| 18 / 20 | `django-on-the-med-paolo-melchiorre` | rotating sentence chunked into 7 word-windows ×10–11 | **NEW** |
+| 30 / 32 | `the-future-of-django-emma-delescolle` | `"And that's all you have to do."` ×9 (zero-duration cues) | **NEW** |
+| 36 / 38 | `python-core-developer-mariatta-wijaya` | `"I want to be a part of the community."` ×12 | **NEW** |
+
+**3. Regenerated all 8 with `generate_transcripts --force`** (two `nohup` lanes,
+tracked via the DB). The anti-loop ASR cleared every loop *and recovered the real
+speech* the loop had overwritten (audio 37's 3.5-min and audio 17's 3.7-min loop
+regions now hold coherent, correctly-attributed conversation, not gaps).
+
+**4. Re-mapped the 4 contributor-mapped episodes deterministically, not by hand.**
+Audio 14/17/18/20 carried real-name labels (`--force` renumbers `Speaker N` and
+breaks the mapping). Because `EpisodeContributor` rows, links, and voice
+references live in the DB **independent of the transcript**, only the in-transcript
+labels needed redoing. Rather than re-identify by ear/heuristics (swap-prone),
+**time-align the fresh `Speaker N` transcript against the backed-up named one**:
+for each new label, tally which old name its segments overlap, and take the
+dominant name. Overlap was decisive every time (92–100% per speaker), so there was
+no host-swap risk. Script: `remap.py <audio_id> [--apply]` (an operator artifact;
+back up the named `podlove_data` first — `backup.py` saved JSON + byte copies to
+`/home/django-chat/transcript-backups/`).
+
+**5. Verified.** Full 205-transcript rescan → **0** residual loops (len≥12, ≥6×).
+Public Podlove API for the 4 re-labeled episodes → correct contributor names, no
+`Speaker N` leaks. Browser DOM assertions (`verify_speakers.py`) → contributor
+strip + Podlove transcript tab + `/transcript/` page all pass for all four.
+
+> **Detector lesson.** When rescanning for loops, do **not** rely on
+> `most_common(1)` + a long-cue length filter. Use the timing signature
+> (`maxrun` of consecutive identical cues) on every non-filler cue down to
+> `len >= 12`; word-level loops (audio 18) and short-cue loops (audio 15's
+> `"Aliens of Glee"`, audio 30's zero-duration cues) all hide from a naive
+> top-cue/length scan.
 
 ### Additional batch (2026-05-30) — contributor links + seven more episodes
 
