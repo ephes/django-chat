@@ -528,7 +528,7 @@ button.share-pill,
 
 .brand:hover .brand-name,
 .brand:focus-visible .brand-name {
-  color: var(--dc-django);
+  color: var(--dc-django-aaa-light);
   text-shadow: 0 0 .5px currentColor;
 }
 
@@ -554,7 +554,7 @@ button.share-pill,
 .nav-links a:hover,
 .nav-links a:focus-visible,
 .nav-links a[aria-current="page"] {
-  color: var(--dc-django);
+  color: var(--dc-django-aaa-light);
   text-shadow: 0 0 .5px currentColor;
 }
 
@@ -1268,7 +1268,7 @@ body:has([data-show-hero-shell]) .brand {
 .platform-band h2 {
   margin: var(--s-2) 0 var(--s-1);
   text-wrap: balance;
-  color: var(--dc-django);
+  color: var(--dc-django-aaa-light);
 }
 
 .platform-band p {
@@ -1947,7 +1947,7 @@ h2[data-vt-episode-title] {
 }
 
 .episode-number-badge span:last-child {
-  color: var(--dc-django);
+  color: var(--dc-django-aaa-light);
   z-index: 2;
 }
 
@@ -2519,7 +2519,7 @@ h2[data-vt-episode-title] {
 
 .subscribe-why {
   padding: var(--s0);
-  border-left: 2px solid var(--dc-django);
+  border-left: 0.375rem solid var(--dc-django);
   background: rgb(14 163 66 / 0.05);
   border-radius: 0 0.75rem 0.75rem 0;
   display: grid;
