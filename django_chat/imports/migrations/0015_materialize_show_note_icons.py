@@ -27,15 +27,26 @@ SHOW_NOTE_BLOCK_TYPES = {
 }
 # kind values that are never genuine editor overrides and should normalise to auto
 _SYSTEM_KINDS = {"auto", "other", ""}
+# Before the auto/override model, ShowNoteLinkListBlock.kind defaulted to "links",
+# and the importer only ever emitted kind="links" alongside the heading "Links"
+# (other known sections got their matching kind). So a stored "links" on a link-list
+# block whose heading resolves elsewhere is that legacy default leaking through, not
+# a deliberate override — normalise it to auto so the icon follows the heading.
+# Scoped to link lists: heading/sponsor blocks had no concrete default, so a "links"
+# kind there can only be a post-auto picker choice and stays an override.
+_LEGACY_LINK_LIST_DEFAULT_KIND = "links"
 
 
-def _materialize_block_value(value, resolve_icon_kind) -> bool:
+def _materialize_block_value(block_type, value, resolve_icon_kind) -> bool:
     if not isinstance(value, dict):
         return False
     heading = value.get("heading") or ""
     old_kind = value.get("kind") or "auto"
     derived = resolve_icon_kind(heading)
-    if old_kind in _SYSTEM_KINDS or old_kind == derived:
+    is_legacy_default = (
+        block_type == "show_note_link_list" and old_kind == _LEGACY_LINK_LIST_DEFAULT_KIND
+    )
+    if old_kind in _SYSTEM_KINDS or is_legacy_default or old_kind == derived:
         new_kind = "auto"
         icon = derived
     else:
@@ -63,7 +74,9 @@ def materialize_show_note_icons(apps, schema_editor):
                 continue
             for child in section["value"]:
                 if isinstance(child, dict) and child.get("type") in SHOW_NOTE_BLOCK_TYPES:
-                    if _materialize_block_value(child.get("value"), resolve_icon_kind):
+                    if _materialize_block_value(
+                        child.get("type"), child.get("value"), resolve_icon_kind
+                    ):
                         changed = True
         if changed:
             Episode.objects.filter(pk=episode.pk).update(body=body_value)

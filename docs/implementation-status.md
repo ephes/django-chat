@@ -207,7 +207,12 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       of the auto-resolved icon (progressive enhancement, public site JS-free).
       Migration `0015_materialize_show_note_icons` brings existing data forward
       (icon-only, no HTML re-parse; normalises system-derived `kind` to
-      `"auto"`, preserves genuine overrides). See
+      `"auto"`, preserves genuine overrides — where "system-derived" also covers
+      the legacy link-list default `"links"` on a differently headed link list, so
+      e.g. a `Books` heading left at the default follows its heading instead of
+      freezing as a links override). `0016_heal_show_note_icons` re-runs that
+      corrected backfill to heal environments that applied the initially-shipped
+      0015. See
       [`docs/structured-show-note-blocks-research.md`](structured-show-note-blocks-research.md).
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after

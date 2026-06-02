@@ -58,7 +58,16 @@ body preserved verbatim as a following `paragraph`. Empty headings are left as
 raw content. The migration `0015_materialize_show_note_icons` brings existing
 data forward (icon-only, no HTML re-parse): it materializes `icon` on stored
 blocks and normalises system-derived `kind` back to `"auto"`, preserving genuine
-overrides.
+overrides. A stored `kind` counts as system-derived (→ `"auto"`) when it is empty,
+the deprecated `other`, matches the heading's auto-resolution, **or** is the legacy
+`ShowNoteLinkListBlock` default `"links"` on a link-list block — the importer only
+ever paired `kind="links"` with the heading `Links`, so `"links"` on a differently
+headed link list (e.g. `Books` left at the default) is the old default leaking
+through, not an override. That last rule is scoped to link lists: a `"links"` kind
+on a heading/sponsor block has no legacy default and stays an override. The
+follow-up migration `0016_heal_show_note_icons` re-runs this corrected backfill so
+environments that applied the initially-shipped 0015 (which froze those legacy
+defaults as `links` overrides) are healed; it is forward-only and idempotent.
 
 ## Research Basis
 
