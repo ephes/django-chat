@@ -78,6 +78,12 @@ before the guards existed (they are near no-ops for the real, benign feed):
 - An import will raise `UnsafeURLError` and abort the offending fetch if a source
   URL points at a non-public address or a non-http(s) scheme.
 
+## Known unfixed issues
+
+Residual, deliberately-unfixed findings (low severity, author-privileged,
+deployment-assumption-dependent, or excluded classes) are listed in
+[`security-known-issues.md`](security-known-issues.md).
+
 ## Tests
 
 `django_chat/imports/tests/test_security_hardening.py` covers the sanitizer

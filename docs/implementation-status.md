@@ -357,7 +357,9 @@ The import pipeline treats third-party Simplecast/RSS/staging content as
 untrusted: it sanitizes imported show-note HTML, scheme-checks imported link
 URLs, and SSRF-guards (scheme + connect-time IP pinning + redirect
 re-validation) all outbound fetches. See
-[`docs/import-security.md`](import-security.md).
+[`docs/import-security.md`](import-security.md). Deliberately-unfixed residual
+findings (low/accepted) are tracked in
+[`docs/security-known-issues.md`](security-known-issues.md).
 
 ## Next Action
 
