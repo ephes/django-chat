@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from typing import Any, Literal
+from urllib.parse import urlparse
 from xml.etree import ElementTree
 
 RSS_FEED_URL = "https://feeds.simplecast.com/WpQaX_cs"
@@ -358,7 +359,7 @@ def parse_simplecast_distribution_links(
     for item in _optional_collection(payload):
         channel = _optional_object(item.get("distribution_channel"))
         name = _optional_str(channel.get("name"))
-        url = _optional_str(item.get("url"))
+        url = _safe_link_url(item.get("url"))
         if not name or not url:
             continue
         links.append(
@@ -368,7 +369,7 @@ def parse_simplecast_distribution_links(
                 source_id=_optional_str(item.get("id")),
                 source_url=_optional_str(item.get("href")),
                 name=name,
-                url=url.strip(),
+                url=url,
                 order=None,
                 new_window=None,
                 is_visible=True,
@@ -483,7 +484,7 @@ def _parse_site_links(
     links: list[SourceLink] = []
     for item in _optional_collection(payload):
         name = _optional_str(item.get("name"))
-        url = _optional_str(item.get("url"))
+        url = _safe_link_url(item.get("url"))
         if not name or not url:
             continue
         links.append(
@@ -493,7 +494,7 @@ def _parse_site_links(
                 source_id=_optional_str(item.get("id")),
                 source_url=_optional_str(item.get("href")),
                 name=name,
-                url=url.strip(),
+                url=url,
                 order=_optional_int(item.get("order")),
                 new_window=_optional_bool(item.get("new_window")),
                 is_visible=_optional_bool(item.get("is_visible")),
@@ -682,6 +683,26 @@ def _required_str(payload: JsonObject, key: str) -> str:
 
 def _optional_str(value: Any) -> str | None:
     return value if isinstance(value, str) and value else None
+
+
+_SAFE_LINK_SCHEMES = frozenset({"http", "https", "mailto"})
+
+
+def _safe_link_url(value: Any) -> str | None:
+    """Return a stripped link URL only if it uses a safe scheme.
+
+    Imported source links (menu/social/distribution) are rendered straight into
+    ``href`` attributes, so a ``javascript:`` / ``data:`` URL from a tampered or
+    MITM'd upstream feed would be a stored-XSS vector. Drop anything that isn't
+    http(s) or mailto.
+    """
+    text = _optional_str(value)
+    if not text:
+        return None
+    candidate = text.strip()
+    if urlparse(candidate).scheme.lower() in _SAFE_LINK_SCHEMES:
+        return candidate
+    return None
 
 
 def _optional_bool(value: Any) -> bool | None:

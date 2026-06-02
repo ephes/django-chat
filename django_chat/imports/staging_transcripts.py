@@ -6,14 +6,15 @@ from contextlib import suppress
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import Any, cast
-from urllib.parse import quote, urljoin
-from urllib.request import Request, urlopen
+from urllib.parse import quote, urljoin, urlparse
 from uuid import uuid4
 
 from cast.models import Episode
 from django.apps import apps
 from django.conf import settings
 from django.core.files.base import ContentFile
+
+from django_chat.imports.url_safety import safe_urlopen
 
 USER_AGENT = "django-chat-staging-transcript-import/1.0"
 DEFAULT_STAGING_HOST = "https://djangochat.staging.django-cast.com"
@@ -186,7 +187,17 @@ def extract_podlove_api_url(html: str, *, base_url: str) -> str:
     if not parser.data_url:
         msg = "staging episode page did not contain a podlove-player data-url"
         raise ValueError(msg)
-    return urljoin(base_url, parser.data_url)
+    # The data-url comes from the (untrusted) remote page body. Resolve it
+    # against the page URL, then require it to stay on the same host over
+    # http(s) — otherwise a tampered/compromised page could point the fetch at
+    # `file:///…` or an internal/metadata host (SSRF / local file read).
+    api_url = urljoin(base_url, parser.data_url)
+    base = urlparse(base_url)
+    resolved = urlparse(api_url)
+    if resolved.scheme not in {"http", "https"} or resolved.netloc != base.netloc:
+        msg = f"podlove-player data-url is not on the expected staging host: {api_url!r}"
+        raise ValueError(msg)
+    return api_url
 
 
 def podlove_segments_to_vtt(segments: list[JsonObject]) -> str:
@@ -219,11 +230,11 @@ def podlove_segments_to_dote(segments: list[JsonObject]) -> JsonObject:
 
 
 def default_fetch_text(url: str, timeout: float) -> str:
-    request = Request(
+    with safe_urlopen(
         url,
+        timeout=timeout,
         headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/json;q=0.9,*/*;q=0.8"},
-    )
-    with urlopen(request, timeout=timeout) as response:
+    ) as response:
         return response.read().decode("utf-8")
 
 

@@ -8,7 +8,16 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
-from bs4.element import Comment, NavigableString, PageElement, Tag
+from bs4.element import (
+    CData,
+    Comment,
+    Declaration,
+    Doctype,
+    NavigableString,
+    PageElement,
+    ProcessingInstruction,
+    Tag,
+)
 
 LIST_SECTION_HEADING_LABELS = frozenset(
     {
@@ -48,6 +57,117 @@ CANONICAL_HEADING_BY_LABEL = {
 }
 STRUCTURED_SECTION_LABELS = frozenset(LINK_LIST_KIND_BY_LABEL) | frozenset({"sponsor"})
 BlockTuple = tuple[str, Any]
+
+# Imported show-note HTML is stored as RichText block values and later rendered
+# with autoescaping disabled (Wagtail's `richtext`/`expand_db_html` do NOT
+# sanitize at render time — they only do so in the editor widget, which the
+# importer bypasses). Everything that ends up in a stored value therefore has to
+# be sanitized here, on the way in. Allowlist-based: tags not in the allowlist
+# are unwrapped (their text is kept), known-dangerous container tags are dropped
+# with their contents, and every attribute except a scheme-validated anchor
+# `href` is removed (this strips `on*` handlers, inline `style`, etc.).
+_SANITIZE_ALLOWED_TAGS = frozenset(
+    {
+        "p",
+        "br",
+        "strong",
+        "b",
+        "em",
+        "i",
+        "u",
+        "a",
+        "ul",
+        "ol",
+        "li",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "blockquote",
+        "code",
+        "pre",
+    }
+)
+_SANITIZE_DROP_WITH_CONTENT = frozenset(
+    {
+        "script",
+        "style",
+        "iframe",
+        "object",
+        "embed",
+        "svg",
+        "math",
+        "template",
+        "noscript",
+        "link",
+        "meta",
+        "base",
+        "form",
+        "input",
+        "textarea",
+        "button",
+        "select",
+        "option",
+        "frame",
+        "frameset",
+        "applet",
+    }
+)
+_SANITIZE_ALLOWED_ATTRS: dict[str, frozenset[str]] = {
+    "a": frozenset({"href", "rel", "target", "title"}),
+}
+
+
+def _sanitized_href(href: Any) -> str | None:
+    if not isinstance(href, str):
+        return None
+    candidate = href.strip()
+    if candidate.lower().startswith("mailto:") and len(candidate) > len("mailto:"):
+        return candidate
+    return _canonical_http_url(candidate)
+
+
+def sanitize_show_note_html(html: str) -> str:
+    """Strip scripts, event handlers, and unsafe URL schemes from imported
+    show-note HTML before it is stored and rendered without autoescaping."""
+    if not html:
+        return html
+    soup = BeautifulSoup(html, "html.parser")
+    # Drop comment-like nodes. CData / Declaration / ProcessingInstruction in
+    # particular matter for safety: html.parser keeps `<![CDATA[ … ]]>` as one
+    # opaque node, so an embedded `<script>` is invisible to the tag passes
+    # below — but a *browser* parsing an HTML (non-foreign) context treats
+    # `<![CDATA[` as a bogus comment ending at the first `>`, turning whatever
+    # follows into live markup (a parser-differential mXSS). Stripping these
+    # nodes outright closes that gap.
+    _comment_like = (CData, Comment, Declaration, Doctype, ProcessingInstruction)
+    for node in soup.find_all(string=lambda text: isinstance(text, _comment_like)):
+        node.extract()
+    for tag in soup.find_all(
+        lambda candidate: (
+            bool(candidate.name) and candidate.name.lower() in _SANITIZE_DROP_WITH_CONTENT
+        )
+    ):
+        tag.decompose()
+    for tag in soup.find_all(True):
+        name = (tag.name or "").lower()
+        if name not in _SANITIZE_ALLOWED_TAGS:
+            tag.unwrap()
+            continue
+        allowed = _SANITIZE_ALLOWED_ATTRS.get(name, frozenset())
+        for attr in list(tag.attrs):
+            if attr.lower() not in allowed:
+                del tag[attr]
+                continue
+            if name == "a" and attr.lower() == "href":
+                safe = _sanitized_href(tag.get("href"))
+                if safe is None:
+                    del tag[attr]
+                else:
+                    tag["href"] = safe
+    return str(soup)
 
 
 class ShowNoteStructureReport:
@@ -158,8 +278,11 @@ def _render_inline_markdown(value: str) -> str:
     for match in re.finditer(r"\[([^\]]+)\]\(([^)]+)\)", value):
         parts.append(escape(value[position : match.start()]))
         label = escape(match.group(1).strip())
-        href = escape(match.group(2).strip(), quote=True)
-        parts.append(f'<a href="{href}">{label}</a>')
+        href = _sanitized_href(match.group(2).strip())
+        if href is None:
+            parts.append(label)
+        else:
+            parts.append(f'<a href="{escape(href, quote=True)}">{label}</a>')
         position = match.end()
     parts.append(escape(value[position:]))
     return "".join(parts)
@@ -233,7 +356,7 @@ def _structured_show_note_detail_blocks(
     _flush_paragraph_block(pending_nodes, blocks)
 
     if not report.added_structured_block:
-        return [("paragraph", normalized_html)], report
+        return [("paragraph", sanitize_show_note_html(normalized_html))], report
     return blocks, report
 
 
@@ -778,7 +901,8 @@ def _flush_paragraph_block(nodes: list[PageElement], blocks: list[BlockTuple]) -
 
 
 def _serialize_nodes(nodes: Iterable[PageElement]) -> str:
-    return "".join(str(node) for node in nodes if _node_has_meaning(node)).strip()
+    html = "".join(str(node) for node in nodes if _node_has_meaning(node)).strip()
+    return sanitize_show_note_html(html)
 
 
 def _node_has_meaning(node: PageElement) -> bool:

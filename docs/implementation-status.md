@@ -364,6 +364,12 @@ with 202 items.
    migration notes, and the
    [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.
 
+The import pipeline treats third-party Simplecast/RSS/staging content as
+untrusted: it sanitizes imported show-note HTML, scheme-checks imported link
+URLs, and SSRF-guards (scheme + connect-time IP pinning + redirect
+re-validation) all outbound fetches. See
+[`docs/import-security.md`](import-security.md).
+
 ## Next Action
 
 Proceed to host review after deploying the current pre-review cleanup. The

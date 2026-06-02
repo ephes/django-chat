@@ -7,7 +7,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 from xml.etree import ElementTree
 
 from django.conf import settings
@@ -19,6 +18,7 @@ from django_chat.imports.source_data import (
     SIMPLECAST_EPISODES_URL,
     SIMPLECAST_PODCAST_URL,
 )
+from django_chat.imports.url_safety import safe_urlopen
 
 DEFAULT_FIXTURE_DIR = Path(
     "django_chat/imports/tests/fixtures/django_chat_source",
@@ -183,8 +183,9 @@ class Command(BaseCommand):
         return Path(settings.ROOT_DIR) / output_dir
 
     def _fetch_text(self, url: str, *, timeout: float) -> str:
-        request = Request(url, headers={"User-Agent": USER_AGENT})
-        with urlopen(request, timeout=timeout) as response:
+        # `url` for the site/episode fetches comes from remote Simplecast
+        # responses; route through the SSRF guard like the runtime importers.
+        with safe_urlopen(url, timeout=timeout, headers={"User-Agent": USER_AGENT}) as response:
             return response.read().decode("utf-8")
 
     def _fetch_json(self, url: str, *, timeout: float) -> dict[str, Any]:

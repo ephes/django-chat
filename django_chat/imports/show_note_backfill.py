@@ -6,7 +6,10 @@ from typing import Any
 from django.db import transaction
 from django.utils.html import strip_tags
 
-from django_chat.imports.show_notes import structure_episode_body_show_notes_with_report
+from django_chat.imports.show_notes import (
+    sanitize_show_note_html,
+    structure_episode_body_show_notes_with_report,
+)
 
 
 @dataclass(frozen=True)
@@ -157,6 +160,160 @@ def _repair_queryset(
         raw_markdown_like_episodes=raw_markdown_like_episodes,
         items=tuple(items),
     )
+
+
+def sanitize_imported_episode_bodies(
+    *, Episode: Any, EpisodeSourceMetadata: Any, write: bool
+) -> tuple[int, int]:
+    """Sanitize the HTML in already-stored *imported* episode show-note bodies.
+
+    Fresh imports sanitize on the way in, and the structuring repair only
+    rewrites ``detail`` blocks — so previously-imported ``overview`` paragraph
+    HTML and already-structured ``intro``/``copy`` values can still hold unsafe
+    markup. This re-runs :func:`sanitize_show_note_html` over those
+    RichText-bearing fields.
+
+    Scoped to episodes that have ``EpisodeSourceMetadata`` (i.e. import-created
+    bodies, matching :func:`repair_imported_episode_show_notes`). Manually
+    authored episodes are left untouched — the sanitizer would otherwise strip
+    Wagtail internal-link markup (``<a linktype="page" id="…">``) from
+    editor-written rich text. Returns ``(episodes_scanned, bodies_changed)``.
+    """
+    queryset = EpisodeSourceMetadata.objects.select_related("episode").order_by(
+        "episode_number",
+        "source_title",
+    )
+    if write:
+        with transaction.atomic():
+            return _sanitize_bodies_queryset(Episode, queryset, write=True)
+    return _sanitize_bodies_queryset(Episode, queryset, write=False)
+
+
+def _sanitize_bodies_queryset(Episode: Any, queryset: Any, *, write: bool) -> tuple[int, int]:
+    scanned = 0
+    changed_count = 0
+    for metadata in queryset.iterator(chunk_size=100):
+        episode = metadata.episode
+        if episode is None:
+            continue
+        scanned += 1
+        new_body, changed = _sanitize_episode_body(episode.body)
+        if not changed:
+            continue
+        changed_count += 1
+        if write:
+            Episode.objects.filter(pk=episode.pk).update(body=new_body)
+    return scanned, changed_count
+
+
+def _sanitize_episode_body(body: Any) -> tuple[Any, bool]:
+    body_value = body.get_prep_value() if hasattr(body, "get_prep_value") else body
+    if not isinstance(body_value, list):
+        return body_value, False
+
+    changed = False
+    new_body: list[Any] = []
+    for block in body_value:
+        # Imported HTML only ever lands inside overview/detail show-note
+        # containers; leave every other block type (images, embeds, …) alone.
+        if (
+            isinstance(block, dict)
+            and block.get("type") in {"overview", "detail"}
+            and isinstance(block.get("value"), list)
+        ):
+            new_children = []
+            for child in block["value"]:
+                new_child, child_changed = _sanitize_show_note_child(child)
+                changed = changed or child_changed
+                new_children.append(new_child)
+            new_body.append({**block, "value": new_children})
+        else:
+            new_body.append(block)
+    return new_body, changed
+
+
+def _sanitize_show_note_child(child: Any) -> tuple[Any, bool]:
+    if not isinstance(child, dict):
+        return child, False
+    child_type = child.get("type")
+    value = child.get("value")
+    if child_type == "paragraph" and isinstance(value, str):
+        return _sanitized_str_child(child, value)
+    if child_type == "show_note_link_list" and isinstance(value, dict):
+        return _sanitized_link_list_child(child, value)
+    if child_type == "show_note_sponsor" and isinstance(value, dict):
+        return _sanitized_struct_field(child, value, "copy")
+    return child, False
+
+
+def _sanitized_str_child(child: dict[str, Any], value: str) -> tuple[Any, bool]:
+    sanitized = sanitize_show_note_html(value)
+    if sanitized == value:
+        return child, False
+    return {**child, "value": sanitized}, True
+
+
+def _sanitized_struct_field(
+    child: dict[str, Any], value: dict[str, Any], field_name: str
+) -> tuple[Any, bool]:
+    original = value.get(field_name)
+    if not isinstance(original, str):
+        return child, False
+    sanitized = sanitize_show_note_html(original)
+    if sanitized == original:
+        return child, False
+    return {**child, "value": {**value, field_name: sanitized}}, True
+
+
+def _sanitized_link_list_child(child: dict[str, Any], value: dict[str, Any]) -> tuple[Any, bool]:
+    new_value = dict(value)
+    changed = False
+
+    intro = value.get("intro")
+    if isinstance(intro, str):
+        sanitized_intro = sanitize_show_note_html(intro)
+        if sanitized_intro != intro:
+            new_value["intro"] = sanitized_intro
+            changed = True
+
+    items = value.get("items")
+    if isinstance(items, list):
+        new_items = []
+        for item in items:
+            if isinstance(item, dict) and isinstance(item.get("description"), str):
+                sanitized_desc = sanitize_show_note_html(item["description"])
+                if sanitized_desc != item["description"]:
+                    new_items.append({**item, "description": sanitized_desc})
+                    changed = True
+                    continue
+            new_items.append(item)
+        if changed:
+            new_value["items"] = new_items
+
+    if not changed:
+        return child, False
+    return {**child, "value": new_value}, True
+
+
+def drop_unsafe_source_links(*, PodcastSourceLink: Any, write: bool) -> tuple[int, int]:
+    """Delete imported source links whose URL uses an unsafe scheme.
+
+    Fresh imports skip non-http(s)/mailto link URLs (``_safe_link_url``); this
+    remediates rows stored before that guard existed, where a ``javascript:``
+    URL from a tampered upstream feed would otherwise render into a public
+    ``<a href>``. Returns ``(links_scanned, links_removed)``.
+    """
+    from django_chat.imports.source_data import _safe_link_url
+
+    scanned = 0
+    unsafe_pks: list[Any] = []
+    for link in PodcastSourceLink.objects.all().iterator(chunk_size=200):
+        scanned += 1
+        if _safe_link_url(link.url) is None:
+            unsafe_pks.append(link.pk)
+    if write and unsafe_pks:
+        PodcastSourceLink.objects.filter(pk__in=unsafe_pks).delete()
+    return scanned, len(unsafe_pks)
 
 
 def episode_summary_from_database(episode: Any, metadata: Any) -> str:

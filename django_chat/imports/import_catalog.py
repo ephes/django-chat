@@ -5,7 +5,6 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 
 from django.db import transaction
 
@@ -43,6 +42,7 @@ from django_chat.imports.source_data import (
     parse_simplecast_podcast,
     parse_simplecast_site,
 )
+from django_chat.imports.url_safety import safe_urlopen
 
 USER_AGENT = "django-chat-catalog-import/1.0"
 
@@ -248,8 +248,7 @@ def build_import_plan(source_data: ImportSourceData) -> ImportPlan:
 
 
 def default_fetch_text(source_url: str, timeout: float) -> str:
-    request = Request(source_url, headers={"User-Agent": USER_AGENT})
-    with urlopen(request, timeout=timeout) as response:
+    with safe_urlopen(source_url, timeout=timeout, headers={"User-Agent": USER_AGENT}) as response:
         return response.read().decode("utf-8")
 
 
@@ -282,8 +281,9 @@ def timed_stream_audio_downloader(timeout: float) -> StreamingAudioDownloader:
 
 def live_cover_image_downloader(timeout: float) -> ImageDownloader:
     def download(source_url: str) -> bytes:
-        request = Request(source_url, headers={"User-Agent": USER_AGENT})
-        with urlopen(request, timeout=timeout) as response:
+        with safe_urlopen(
+            source_url, timeout=timeout, headers={"User-Agent": USER_AGENT}
+        ) as response:
             return response.read()
 
     return download

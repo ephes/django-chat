@@ -11,7 +11,6 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import unquote, urlparse
-from urllib.request import Request, urlopen
 from uuid import UUID
 
 from cast.models import Audio, Episode, Podcast
@@ -34,7 +33,10 @@ from django_chat.imports.models import (
     PodcastSourceLink,
     PodcastSourceMetadata,
 )
-from django_chat.imports.show_notes import structured_show_note_detail_blocks
+from django_chat.imports.show_notes import (
+    sanitize_show_note_html,
+    structured_show_note_detail_blocks,
+)
 from django_chat.imports.source_data import (
     EpisodeSourceData,
     RssPodcast,
@@ -50,6 +52,7 @@ from django_chat.imports.source_data import (
     parse_simplecast_podcast,
     parse_simplecast_site,
 )
+from django_chat.imports.url_safety import safe_urlopen
 
 DEFAULT_SOURCE_FIXTURE_DIR = Path(__file__).parent / "tests" / "fixtures" / "django_chat_source"
 
@@ -276,8 +279,9 @@ def copy_django_chat_catalog_audio(
 
 
 def default_download_audio(source_url: str) -> DownloadedAudio:
-    request = Request(source_url, headers={"User-Agent": "django-chat-sample-import/1.0"})
-    with urlopen(request, timeout=60) as response:
+    with safe_urlopen(
+        source_url, timeout=60, headers={"User-Agent": "django-chat-sample-import/1.0"}
+    ) as response:
         content = response.read()
         headers = response.headers
         content_type = headers.get_content_type() if hasattr(headers, "get_content_type") else None
@@ -298,9 +302,13 @@ def default_stream_download_audio(
     timeout: float = 60.0,
     chunk_size: int = 1024 * 1024,
 ) -> DownloadedAudioFile:
-    request = Request(source_url, headers={"User-Agent": "django-chat-catalog-import/1.0"})
     byte_size = 0
-    with urlopen(request, timeout=timeout) as response, destination.open("wb") as output:
+    with (
+        safe_urlopen(
+            source_url, timeout=timeout, headers={"User-Agent": "django-chat-catalog-import/1.0"}
+        ) as response,
+        destination.open("wb") as output,
+    ):
         while chunk := response.read(chunk_size):
             output.write(chunk)
             byte_size += len(chunk)
@@ -318,8 +326,9 @@ def default_stream_download_audio(
 
 
 def default_download_image(source_url: str) -> bytes:
-    request = Request(source_url, headers={"User-Agent": "django-chat-sample-import/1.0"})
-    with urlopen(request, timeout=60) as response:
+    with safe_urlopen(
+        source_url, timeout=60, headers={"User-Agent": "django-chat-sample-import/1.0"}
+    ) as response:
         return response.read()
 
 
@@ -1054,12 +1063,12 @@ def _episode_body(episode_source: EpisodeSourceData) -> list[tuple[str, list[tup
     raw_detail = _episode_description(episode_source)
     body: list[tuple[str, list[tuple[str, Any]]]] = []
     if overview:
-        body.append(("overview", [("paragraph", overview)]))
+        body.append(("overview", [("paragraph", sanitize_show_note_html(overview))]))
     if raw_detail and raw_detail != overview:
         detail_blocks, _ = structured_show_note_detail_blocks(raw_detail)
         body.append(("detail", detail_blocks))
     if not body and episode_source.title:
-        body.append(("overview", [("paragraph", episode_source.title)]))
+        body.append(("overview", [("paragraph", sanitize_show_note_html(episode_source.title))]))
     return body
 
 
