@@ -1,16 +1,18 @@
 # Structured Show-Note Blocks Research
 
-Date: 2026-05-30
+Date: 2026-05-30 (icon model added 2026-06-02)
 
 ## Recommendation
 
 Use `CAST_POST_BODY_BLOCKS` to add Django Chat-specific show-note blocks only to
 the `detail` section of `Post.body`.
 
-The first implementation slice should add these stable block names:
+The stable block names are:
 
 - `show_note_sponsor`
 - `show_note_link_list`
+- `show_note_heading` (added with the icon feature, for section headings whose
+  body is not a convertible link list / sponsor)
 
 `show_note_link_list` should be generic enough to cover `Links`, `Projects`,
 `Books`, `YouTube`, `Groups`, `Shameless Plugs`, `Support the Show`,
@@ -22,6 +24,41 @@ StreamField schema.
 The implementation also needs to bump `django-cast` from the current pinned
 commit `d6ce2c7980baaece847d8495d22832208cd73f88` to `f795ed5f` or later,
 because that is where `CAST_POST_BODY_BLOCKS` was added.
+
+## Show-Note Icons (auto/override, materialized at save time)
+
+Every show-note section heading carries a decorative circular icon. The model:
+
+- Each block (`show_note_link_list`, `show_note_sponsor`, `show_note_heading`)
+  has a `kind` field (editor *intent*, default `"auto"`, choices from the
+  `ICON_REGISTRY` in `django_chat/show_notes/icons.py`, edited via the visual
+  `IconChoiceWidget`) and a hidden `icon` field (the materialized concrete kind).
+- `kind="auto"` derives the icon from the heading via `resolve_icon_kind()`
+  (`django_chat/imports/show_notes.py`): exact label match (Links, Support the
+  Show, Sponsor, …) → that kind; else a whole-word `sale`/`rabatt`/`offer` or a
+  literal `%` → `sale`; else a `dashboard` substring → `dashboards`; else
+  `default`. An explicit `kind` is used verbatim.
+- The `icon` is **materialized at save time**, not resolved on every render:
+  `StructBlock.clean()` (admin Save and Preview), the importer/structuring
+  pipeline, and the data migration all set `icon` via `materialize_icon()`.
+  Rendering reads `icon`; `display_icon()` falls back to deriving from the
+  heading when `icon` is absent (old revisions / un-migrated JSON).
+- "Has the editor customized it?" is simply `kind != "auto"`.
+- Icons are code-side SVG snippets under
+  `templates/cast/django_chat/show_notes/icons/<snippet>.svg`, rendered by the
+  `{% show_note_icon kind %}` tag (registry lookup + `default.svg` fallback).
+  The picker has an optional admin-only JS live-preview that shows the
+  auto-resolved icon as the editor types the heading; it degrades gracefully.
+
+**D5 — every heading gets an icon.** During structuring, every real `<h3>`–`<h6>`
+heading is offloaded into a block: a convertible link/sponsor section becomes
+`show_note_link_list`/`show_note_sponsor`; any other heading (including
+non-convertible known-label sections) becomes a `show_note_heading` with its
+body preserved verbatim as a following `paragraph`. Empty headings are left as
+raw content. The migration `0015_materialize_show_note_icons` brings existing
+data forward (icon-only, no HTML re-parse): it materializes `icon` on stored
+blocks and normalises system-derived `kind` back to `"auto"`, preserving genuine
+overrides.
 
 ## Research Basis
 
@@ -177,20 +214,27 @@ CAST_POST_BODY_BLOCKS = {
     "detail": [
         "django_chat.show_notes.blocks.sponsor_block",
         "django_chat.show_notes.blocks.link_list_block",
+        "django_chat.show_notes.blocks.heading_block",
     ],
 }
 ```
+
+All three blocks additionally carry the `kind` (intent) + hidden `icon`
+(materialized) fields described in [Show-Note Icons](#show-note-icons-autooverride-materialized-at-save-time).
 
 ### `show_note_sponsor`
 
 Wagtail icon: `tag`
 
-Public/detail icon: sponsor/handshake style if the frontend has a matching
-asset; otherwise reuse the Wagtail-like tag icon visually.
+Public/detail icon: the `sponsors.svg` snippet (a person-in-circle / avatar
+mark), selected via the materialized `icon` (the default "Sponsor" heading
+auto-resolves to `kind="sponsor"`).
 
 Schema:
 
 - `heading`: `CharBlock`, default `Sponsor`.
+- `kind`: `ChoiceBlock`, default `auto` (icon picker).
+- `icon`: hidden `CharBlock` (materialized concrete kind).
 - `sponsor_name`: `CharBlock`, required.
 - `sponsor_url`: `URLBlock`, required.
 - `copy`: `RichTextBlock`, optional, limited to links, bold, italic.
@@ -214,29 +258,23 @@ Backfill behavior:
 
 Wagtail icon: `link`
 
-Public/detail icon by `kind`:
-
-- `links`: `link`
-- `projects`: `folder`
-- `books`: `doc-full`
-- `youtube`: `media`
-- `groups`: `group`
-- `shameless_plugs`: `pick`
-- `support`: `pick`
-- `sponsors`: `tag`
-- `sponsoring_options`: `tag`
-- `other`: `link`
+Public/detail icon: determined by the materialized `icon` field, which maps to an
+SVG snippet via `ICON_REGISTRY` (see
+[Show-Note Icons](#show-note-icons-autooverride-materialized-at-save-time));
+unknown kinds fall back to `default.svg`.
 
 Schema:
 
 - `heading`: `CharBlock`, default `Links`.
-- `kind`: `ChoiceBlock`, choices listed above, default `links`.
+- `kind`: `ChoiceBlock`, default `auto` (icon picker).
+- `icon`: hidden `CharBlock` (materialized concrete kind).
+- `show_heading` / `show_items`: `BooleanBlock`, default `True`.
 - `intro`: `RichTextBlock`, optional, limited to links, bold, italic.
 - `items`: `ListBlock` of link items, minimum one item.
 
 This one schema is the concrete schema for links, projects, books, and the
-other list-like show-note categories; `kind` controls the default heading,
-icon, and CSS hook.
+other list-like show-note categories; the materialized `icon` (derived from
+`kind`/heading) controls the icon and CSS hook.
 
 Link item schema:
 
@@ -245,18 +283,20 @@ Link item schema:
 - `description`: `RichTextBlock`, optional, limited to links, bold, italic.
 - `extra_links`: optional `ListBlock` of `{title, url}` pairs.
 
-Backfill behavior:
+Backfill behavior (all conversions store `kind="auto"` with the `icon`
+materialized to the named kind, e.g. `Links` → icon `links`; the labels below
+name the resulting icon, not a stored `kind`):
 
-- Convert `Links` to `kind=links`.
-- Convert `Projects` to `kind=projects`. The catalog currently has 28 project
+- Convert `Links` (icon `links`).
+- Convert `Projects` (icon `projects`). The catalog currently has 28 project
   items, all one-link items, so this is the safest list conversion.
-- Convert `Books` to `kind=books`. Use the first anchor text as `title` and the
+- Convert `Books` (icon `books`). Use the first anchor text as `title` and the
   first href as `url`.
-- Convert `YouTube` to `kind=youtube`; do not create a dedicated YouTube block.
-- Convert `Groups` to `kind=groups`; only 3 episodes use it.
-- Convert `Shameless Plugs` to `kind=shameless_plugs`; only 12 older episodes
+- Convert `YouTube` (icon `youtube`); do not create a dedicated YouTube block.
+- Convert `Groups` (icon `groups`); only 3 episodes use it.
+- Convert `Shameless Plugs` (icon `shameless_plugs`); only 12 older episodes
   use it and its content is ordinary links.
-- Convert `Support the Show` to `kind=support` when the section is structurally
+- Convert `Support the Show` (icon `support`) when the section is structurally
   safe. Keep paragraph copy in `intro` and extract linked calls to action into
   `items`. This is not a sponsor block because the copy repeatedly says the
   show had no sponsor.
@@ -264,8 +304,8 @@ Backfill behavior:
     full paragraph text as the link item title and leave `intro` blank, so the
     same support link is not rendered twice. Support sections that already have
     list items can still render intro copy before the list.
-- Convert `Sponsors` to `kind=sponsors` and `Sponsoring Options` to
-  `kind=sponsoring_options`.
+- Convert `Sponsors` (icon `sponsors`) and `Sponsoring Options` (icon
+  `sponsoring_options`); both store `kind="auto"`.
 - For list items with multiple anchors, use the first anchor as the primary
   item and store remaining anchors in `extra_links`. Preserve surrounding item
   text in `description` when needed.
@@ -370,21 +410,22 @@ The parser should:
    paragraph and structured blocks.
 10. Be idempotent when run on already-structured detail content.
 
-Suggested conversion map:
+Conversion map (every block stores `kind="auto"`; the listed icon is what the
+heading auto-resolves to and is materialized into `icon`):
 
-| Normalized label | Target block |
-| --- | --- |
-| `links` | `show_note_link_list(kind="links")` |
-| `projects` | `show_note_link_list(kind="projects")` |
-| `books` | `show_note_link_list(kind="books")` |
-| `youtube` | `show_note_link_list(kind="youtube")` |
-| `groups` | `show_note_link_list(kind="groups")` |
-| `shameless plugs` | `show_note_link_list(kind="shameless_plugs")` |
-| `support the show` | `show_note_link_list(kind="support")` |
-| `sponsors` | `show_note_link_list(kind="sponsors")` |
-| `sponsoring options` | `show_note_link_list(kind="sponsoring_options")` |
-| `black friday sale` | `show_note_link_list(kind="other")`, only in a later cleanup |
-| `sponsor` | `show_note_sponsor` |
+| Normalized label | Target block | Icon |
+| --- | --- | --- |
+| `links` | `show_note_link_list` | `links` |
+| `projects` | `show_note_link_list` | `projects` |
+| `books` | `show_note_link_list` | `books` |
+| `youtube` | `show_note_link_list` | `youtube` |
+| `groups` | `show_note_link_list` | `groups` |
+| `shameless plugs` | `show_note_link_list` | `shameless_plugs` |
+| `support the show` | `show_note_link_list` | `support` |
+| `sponsors` | `show_note_link_list` | `sponsors` |
+| `sponsoring options` | `show_note_link_list` | `sponsoring_options` |
+| `sponsor` | `show_note_sponsor` | `sponsor` |
+| any other heading | `show_note_heading` (D5) | `resolve_icon_kind` (`sale`/`dashboards`/`default`) |
 
 Backfill criteria:
 
@@ -401,8 +442,9 @@ Backfill criteria:
   cases lives in [`show-note-backfill-repair.md`](show-note-backfill-repair.md);
   that repair is implemented through new idempotent data migrations and a
   command rather than by editing the already-applied first migration.
-- Leave `Black Friday Sale` unchanged unless a later cleanup intentionally maps
-  it to `show_note_link_list(kind="other")`.
+- `Black Friday Sale` (and other non-list headings) are offloaded by D5 into a
+  `show_note_heading` whose `icon` auto-resolves to `sale` (via the `%`/`sale`
+  rule in `resolve_icon_kind`); the section body is preserved verbatim.
 - Provide a dry-run command that reports planned conversions and source-detail
   restores by episode slug before writing anything.
 
@@ -414,7 +456,8 @@ metadata fields should remain unchanged.
 
 Add unit tests for block factories and settings:
 
-- `CAST_POST_BODY_BLOCKS["detail"]` loads both factories.
+- `CAST_POST_BODY_BLOCKS["detail"]` loads all three factories
+  (`show_note_sponsor`, `show_note_link_list`, `show_note_heading`).
 - No block name collides with built-in django-cast names.
 - Blocks are not registered for `overview`.
 - The django-cast system check passes with the configured factory paths.
@@ -427,12 +470,13 @@ Add parser tests:
   `Support the Show`, `###Support the Show`.
 - Sponsor paragraph copy converts to `show_note_sponsor`.
 - List-only sponsor converts to `show_note_sponsor`.
-- `Projects` and `Books` convert to `show_note_link_list` with the matching
-  `kind`.
+- `Projects` and `Books` convert to `show_note_link_list` with `kind="auto"`
+  and the matching materialized `icon`.
 - Plural `Sponsors` and `Sponsoring Options` convert to
   `show_note_link_list`.
-- `Support the Show` paragraph and list variants convert to
-  `show_note_link_list(kind="support")`.
+- `Support the Show` list variants convert to `show_note_link_list`
+  (`kind="auto"`, icon `support`); paragraph-only variants offload the heading
+  to `show_note_heading` (icon `support`) with the copy as a following paragraph.
 - Multi-link list items preserve primary and extra links.
 - `Books` does not automatically split authors; the original label stays in
   `title`.

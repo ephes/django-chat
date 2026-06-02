@@ -109,8 +109,11 @@ The repair criteria now cover both content shapes:
 - Paragraph-style `Support the Show` sections are preserved as source copy
   with embedded links. They must not be collapsed into link-list items, because
   that either turns the whole sentence into one link or drops the surrounding
-  sentence text. On episode detail pages, their source-preserved heading is
-  decorated with the same support heart icon as structured support blocks.
+  sentence text. With the icon feature (D5), the heading is offloaded into a
+  `show_note_heading` block carrying the support icon, and the sentence copy is
+  preserved verbatim as the following `paragraph` block (rather than a single raw
+  `<h3>` + paragraph). The same applies to any non-convertible section heading:
+  its heading becomes an iconed block and its body is kept as raw HTML.
 - The known three-link support boilerplate renders as one support CTA sentence
   with the support icon, not as a bare list of links.
 - Markdown-style hash prefixes on recognized show-note headings are stripped
@@ -155,9 +158,10 @@ restored:
 2. Extend the show-note parser.
    - Treat a leading top-level `<ul>` or `<ol>` in `detail` as an implicit
      episode-notes link list only when each item is link-only.
-   - Convert it to `show_note_link_list` with `kind="links"` and
-     `show_heading=False`, so it renders under the page-level `Episode Notes`
-     heading instead of an invented visible `Links` heading.
+   - Convert it to `show_note_link_list` with `show_heading=False`, so it
+     renders under the page-level `Episode Notes` heading instead of an invented
+     visible `Links` heading. (With the icon feature it stores `kind="auto"` and
+     a materialized `icon="links"`.)
    - Preserve list order.
    - Preserve the first anchor as the primary link.
    - Preserve additional anchors as `extra_links`.
@@ -169,11 +173,11 @@ restored:
    - Convert the narrow legacy Markdown subset used by old Simplecast notes:
      `* [label](url)` or `- [label](url)` bullets and Markdown headings such
      as `#### SHAMELESS PLUGS`.
-   - Leave paragraph-style `Support the Show` sections as paragraph HTML so
-     the full sentence and embedded links render as authored.
-   - Decorate source-preserved `Support the Show` headings with the support
-     heart icon at detail-page render time, without changing their stored block
-     type or paragraph copy.
+   - Preserve paragraph-style `Support the Show` copy verbatim so the full
+     sentence and embedded links render as authored. With the icon feature (D5)
+     the heading is offloaded into a `show_note_heading` block carrying the
+     support icon, and the sentence is kept as the following `paragraph` block
+     (rather than a source-preserved raw `<h3>` decorated at render time).
    - Render the known three-link `Support the Show` boilerplate as a structured
      support block with the heading/icon, a linked CTA sentence, and no visible
      bare list.
@@ -250,6 +254,14 @@ restored:
    - `imports.0012_strip_markdown_hashes_from_show_note_headings` strips
      Markdown-style `#` prefixes from recognized show-note headings that were
      already stored in imported bodies.
+   - `imports.0013_sanitize_imported_show_note_html` and
+     `imports.0014_drop_unsafe_imported_source_links` harden already-stored
+     imported HTML (XSS/SSRF).
+   - `imports.0015_materialize_show_note_icons` (icon feature) materializes the
+     concrete `icon` field on every stored show-note block and normalises
+     system-derived `kind` values back to `"auto"`, preserving genuine editor
+     overrides. It is icon-only: it never re-parses or sanitizes stored HTML, so
+     authored RichText attributes are left untouched. Idempotent; forward-only.
    - Reverse migrations should be no-ops because reconstructing the exact old
      StreamField serialization is not required and would be risky.
 
@@ -271,8 +283,8 @@ restored:
 
 Add focused tests for:
 
-- A leading unheaded link-only HTML list converts to
-  `show_note_link_list(kind="links")`.
+- A leading unheaded link-only HTML list converts to a `show_note_link_list`
+  (`show_heading=False`, `kind="auto"`, materialized `icon="links"`).
 - A leading or headed HTML list with prose around links remains source HTML.
 - `mongodb-aaron-bassett`-style content converts the leading list while keeping
   later `Support the Show` structured.

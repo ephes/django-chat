@@ -147,8 +147,9 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
 - [x] **9j. Structured show-note block UI sample slice** — django-cast is pinned
       to `f795ed5f` for `CAST_POST_BODY_BLOCKS`, and Django Chat registers
       detail-only `show_note_sponsor` and `show_note_link_list` blocks. The
-      importer structures safe headed show-note sections into the two-block
-      schema, while feed rendering stays static (`h3`, `p`, `ul`, `li`, `a`)
+      importer structures safe headed show-note sections into the block schema
+      (a third block, `show_note_heading`, was added later in 9l), while feed
+      rendering stays static (`h3`, `p`, `ul`, `li`, `a`)
       without icon chrome. The public UI uses decorative dark-green circular
       heading icons sized to match contributor avatars, with dark-green custom
       bullets centered under the icon column and link text aligned to the
@@ -177,9 +178,10 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       instead of collapsing it into link-list items and rebuild affected detail
       blocks from stored source metadata; staging audit found 62 affected
       support-copy sections, and the source-vs-body text audit reports zero
-      remaining missing detail phrases. Source-preserved `Support the Show`
-      headings are decorated with the same heart icon at detail-page render
-      time, without converting their paragraph copy into link-list items. A
+      remaining missing detail phrases. Paragraph-style `Support the Show` copy
+      is preserved without being collapsed into link-list items (under the later
+      icon feature in 9l, the heading is offloaded into a `show_note_heading`
+      block with the support icon and the copy kept as a following paragraph). A
       final support-boilerplate repair keeps the support heart icon while
       rendering the 13 known three-link support lists as a CTA sentence instead
       of bare links. Migration `0012` strips Markdown-style hash prefixes from
@@ -191,6 +193,22 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       Markdown-like bodies; Playwright verified the original affected pages,
       complex-list edge cases, raw-Markdown legacy pages, already-structured
       simple sections, and the support-boilerplate sample.
+- [x] **9l. Automatic, editor-overridable show-note icons** — adds the
+      `show_note_heading` block (registered alongside sponsor/link-list) so
+      every real heading becomes an iconed block (D5), even non-convertible
+      ones (body preserved verbatim). Each block carries a `kind` (editor
+      intent, default `"auto"`, visual `IconChoiceWidget`) and a hidden,
+      system-set `icon`. `kind="auto"` derives the icon from the heading via
+      `resolve_icon_kind`; the concrete `icon` is **materialized at save time**
+      (block `clean()` covering admin Save + Preview, the importer, and the
+      data migration), with a render-time fallback for un-materialized JSON.
+      Icons are code-side SVG snippets driven by `ICON_REGISTRY` and the
+      `{% show_note_icon %}` tag; the picker has an admin-only JS live-preview
+      of the auto-resolved icon (progressive enhancement, public site JS-free).
+      Migration `0015_materialize_show_note_icons` brings existing data forward
+      (icon-only, no HTML re-parse; normalises system-derived `kind` to
+      `"auto"`, preserves genuine overrides). See
+      [`docs/structured-show-note-blocks-research.md`](structured-show-note-blocks-research.md).
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
