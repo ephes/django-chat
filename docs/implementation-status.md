@@ -35,9 +35,10 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       layout by passing `data-template=/podlove-player-template/` into
       django-cast's existing Podlove web component. The player still uses
       `cast:api:player_config` and `CAST_PODLOVE_PLAYER_THEMES`; the page
-      declares a light theme so browser dark-mode preferences do not add a
-      dark iframe strip below the compact controls. Facade mode remains
-      disabled.
+      declares a light theme so browser dark-mode preferences do not add a dark
+      iframe strip below the compact controls. Later performance work added a
+      Django Chat click-to-load facade so the external Podlove bundle and
+      iframe wait for hover, focus, tap, or click.
 - [x] **7. Smoke-level feed comparison against Simplecast RSS** — `f4fc8fc`.
       Exhaustive parity validation is deferred to production hardening per the
       PRD.
@@ -158,8 +159,8 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       `.playwright-verify/`. Paragraph-only `Support the Show` sections
       render as a single CTA list item to avoid duplicate links; multi-link
       sponsor lists are preserved as paragraph HTML instead of partially
-      structuring. Link-item `description` extraction is intentionally deferred.
-      Full-catalog backfill remains deferred.
+      structuring. Link-item `description` extraction is intentionally
+      deferred. The follow-up full-catalog backfill/repair landed in 9k.
 - [x] **9k. Show-note backfill repair** — follow-up plan documented in
       [`docs/show-note-backfill-repair.md`](show-note-backfill-repair.md).
       Repeatable repair where `just manage migrate` fixes existing
@@ -202,10 +203,11 @@ PRD section "Acceptance Criteria For The Research Spike".
 - [x] Hosts can log into Wagtail admin (`host-review-admin` bootstrap account
       on staging).
 - [x] Representative episode audio playback proven. Initially verified against
-      the 8/8 copied sample; staging now has the full live catalog copied
-      (202/202 live episodes with audio), CloudFront-served MP3s, and Podlove
-      `<podlove-player>` elements on detail pages with django-vite-loaded init
-      module.
+      the 8/8 copied sample; a 2026-04-29 staging catalog measurement reported
+      full copied-audio coverage for the then-current 202 live episodes. A
+      2026-06-02 public RSS probe found 205 current podcast items with 205
+      `audio/mpeg` enclosures. Detail pages render Podlove
+      `<podlove-player>` elements with django-vite-loaded init module.
 - [x] Public URL patterns `/`, `/episodes/`, `/episodes/<slug>`, and
       `/episodes/<slug>/transcript` represented or redirected. `/episodes/`
       and imported episode detail pages are live; generated django-cast
@@ -239,23 +241,22 @@ PRD section "Acceptance Criteria For The Research Spike".
 
 ## Where We Are
 
-Slice 6 visual polish + the post-deploy fixes that surfaced during
-staging review are landed on `main` in the series ending at `f132b76`
-on `2026-04-26`. The full-catalog importer slice is in the current worktree.
-Staging at `https://djangochat.staging.django-cast.com` is deployed and
-serving the polished site:
+The staging proof-of-concept slices through 9k have landed on `main`. Staging
+at `https://djangochat.staging.django-cast.com` is deployed and serving the
+polished site:
 
 - Black header with show artwork mark, single-column episode rows,
   Roboto type stack self-hosted, filterset search/date facets/ordering,
   branded error pages, favicon trio, OG/Twitter metadata.
-- Compact Podlove player on episode detail (no facade), themed with the
-  Django-green brand tokens via `CAST_PODLOVE_PLAYER_THEMES` and a local
-  `data-template` endpoint. The compact template keeps the transcript tab
-  available; the transcript tab uses Podlove's transcript-results list as the
-  only vertical scroller, avoiding a redundant outer panel scrollbar, while
-  non-transcript tabs retain a 420px internal panel cap. Episodes with an
-  attached django-cast `Transcript` expose transcript data through the Podlove
-  API and link to the themed transcript route.
+- Compact Podlove player on episode detail, themed with the Django-green brand
+  tokens via `CAST_PODLOVE_PLAYER_THEMES` and a local `data-template` endpoint.
+  The page renders a lightweight click-to-load facade first; the external
+  Podlove bundle and iframe load after hover, focus, tap, or click. The compact
+  template keeps the transcript tab available; the transcript tab uses Podlove's
+  transcript-results list as the only vertical scroller, avoiding a redundant
+  outer panel scrollbar, while non-transcript tabs retain a 420px internal panel
+  cap. Episodes with an attached django-cast `Transcript` expose transcript data
+  through the Podlove API and link to the themed transcript route.
 - Episode detail heroes render the static Django Chat SVG logo; imported show
   artwork stays attached to `Podcast.cover_image` for django-cast metadata,
   feed, and player API image paths.
@@ -276,8 +277,6 @@ serving the polished site:
   documented operator command for representative full-catalog host-review
   audio state.
 
-Branch is unpushed at the time of writing.
-
 **Ready for full host review:**
 
 The deployed staging site remains useful for internal smoke review of
@@ -287,11 +286,11 @@ transcript demos, documented production migration risks, pagination behavior
 that returns reviewers to the refreshed episode results, and a polished
 episode filter/search strip.
 
-As of 2026-04-29, staging has the full live catalog copied for host-review
-audio validation: `measure_django_chat_catalog
---host=djangochat.staging.django-cast.com` reports `live_episodes=202`,
-`with_audio=202`, and `missing_audio=0`. Both generated RSS routes return 200
-with 202 items.
+As of 2026-06-02, both generated staging RSS routes return HTTP 200 with 205
+items. The podcast RSS route also exposes 205 `audio/mpeg` enclosures. Earlier
+catalog measurement on 2026-04-29 reported full copied-audio coverage
+(`live_episodes=202`, `with_audio=202`, `missing_audio=0`) before later catalog
+growth.
 
 - After each deploy or destructive staging refresh, re-check whether staging
   still holds the intended full live catalog/audio state.
@@ -329,37 +328,27 @@ with 202 items.
    production migration risks + pre-review UI polish in place, the staging site
    is ready for host review. Send hosts the URL + `host-review-admin`
    credential.
-2. **Transcript detail page design.** Addressed during the contributors +
-   diarization slice (9h): the `/episodes/<slug>/transcript/` page reuses the
-   episode-detail grid/sidebar, renders bold speaker names + green mono
-   timestamps per segment, and keeps a "Back to Show Notes" link. Verified
-   readable on staging via Playwright for `breaking-django`. Re-check mobile
-   spacing if the segment list grows much longer.
-3. **Episode tags/taxonomy import decision.** Decide whether source keywords
+2. **Episode tags/taxonomy import decision.** Decide whether source keywords
    should also become Wagtail/taggit episode tags. Do not blindly mirror generic
    RSS keywords into public tags without a UI/editor use case and a preservation
    policy for manual Wagtail tags; if implemented later, prefer a filtered
    source-managed tag strategy that does not wipe editor-curated tags.
-4. **Structured show-note full-catalog backfill.** The first two-block UI slice
-   and the operator-facing dry-run/write backfill command are implemented.
-   The full-catalog repair now preserves complex list sections as source HTML
-   instead of forcing surrounding prose into link-item descriptions.
-5. **Live feed parity checker.** Add a command/script that compares the current
+3. **Live feed parity checker.** Add a command/script that compares the current
    Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
    generated or S3/CDN-served Django Chat podcast feed. It should fail on item
    count, missing/extra GUIDs, GUID order, publication-date, title, enclosure
    type, latest-episode, and copied-media byte-size regressions, with explicit
    warnings for approved differences such as moved enclosure URLs or equivalent
    duration formatting.
-6. **Performance optimization backlog.** Continue tracking concrete Lighthouse
+4. **Performance optimization backlog.** Continue tracking concrete Lighthouse
    and browser-network follow-ups in
    [`docs/lighthouse-performance.md#performance-optimization-backlog`](lighthouse-performance.md#performance-optimization-backlog).
    The HTML-discoverable `/episodes/` hero background has been verified on
-   staging. The current focus is deciding whether to defer view-transition
-   JavaScript, split or critical-inline CSS, and revisit render-blocking
-   `rel="expect"` hints. First-party CSS minification now runs during
-   `collectstatic`.
-7. **Production VPS, DNS cutover, URL redirects, podcast directory
+   staging, view-transition JavaScript is deferred, and first-party CSS
+   minification now runs during `collectstatic`. Remaining choices are whether
+   to split or critical-inline CSS and whether the render-blocking `rel="expect"`
+   hints should stay.
+5. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
    [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.
@@ -372,13 +361,13 @@ re-validation) all outbound fetches. See
 
 ## Next Action
 
-Proceed to host review after deploying the current pre-review cleanup. The
-latest-entries feed mitigation and Lighthouse/Web Vitals fixes have been
-deployed, staging catalog measurement confirms both RSS routes still return
-202 items, and the host-review public pages scored 98-100 in final mobile and
-desktop Lighthouse runs. The current cleanup adds production migration notes,
-pagination focus/scroll behavior, episode filter styling including custom
-date/select popovers, Wagtail 7.4, and an editable Wagtail `SponsorPage` at
+Proceed to host review. The latest-entries feed mitigation and Lighthouse/Web
+Vitals fixes have been deployed, a 2026-06-02 staging RSS probe confirms both
+RSS routes return 205 items, and the host-review public pages scored 98-100 in
+final mobile and desktop Lighthouse runs. The pre-review cleanup added
+production migration notes, pagination focus/scroll behavior, episode filter
+styling including custom date/select popovers, Wagtail 7.4, and an editable
+Wagtail `SponsorPage` at
 `/episodes/sponsor/` that replaces the upstream Google-Doc "Sponsor Us" link
 with an on-site pitch (stats, sponsorship slots, pricing, hosts bio, reviews
 reel, bundled PDF download). The page is a `max_count=1` singleton under the
@@ -388,5 +377,5 @@ Google-Doc URL for the internal route without touching the imported source
 fixture.
 
 Production migration (DNS, feed cutover, real production VPS) is
-explicitly deferred until host review (item 1) has happened and any
-perf fixes from the catalog measurement have landed.
+explicitly deferred until host review (item 1) has happened and the production
+feed/DNS plan is settled.

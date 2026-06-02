@@ -38,12 +38,12 @@ interaction with the player facade, keeping it out of the critical render path.
 Copied MP3 URLs respond with HTTP 200 and `audio/mpeg`. Audio playback is
 therefore available end-to-end on staging.
 
-As of 2026-04-29, staging has full-catalog metadata plus copied audio for every
-live imported podcast episode. `measure_django_chat_catalog
---host=djangochat.staging.django-cast.com` reports `live_episodes=202`,
-`with_audio=202`, and `missing_audio=0`; both generated RSS routes return HTTP
-200 with 202 items. The self-hosted podcast RSS URL is available from
-`/episodes/feed/` and advertised through RSS auto-discovery links.
+As of 2026-06-02, both generated staging RSS routes return HTTP 200 with 205
+items, and the podcast RSS route exposes 205 `audio/mpeg` enclosures. Earlier
+catalog measurement on 2026-04-29 reported full copied-audio coverage
+(`live_episodes=202`, `with_audio=202`, `missing_audio=0`) before later catalog
+growth. The self-hosted podcast RSS URL is available from `/episodes/feed/` and
+advertised through RSS auto-discovery links.
 
 Transcript handling is demonstrated with Voxhelm-generated django-cast
 transcripts. Each imported transcript has Podlove JSON, WebVTT, and DOTe
