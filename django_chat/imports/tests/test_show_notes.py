@@ -131,24 +131,32 @@ def test_structured_show_note_detail_blocks_preserve_complex_link_sections() -> 
     blocks, changed = structured_show_note_detail_blocks(html)
 
     assert changed is True
+    # The Links section has a non-convertible multi-anchor item, so D5 offloads
+    # the heading (with an icon) and preserves the list verbatim as a paragraph.
     assert [name for name, _value in blocks] == [
+        "show_note_heading",
         "paragraph",
         "show_note_link_list",
         "show_note_link_list",
         "show_note_link_list",
         "show_note_sponsor",
     ]
-    assert blocks[0][1] == (
-        "<h3>🔗 Links</h3>"
+    assert blocks[0][1]["heading"] == "🔗 Links"
+    assert blocks[0][1]["kind"] == "auto"
+    assert blocks[0][1]["icon"] == "links"
+    assert blocks[1][1] == (
         '<ul><li><a href="https://example.com/one">Primary</a> and '
         '<a href="https://example.com/two">Secondary</a></li></ul>'
     )
-    assert blocks[1][1]["kind"] == "projects"
-    assert blocks[2][1]["kind"] == "books"
-    assert blocks[2][1]["items"][0]["title"] == "Book by Author"
-    assert blocks[3][1]["kind"] == "youtube"
-    sponsor = blocks[4][1]
+    assert blocks[2][1]["kind"] == "auto"
+    assert blocks[2][1]["icon"] == "projects"
+    assert blocks[3][1]["icon"] == "books"
+    assert blocks[3][1]["items"][0]["title"] == "Book by Author"
+    assert blocks[4][1]["icon"] == "youtube"
+    sponsor = blocks[5][1]
     assert sponsor["heading"] == "Sponsor"
+    assert sponsor["kind"] == "auto"
+    assert sponsor["icon"] == "sponsor"
     assert sponsor["sponsor_name"] == "Buttondown"
     assert sponsor["sponsor_url"] == "https://buttondown.com/django"
     assert "Sponsored by" in sponsor["copy"]
@@ -171,17 +179,22 @@ def test_structured_show_note_detail_blocks_convert_legacy_kind_variants() -> No
     blocks, changed = structured_show_note_detail_blocks(html)
 
     assert changed is True
-    assert [value["kind"] for name, value in blocks if name == "show_note_link_list"] == [
+    # All structured link lists store kind="auto"; the icon carries the label.
+    assert all(value["kind"] == "auto" for name, value in blocks if name == "show_note_link_list")
+    assert [value["icon"] for name, value in blocks if name == "show_note_link_list"] == [
         "shameless_plugs",
         "groups",
         "sponsors",
         "sponsoring_options",
     ]
-    support = blocks[0]
-    assert support[0] == "paragraph"
-    assert support[1] == (
-        "<h3>Support the Show</h3>"
-        '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>'
+    # D5: the paragraph-only "Support the Show" heading is offloaded with an icon,
+    # its copy preserved verbatim as a following paragraph block.
+    assert blocks[0][0] == "show_note_heading"
+    assert blocks[0][1]["heading"] == "Support the Show"
+    assert blocks[0][1]["icon"] == "support"
+    assert blocks[1] == (
+        "paragraph",
+        '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>',
     )
     assert blocks[-1][1]["items"][0]["url"] == "https://revsys.com"
 
@@ -193,17 +206,18 @@ def test_support_paragraph_preserves_embedded_link_copy() -> None:
     )
 
     assert changed is True
-    assert blocks == [
-        (
-            "paragraph",
-            "<h3>Support the Show</h3>"
-            '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>',
-        )
-    ]
-    html = blocks[0][1]
-    assert html.count('href="https://example.com/support"') == 1
-    assert BeautifulSoup(html, "html.parser").get_text(" ", strip=True) == (
-        "Support the Show Support us on Patreon ."
+    # D5 offloads the heading (with an icon) and keeps the link copy verbatim.
+    assert blocks[0][0] == "show_note_heading"
+    assert blocks[0][1]["heading"] == "Support the Show"
+    assert blocks[0][1]["icon"] == "support"
+    assert blocks[1] == (
+        "paragraph",
+        '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>',
+    )
+    copy_html = blocks[1][1]
+    assert copy_html.count('href="https://example.com/support"') == 1
+    assert BeautifulSoup(copy_html, "html.parser").get_text(" ", strip=True) == (
+        "Support us on Patreon ."
     )
 
 
@@ -214,13 +228,14 @@ def test_markdown_prefixed_support_heading_normalizes_without_hashes() -> None:
     )
 
     assert changed is True
-    assert blocks == [
-        (
-            "paragraph",
-            "<h3>Support the Show</h3>"
-            '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>',
-        )
-    ]
+    # The markdown "###" prefix is stripped; D5 offloads the cleaned heading.
+    assert blocks[0][0] == "show_note_heading"
+    assert blocks[0][1]["heading"] == "Support the Show"
+    assert blocks[0][1]["icon"] == "support"
+    assert blocks[1] == (
+        "paragraph",
+        '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>',
+    )
 
 
 def test_support_boilerplate_link_list_renders_as_icon_heading_and_copy() -> None:
@@ -236,7 +251,8 @@ def test_support_boilerplate_link_list_renders_as_icon_heading_and_copy() -> Non
     assert changed is True
     assert [name for name, _value in blocks] == ["show_note_link_list"]
     value = blocks[0][1]
-    assert value["kind"] == "support"
+    assert value["kind"] == "auto"
+    assert value["icon"] == "support"
     assert value["show_items"] is False
     assert "purchasing a book" in value["intro"]
     assert "Django News newsletter" in value["intro"]
@@ -246,6 +262,7 @@ def test_support_boilerplate_link_list_renders_as_icon_heading_and_copy() -> Non
         {
             "value": _template_value(value),
             "render_for_feed": False,
+            "display_kind": value["icon"],
         },
     )
     soup = BeautifulSoup(html, "html.parser")
@@ -307,15 +324,21 @@ def test_unheaded_leading_list_with_linkless_item_stays_source_html() -> None:
         '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>'
     )
 
-    assert changed is False
-    assert [name for name, _value in blocks] == ["paragraph"]
+    # The linkless leading list stays raw; the "Support the Show" heading is
+    # offloaded by D5 with its copy preserved as a following paragraph.
+    assert changed is True
+    assert [name for name, _value in blocks] == ["paragraph", "show_note_heading", "paragraph"]
     assert blocks[0][1] == (
         "<ul>"
         '<li><a href="https://example.com/one">One</a></li>'
         "<li>Missing link stays legacy.</li>"
         "</ul>"
-        "<h3>Support the Show</h3>"
-        '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>'
+    )
+    assert blocks[1][1]["heading"] == "Support the Show"
+    assert blocks[1][1]["icon"] == "support"
+    assert blocks[2] == (
+        "paragraph",
+        '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>',
     )
 
 
@@ -339,14 +362,21 @@ def test_raw_markdown_like_notes_convert_to_structured_blocks() -> None:
     )
 
     assert changed is True
-    assert [name for name, _value in blocks] == ["show_note_link_list", "paragraph"]
+    assert [name for name, _value in blocks] == [
+        "show_note_link_list",
+        "show_note_heading",
+        "paragraph",
+    ]
     assert blocks[0][1]["show_heading"] is False
     assert [item["title"] for item in blocks[0][1]["items"]] == [
         "Michael Herman personal site",
         "TestDriven.io",
     ]
-    assert blocks[1][1] == (
-        "<h3>SHAMELESS PLUGS</h3>"
+    # The Shameless Plugs list has prose-prefixed items (non-convertible), so D5
+    # offloads the heading with an icon and keeps the list as a raw paragraph.
+    assert blocks[1][1]["heading"] == "SHAMELESS PLUGS"
+    assert blocks[1][1]["icon"] == "shameless_plugs"
+    assert blocks[2][1] == (
         "<ul><li>William's "
         '<a href="https://wsvincent.com/books">books on Django</a></li>'
         '<li>Carlton\'s website <a href="https://noumenal.es/">Noumenal</a></li></ul>'
@@ -394,16 +424,8 @@ def test_no_source_unchanged_detail_does_not_report_action_counters() -> None:
             "value": [
                 {
                     "type": "paragraph",
-                    "value": "<ul><li>No link here.</li></ul>",
-                    "id": "linkless-list",
-                },
-                {
-                    "type": "paragraph",
-                    "value": (
-                        "<h3>Support the Show</h3>"
-                        '<p>Support us on <a href="https://example.com">Patreon</a>.</p>'
-                    ),
-                    "id": "support-copy",
+                    "value": "<p>Just ordinary prose with no headings or lists.</p>",
+                    "id": "prose",
                 },
             ],
             "id": "detail",
@@ -431,35 +453,55 @@ def test_multi_link_sponsor_list_stays_unstructured() -> None:
 
     blocks, changed = structured_show_note_detail_blocks(html)
 
+    # A multi-link sponsor list is not convertible to a sponsor block, so D5
+    # offloads the heading (with an icon) and keeps the links verbatim.
     assert changed is True
-    assert blocks == [
-        (
-            "paragraph",
-            "<h3>Sponsor</h3>"
-            "<ul>"
-            '<li><a href="https://example.com/one">One</a></li>'
-            '<li><a href="https://example.com/two">Two</a></li>'
-            "</ul>",
-        )
-    ]
+    assert [name for name, _value in blocks] == ["show_note_heading", "paragraph"]
+    assert blocks[0][1]["heading"] == "Sponsor"
+    assert blocks[0][1]["icon"] == "sponsor"
+    assert blocks[1] == (
+        "paragraph",
+        "<ul>"
+        '<li><a href="https://example.com/one">One</a></li>'
+        '<li><a href="https://example.com/two">Two</a></li>'
+        "</ul>",
+    )
 
 
-def test_structured_show_note_detail_blocks_preserve_unsupported_sections() -> None:
+def test_structured_show_note_detail_blocks_offload_unsupported_sections() -> None:
     html = (
         "<p>Intro copy stays.</p><h3>Links</h3><ul><li>Missing link stays unstructured.</li></ul>"
     )
 
     blocks, changed = structured_show_note_detail_blocks(html)
 
+    # D5: the unconvertible Links section becomes an iconed heading block, with
+    # the intro and list preserved verbatim around it.
+    assert changed is True
+    assert [name for name, _value in blocks] == ["paragraph", "show_note_heading", "paragraph"]
+    assert blocks[0][1] == "<p>Intro copy stays.</p>"
+    assert blocks[1][1]["heading"] == "Links"
+    assert blocks[1][1]["icon"] == "links"
+    assert blocks[2][1] == "<ul><li>Missing link stays unstructured.</li></ul>"
+
+
+def test_empty_heading_is_preserved_as_raw_content() -> None:
+    # An empty heading must not become a show_note_heading with a blank
+    # (required) heading; D5 only offloads headings with non-empty text.
+    blocks, changed = structured_show_note_detail_blocks("<h3></h3><p>Copy</p>")
+
     assert changed is False
-    assert blocks == [
-        (
-            "paragraph",
-            "<p>Intro copy stays.</p>"
-            "<h3>Links</h3>"
-            "<ul><li>Missing link stays unstructured.</li></ul>",
-        )
-    ]
+    assert blocks == [("paragraph", "<h3></h3><p>Copy</p>")]
+
+
+def test_empty_heading_between_sections_is_not_offloaded() -> None:
+    blocks, changed = structured_show_note_detail_blocks("<h3></h3><p>x</p><h3>Outro</h3><p>y</p>")
+
+    assert [name for name, _value in blocks] == ["paragraph", "show_note_heading", "paragraph"]
+    assert blocks[0][1] == "<h3></h3><p>x</p>"
+    assert blocks[1][1]["heading"] == "Outro"
+    assert blocks[1][1]["icon"] == "default"
+    assert blocks[2][1] == "<p>y</p>"
 
 
 def test_structure_episode_body_show_notes_is_idempotent() -> None:

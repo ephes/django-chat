@@ -129,24 +129,33 @@ def test_sample_import_structures_detail_show_note_sections() -> None:
     latest_detail = _body_children(latest_metadata.episode, "detail")
     structured_types = [child["type"] for child in latest_detail]
 
+    # The Links section has a multi-anchor item (django-tasks + Jake's GitHub),
+    # so D5 offloads the heading (with an icon) and keeps the list verbatim.
     assert structured_types == [
+        "show_note_heading",
         "paragraph",
         "show_note_link_list",
         "show_note_link_list",
         "show_note_link_list",
         "show_note_sponsor",
     ]
+    assert all(
+        child["value"]["kind"] == "auto"
+        for child in latest_detail
+        if child["type"] in {"show_note_link_list", "show_note_sponsor", "show_note_heading"}
+    )
     assert [
-        child["value"]["kind"] for child in latest_detail if child["type"] == "show_note_link_list"
+        child["value"]["icon"] for child in latest_detail if child["type"] == "show_note_link_list"
     ] == ["projects", "books", "youtube"]
-    links = latest_detail[0]["value"]
-    assert "<h3>🔗 Links</h3>" in links
+    assert latest_detail[0]["value"]["heading"] == "🔗 Links"
+    assert latest_detail[0]["value"]["icon"] == "links"
+    links = latest_detail[1]["value"]
     assert "django-tasks" in links
     assert "and" in links
     assert "Jake's GitHub" in links
-    books = latest_detail[2]["value"]
+    books = latest_detail[3]["value"]
     assert _list_values(books["items"])[0]["title"] == "The Passage by Justin Cronin"
-    sponsor = latest_detail[4]["value"]
+    sponsor = latest_detail[5]["value"]
     assert sponsor["heading"] == "Sponsor"
     assert sponsor["sponsor_name"] == "Buttondown"
     assert sponsor["sponsor_url"] == "https://buttondown.com/django"
@@ -154,19 +163,26 @@ def test_sample_import_structures_detail_show_note_sections() -> None:
     assert "<p>🔗 Links</p>" in latest_metadata.simplecast_long_description_html
     assert "<p>🤝 Sponsor</p>" in latest_metadata.simplecast_long_description_html
 
+    # D5 offloads non-convertible section headings into iconed heading blocks,
+    # with their list content preserved verbatim as following paragraphs.
     first_metadata = EpisodeSourceMetadata.objects.get(episode_number=1)
     first_detail = _body_children(first_metadata.episode, "detail")
-    assert first_detail[-1]["type"] == "paragraph"
-    assert "SHAMELESS PLUGS" in first_detail[-1]["value"]
-    assert "Free tutorials and premium books" in first_detail[-1]["value"]
+    first_headings = [
+        c["value"]["heading"] for c in first_detail if c["type"] == "show_note_heading"
+    ]
+    first_text = "".join(c["value"] for c in first_detail if c["type"] == "paragraph")
+    assert "SHAMELESS PLUGS" in first_headings
+    assert "Free tutorials and premium books" in first_text
     assert "<h4>SHAMELESS PLUGS</h4>" in first_metadata.simplecast_long_description_html
 
     second_metadata = EpisodeSourceMetadata.objects.get(episode_number=2)
     second_detail = _body_children(second_metadata.episode, "detail")
-    assert second_detail[-1]["type"] == "paragraph"
-    assert "<h3>Groups</h3>" in second_detail[-1]["value"]
-    assert "Subreddits:" in second_detail[-1]["value"]
-    assert "William's" in second_detail[-1]["value"]
+    second_headings = [
+        c["value"]["heading"] for c in second_detail if c["type"] == "show_note_heading"
+    ]
+    second_text = "".join(c["value"] for c in second_detail if c["type"] == "paragraph")
+    assert "Groups" in second_headings
+    assert "William's" in second_text
     assert "<h4>Groups</h4>" in second_metadata.simplecast_long_description_html
 
 

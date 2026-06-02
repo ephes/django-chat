@@ -137,8 +137,13 @@ def test_show_note_repair_restores_complex_source_detail_html() -> None:
     detail = _body_children(episode, "detail")
     assert result.body_rows_changed == 1
     assert result.source_detail_blocks_restored == 1
-    assert detail[0]["type"] == "paragraph"
-    assert detail[0]["value"] == metadata.simplecast_long_description_html
+    # D5: the restored source heading is offloaded into an iconed heading block,
+    # with the prose-prefixed list preserved verbatim as a following paragraph.
+    assert [c["type"] for c in detail] == ["show_note_heading", "paragraph"]
+    assert detail[0]["value"]["heading"] == "SHAMELESS PLUGS"
+    assert detail[0]["value"]["icon"] == "shameless_plugs"
+    assert "LearnDjango" in detail[1]["value"]
+    assert "Noumenal" in detail[1]["value"]
 
 
 @pytest.mark.django_db
@@ -255,8 +260,12 @@ def test_show_note_repair_restores_support_paragraph_copy() -> None:
     assert result.body_rows_changed == 1
     assert result.source_detail_blocks_restored == 1
     assert result.support_copy_sections_restored == 1
-    assert detail[0]["type"] == "paragraph"
-    assert detail[0]["value"] == metadata.simplecast_long_description_html
+    # D5: the support heading is offloaded with an icon, its link copy preserved.
+    assert [c["type"] for c in detail] == ["show_note_heading", "paragraph"]
+    assert detail[0]["value"]["heading"] == "Support the Show"
+    assert detail[0]["value"]["icon"] == "support"
+    assert "Please visit" in detail[1]["value"]
+    assert detail[1]["value"].count("href=") == 3
 
 
 @pytest.mark.django_db
@@ -325,7 +334,8 @@ def test_show_note_repair_restores_support_boilerplate_copy() -> None:
     assert result.source_detail_blocks_restored == 1
     assert result.support_copy_sections_restored == 1
     assert detail[0]["type"] == "show_note_link_list"
-    assert detail[0]["value"]["kind"] == "support"
+    assert detail[0]["value"]["kind"] == "auto"
+    assert detail[0]["value"]["icon"] == "support"
     assert detail[0]["value"]["show_items"] is False
     assert "purchasing a book" in detail[0]["value"]["intro"]
 
