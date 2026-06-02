@@ -581,6 +581,74 @@ A recurring guest's link is shared across all their episodes; set
 `EpisodeContributor.link` on each of their assignments (e.g. Jeff Triplett on both
 the survey and the DjangoCon-Europe-recap episodes).
 
+### 5c. Contributor strip ordering (guests → Will → Carlton)
+
+The "Hosts and Guests" strip (and the RSS `<podcast:person>` order) renders
+`episode.visible_contributor_assignments`, which is just the episode's
+`EpisodeContributor` rows in **`sort_order`** — django-cast applies **no**
+role-based sorting. The site convention is **guests first (in their existing
+relative order), then Will Vincent, then Carlton Gibson**.
+
+The step-4 recipe creates assignments hosts-first, so new episodes land
+hosts-first and must be re-ordered. Do it with the idempotent, dry-run-first
+operator script (a read-only run also **audits** every live episode for missing
+visible contributors — all should have them):
+
+```python
+# /home/django-chat/reorder_contributors.py  (run with .venv/bin/python; --apply to write)
+import sys
+sys.path.insert(0, "/home/django-chat/site")
+import os, django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.production")
+django.setup()
+from cast.models import Episode, Transcript
+
+HOST_ORDER = {"will-vincent": 1, "carlton-gibson": 2}  # guests sort to tier 0
+APPLY = "--apply" in sys.argv
+
+def key(ec):
+    tier = HOST_ORDER.get(ec.contributor.slug, 0)
+    cur = ec.sort_order if ec.sort_order is not None else 10**6
+    return (tier, cur, ec.pk)
+
+changed, missing = 0, []
+for ep in Episode.objects.filter(live=True).order_by("pk"):
+    rows = list(ep.contributor_assignments.select_related("contributor").all())
+    if not [r for r in rows if r.contributor and r.contributor.visible]:
+        missing.append(ep); continue
+    ordered = sorted(rows, key=key)
+    desired = {r.pk: i for i, r in enumerate(ordered)}
+    if all(r.sort_order == desired[r.pk] for r in rows):
+        continue
+    changed += 1
+    print("ep %s %s: %s" % (ep.pk, ep.slug,
+        " | ".join("%d.%s(%s)" % (desired[r.pk], r.contributor.display_name, r.role) for r in ordered)))
+    if APPLY:
+        for r in ordered:
+            if r.sort_order != desired[r.pk]:
+                r.sort_order = desired[r.pk]; r.save(update_fields=["sort_order"])
+
+print("\n%s: %d episode(s) need reordering" % ("APPLIED" if APPLY else "DRY-RUN", changed))
+print("Live episodes with NO visible contributors: %d" % len(missing))
+for ep in missing:
+    a = ep.podcast_audio
+    t = Transcript.objects.filter(audio=a).first() if a else None
+    print("  post %s audio %s  %s  transcript=%s" % (ep.pk, a.pk if a else None, ep.slug, bool(t)))
+```
+
+```bash
+# dry-run first (read-only), then --apply:
+.venv/bin/python /home/django-chat/reorder_contributors.py
+.venv/bin/python /home/django-chat/reorder_contributors.py --apply
+```
+
+> **Status (2026-06-02): applied to all of staging.** 188 episodes reordered to
+> guests → Will → Carlton; the missing-contributor audit reported **0** live
+> episodes without visible contributors. Multi-guest episodes keep their existing
+> guest order (e.g. `Elaine Wong | Jon Banafato`). Re-run `--apply` after adding a
+> new episode's contributors, or this is the one place a small django-chat
+> render-time sort would make the order permanent without the manual step.
+
 ### 6. Verify
 
 Public checks (no auth):
@@ -828,14 +896,16 @@ loops (e.g. `"Aliens of Glee" ×176`).
   Detect snippet; the top sentence-length cue should drop back to normal speech
   counts). None of the candidates are contributor-mapped yet, so the
   `Speaker N` renumbering caveat does not bite for this batch.
-- **Status (2026-06-01): RESOLVED — every looped transcript regenerated and
-  verified loop-free.** All 17 candidates below were regenerated with the
-  anti-loop ASR, plus **8 further loops found by a full-corpus rescan** (see
-  [Resolution](#resolution-2026-06-01-all-asr-loops-cleared) below). A full
-  205-transcript scan now finds **zero** sentence-length repetition loops at any
-  threshold. Several candidates *had* since been contributor-mapped by later
-  batches, so the renumbering caveat **did** bite — resolved with a deterministic
-  re-map (see below), not manual re-identification.
+- **Status (2026-06-01): all known loops and reproducible echoes are cleared.**
+  All 17 candidates below were regenerated with the anti-loop ASR, plus **10
+  further loops found by full-corpus rescans** (8 in the
+  [Resolution](#resolution-2026-06-01-all-asr-loops-cleared) pass + 2 in
+  [Round 2](#round-2-2026-06-01-deeper-rescan-reproducible-echoes-a-voxhelm-overload-and-a-storage-hazard)).
+  Every **sentence-length / minute-scale loop** is gone, and audio 23's
+  reproducible sub-second echo was restored from backup and collapsed in place
+  with write-new-then-delete-old artifact replacement. Contributor-mapped
+  candidates were re-labelled with a deterministic time-overlap re-map (see
+  below), not manual re-identification.
 
 #### Staging regeneration candidates (re-scanned 2026-05-30, fix now deployed)
 
@@ -940,6 +1010,83 @@ strip + Podlove transcript tab + `/transcript/` page all pass for all four.
 > `"Aliens of Glee"`, audio 30's zero-duration cues) all hide from a naive
 > top-cue/length scan.
 
+#### Round 2 (2026-06-01): deeper rescan, reproducible echoes, a Voxhelm overload, and a storage hazard
+
+A second, more sensitive sweep (any non-filler cue `len >= 10` repeated in a
+**consecutive run** `>= 3`, regardless of total count) found **9 more affected
+transcripts** the first pass missed, splitting into two classes:
+
+- **2 genuine loops** (real speech lost — regenerated): audio **28**
+  (`sticking-with-django-florian-apolloner`, `"Right. So it's not like…"` ×5 as
+  30s segments ≈ **2 min**) and audio **46** (`djangos-evolution-jacob-kaplan-moss`,
+  ≈22s). Both regenerated clean; the audio-28 region recovered real
+  Ansible-secrets discussion.
+- **7 echo artifacts** (a real sentence emitted 3–7× as **zero/near-zero-duration
+  cues** inside a sub-3-second blip — visible as repeated lines on the transcript
+  page, but no speech lost): audio 3, 11, 21, 23, 27, 39, 50. Six regenerated
+  clean; the labeled ones (3 = the two-guest Elaine Wong/Jon Banafato episode,
+  11 = Brian Okken, 21 = Roman Pronskiy) were re-mapped by the alignment method.
+
+Four new lessons from this round:
+
+1. **Concurrent regen lanes overload the serial Voxhelm backend.** Running **3**
+   lanes (9 jobs) at once produced `error audio=N: Remote worker reported a
+   terminal failure` for **5 of 9** jobs (the earlier 2-lane round had zero
+   failures). The timed-out/failed audios keep their **old** transcript (no row
+   written, or an unchanged one). Fix: re-submit failures in a **single serial
+   lane** (`--force`, all `--audio-id` in one process) — gentlest on the backend.
+   It cleared all retries with `errors=0`.
+
+2. **Some echoes are REPRODUCIBLE — regeneration cannot fix them.** Audio **23**
+   (`event-sourcing-chris-may`, `"All right, you go." ×3` over ~1.5s) came back
+   **byte-identical** on two separate `--force` runs (the lane logs even say
+   `updated audio=23 … errors=0`, but the stored text is unchanged). Voxhelm
+   deterministically re-emits the triplicate. Such an artifact must be fixed
+   **in place**, not by regeneration.
+
+3. **In-place lossless collapse for reproducible echoes** (`collapse_dups.py`,
+   operator artifact): collapse any run of `>= 2` consecutive identical-text cues
+   (`len >= 10`) to one — keep the first cue, extend its end to the last cue's
+   end, drop the rest — applied consistently to **podlove + dote + vtt** (the
+   three artifacts are independent files; VTT needs WEBVTT cue parsing, stripping
+   `<v …>` voice tags before comparing). Lossless (the words survive once),
+   label-preserving, deterministic. For audio 23 this removes exactly 2 cues per
+   artifact (607 → 605).
+
+4. **HAZARD: delete-then-write file replacement can orphan a transcript file on a
+   storage write failure.** The codebase's `_replace_file` (and the first
+   `collapse_dups.py`) does `field.delete(save=False)` **then** `field.save(...)`.
+   If the object store rejects the upload, the old file is already gone → the
+   transcript row points at a **missing** file. This bit us during a live
+   **object-store write outage** (`botocore … PutObject … InternalError (reached
+   max retries)` — reads kept working, writes failed for an extended period):
+   audio 23's `podlove` file was deleted, the re-upload failed, and its transcript
+   went to **0 segments**. Mitigation: **write the new object first (under a fresh
+   name), persist the field, then delete the old object** — never leave a window
+   where neither exists. Always keep a backup (`backup.py` →
+   `/home/django-chat/transcript-backups/`) before any in-place edit.
+
+> **Resolved final item (2026-06-01): audio 23 restored and collapsed.** Audio
+> 23's missing `podlove` artifact was restored from
+> `transcript-backups/audio-23/podlove_data.json` (607 segments), then the
+> reproducible `"All right, you go." ×3` echo was collapsed in place across
+> `podlove`, `dote`, and `vtt` (607 → 605). The operator scripts were updated to
+> avoid the delete-then-write hazard: `collapse_dups.py` writes fresh objects
+> first, persists the DB fields, then deletes old objects. During the final
+> repair, django-storages' `upload_fileobj` path still returned S3
+> `InternalError`, so `restore23.py`/`collapse_dups.py` used direct S3
+> `PutObject` writes for this data operation. Final full-corpus scans:
+> `runscan.py` → **0 affected transcripts**; `deep_scan.py` → **0 suspicious
+> phrase-cues**. Audio 23 now has **605** real segments, one occurrence of
+> `"All right, you go."`, and unchanged raw `Speaker 1/2/3` labels.
+
+**Alignment-remap, now proven at scale.** Across both rounds, 7 contributor-mapped
+episodes (14, 17, 18, 20, 3, 11, 21) were re-labeled purely by time-aligning the
+fresh `Speaker N` transcript against the backed-up named one — overlap was 90–100%
+per speaker every time, including the **two-guest** episode (audio 3: Elaine Wong
+vs Jon Banafato separated cleanly) and **non-standard speaker ordering** (audio 21:
+Carlton = Speaker 1, Will = Speaker 2). No host-swap guessing was ever needed.
+
 ### Additional batch (2026-05-30) — contributor links + seven more episodes
 
 This batch added the **contributor-link layer** (see [§5b](#5b-contributor-links-strip-anchors--podcastperson-href))
@@ -998,6 +1145,64 @@ identify→map→link→seed pass. Verified by per-episode
   (`django-deployments-eric-matthes-ep108-replay`, ×346) and audio 57
   (`pycharms-year-of-django-paul-everitt`, ×195) are badly looped; audio 52
   (`understand-django-matt-layman`) has a minor loop (×38).
+
+### Additional batch (2026-06-01) — staging contributor/mapping completion
+
+Completed the remaining staging raw-label backlog with **DB-only** contributor
+assignments plus approved `TranscriptSpeakerMapping` rows. No transcript
+artifacts were regenerated or rewritten. Speaker identification used the public
+Simplecast named transcript aligned by timestamp against the staging
+`Speaker N` transcript; where Simplecast had no transcript or weak
+`Unknown Speaker` blocks, intro/outro self-identification and staging transcript
+windows were used as corroboration.
+
+Coverage:
+
+- The already-diarized-but-unmapped backlog from audio 22 through audio 132.
+- The final read-order backlog: audios 133-152, audios 6-8, and audios 153-201.
+- Host-only topic episodes were assigned only Will/Carlton; guest episodes were
+  assigned the episode guest(s) plus the participating host(s).
+- Host contributor links were kept at the staging standard: Will Vincent →
+  `mastodon https://fosstodon.org/@wsvincent`, Carlton Gibson →
+  `mastodon https://chaos.social/@carlton`.
+
+Public verification was run after each write batch against both the Podlove API
+and `/transcript/` page for the changed episodes: all returned HTTP 200, no
+literal `Speaker N` label was present, and the expected public speaker names
+and contributor arrays were present. A final DB scan over live episodes with
+transcripts reported:
+
+```text
+raw_episodes 186
+default_unmapped_raw 0
+with_no_contributors 0
+reviewed_unmapped_raw 12
+```
+
+The 12 remaining raw labels are intentional, reviewed-unmapped exceptions. They
+preserve transcript text without exposing the generic label publicly:
+
+- audio 2 `boost-your-github-dx-adam-johnson`: `Speaker 4` (1 spurious segment)
+- audio 9 `djangocon-europe-recap-other-news-jeff-triplett`: `Speaker 2` (2
+  spurious segments)
+- audio 16 `django-20-years-later-adrian-holovaty-g7z78kc0`: `Speaker 4` (5
+  spurious segments)
+- audio 27 `django-and-rust-tooling-lily-foote`: `Speaker 4` (split
+  host-overlap/ambiguous cluster)
+- audio 56 `becoming-a-django-fellow-natalia-bidart`: `Speaker 2`-`Speaker 6`
+  (Djangonaut Space pre-recorded ad-only labels, not episode contributors)
+- audio 82 `djangocon-europe-2022-kojo-idrissa`: `Speaker 4` (split host
+  cluster)
+- audio 94 `django-the-good-parts-james-bennett`: `Speaker 4`
+  (split/ambiguous cluster)
+- audio 122 `django-girls-rachell-calhoun`: `Speaker 4` (split host cluster)
+
+Two final-batch mappings are best-effort because the raw diarization labels are
+mixed, but mapping them keeps the public contributor/speaker contract intact:
+audio 191 `nicholas-tollervey` maps `Speaker 3` to Carlton Gibson; audio 194
+`pathai-robby-grodin` maps `Speaker 1` to Will Vincent and `Speaker 2` to Robby
+Grodin. Revisit these by ear or regenerate if exact per-segment attribution
+matters.
 
 ## Operational follow-ups
 
