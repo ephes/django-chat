@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Iterable
+from contextlib import suppress
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import Any, cast
 from urllib.parse import quote, urljoin
 from urllib.request import Request, urlopen
+from uuid import uuid4
 
 from cast.models import Episode
 from django.apps import apps
@@ -39,6 +41,14 @@ class StagingTranscriptImportResult:
     @property
     def skipped_count(self) -> int:
         return sum(1 for item in self.items if not item.imported)
+
+
+@dataclass(frozen=True)
+class ReplacedFile:
+    old_storage: Any
+    old_name: str
+    new_storage: Any
+    new_name: str
 
 
 def import_staging_transcripts(
@@ -134,22 +144,34 @@ def import_staging_transcript_for_episode(
     transcript_model = cast(Any, apps.get_model("cast", "Transcript"))
     transcript, _created = transcript_model.objects.get_or_create(audio=episode.podcast_audio)
     podlove = {"transcripts": segments}
-    _replace_text_file(
-        transcript.podlove,
-        f"django-chat-staging/{episode_slug}.podlove.json",
-        podlove,
-    )
-    _replace_file(
-        transcript.vtt,
-        f"django-chat-staging/{episode_slug}.vtt",
-        ContentFile(podlove_segments_to_vtt(segments)),
-    )
-    _replace_text_file(
-        transcript.dote,
-        f"django-chat-staging/{episode_slug}.dote.json",
-        podlove_segments_to_dote(segments),
-    )
-    transcript.save(update_fields=["podlove", "vtt", "dote"])
+    replacements = []
+    try:
+        replacements.append(
+            _replace_text_file(
+                transcript.podlove,
+                f"django-chat-staging/{episode_slug}.podlove.json",
+                podlove,
+            )
+        )
+        replacements.append(
+            _replace_file(
+                transcript.vtt,
+                f"django-chat-staging/{episode_slug}.vtt",
+                ContentFile(podlove_segments_to_vtt(segments)),
+            )
+        )
+        replacements.append(
+            _replace_text_file(
+                transcript.dote,
+                f"django-chat-staging/{episode_slug}.dote.json",
+                podlove_segments_to_dote(segments),
+            )
+        )
+        transcript.save(update_fields=["podlove", "vtt", "dote"])
+    except Exception:
+        _delete_replacement_files(replacements, use_new=True)
+        raise
+    _delete_replacement_files(replacements, use_new=False)
 
     return StagingTranscriptImportItem(
         slug=episode_slug,
@@ -231,14 +253,48 @@ def _normalized_segments(value: Any) -> list[JsonObject]:
     return segments
 
 
-def _replace_text_file(field: Any, name: str, data: JsonObject) -> None:
-    _replace_file(field, name, ContentFile(json.dumps(data, ensure_ascii=False, indent=2) + "\n"))
+def _replace_text_file(field: Any, name: str, data: JsonObject) -> ReplacedFile | None:
+    return _replace_file(
+        field, name, ContentFile(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    )
 
 
-def _replace_file(field: Any, name: str, content: ContentFile) -> None:
-    if field and field.name:
-        field.delete(save=False)
-    field.save(name, content, save=False)
+def _replace_file(field: Any, name: str, content: ContentFile) -> ReplacedFile | None:
+    old_name = field.name if field and field.name else ""
+    old_storage = field.storage if old_name else None
+    replacement_name = _replacement_name(name)
+    field.save(replacement_name, content, save=False)
+    if old_name and old_name != field.name:
+        return ReplacedFile(
+            old_storage=old_storage,
+            old_name=old_name,
+            new_storage=field.storage,
+            new_name=field.name,
+        )
+    return None
+
+
+def _replacement_name(name: str) -> str:
+    unique_suffix = uuid4().hex[:12]
+    for suffix in (".podlove.json", ".dote.json"):
+        if name.endswith(suffix):
+            return f"{name[: -len(suffix)]}-{unique_suffix}{suffix}"
+    stem, dot, suffix = name.rpartition(".")
+    if dot:
+        return f"{stem}-{unique_suffix}.{suffix}"
+    return f"{name}-{unique_suffix}"
+
+
+def _delete_replacement_files(
+    replacements: Iterable[ReplacedFile | None], *, use_new: bool
+) -> None:
+    for replacement in replacements:
+        if replacement is None:
+            continue
+        storage = replacement.new_storage if use_new else replacement.old_storage
+        name = replacement.new_name if use_new else replacement.old_name
+        with suppress(Exception):
+            storage.delete(name)
 
 
 def _dote_time(value: str) -> str:

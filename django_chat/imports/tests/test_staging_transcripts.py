@@ -6,10 +6,13 @@ from typing import Any
 import pytest
 from cast.models import Episode
 from django.apps import apps
+from django.core.files.base import ContentFile
 from django.test import override_settings
 
 from django_chat.imports.import_sample import DownloadedAudio, import_django_chat_sample
 from django_chat.imports.staging_transcripts import (
+    _delete_replacement_files,
+    _replace_file,
     extract_podlove_api_url,
     import_staging_transcript_for_episode,
     import_staging_transcripts,
@@ -117,11 +120,42 @@ def test_import_staging_transcripts_replaces_existing_files(tmp_path: Any) -> No
 
     assert first.imported_count == 1
     assert second.imported_count == 1
-    assert transcript_files == [
-        "django-tasks-jake-howard.dote.json",
-        "django-tasks-jake-howard.podlove.json",
-        "django-tasks-jake-howard.vtt",
-    ]
+    assert len(transcript_files) == 3
+    assert sum(name.endswith(".dote.json") for name in transcript_files) == 1
+    assert sum(name.endswith(".podlove.json") for name in transcript_files) == 1
+    assert sum(name.endswith(".vtt") for name in transcript_files) == 1
+    assert all(name.startswith("django-tasks-jake-howard-") for name in transcript_files)
+
+
+def test_replace_file_keeps_old_file_until_replacement_cleanup() -> None:
+    storage = FakeStorage()
+    field = FakeField(storage, "old-transcript.json")
+
+    replacement = _replace_file(field, "new-transcript.json", ContentFile("new transcript"))
+
+    assert field.name.startswith("new-transcript-")
+    assert field.name.endswith(".json")
+    assert storage.events == [("save", field.name)]
+    assert replacement is not None
+    assert replacement.old_name == "old-transcript.json"
+    assert replacement.new_name == field.name
+
+    _delete_replacement_files([replacement], use_new=False)
+
+    assert storage.events == [("save", field.name), ("delete", "old-transcript.json")]
+
+
+def test_replace_file_does_not_delete_old_file_when_replacement_write_fails() -> None:
+    storage = FakeStorage()
+    field = FakeField(storage, "old-transcript.json", fail_save=True)
+
+    with pytest.raises(OSError, match="replacement write failed"):
+        _replace_file(field, "new-transcript.json", ContentFile("new transcript"))
+
+    assert field.name == "old-transcript.json"
+    assert len(storage.events) == 1
+    assert storage.events[0][0] == "save"
+    assert storage.events[0][1].startswith("new-transcript-")
 
 
 @pytest.mark.django_db
@@ -180,6 +214,28 @@ class FakeStagingFetcher:
             return json.dumps({"transcripts": [_podlove_segment()]})
         msg = f"unexpected URL: {url}"
         raise AssertionError(msg)
+
+
+class FakeStorage:
+    def __init__(self) -> None:
+        self.events: list[tuple[str, str]] = []
+
+    def delete(self, name: str) -> None:
+        self.events.append(("delete", name))
+
+
+class FakeField:
+    def __init__(self, storage: FakeStorage, name: str, *, fail_save: bool = False) -> None:
+        self.storage = storage
+        self.name = name
+        self.fail_save = fail_save
+
+    def save(self, name: str, _content: ContentFile, *, save: bool) -> None:
+        saved_name = name.rsplit(".", 1)[0] if self.fail_save else name
+        self.storage.events.append(("save", saved_name))
+        if self.fail_save:
+            raise OSError("replacement write failed")
+        self.name = saved_name
 
 
 def _podlove_segment() -> dict[str, Any]:
