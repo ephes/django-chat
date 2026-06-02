@@ -242,7 +242,7 @@ def test_topbar_current_nav_link_contrasts_on_dark_surfaces() -> None:
     css_path = settings.ROOT_DIR / "django_chat/static/django_chat/css/site.css"
     css = css_path.read_text()
     current_nav_block = _css_blocks(css, '.nav-links a[aria-current="page"]')[-1]
-    current_color = _css_color_value(current_nav_block)
+    current_color = _css_color_value(css, current_nav_block)
     surface_deep = _css_var_hex(css, "--dc-surface-deep")
     stacked_nav_surface = _mix_srgb(surface_deep, "#ffffff", 0.08)
 
@@ -447,15 +447,23 @@ def _css_blocks(css: str, selector: str) -> list[str]:
         search_from = end + 1
 
 
-def _css_var_hex(css: str, name: str) -> str:
-    match = re.search(rf"{re.escape(name)}:\s*(#[0-9a-fA-F]{{6}});", css)
+def _css_var_hex(css: str, name: str, seen: frozenset[str] = frozenset()) -> str:
+    assert name not in seen
+    match = re.search(
+        rf"{re.escape(name)}:\s*(#[0-9a-fA-F]{{6}}|var\((--[\w-]+)\));",
+        css,
+    )
     assert match is not None
+    if match.group(2):
+        return _css_var_hex(css, match.group(2), seen | {name})
     return match.group(1)
 
 
-def _css_color_value(block: str) -> str:
-    match = re.search(r"\n\s*color:\s*(#[0-9a-fA-F]{6});", block)
+def _css_color_value(css: str, block: str) -> str:
+    match = re.search(r"\n\s*color:\s*(#[0-9a-fA-F]{6}|var\((--[\w-]+)\));", block)
     assert match is not None
+    if match.group(2):
+        return _css_var_hex(css, match.group(2))
     return match.group(1)
 
 
