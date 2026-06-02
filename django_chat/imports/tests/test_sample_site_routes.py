@@ -202,7 +202,7 @@ def test_imported_sample_episode_detail_renders_structured_legacy_h4_sections(
     content = response.content.decode()
     assert '<h2 class="show-notes-title">Show notes</h2>' in content
     assert "Groups</h3>" in content
-    assert "SHAMELESS PLUGS</h3>" in content
+    assert "Shameless Plugs</h3>" in content
     assert "Subreddits:" in content
     assert "books on Django" in content
     assert "<h4>Groups</h4>" not in content

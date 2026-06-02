@@ -54,8 +54,16 @@ Every show-note section heading carries a decorative circular icon. The model:
 heading is offloaded into a block: a convertible link/sponsor section becomes
 `show_note_link_list`/`show_note_sponsor`; any other heading (including
 non-convertible known-label sections) becomes a `show_note_heading` with its
-body preserved verbatim as a following `paragraph`. Empty headings are left as
-raw content. The migration `0015_materialize_show_note_icons` brings existing
+body preserved verbatim as a following `paragraph`. A recognised section label
+canonicalises the offloaded heading text (e.g. a non-convertible `📚 Books` or
+`SHAMELESS PLUGS` list — one with prose around the links — yields heading `Books`
+/ `Shameless Plugs`, the icon replacing the source emoji), so it matches its
+converted counterparts; unknown headings keep their verbatim text but still
+resolve an icon. Empty headings are left as raw content. Episodes structured
+before D5 kept such sections as raw `<h3>…</h3>` HTML with no icon; migration
+`0017_offload_raw_show_note_headings` re-runs the in-place structuring over
+imported bodies to offload them, leaving already-structured blocks (and their
+icon overrides) untouched. The migration `0015_materialize_show_note_icons` brings existing
 data forward (icon-only, no HTML re-parse): it materializes `icon` on stored
 blocks and normalises system-derived `kind` back to `"auto"`, preserving genuine
 overrides. A stored `kind` counts as system-derived (→ `"auto"`) when it is empty,

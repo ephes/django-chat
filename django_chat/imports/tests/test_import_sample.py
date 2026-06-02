@@ -147,7 +147,7 @@ def test_sample_import_structures_detail_show_note_sections() -> None:
     assert [
         child["value"]["icon"] for child in latest_detail if child["type"] == "show_note_link_list"
     ] == ["projects", "books", "youtube"]
-    assert latest_detail[0]["value"]["heading"] == "🔗 Links"
+    assert latest_detail[0]["value"]["heading"] == "Links"
     assert latest_detail[0]["value"]["icon"] == "links"
     links = latest_detail[1]["value"]
     assert "django-tasks" in links
@@ -171,7 +171,7 @@ def test_sample_import_structures_detail_show_note_sections() -> None:
         c["value"]["heading"] for c in first_detail if c["type"] == "show_note_heading"
     ]
     first_text = "".join(c["value"] for c in first_detail if c["type"] == "paragraph")
-    assert "SHAMELESS PLUGS" in first_headings
+    assert "Shameless Plugs" in first_headings
     assert "Free tutorials and premium books" in first_text
     assert "<h4>SHAMELESS PLUGS</h4>" in first_metadata.simplecast_long_description_html
 

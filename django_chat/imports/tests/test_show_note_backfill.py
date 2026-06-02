@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from importlib import import_module
 from io import StringIO
 from typing import Any
 
 import pytest
 from cast.models import Episode
+from django.apps import apps as django_apps
 from django.core.management import call_command
 
 from django_chat.imports.import_sample import import_django_chat_sample
@@ -13,6 +15,71 @@ from django_chat.imports.show_note_backfill import (
     episode_summary_from_database,
     repair_imported_episode_show_notes,
 )
+
+offload_migration = import_module(
+    "django_chat.imports.migrations.0017_offload_raw_show_note_headings"
+)
+
+
+@pytest.mark.django_db
+def test_migration_0017_offloads_raw_headings_and_preserves_overrides() -> None:
+    import_django_chat_sample()
+    metadata = EpisodeSourceMetadata.objects.get(episode_number=200)
+    _isolate_metadata(metadata)
+    episode = metadata.episode
+    item = [{"title": "X", "url": "https://x.test", "description": "", "extra_links": []}]
+    episode.body = [
+        ("overview", [("paragraph", "Summary.")]),
+        (
+            "detail",
+            [
+                # Raw, un-offloaded section heading: a Books list with prose after
+                # the link is non-convertible, so pre-D5 it stayed as source HTML.
+                (
+                    "paragraph",
+                    "<h3>📚 Books</h3>"
+                    '<ul><li><a href="https://a.test/">Big Panda</a> by James Norbury</li></ul>',
+                ),
+                # An already-structured block carrying a genuine icon override must
+                # survive: this is an in-place re-structure, not a source restore.
+                (
+                    "show_note_link_list",
+                    {
+                        "heading": "Links",
+                        "kind": "books",
+                        "icon": "books",
+                        "intro": "",
+                        "items": item,
+                    },
+                ),
+            ],
+        ),
+    ]
+    episode.save(update_fields=["body"])
+
+    offload_migration.offload_raw_show_note_headings(django_apps, None)
+
+    episode.refresh_from_db()
+    detail = _body_children(episode, "detail")
+    # Raw "📚 Books" paragraph -> canonical iconed heading + the prose list kept.
+    assert [c["type"] for c in detail] == [
+        "show_note_heading",
+        "paragraph",
+        "show_note_link_list",
+    ]
+    assert detail[0]["value"]["heading"] == "Books"
+    assert detail[0]["value"]["kind"] == "auto"
+    assert detail[0]["value"]["icon"] == "books"
+    assert "by James Norbury" in detail[1]["value"]
+    # The override block is untouched (no source-based clobber).
+    assert detail[2]["value"]["kind"] == "books"
+    assert detail[2]["value"]["icon"] == "books"
+
+    # Idempotent: a second run leaves the detail block unchanged.
+    before = _body_children(episode, "detail")
+    offload_migration.offload_raw_show_note_headings(django_apps, None)
+    episode.refresh_from_db()
+    assert _body_children(episode, "detail") == before
 
 
 @pytest.mark.django_db
@@ -138,9 +205,10 @@ def test_show_note_repair_restores_complex_source_detail_html() -> None:
     assert result.body_rows_changed == 1
     assert result.source_detail_blocks_restored == 1
     # D5: the restored source heading is offloaded into an iconed heading block,
-    # with the prose-prefixed list preserved verbatim as a following paragraph.
+    # with the prose-prefixed list preserved verbatim as a following paragraph. The
+    # known label canonicalizes the heading text ("SHAMELESS PLUGS" -> the label).
     assert [c["type"] for c in detail] == ["show_note_heading", "paragraph"]
-    assert detail[0]["value"]["heading"] == "SHAMELESS PLUGS"
+    assert detail[0]["value"]["heading"] == "Shameless Plugs"
     assert detail[0]["value"]["icon"] == "shameless_plugs"
     assert "LearnDjango" in detail[1]["value"]
     assert "Noumenal" in detail[1]["value"]

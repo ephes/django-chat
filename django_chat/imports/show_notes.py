@@ -396,7 +396,7 @@ def _structured_show_note_detail_blocks(
                 report.support_copy_sections_restored += 1
             _flush_paragraph_block(pending_nodes, blocks)
             pending_nodes = []
-            blocks.append(_heading_block_tuple(heading_text))
+            blocks.append(_heading_block_tuple(heading_text, label_key))
             _flush_paragraph_block(section_nodes, blocks)
             report.changed = True
             report.added_structured_block = True
@@ -663,7 +663,13 @@ def _is_support_copy_section(
     return bool(_links_from_nodes(meaningful_nodes))
 
 
-def _heading_block_tuple(heading_text: str) -> BlockTuple:
+def _heading_block_tuple(heading_text: str, label_key: str | None = None) -> BlockTuple:
+    # A recognised section label canonicalises the heading text so an offloaded
+    # heading matches its converted counterparts (e.g. "📚 Books" / "SHAMELESS
+    # PLUGS" -> "Books" / "Shameless Plugs"); the decorative icon then replaces the
+    # source emoji. Unknown headings keep their verbatim text.
+    if label_key is not None:
+        heading_text = CANONICAL_HEADING_BY_LABEL.get(label_key, heading_text)
     value: dict[str, Any] = {"heading": heading_text, "kind": "auto"}
     value["icon"] = materialize_icon(value)
     return ("show_note_heading", value)

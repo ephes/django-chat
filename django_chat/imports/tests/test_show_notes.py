@@ -133,6 +133,7 @@ def test_structured_show_note_detail_blocks_preserve_complex_link_sections() -> 
     assert changed is True
     # The Links section has a non-convertible multi-anchor item, so D5 offloads
     # the heading (with an icon) and preserves the list verbatim as a paragraph.
+    # A known section label canonicalizes the heading text (drops the "🔗").
     assert [name for name, _value in blocks] == [
         "show_note_heading",
         "paragraph",
@@ -141,7 +142,7 @@ def test_structured_show_note_detail_blocks_preserve_complex_link_sections() -> 
         "show_note_link_list",
         "show_note_sponsor",
     ]
-    assert blocks[0][1]["heading"] == "🔗 Links"
+    assert blocks[0][1]["heading"] == "Links"
     assert blocks[0][1]["kind"] == "auto"
     assert blocks[0][1]["icon"] == "links"
     assert blocks[1][1] == (
@@ -160,6 +161,37 @@ def test_structured_show_note_detail_blocks_preserve_complex_link_sections() -> 
     assert sponsor["sponsor_name"] == "Buttondown"
     assert sponsor["sponsor_url"] == "https://buttondown.com/django"
     assert "Sponsored by" in sponsor["copy"]
+
+
+def test_d5_offload_canonicalizes_known_label_heading_and_keeps_custom() -> None:
+    # Reproduces the staging "📚 Books" bug: a Books list with prose after the link
+    # ("by <author>") is non-convertible, so D5 offloads the heading. A known label
+    # is canonicalized (the literal 📚 is dropped) so it matches the converted
+    # sections; an unknown heading keeps its text but still resolves an icon.
+    html = (
+        "<h3>📚 Books</h3>"
+        '<ul><li><a href="https://a.test/">Big Panda</a> by James Norbury</li></ul>'
+        "<h3>Black Friday Sale</h3>"
+        '<ul><li><a href="https://b.test/">Deal</a> 50% off this week</li></ul>'
+    )
+
+    blocks, changed = structured_show_note_detail_blocks(html)
+
+    assert changed is True
+    assert [name for name, _value in blocks] == [
+        "show_note_heading",
+        "paragraph",
+        "show_note_heading",
+        "paragraph",
+    ]
+    # Known label -> canonical "Books" with the books icon (no literal 📚).
+    assert blocks[0][1]["heading"] == "Books"
+    assert blocks[0][1]["kind"] == "auto"
+    assert blocks[0][1]["icon"] == "books"
+    assert "by James Norbury" in blocks[1][1]
+    # Unknown heading keeps its verbatim text but still resolves an icon.
+    assert blocks[2][1]["heading"] == "Black Friday Sale"
+    assert blocks[2][1]["icon"] == "sale"
 
 
 def test_structured_show_note_detail_blocks_convert_legacy_kind_variants() -> None:
@@ -373,8 +405,9 @@ def test_raw_markdown_like_notes_convert_to_structured_blocks() -> None:
         "TestDriven.io",
     ]
     # The Shameless Plugs list has prose-prefixed items (non-convertible), so D5
-    # offloads the heading with an icon and keeps the list as a raw paragraph.
-    assert blocks[1][1]["heading"] == "SHAMELESS PLUGS"
+    # offloads the heading with an icon and keeps the list as a raw paragraph. The
+    # known label canonicalizes the heading text ("SHAMELESS PLUGS" -> the label).
+    assert blocks[1][1]["heading"] == "Shameless Plugs"
     assert blocks[1][1]["icon"] == "shameless_plugs"
     assert blocks[2][1] == (
         "<ul><li>William's "
@@ -597,7 +630,7 @@ def test_structured_show_notes_render_on_public_episode_detail(client: Client) -
     headings = [heading.get_text(strip=True) for heading in show_notes.select("h3")]
     assert headings[:6] == [
         "Episode Summary",
-        "🔗 Links",
+        "Links",
         "Projects",
         "Books",
         "YouTube",
@@ -630,7 +663,7 @@ def test_structured_show_notes_render_feed_safe_html() -> None:
 
     assert "show-note-icon" not in content
     assert "show-note-block" not in content
-    assert "<h3>🔗 Links</h3>" in content
+    assert "<h3>Links</h3>" in content
     assert "django-tasks" in content
     assert "Buttondown" in content
 

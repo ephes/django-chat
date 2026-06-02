@@ -213,7 +213,12 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       e.g. a `Books` heading left at the default follows its heading instead of
       freezing as a links override). `0016_heal_show_note_icons` re-runs that
       corrected backfill to heal environments that applied the initially-shipped
-      0015. See
+      0015. D5 also canonicalises an offloaded known-label heading (e.g.
+      `📚 Books` / `SHAMELESS PLUGS` → `Books` / `Shameless Plugs`, the icon
+      replacing the source emoji); `0017_offload_raw_show_note_headings` re-runs
+      the in-place structuring over imported bodies so sections left as raw
+      `<h3>` HTML by pre-D5 imports become iconed heading blocks, while
+      already-structured blocks and their overrides are left untouched. See
       [`docs/structured-show-note-blocks-research.md`](structured-show-note-blocks-research.md).
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
