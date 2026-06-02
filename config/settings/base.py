@@ -70,6 +70,7 @@ LOCAL_APPS = [
     "django_chat.core.apps.CoreConfig",
     "django_chat.imports.apps.ImportsConfig",
     "django_chat.sponsor.apps.SponsorConfig",
+    "django_chat.show_notes.apps.ShowNotesConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -162,6 +163,7 @@ CAST_POST_BODY_BLOCKS = {
     "detail": [
         "django_chat.show_notes.blocks.sponsor_block",
         "django_chat.show_notes.blocks.link_list_block",
+        "django_chat.show_notes.blocks.heading_block",
     ],
 }
 

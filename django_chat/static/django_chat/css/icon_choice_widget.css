@@ -1,0 +1,57 @@
+.icon-choice { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: .5rem; }
+
+/* Auto tile and the "Pick Other Icon" summary share Wagtail's field metrics
+   (min-height 2.625rem, radius .3125rem, field border/surface tokens) so they
+   line up with the adjacent Wagtail choosers/inputs and are exactly equal height. */
+.icon-choice__tile,
+.icon-choice__manual-summary {
+  display: flex; align-items: center; gap: .4rem;
+  box-sizing: border-box; min-height: 2.625rem; padding: 0 .75rem;
+  border: 1px solid var(--w-color-border-field-default, #ccc);
+  border-radius: .3125rem; background: var(--w-color-surface-field, #fff);
+  cursor: pointer;
+}
+.icon-choice__tile.is-checked { border-color: #14513a; box-shadow: inset 0 0 0 1px #14513a; }
+.icon-choice__tile input { margin: 0; }
+.icon-choice__label { white-space: nowrap; }
+
+.icon-choice__manual { flex: 1 1 auto; min-width: 0; }
+.icon-choice__manual-summary { user-select: none; list-style: none; }
+.icon-choice__manual-summary::-webkit-details-marker { display: none; }
+
+/* Wagtail's own collapse chevron (inlined so it renders without the admin sprite). */
+.icon-choice__chevron {
+  margin-left: auto; flex: 0 0 auto; width: 1.25rem; height: 1.25rem;
+  fill: currentColor; transition: transform .15s ease;
+}
+.icon-choice__manual[open] > .icon-choice__manual-summary .icon-choice__chevron { transform: rotate(180deg); }
+
+.icon-choice__grid {
+  display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .25rem; padding: .5rem;
+  border: 1px solid var(--w-color-border-field-default, #ccc); border-radius: .3125rem;
+}
+
+.icon-choice__auto {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #14513a; color: #f9f9f9;
+}
+
+/* JS live-preview of the auto-resolved icon (progressive enhancement). */
+/* `display` on these elements overrides the bare [hidden] UA rule, so the
+   hidden state needs its own override to actually hide the swapped-out node. */
+.icon-choice__auto[hidden] { display: none; }
+.icon-choice__auto-preview { display: inline-flex; }
+.icon-choice__auto-preview[hidden] { display: none; }
+.icon-choice__auto-suffix { color: var(--w-color-text-meta, #5c5c5c); font-style: italic; }
+
+/* Self-contained icon badge — the Wagtail admin does not load site.css. */
+.icon-choice .show-note-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto; width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  background: #14513a; color: #f9f9f9;
+}
+.icon-choice .show-note-icon svg {
+  width: 72%; height: 72%; fill: none; stroke: currentColor;
+  stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round;
+}
+.icon-choice .show-note-icon .show-note-fill { fill: currentColor; stroke: none; }

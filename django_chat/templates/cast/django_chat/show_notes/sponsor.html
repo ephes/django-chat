@@ -1,6 +1,6 @@
-{% load wagtailcore_tags %}
+{% load wagtailcore_tags show_note_icons %}
 
-<h3>{% if not render_for_feed %}{% include "cast/django_chat/show_notes/_icon.html" with icon_name="sponsor" %}{% endif %}{{ value.heading }}</h3>
+<h3>{% if not render_for_feed %}{% show_note_icon display_kind %}{% endif %}{{ value.heading }}</h3>
 {% if value.copy %}
   {{ value.copy|richtext }}
 {% else %}

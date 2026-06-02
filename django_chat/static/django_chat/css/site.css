@@ -4112,6 +4112,24 @@ h2[data-vt-episode-title] {
   height: 76%;
 }
 
+.show-note-icon--dashboards svg {
+  width: 63%;
+  height: 63%;
+}
+
+.show-note-icon--default svg {
+  width: 64%;
+  height: 64%;
+}
+
+.show-note-icon--books svg {
+  stroke-width: 1.2;
+}
+
+.show-note-icon--shameless_plugs svg {
+  transform: translateY(-5%);
+}
+
 
 .pagination-nav {
   display: flex;

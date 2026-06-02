@@ -58,6 +58,47 @@ CANONICAL_HEADING_BY_LABEL = {
 STRUCTURED_SECTION_LABELS = frozenset(LINK_LIST_KIND_BY_LABEL) | frozenset({"sponsor"})
 BlockTuple = tuple[str, Any]
 
+# Resolve map for auto icons (separate from the structuring map): the link-list
+# labels plus "sponsor" -> "sponsor".
+RESOLVE_LABEL_TO_KIND = {**LINK_LIST_KIND_BY_LABEL, "sponsor": "sponsor"}
+SALE_KEYWORDS = ("sale", "rabatt", "offer")
+
+
+def resolve_icon_kind(heading: str) -> str:
+    """Derive the icon kind from a section heading (the "auto" rules)."""
+    heading = heading or ""
+    label_key = _section_label_key(heading)
+    if label_key in RESOLVE_LABEL_TO_KIND:
+        return RESOLVE_LABEL_TO_KIND[label_key]
+    folded = heading.casefold()
+    if "%" in heading or any(re.search(rf"\b{kw}\b", folded) for kw in SALE_KEYWORDS):
+        return "sale"
+    if "dashboard" in folded:
+        return "dashboards"
+    return "default"
+
+
+def _icon_for(kind: str, heading: str) -> str:
+    """Concrete icon kind from intent: an explicit override wins; "auto" derives
+    from the heading."""
+    if kind and kind != "auto":
+        return kind
+    return resolve_icon_kind(heading)
+
+
+def materialize_icon(value: Any) -> str:
+    """Authoritative concrete icon for a block value, recomputed from its intent
+    (``kind``/``heading``). Used at save/import/migration time to set ``icon``;
+    deliberately ignores any stale stored ``icon``."""
+    return _icon_for(value.get("kind") or "auto", value.get("heading") or "")
+
+
+def display_icon(value: Any) -> str:
+    """Render-time icon: prefer the materialized ``icon`` field, else derive it
+    (covers old revisions / un-migrated JSON that has no ``icon``)."""
+    return value.get("icon") or materialize_icon(value)
+
+
 # Imported show-note HTML is stored as RichText block values and later rendered
 # with autoescaping disabled (Wagtail's `richtext`/`expand_db_html` do NOT
 # sanitize at render time — they only do so in the editor widget, which the
@@ -325,15 +366,19 @@ def _structured_show_note_detail_blocks(
                 continue
             report.implicit_link_lists_skipped += 1
 
-        label_key = _heading_label_key(node)
-        if label_key in STRUCTURED_SECTION_LABELS:
+        heading_text = node.get_text(" ", strip=True) if _is_heading_tag(node) else ""
+        if heading_text:
+            label_key = _heading_label_key(node)
             section_nodes: list[PageElement] = []
             index += 1
             while index < len(nodes) and not _is_heading_tag(nodes[index]):
                 section_nodes.append(nodes[index])
                 index += 1
 
-            structured_block = _convert_section(label_key, section_nodes)
+            structured_block = None
+            if label_key in STRUCTURED_SECTION_LABELS:
+                structured_block = _convert_section(label_key, section_nodes)
+
             if structured_block is not None:
                 if _is_support_copy_section(label_key, section_nodes, structured_block):
                     report.support_copy_sections_restored += 1
@@ -344,12 +389,20 @@ def _structured_show_note_detail_blocks(
                 report.added_structured_block = True
                 continue
 
-            if _is_support_copy_section(label_key, section_nodes, structured_block):
+            # D5: every real heading becomes a block that carries an icon, even
+            # when its section cannot be converted to a link list / sponsor. Any
+            # leftover section content is preserved verbatim as a paragraph block.
+            if _is_support_copy_section(label_key, section_nodes, None):
                 report.support_copy_sections_restored += 1
-            pending_nodes.append(node)
-            pending_nodes.extend(section_nodes)
+            _flush_paragraph_block(pending_nodes, blocks)
+            pending_nodes = []
+            blocks.append(_heading_block_tuple(heading_text))
+            _flush_paragraph_block(section_nodes, blocks)
+            report.changed = True
+            report.added_structured_block = True
             continue
 
+        # Non-heading nodes (and empty heading tags) are preserved verbatim.
         pending_nodes.append(node)
         index += 1
 
@@ -579,7 +632,7 @@ def _is_leading_implicit_link_list(
 
 
 def _is_support_copy_section(
-    label_key: str,
+    label_key: str | None,
     section_nodes: list[PageElement],
     structured_block: BlockTuple | None,
 ) -> bool:
@@ -588,10 +641,12 @@ def _is_support_copy_section(
 
     if structured_block is not None:
         name, value = structured_block
+        # The label_key gate above already restricts this to "Support the Show";
+        # detect the boilerplate support placement by its hidden item list, not by
+        # the stored ``kind`` (which is now always "auto" under the icon model).
         return (
             name == "show_note_link_list"
             and isinstance(value, dict)
-            and value.get("kind") == "support"
             and value.get("show_items") is False
         )
 
@@ -606,6 +661,12 @@ def _is_support_copy_section(
     ):
         return False
     return bool(_links_from_nodes(meaningful_nodes))
+
+
+def _heading_block_tuple(heading_text: str) -> BlockTuple:
+    value: dict[str, Any] = {"heading": heading_text, "kind": "auto"}
+    value["icon"] = materialize_icon(value)
+    return ("show_note_heading", value)
 
 
 def _convert_section(label_key: str, section_nodes: list[PageElement]) -> BlockTuple | None:
@@ -624,16 +685,15 @@ def _convert_implicit_link_list(list_tag: PageElement) -> BlockTuple | None:
     if not items:
         return None
 
-    return (
-        "show_note_link_list",
-        {
-            "heading": "Links",
-            "show_heading": False,
-            "kind": "links",
-            "intro": "",
-            "items": items,
-        },
-    )
+    value: dict[str, Any] = {
+        "heading": "Links",
+        "show_heading": False,
+        "kind": "auto",
+        "intro": "",
+        "items": items,
+    }
+    value["icon"] = materialize_icon(value)
+    return ("show_note_link_list", value)
 
 
 def _convert_sponsor_section(label_key: str, section_nodes: list[PageElement]) -> BlockTuple | None:
@@ -664,16 +724,16 @@ def _convert_sponsor_section(label_key: str, section_nodes: list[PageElement]) -
         return None
 
     copy_html = _serialize_nodes(paragraph_nodes)
-    return (
-        "show_note_sponsor",
-        {
-            "heading": CANONICAL_HEADING_BY_LABEL[label_key],
-            "sponsor_name": sponsor_link["title"],
-            "sponsor_url": sponsor_link["url"],
-            "copy": copy_html,
-            "coupon_code": "",
-        },
-    )
+    value: dict[str, Any] = {
+        "heading": CANONICAL_HEADING_BY_LABEL[label_key],
+        "kind": "auto",
+        "sponsor_name": sponsor_link["title"],
+        "sponsor_url": sponsor_link["url"],
+        "copy": copy_html,
+        "coupon_code": "",
+    }
+    value["icon"] = materialize_icon(value)
+    return ("show_note_sponsor", value)
 
 
 def _convert_link_list_section(
@@ -706,12 +766,13 @@ def _convert_link_list_section(
 
     value: dict[str, Any] = {
         "heading": CANONICAL_HEADING_BY_LABEL[label_key],
-        "kind": LINK_LIST_KIND_BY_LABEL[label_key],
+        "kind": "auto",
         "intro": intro,
         "items": items,
     }
     if not show_items:
         value["show_items"] = False
+    value["icon"] = materialize_icon(value)
     return ("show_note_link_list", value)
 
 

@@ -4,6 +4,7 @@
 {% load dc_sponsor %}
 {% load django_vite %}
 {% load dc_filters %}
+{% load show_note_icons %}
 
 {% block title %}{{ page.title }}{% endblock title %}
 
@@ -69,7 +70,7 @@
                   {% if block.block_type == "overview" %}
                     <h3 class="show-notes-section-heading show-notes-section-heading--overview">Episode Summary</h3>
                   {% elif block.block_type == "detail" %}
-                    <h3 class="show-notes-section-heading show-notes-section-heading--detail">{% include "cast/django_chat/show_notes/_icon.html" with icon_name="links" %}Episode Notes</h3>
+                    <h3 class="show-notes-section-heading show-notes-section-heading--detail">{% show_note_icon "links" %}Episode Notes</h3>
                   {% endif %}
                   {% for child_block in block.value %}
                     {% include_block child_block %}

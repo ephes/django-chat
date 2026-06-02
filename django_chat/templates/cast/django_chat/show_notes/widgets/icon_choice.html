@@ -1,0 +1,10 @@
+{% load show_note_icons %}
+<div class="icon-choice" data-icon-choice data-resolve-labels='{{ resolve_labels_json }}' data-sale-keywords='{{ sale_keywords_json }}' data-dashboard-keyword="{{ dashboard_keyword }}">
+  {% if auto_option %}{% include option_template with widget=auto_option %}{% endif %}
+  <details class="icon-choice__manual"{% if manual_selected %} open{% endif %}>
+    <summary class="icon-choice__manual-summary">Pick Other Icon<svg class="icon-choice__chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 11.5a.92.92 0 0 1-.67-.27L2.64 6.55a.9.9 0 0 1 0-1.32.9.9 0 0 1 1.32 0L8 9.24l4.01-4.01a.9.9 0 0 1 1.32 0c.38.35.38.96 0 1.32l-4.69 4.68a.9.9 0 0 1-.64.27Z"/></svg></summary>
+    <div class="icon-choice__grid">
+      {% for option in manual_options %}{% include option_template with widget=option %}{% endfor %}
+    </div>
+  </details>
+</div>

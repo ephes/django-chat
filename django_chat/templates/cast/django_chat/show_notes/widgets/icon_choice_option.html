@@ -1,0 +1,13 @@
+{% load show_note_icons %}
+<label class="icon-choice__tile{% if widget.selected %} is-checked{% endif %}">
+  <input type="radio" name="{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value|stringformat:'s' }}"{% endif %}{% include "django/forms/widgets/attrs.html" %}>
+  <span class="icon-choice__icon">
+    {% if widget.value == 'auto' %}
+      <span class="icon-choice__auto" data-auto-fallback aria-hidden="true">A</span>
+      <span class="icon-choice__auto-preview" data-auto-preview hidden aria-hidden="true"></span>
+    {% else %}
+      {% show_note_icon widget.value %}
+    {% endif %}
+  </span>
+  <span class="icon-choice__label">{{ widget.label }}{% if widget.value == 'auto' %}<span class="icon-choice__auto-suffix" data-auto-suffix></span>{% endif %}</span>
+</label>
