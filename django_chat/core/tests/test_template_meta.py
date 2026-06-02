@@ -343,7 +343,11 @@ def test_podlove_loader_injects_iframe_panel_styles() -> None:
     assert '[data-test="tab"]:not(#tab-transcripts) {' in loader
     assert "max-height: 420px !important;" in loader
     assert "#tab-transcripts {" in loader
-    assert "max-height: none !important;" in loader
+    # The transcript tab is bounded (not "none") so the full transcript height
+    # cannot leak into the iframe document for a frame while Podlove mounts the
+    # rows, which previously made content below the player flicker.
+    assert "max-height: 600px !important;" in loader
+    assert "max-height: none !important;" not in loader
     assert '[data-test="tab-title--close"] {' in loader
     assert '[data-test="tab"] [data-test="tab-title--close"] {' in loader
     assert '[data-test="tab-title--close"] svg {' in loader

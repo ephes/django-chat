@@ -498,6 +498,7 @@ def test_player_transcript_tab_uses_single_scroll_container(
                 outerClientHeight: outer.clientHeight,
                 outerScrollHeight: outer.scrollHeight,
                 transcriptTabMaxHeight: transcriptTabStyles.maxHeight,
+                transcriptTabClientHeight: transcriptTab.clientHeight,
                 resultsOverflowX: resultsStyles.overflowX,
                 resultsOverflowY: resultsStyles.overflowY,
                 resultsClientHeight: results.clientHeight,
@@ -508,10 +509,19 @@ def test_player_transcript_tab_uses_single_scroll_container(
 
     assert metrics["outerOverflowY"] == "visible"
     assert metrics["outerScrollHeight"] <= metrics["outerClientHeight"] + 1
-    assert metrics["transcriptTabMaxHeight"] == "none"
+    # The transcript tab is bounded rather than "none": while Podlove mounts the
+    # transcript rows there is a frame where they render before the inner results
+    # element receives its scroll styles, and an unbounded tab let that full
+    # height leak into the iframe document, which iframe-resizer then propagated
+    # to the host page as a flicker of the content below the player. The bound
+    # clips that transient at the source while results stays the scroll container.
+    assert metrics["transcriptTabMaxHeight"] == "600px"
     assert metrics["resultsOverflowX"] == "hidden"
     assert metrics["resultsOverflowY"] == "auto"
     assert metrics["resultsScrollHeight"] > metrics["resultsClientHeight"] + 1
+    # The bounded tab clips the transient full-transcript render at the source, so
+    # the tab itself never grows past its cap and cannot push the host page.
+    assert metrics["transcriptTabClientHeight"] <= 600
 
 
 def episode_index_path() -> str:

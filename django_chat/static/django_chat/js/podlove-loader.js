@@ -22,8 +22,19 @@
   overflow-y: auto !important;
 }
 
+/* The transcript tab keeps its own inner scroll container
+   ([data-test="tab-transcripts--results"], styled below) rather than scrolling
+   the whole tab, so it is not capped at the 420px used for other tabs. It still
+   needs a bound: when Podlove mounts the transcript rows, there is a frame where
+   the rows render before the inner results element receives its scroll styles.
+   Without a cap here the full transcript height (tens of thousands of px) leaks
+   into the iframe document for that frame, iframe-resizer propagates it to the
+   host page, and content below the player flickers. This id is present from the
+   moment the tab mounts, so the cap clips that transient at the source. The
+   value comfortably clears the deterministic settled tab height (~567px). */
 #tab-transcripts {
-  max-height: none !important;
+  max-height: 600px !important;
+  overflow-y: auto !important;
 }
 
 [data-test="tab"] .tab-content {
