@@ -595,9 +595,8 @@ def test_structured_show_notes_render_on_public_episode_detail(client: Client) -
     assert show_notes.select_one('a[href="https://github.com/RealOrangeOne/django-tasks"]')
     assert "django-tasks and Jake's GitHub" in show_notes.get_text(" ", strip=True)
     headings = [heading.get_text(strip=True) for heading in show_notes.select("h3")]
-    assert headings[:7] == [
+    assert headings[:6] == [
         "Episode Summary",
-        "Episode Notes",
         "🔗 Links",
         "Projects",
         "Books",

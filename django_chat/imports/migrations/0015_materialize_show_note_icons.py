@@ -8,7 +8,7 @@ new auto/override model:
   is resolved from the heading), so rendering no longer has to resolve at display
   time.
 * System-derived ``kind`` values (the ones the importer produced, plus the
-  deprecated ``other``) are reset to ``"auto"`` so the admin shows "Automatisch"
+  deprecated ``other``) are reset to ``"auto"`` so the admin shows "Auto Icon"
   and future heading edits re-derive the icon. Genuine editor overrides
   (a stored ``kind`` that differs from what the heading would auto-resolve to)
   are preserved.

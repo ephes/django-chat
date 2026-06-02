@@ -9,7 +9,7 @@ from django_chat.show_notes.widgets import IconChoiceWidget
 def test_widget_renders_auto_tile_and_icon_for_concrete_kind():
     widget = IconChoiceWidget(choices=kind_choices())
     html = widget.render("kind", "auto")
-    assert "Automatisch" in html  # auto tile
+    assert "Auto Icon (from heading)" in html  # auto tile
     assert "show-note-icon--sale" in html  # a concrete tile renders its icon
 
 
@@ -48,7 +48,7 @@ def test_widget_preserves_telepath_placeholder_id():
 def test_auto_option_outside_details_and_collapsed_by_default():
     widget = IconChoiceWidget(choices=kind_choices())
     html = widget.render("kind", "auto")
-    assert "Automatisch" in html
+    assert "Auto Icon (from heading)" in html
     assert "Pick Other Icon" in html
     assert "<details" in html
     details_tag_match = re.search(r"<details([^>]*)>", html)

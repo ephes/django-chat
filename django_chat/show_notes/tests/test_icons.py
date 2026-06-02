@@ -25,7 +25,7 @@ def test_unknown_kind_falls_back_to_default():
 
 def test_kind_choices_include_auto_first_and_other_deprecated_last():
     choices = kind_choices()
-    assert choices[0] == ("auto", "Automatisch (aus Überschrift)")
+    assert choices[0] == ("auto", "Auto Icon (from heading)")
     assert choices[-1] == ("other", "Other (deprecated)")
     kinds = [c[0] for c in choices]
     assert "sale" in kinds and "dashboards" in kinds and "default" in kinds

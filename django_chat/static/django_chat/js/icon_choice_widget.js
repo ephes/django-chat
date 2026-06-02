@@ -1,7 +1,7 @@
 /*
  * Progressive enhancement for the show-note icon picker (Wagtail admin only).
  *
- * When "Automatisch" is the intent, this shows a LIVE preview of the icon that
+ * When "Auto Icon (from heading)" is the intent, this shows a LIVE preview of the icon that
  * the auto rules would derive from the current heading text. It mirrors the
  * small matcher from django_chat/imports/show_notes.py::resolve_icon_kind; the
  * rule DATA (label map, keywords) comes from the server via data-attributes, and

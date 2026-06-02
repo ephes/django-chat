@@ -171,8 +171,9 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       re-runs. The repair converts link-only unheaded HTML lists into hidden-
       heading episode-note link lists, keeps complex source lists as source
       HTML when they contain prose around links, backfills `search_description`
-      from in-database episode summaries, restores visible `Episode Summary` /
-      `Episode Notes` headings on detail pages, and converts older visibly
+      from in-database episode summaries, restores the visible `Episode Summary`
+      heading on detail pages (the separate `Episode Notes` subheading was later
+      unified into the page-level `Show notes` title), and converts older visibly
       legacy raw Markdown-like note bodies into rendered HTML. Follow-up
       migrations preserve paragraph-style `Support the Show` source copy
       instead of collapsing it into link-list items and rebuild affected detail

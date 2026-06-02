@@ -6,13 +6,13 @@ from typing import NamedTuple
 class IconDef(NamedTuple):
     kind: str
     label: str
-    snippet: str | None  # None nur für "auto" (wird nie gerendert)
+    snippet: str | None  # None only for "auto" (never rendered)
 
 
-# Einzige Quelle der Wahrheit für Icon-Kinds (UI/Choices + Rendering).
-# `snippet` ist vom `kind` entkoppelt: mehrere Kinds dürfen dieselbe Datei nutzen.
+# Single source of truth for icon kinds (UI/choices + rendering).
+# `snippet` is decoupled from `kind`: several kinds may reuse the same file.
 ICON_REGISTRY: list[IconDef] = [
-    IconDef("auto", "Automatisch (aus Überschrift)", None),
+    IconDef("auto", "Auto Icon (from heading)", None),
     IconDef("links", "Links", "links"),
     IconDef("projects", "Projects", "projects"),
     IconDef("books", "Books", "books"),
@@ -25,7 +25,7 @@ ICON_REGISTRY: list[IconDef] = [
     IconDef("sponsor", "Sponsor", "sponsors"),
     IconDef("sale", "Sale", "sale"),
     IconDef("dashboards", "Dashboards", "dashboards"),
-    IconDef("default", "Default / Sonstiges", "default"),
+    IconDef("default", "Default / Other", "default"),
 ]
 
 DEFAULT_SNIPPET = "default"
@@ -33,10 +33,10 @@ _SNIPPET_BY_KIND = {d.kind: d.snippet for d in ICON_REGISTRY if d.snippet}
 
 
 def snippet_for_kind(kind: str) -> str:
-    """Snippet-Dateiname für einen kind; unbekannte/fehlende → default."""
+    """Snippet filename for a kind; unknown/missing → default."""
     return _SNIPPET_BY_KIND.get(kind, DEFAULT_SNIPPET)
 
 
 def kind_choices() -> list[tuple[str, str]]:
-    """ChoiceBlock-Choices: alle Registry-Kinds + deprecated `other` als Fallback-Wert."""
+    """ChoiceBlock choices: all registry kinds + the deprecated `other` fallback value."""
     return [(d.kind, d.label) for d in ICON_REGISTRY] + [("other", "Other (deprecated)")]

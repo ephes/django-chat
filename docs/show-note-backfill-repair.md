@@ -159,7 +159,7 @@ restored:
    - Treat a leading top-level `<ul>` or `<ol>` in `detail` as an implicit
      episode-notes link list only when each item is link-only.
    - Convert it to `show_note_link_list` with `show_heading=False`, so it
-     renders under the page-level `Episode Notes` heading instead of an invented
+     renders under the page-level `Show notes` heading instead of an invented
      visible `Links` heading. (With the icon feature it stores `kind="auto"` and
      a materialized `icon="links"`.)
    - Preserve list order.
@@ -190,9 +190,9 @@ restored:
 3. Restore rendered summary/note headings.
    - Render `Episode Summary` before the `overview` body section on episode
      detail pages.
-   - Render `Episode Notes` before the `detail` body section on episode detail
-     pages.
-   - Keep source-authored show-note headings visible below `Episode Notes`.
+   - Render the `detail` body section under the unified page-level `Show notes`
+     heading; it no longer carries a separate `Episode Notes` subheading.
+   - Keep source-authored show-note headings visible within that section.
    - Do not store these wrapper headings in `Episode.body`, because list cards
      and feeds reuse the body blocks differently.
 
@@ -298,7 +298,9 @@ Add focused tests for:
 - Running the repair twice is idempotent.
 - Existing already-structured simple sections remain unchanged.
 - `search_description` uses the short summary, not long show notes.
-- Episode detail pages render `Episode Summary` and `Episode Notes`.
+- Episode detail pages render `Episode Summary`; the `detail` section sits under
+  the unified page-level `Show notes` heading (no separate `Episode Notes`
+  subheading).
 - Unheaded source lists do not render an invented visible `Links` heading.
 - Raw Markdown-like notes become rendered links/headings instead of literal
   Markdown syntax.
@@ -329,8 +331,8 @@ Verify these manually after migration:
 
 Expected results:
 
-- The two affected detail pages render the old first note list under a visible
-  `Episode Notes` heading without an invented visible `Links` heading.
+- The two affected detail pages render the old first note list under the unified
+  `Show notes` heading without an invented visible `Links` heading.
 - The overview text renders under `Episode Summary`.
 - Later structured sections still render in their original order.
 - Simple already-structured sample sections are unchanged; complex source lists
