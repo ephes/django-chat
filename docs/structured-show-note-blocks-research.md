@@ -63,7 +63,23 @@ resolve an icon. Empty headings are left as raw content. Episodes structured
 before D5 kept such sections as raw `<h3>…</h3>` HTML with no icon; migration
 `0017_offload_raw_show_note_headings` re-runs the in-place structuring over
 imported bodies to offload them, leaving already-structured blocks (and their
-icon overrides) untouched. The migration `0015_materialize_show_note_icons` brings existing
+icon overrides) untouched.
+
+D5 also covers **headingless** sources. A leading source list with no heading is
+converted to a `show_note_link_list` (iconed `Links`) when its items are cleanly
+itemizable. When it is not (items mix prose with links, multiple anchors per
+item, …) the list cannot be losslessly itemized, so instead a synthesized iconed
+`Links` `show_note_heading` is emitted and the list is preserved verbatim as a
+following `paragraph` — the headingless analog of the offload above. This only
+applies when the list carries at least one real link; a link-less bullet list is
+not a `Links` section and stays unstructured. Re-structuring is idempotent: a
+list that already follows its own stored heading block does not regain a
+synthesized `Links` heading. Episodes imported before this rule kept such lists
+as a bare `<ul>` with no heading/icon; migration
+`0019_add_implicit_link_list_headings` re-runs the in-place structuring over
+imported bodies to add the heading, leaving already-structured blocks untouched.
+
+The migration `0015_materialize_show_note_icons` brings existing
 data forward (icon-only, no HTML re-parse): it materializes `icon` on stored
 blocks and normalises system-derived `kind` back to `"auto"`, preserving genuine
 overrides. A stored `kind` counts as system-derived (→ `"auto"`) when it is empty,

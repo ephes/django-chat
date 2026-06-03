@@ -253,6 +253,110 @@ def test_support_paragraph_preserves_embedded_link_copy() -> None:
     )
 
 
+def test_headingless_leading_mixed_list_gets_links_heading() -> None:
+    # A leading source list with no heading whose items mix prose with links is
+    # non-convertible (can't be cleanly itemized), so under the icon model it
+    # gets a synthesized iconed "Links" heading while the list is preserved
+    # verbatim as a following paragraph (the analog of D5 heading offload).
+    html = (
+        "<ul>"
+        '<li>@brettcannon <a href="https://github.com/brettcannon">on GitHub</a> '
+        'and <a href="https://fosstodon.org/@brettcannon">Fosstodon</a></li>'
+        '<li><a href="https://snarky.ca/">Brett\'s site</a></li>'
+        "</ul>"
+    )
+
+    blocks, changed = structured_show_note_detail_blocks(html)
+
+    assert changed is True
+    assert [name for name, _value in blocks] == ["show_note_heading", "paragraph"]
+    assert blocks[0][1]["heading"] == "Links"
+    assert blocks[0][1]["kind"] == "auto"
+    assert blocks[0][1]["icon"] == "links"
+    # The list is preserved verbatim: every link and the surrounding prose stay
+    # intact and in source order (no lossy itemization).
+    list_html = blocks[1][1]
+    assert "@brettcannon" in list_html
+    assert list_html.count("<li>") == 2
+    assert 'href="https://fosstodon.org/@brettcannon"' in list_html
+
+
+def test_offloaded_heading_then_list_does_not_gain_links_heading() -> None:
+    # Re-structuring an already-structured body must be idempotent: a list that
+    # follows its own (separately stored) heading block is NOT a headingless
+    # leading list, so it must not gain a spurious synthesized "Links" heading.
+    body = [
+        {
+            "type": "detail",
+            "value": [
+                {
+                    "type": "show_note_heading",
+                    "value": {"heading": "Books", "kind": "auto", "icon": "books"},
+                    "id": "heading",
+                },
+                {
+                    "type": "paragraph",
+                    "value": (
+                        '<ul><li><a href="https://a.test/">Big Panda</a> by James Norbury</li></ul>'
+                    ),
+                    "id": "list",
+                },
+            ],
+            "id": "detail",
+        },
+    ]
+
+    new_body, changed = structure_episode_body_show_notes(body)
+
+    detail = new_body[0]["value"]
+    assert [child["type"] for child in detail] == ["show_note_heading", "paragraph"]
+    assert detail[0]["value"]["heading"] == "Books"
+    assert changed is False
+    # Idempotent down to the stream ids — no churn that would trigger a re-write.
+    assert [child["id"] for child in detail] == ["heading", "list"]
+
+
+def test_paragraph_links_label_after_stored_heading_is_not_dropped() -> None:
+    # A source-authored "Links" label (a <p>Links</p> that normalizes to a
+    # heading) sitting in a paragraph child after a stored heading block must be
+    # offloaded as its own iconed heading — NOT mistaken for the synthesized
+    # headingless-list "Links" heading and dropped by the idempotency dedup.
+    body = [
+        {
+            "type": "detail",
+            "value": [
+                {
+                    "type": "show_note_heading",
+                    "value": {"heading": "Books", "kind": "auto", "icon": "books"},
+                    "id": "books",
+                },
+                {
+                    "type": "paragraph",
+                    "value": (
+                        '<p>Links</p><ul><li><a href="https://a.test/">A</a> by Author</li></ul>'
+                    ),
+                    "id": "links",
+                },
+            ],
+            "id": "detail",
+        },
+    ]
+
+    new_body, changed = structure_episode_body_show_notes(body)
+
+    detail = new_body[0]["value"]
+    assert changed is True
+    assert [child["type"] for child in detail] == [
+        "show_note_heading",
+        "show_note_heading",
+        "paragraph",
+    ]
+    assert detail[0]["value"]["heading"] == "Books"
+    assert detail[1]["value"]["heading"] == "Links"
+    assert detail[1]["value"]["icon"] == "links"
+    assert "by Author" in detail[2]["value"]
+
+
 def test_markdown_prefixed_support_heading_normalizes_without_hashes() -> None:
     blocks, changed = structured_show_note_detail_blocks(
         "<h3>###Support the Show</h3>"
@@ -310,7 +414,7 @@ def test_support_boilerplate_link_list_renders_as_icon_heading_and_copy() -> Non
     )
 
 
-def test_unheaded_leading_list_with_surrounding_text_stays_source_html() -> None:
+def test_unheaded_leading_list_with_surrounding_text_gets_links_heading() -> None:
     blocks, changed = structured_show_note_detail_blocks(
         "<ul>"
         '<li><a href="https://example.com/talk">Talk</a> - PyCon talk by Example</li>'
@@ -320,11 +424,15 @@ def test_unheaded_leading_list_with_surrounding_text_stays_source_html() -> None
         "</ul>"
     )
 
-    assert changed is False
-    assert [name for name, _value in blocks] == ["paragraph"]
-    assert "PyCon talk by Example" in blocks[0][1]
-    assert "See" in blocks[0][1]
-    assert ">One</a> and <a" in blocks[0][1]
+    # Non-convertible (prose + multi-anchor items) but it carries real links, so
+    # it gets a synthesized iconed "Links" heading and the list is kept verbatim.
+    assert changed is True
+    assert [name for name, _value in blocks] == ["show_note_heading", "paragraph"]
+    assert blocks[0][1]["heading"] == "Links"
+    assert blocks[0][1]["icon"] == "links"
+    assert "PyCon talk by Example" in blocks[1][1]
+    assert "See" in blocks[1][1]
+    assert ">One</a> and <a" in blocks[1][1]
 
 
 def test_unheaded_leading_link_only_list_converts_with_visible_links_heading() -> None:
@@ -349,7 +457,7 @@ def test_unheaded_leading_link_only_list_converts_with_visible_links_heading() -
     assert html.count('href="https://example.com/talk"') == 1
 
 
-def test_unheaded_leading_list_with_linkless_item_stays_source_html() -> None:
+def test_unheaded_leading_list_with_linkless_item_gets_links_heading() -> None:
     blocks, changed = structured_show_note_detail_blocks(
         "<ul>"
         '<li><a href="https://example.com/one">One</a></li>'
@@ -359,19 +467,27 @@ def test_unheaded_leading_list_with_linkless_item_stays_source_html() -> None:
         '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>'
     )
 
-    # The linkless leading list stays raw; the "Support the Show" heading is
-    # offloaded by D5 with its copy preserved as a following paragraph.
+    # The leading list carries a real link (alongside a link-less bullet), so it
+    # gets a synthesized iconed "Links" heading with the list kept verbatim; the
+    # "Support the Show" heading is offloaded by D5 with its copy as a paragraph.
     assert changed is True
-    assert [name for name, _value in blocks] == ["paragraph", "show_note_heading", "paragraph"]
-    assert blocks[0][1] == (
+    assert [name for name, _value in blocks] == [
+        "show_note_heading",
+        "paragraph",
+        "show_note_heading",
+        "paragraph",
+    ]
+    assert blocks[0][1]["heading"] == "Links"
+    assert blocks[0][1]["icon"] == "links"
+    assert blocks[1][1] == (
         "<ul>"
         '<li><a href="https://example.com/one">One</a></li>'
         "<li>Missing link stays legacy.</li>"
         "</ul>"
     )
-    assert blocks[1][1]["heading"] == "Support the Show"
-    assert blocks[1][1]["icon"] == "support"
-    assert blocks[2] == (
+    assert blocks[2][1]["heading"] == "Support the Show"
+    assert blocks[2][1]["icon"] == "support"
+    assert blocks[3] == (
         "paragraph",
         '<p>Support us on <a href="https://example.com/support">Patreon</a>.</p>',
     )

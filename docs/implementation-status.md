@@ -224,8 +224,28 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       `0007_hide_implicit_link_list_headings`: implicit "Links" lists (a leading
       source list with no heading) now show their iconed heading instead of a
       bare list, since under the icon model `show_heading=False` also hid the
-      icon. See
+      icon. `0019_add_implicit_link_list_headings` closes the remaining gap a
+      full staging crawl surfaced (42 episodes): a *headingless* leading list that
+      is **non-convertible** (items mix prose with links / multiple anchors, so it
+      cannot be cleanly itemized) was left as a bare `<ul>` with no heading or
+      icon — the clean-list path and `0018` never reached it. D5 now synthesizes
+      an iconed `Links` `show_note_heading` before such a list (list kept verbatim
+      as a following paragraph) when it carries real links; the migration re-runs
+      the idempotent in-place structuring so already-offloaded sections do not
+      gain a spurious `Links` heading. See
       [`docs/structured-show-note-blocks-research.md`](structured-show-note-blocks-research.md).
+      A 2026-06-03 read-only crawl of all 203 live episodes (BeautifulSoup
+      structural detector over `div.show-notes`) confirmed the four classes
+      0015–0018 targeted are clean — zero raw/emoji headings, zero `Episode
+      Notes` leftovers, zero leaked German admin strings, zero bad/empty icon
+      kinds — and surfaced this headingless-list gap on 42 episodes (a prior crawl
+      missed it by only inspecting `ul[role="list"]`; these are bare `<ul>`s with
+      no `role`). Replaying the new converter over those 42 episodes' lists
+      produced an iconed `Links` heading for all 43 leading lists (0 still bare);
+      a live staging re-crawl after deploying `0019` remains to confirm in situ.
+      One unrelated one-off (`greening-django-chris-adams`) has all show notes in
+      `block-overview` (detail-only structuring never reaches it) — a separate
+      non-standard data state tracked as a follow-up.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
