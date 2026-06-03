@@ -64,6 +64,18 @@
   --dc-accent: #2d8260;
   --dc-accent-dark: #14513a;
   --dc-django: #0ea342;
+  /* django-cast custom audio player — map its tokens to the Django Chat
+     forest-green palette so it reads like the Podlove player it replaces:
+     a dark-green play button + thin progress bar on the light page. */
+  --cast-player-accent: #1f6647;
+  --cast-player-on-accent: #ffffff;
+  --cast-player-bg: var(--dc-paper);
+  --cast-player-surface: transparent;
+  --cast-player-fg: #1a1a1a;
+  --cast-player-muted: var(--dc-muted);
+  --cast-player-line: #cfe0d7;
+  --cast-player-progress-track: #c9d8cf;
+  --cast-player-focus: var(--dc-accent);
   /* AAA-safe sibling of `--dc-django`: the bright brand green only reaches
      3.15:1 on paper, so large numeric figures (sponsor stat bubbles, pricing
      tiers) use this slightly deeper #0a7d33 — 4.99:1 on `--dc-paper`, clearing
@@ -255,6 +267,15 @@
      (centered `<main>`), independent of viewport zoom or embeds. */
   --dc-aside-width: clamp(14.375rem, 24cqi, 17.5rem);  /* ~230–280px */
   --dc-aside-column-gap: clamp(1.5rem, 4cqi, 3rem);    /* ~24–48px */
+}
+
+/* Match Podlove's borderless transport: the controls float on the page rather
+   than inside an outlined pill. The share/shortcuts buttons keep their own
+   outline; the transcript/chapters panels keep their subtle card. */
+cast-audio-player .cast-player__transport {
+  border: none !important;
+  background: transparent !important;
+  padding-left: 0;
 }
 
 /* Tablet-and-up gutter bump. Single global breakpoint that re-tokens

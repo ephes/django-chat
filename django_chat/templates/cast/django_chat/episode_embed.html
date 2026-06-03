@@ -1,4 +1,5 @@
 {% load static %}
+{% load cast_audio_player %}
 {% load django_vite %}<!DOCTYPE html>
 <html lang="en" data-theme="light">
   <head>
@@ -90,9 +91,14 @@
         </div>
       {% endif %}
     </div>
+    {% cast_audio_player_mode as audio_player_mode %}
     {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
-      {% vite_asset 'src/audio/podlove-player.ts' app="cast" %}
-      <script defer src="{% static 'django_chat/js/podlove-loader.js' %}?v=podlove-4"></script>
+      {% if audio_player_mode == "custom" %}
+        {% vite_asset 'src/audio/custom-player.ts' app="cast" %}
+      {% else %}
+        {% vite_asset 'src/audio/podlove-player.ts' app="cast" %}
+        <script defer src="{% static 'django_chat/js/podlove-loader.js' %}?v=podlove-4"></script>
+      {% endif %}
     {% endif %}
   </body>
 </html>

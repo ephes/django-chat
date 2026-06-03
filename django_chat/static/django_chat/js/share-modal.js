@@ -128,7 +128,26 @@
     }
   };
 
+  const formatTimecode = (seconds) => {
+    const s = Math.max(0, Math.floor(seconds || 0));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  };
+
+  // Prefill "start at" from the custom audio player's current position. The
+  // player exposes a read-only getShareState(); only prefill mid-playback so the
+  // default share still links to the start of the episode.
+  const prefillStartFromPlayer = () => {
+    if (!startInput || !startToggle) return;
+    const player = document.querySelector("cast-audio-player");
+    const state = player && typeof player.getShareState === "function" ? player.getShareState() : null;
+    if (!state || !(state.currentTime > 0)) return;
+    startInput.value = formatTimecode(state.currentTime);
+    startToggle.checked = true;
+    startInput.disabled = false;
+  };
+
   const openDialog = () => {
+    prefillStartFromPlayer();
     renderPills();
     closeMastodonPrompt();
     updateMastodonStatus();

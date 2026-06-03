@@ -1,7 +1,13 @@
 {% load dc_filters %}
 {% load static %}
+{% load cast_audio_player %}
+{% cast_audio_player_mode as audio_player_mode %}
 {% if page.pk %}
   {% if not render_for_feed %}
+    {% if audio_player_mode == "custom" %}
+      {# django-cast's custom player; styled to the Django Chat green palette. #}
+      {% cast_custom_player value page %}
+    {% else %}
     <podlove-player
       id="audio_{{ value.pk }}"
       data-variant="xl"
@@ -40,5 +46,6 @@
         </button>
       </div>
     </podlove-player>
+    {% endif %}
   {% endif %}
 {% endif %}
