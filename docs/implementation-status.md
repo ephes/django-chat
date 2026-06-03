@@ -168,8 +168,9 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       imported episode bodies and summary metadata on any deployed database,
       fresh imports write the corrected structure directly, and an explicit
       idempotent repair command remains available for dry-run audits and
-      re-runs. The repair converts link-only unheaded HTML lists into hidden-
-      heading episode-note link lists, keeps complex source lists as source
+      re-runs. The repair converts link-only unheaded HTML lists into implicit
+      "Links" episode-note link lists (originally heading-hidden; later un-hidden
+      to show their iconed heading — see 9l / `0018`), keeps complex source lists as source
       HTML when they contain prose around links, backfills `search_description`
       from in-database episode summaries, restores the visible `Episode Summary`
       heading on detail pages (the separate `Episode Notes` subheading was later
@@ -218,7 +219,12 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       replacing the source emoji); `0017_offload_raw_show_note_headings` re-runs
       the in-place structuring over imported bodies so sections left as raw
       `<h3>` HTML by pre-D5 imports become iconed heading blocks, while
-      already-structured blocks and their overrides are left untouched. See
+      already-structured blocks and their overrides are left untouched.
+      `0018_unhide_implicit_link_list_headings` reverses the earlier
+      `0007_hide_implicit_link_list_headings`: implicit "Links" lists (a leading
+      source list with no heading) now show their iconed heading instead of a
+      bare list, since under the icon model `show_heading=False` also hid the
+      icon. See
       [`docs/structured-show-note-blocks-research.md`](structured-show-note-blocks-research.md).
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after

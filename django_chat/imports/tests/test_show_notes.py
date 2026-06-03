@@ -327,7 +327,7 @@ def test_unheaded_leading_list_with_surrounding_text_stays_source_html() -> None
     assert ">One</a> and <a" in blocks[0][1]
 
 
-def test_unheaded_leading_link_only_list_converts_without_visible_links_heading() -> None:
+def test_unheaded_leading_link_only_list_converts_with_visible_links_heading() -> None:
     blocks, changed = structured_show_note_detail_blocks(
         '<ul><li><a href="https://example.com/talk">Talk</a></li></ul>'
     )
@@ -337,12 +337,15 @@ def test_unheaded_leading_link_only_list_converts_without_visible_links_heading(
         "cast/django_chat/show_notes/link_list.html",
         {
             "value": _template_value(blocks[0][1]),
+            "display_kind": blocks[0][1]["icon"],
             "render_for_feed": False,
         },
     )
 
     assert html.count("Talk") == 1
-    assert "Links" not in html
+    # The implicit "Links" list now shows its iconed heading (no longer hidden).
+    assert "Links" in html
+    assert "show-note-icon--links" in html
     assert html.count('href="https://example.com/talk"') == 1
 
 
@@ -399,7 +402,11 @@ def test_raw_markdown_like_notes_convert_to_structured_blocks() -> None:
         "show_note_heading",
         "paragraph",
     ]
-    assert blocks[0][1]["show_heading"] is False
+    # The leading headingless source list becomes an implicit "Links" list that now
+    # shows its iconed heading (no longer hidden — the key is omitted, defaulting True).
+    assert "show_heading" not in blocks[0][1]
+    assert blocks[0][1]["heading"] == "Links"
+    assert blocks[0][1]["icon"] == "links"
     assert [item["title"] for item in blocks[0][1]["items"]] == [
         "Michael Herman personal site",
         "TestDriven.io",
@@ -440,7 +447,7 @@ def test_structure_episode_body_show_notes_reports_repair_classes() -> None:
 
     assert report.changed is True
     assert report.implicit_link_lists_converted == 1
-    assert report.implicit_link_list_headings_hidden == 1
+    assert report.implicit_link_list_headings_hidden == 0
     assert report.implicit_link_lists_skipped == 0
     assert report.raw_markdown_like is True
     assert structured[0]["value"][0]["type"] == "show_note_link_list"

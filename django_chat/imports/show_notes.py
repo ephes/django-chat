@@ -361,7 +361,6 @@ def _structured_show_note_detail_blocks(
                 report.changed = True
                 report.added_structured_block = True
                 report.implicit_link_lists_converted += 1
-                report.implicit_link_list_headings_hidden += 1
                 index += 1
                 continue
             report.implicit_link_lists_skipped += 1
@@ -693,7 +692,6 @@ def _convert_implicit_link_list(list_tag: PageElement) -> BlockTuple | None:
 
     value: dict[str, Any] = {
         "heading": "Links",
-        "show_heading": False,
         "kind": "auto",
         "intro": "",
         "items": items,

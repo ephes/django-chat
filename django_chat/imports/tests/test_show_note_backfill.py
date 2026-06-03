@@ -19,6 +19,84 @@ from django_chat.imports.show_note_backfill import (
 offload_migration = import_module(
     "django_chat.imports.migrations.0017_offload_raw_show_note_headings"
 )
+unhide_migration = import_module(
+    "django_chat.imports.migrations.0018_unhide_implicit_link_list_headings"
+)
+
+
+@pytest.mark.django_db
+def test_migration_0018_unhides_implicit_link_list_headings() -> None:
+    import_django_chat_sample()
+    metadata = EpisodeSourceMetadata.objects.get(episode_number=200)
+    _isolate_metadata(metadata)
+    episode = metadata.episode
+    item = [{"title": "X", "url": "https://x.test", "description": "", "extra_links": []}]
+    episode.body = [
+        ("overview", [("paragraph", "Summary.")]),
+        (
+            "detail",
+            [
+                # Implicit link list with a hidden heading (old importer output).
+                (
+                    "show_note_link_list",
+                    {
+                        "heading": "Links",
+                        "show_heading": False,
+                        "kind": "auto",
+                        "icon": "links",
+                        "intro": "",
+                        "items": item,
+                    },
+                ),
+                # A list that already shows its heading is left alone.
+                (
+                    "show_note_link_list",
+                    {
+                        "heading": "Projects",
+                        "kind": "auto",
+                        "icon": "projects",
+                        "intro": "",
+                        "items": item,
+                    },
+                ),
+                # A deliberately-hidden NON-implicit list (custom heading) must
+                # stay hidden — only the generated implicit "Links" list is un-hidden.
+                (
+                    "show_note_link_list",
+                    {
+                        "heading": "Editor's Picks",
+                        "show_heading": False,
+                        "kind": "auto",
+                        "icon": "links",
+                        "intro": "",
+                        "items": item,
+                    },
+                ),
+            ],
+        ),
+    ]
+    episode.save(update_fields=["body"])
+
+    unhide_migration.unhide_implicit_link_list_headings(django_apps, None)
+
+    episode.refresh_from_db()
+    detail = _body_children(episode, "detail")
+    # The hidden heading is un-hidden (key dropped -> default shows heading + icon);
+    # heading/icon/items are untouched.
+    assert "show_heading" not in detail[0]["value"]
+    assert detail[0]["value"]["heading"] == "Links"
+    assert detail[0]["value"]["icon"] == "links"
+    assert len(detail[0]["value"]["items"]) == 1
+    # The already-visible list is left exactly as-is.
+    assert "show_heading" not in detail[1]["value"]
+    # The deliberately-hidden custom list keeps its hidden heading.
+    assert detail[2]["value"]["show_heading"] is False
+
+    # Idempotent: a second run changes nothing.
+    before = _body_children(episode, "detail")
+    unhide_migration.unhide_implicit_link_list_headings(django_apps, None)
+    episode.refresh_from_db()
+    assert _body_children(episode, "detail") == before
 
 
 @pytest.mark.django_db
@@ -133,7 +211,7 @@ def test_show_note_repair_updates_body_and_search_description() -> None:
     assert result.search_description_rows_changed == 1
     assert detail[0]["type"] == "show_note_link_list"
     assert detail[0]["value"]["heading"] == "Links"
-    assert detail[0]["value"]["show_heading"] is False
+    assert "show_heading" not in detail[0]["value"]
     assert detail[0]["value"]["items"][0]["description"] == ""
     assert episode.search_description == "Short summary."
 
@@ -215,7 +293,7 @@ def test_show_note_repair_restores_complex_source_detail_html() -> None:
 
 
 @pytest.mark.django_db
-def test_show_note_repair_hides_existing_generated_links_heading() -> None:
+def test_show_note_repair_shows_generated_links_heading_for_headingless_source() -> None:
     import_django_chat_sample()
     metadata = EpisodeSourceMetadata.objects.get(episode_number=2)
     _isolate_metadata(metadata)
@@ -261,8 +339,8 @@ def test_show_note_repair_hides_existing_generated_links_heading() -> None:
     detail = _body_children(episode, "detail")
     assert result.body_rows_changed == 1
     assert result.source_detail_blocks_restored == 1
-    assert result.implicit_link_list_headings_hidden == 1
-    assert detail[0]["value"]["show_heading"] is False
+    assert result.implicit_link_list_headings_hidden == 0
+    assert "show_heading" not in detail[0]["value"]
 
 
 @pytest.mark.django_db

@@ -35,7 +35,10 @@ implementation. The first repair pass converted the links, but it still
 introduced a visible `Links` heading that was not present in the source. The
 correct rendered shape should match Simplecast: an episode summary section,
 then an episode notes section, with source-authored note headings preserved but
-no invented `Links` heading for lists that were unheaded in the source.
+no invented `Links` heading for lists that were unheaded in the source. (The
+icon model later reversed this last point: every section now carries its iconed
+heading, so these implicit lists show a generated `Links` heading + links icon —
+see `0018_unhide_implicit_link_list_headings`.)
 
 Representative affected URLs:
 
@@ -158,10 +161,11 @@ restored:
 2. Extend the show-note parser.
    - Treat a leading top-level `<ul>` or `<ol>` in `detail` as an implicit
      episode-notes link list only when each item is link-only.
-   - Convert it to `show_note_link_list` with `show_heading=False`, so it
-     renders under the page-level `Show notes` heading instead of an invented
-     visible `Links` heading. (With the icon feature it stores `kind="auto"` and
-     a materialized `icon="links"`.)
+   - Convert it to `show_note_link_list` with `heading="Links"`, `kind="auto"`,
+     and a materialized `icon="links"`. Under the icon model the heading is shown
+     (its links icon stands in for the missing source heading); the original
+     `show_heading=False` hiding was reverted by
+     `0018_unhide_implicit_link_list_headings`.
    - Preserve list order.
    - Preserve the first anchor as the primary link.
    - Preserve additional anchors as `extra_links`.
@@ -220,7 +224,7 @@ restored:
      - metadata rows that would change;
      - source-derived detail blocks restored;
      - converted leading lists;
-     - generated implicit `Links` headings hidden;
+     - generated implicit `Links` headings hidden (now always 0; see below);
      - leading lists skipped because source prose must stay as source HTML;
      - support-copy sections restored from source detail;
      - raw Markdown-like bodies converted or still reportable;
@@ -228,9 +232,9 @@ restored:
    - These are action counters for rows that need repair. Intentionally
      preserved complex source lists should not keep reporting as skipped after
      the stored body matches the desired source-derived detail block.
-   - Every converted implicit leading list also hides its generated `Links`
-     heading, so `implicit_link_list_headings_hidden` is expected to match
-     `implicit_link_lists_converted` for newly converted rows.
+   - Implicit leading lists now show their generated `Links` heading + icon, so
+     `implicit_link_list_headings_hidden` stays 0 (the field is retained for
+     report compatibility but no longer increments).
 
 6. Add data migrations.
    - Do not edit `imports.0004`; it has already run on staging.
@@ -239,8 +243,10 @@ restored:
    - `imports.0006_repair_remaining_implicit_show_note_lists` covers the
      discovered linkless-list-item fallback after `0005` had already run on
      staging.
-   - `imports.0007_hide_implicit_link_list_headings` hides the generated
-     `Links` heading for already-migrated implicit source lists.
+   - `imports.0007_hide_implicit_link_list_headings` hid the generated `Links`
+     heading for already-migrated implicit source lists (later reverted by
+     `imports.0018_unhide_implicit_link_list_headings` once the icon model wanted
+     every section to show its iconed heading).
    - `imports.0008_convert_legacy_markdown_show_notes` converts the old
      Simplecast Markdown-like bodies.
    - `imports.0009_restore_support_show_copy` restores paragraph-style
@@ -284,7 +290,7 @@ restored:
 Add focused tests for:
 
 - A leading unheaded link-only HTML list converts to a `show_note_link_list`
-  (`show_heading=False`, `kind="auto"`, materialized `icon="links"`).
+  (`kind="auto"`, materialized `icon="links"`) that shows its iconed `Links` heading.
 - A leading or headed HTML list with prose around links remains source HTML.
 - `mongodb-aaron-bassett`-style content converts the leading list while keeping
   later `Support the Show` structured.
@@ -301,7 +307,7 @@ Add focused tests for:
 - Episode detail pages render `Episode Summary`; the `detail` section sits under
   the unified page-level `Show notes` heading (no separate `Episode Notes`
   subheading).
-- Unheaded source lists do not render an invented visible `Links` heading.
+- Unheaded source lists render the generated `Links` heading with its links icon.
 - Raw Markdown-like notes become rendered links/headings instead of literal
   Markdown syntax.
 - Paragraph-style `Support the Show` sections render as full copy with only
@@ -331,8 +337,8 @@ Verify these manually after migration:
 
 Expected results:
 
-- The two affected detail pages render the old first note list under the unified
-  `Show notes` heading without an invented visible `Links` heading.
+- The two affected detail pages render the old first note list under a generated
+  `Links` heading with its links icon (icon model).
 - The overview text renders under `Episode Summary`.
 - Later structured sections still render in their original order.
 - Simple already-structured sample sections are unchanged; complex source lists
