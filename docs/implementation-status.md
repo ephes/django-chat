@@ -378,24 +378,32 @@ growth.
 
 ## Open Work (Highest Signal First)
 
-1. **Host review of staging.** With full catalog + RSS-discovery +
+1. **Custom player transcript/share parity.** The custom-player branch needs a
+   focused polish slice before it replaces staging's Podlove player: restore
+   public speaker labels in the transcript panel, reduce per-line timestamp
+   clutter, make Transcript an attached panel header with a real loading and
+   reveal state, resolve the unclear `Tab cues` control, remove the duplicate
+   in-player share button, and keep site-share `?t=<seconds>` links working.
+   Spec:
+   [`docs/custom-player-transcript-share-spec.md`](custom-player-transcript-share-spec.md).
+2. **Host review of staging.** With full catalog + RSS-discovery +
    Voxhelm transcript handling + Lighthouse/Web Vitals readiness + documented
    production migration risks + pre-review UI polish in place, the staging site
    is ready for host review. Send hosts the URL + `host-review-admin`
    credential.
-2. **Episode tags/taxonomy import decision.** Decide whether source keywords
+3. **Episode tags/taxonomy import decision.** Decide whether source keywords
    should also become Wagtail/taggit episode tags. Do not blindly mirror generic
    RSS keywords into public tags without a UI/editor use case and a preservation
    policy for manual Wagtail tags; if implemented later, prefer a filtered
    source-managed tag strategy that does not wipe editor-curated tags.
-3. **Live feed parity checker.** Add a command/script that compares the current
+4. **Live feed parity checker.** Add a command/script that compares the current
    Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
    generated or S3/CDN-served Django Chat podcast feed. It should fail on item
    count, missing/extra GUIDs, GUID order, publication-date, title, enclosure
    type, latest-episode, and copied-media byte-size regressions, with explicit
    warnings for approved differences such as moved enclosure URLs or equivalent
    duration formatting.
-4. **Performance optimization backlog.** Continue tracking concrete Lighthouse
+5. **Performance optimization backlog.** Continue tracking concrete Lighthouse
    and browser-network follow-ups in
    [`docs/lighthouse-performance.md#performance-optimization-backlog`](lighthouse-performance.md#performance-optimization-backlog).
    The HTML-discoverable `/episodes/` hero background has been verified on
@@ -403,7 +411,7 @@ growth.
    minification now runs during `collectstatic`. Remaining choices are whether
    to split or critical-inline CSS and whether the render-blocking `rel="expect"`
    hints should stay.
-5. **Production VPS, DNS cutover, URL redirects, podcast directory
+6. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
    [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.
@@ -418,10 +426,14 @@ findings (low/accepted) are tracked in
 
 ## Next Action
 
-Proceed to host review. The latest-entries feed mitigation and Lighthouse/Web
-Vitals fixes have been deployed, a 2026-06-02 staging RSS probe confirms both
-RSS routes return 205 items, and the host-review public pages scored 98-100 in
-final mobile and desktop Lighthouse runs. The pre-review cleanup added
+On the custom-player branch, address
+[`docs/custom-player-transcript-share-spec.md`](custom-player-transcript-share-spec.md)
+before using that player for host review. If the branch is not part of the host
+review deploy, proceed to host review from the current staging baseline. The
+latest-entries feed mitigation and Lighthouse/Web Vitals fixes have been
+deployed, a 2026-06-02 staging RSS probe confirms both RSS routes return 205
+items, and the host-review public pages scored 98-100 in final mobile and
+desktop Lighthouse runs. The pre-review cleanup added
 production migration notes, pagination focus/scroll behavior, episode filter
 styling including custom date/select popovers, Wagtail 7.4, and an editable
 Wagtail `SponsorPage` at

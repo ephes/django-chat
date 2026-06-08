@@ -550,6 +550,25 @@ Implementation tracking should stay lightweight:
 
 ## Post-Staging Research Backlog
 
+- [ ] Restore custom player transcript parity and single timestamped share
+      workflow.
+  - Context: the custom player branch replaces the Podlove iframe with
+    django-cast's vanilla JavaScript player. A 2026-06-08 Playwright comparison
+    of `/episodes/django-tasks-jake-howard/` against staging found that the
+    custom transcript panel loads cues but drops visible speaker labels, shows a
+    timestamp on every line, exposes an unclear `Tab cues` control, has no
+    spinner while cues load, treats `Transcript` like a standalone pill button
+    instead of an attached panel header, and adds an in-player share button next
+    to Django Chat's existing share rail item.
+  - Specification:
+    [`docs/custom-player-transcript-share-spec.md`](docs/custom-player-transcript-share-spec.md).
+  - Done when: the custom player transcript shows public contributor-approved
+    speaker labels and staging-quality grouping, per-line timestamp clutter is
+    removed, loading and reveal states feel deliberate, `Tab cues` is
+    removed/relabelled outside the primary path, only one share entry point is
+    visible, and the remaining Django Chat share modal still shares the player's
+    current time through `?t=<seconds>`.
+
 - [x] Research structured show-note blocks for Django Chat episodes.
   - Context: django-cast now has a `CAST_POST_BODY_BLOCKS` extension point that
     can append project-specific Wagtail blocks to the `Post.body` `overview` and
