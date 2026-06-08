@@ -278,6 +278,46 @@ cast-audio-player .cast-player__transport {
   padding-left: 0;
 }
 
+/* The Transcript / Chapters toggle reads as an attached panel header, not a
+   standalone pill button: drop the pill border/fill and the wide padding and
+   left-align it directly under the player, so it occupies a header's worth of
+   space and the hero separator sits close to the player region (the chevron +
+   bold label still signal an expandable control; the open panel reveals below
+   it). Project-specific presentation; the upstream component keeps its default
+   pill for hosts that want it. */
+.audio-panel .cast-panel__toggle {
+  /* !important to beat the unlayered upstream player CSS from inside @layer base,
+     matching the `.cast-player__transport` override above. */
+  border: none !important;
+  background: transparent !important;
+  padding: 0.1rem 0 !important;
+  gap: 0.4rem;
+}
+
+.audio-panel .cast-panel__toggle:hover,
+.audio-panel .cast-panel.is-open .cast-panel__toggle {
+  background: transparent !important;
+  border: none !important;
+  color: var(--dc-accent-dark);
+}
+
+/* Pull the transcript header tight under the transport so the player region (and
+   its separator) ends close to the cover's bottom edge. !important to beat the
+   unlayered upstream `.cast-player__panels { margin-top }`. */
+.audio-panel .cast-player__panels {
+  margin-top: var(--s-2) !important;
+}
+
+/* The opened transcript should read as inline page content, not a floating
+   window/card: drop the panel card's border and rounded corners (its surface is
+   already transparent in the Django Chat tokens) so the cues sit on the page,
+   bounded only by the player region's separator below — which slides down with
+   the transcript as it expands. */
+.audio-panel .cast-panel__reveal {
+  border: none !important;
+  border-radius: 0 !important;
+}
+
 /* Tablet-and-up gutter bump. Single global breakpoint that re-tokens
    `--dc-gutter`; every consumer reads `var(--dc-gutter)` so the change
    flows through `--dc-container`, the platform-band/filter-form bleed
@@ -3378,15 +3418,6 @@ h2[data-vt-episode-title] {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  /* Grid-aligned separator marking the bottom of the player/transcript region.
-     It spans only the hero content column (right of the episode-number column)
-     rather than bleeding the full main width, so the transcript reads as content
-     revealed within a bounded panel region — and opening it pushes this line
-     down with the panel instead of leaving an unrelated page-wide rule under a
-     standalone toggle. Replaces the former full-width `.episode-contributors` /
-     `.episode-body` hairline directly below the player. */
-  padding-bottom: var(--s1);
-  border-bottom: 1px solid var(--dc-line);
 }
 
 .episode-hero h1 {
@@ -3561,7 +3592,31 @@ h2[data-vt-episode-title] {
 .audio-panel {
   --player-min-height: 112px;
   width: min(37.5rem, 100%);
-  margin: var(--s1) 0 0;
+  margin: var(--s-2) 0 0;
+  padding-bottom: var(--s-3);
+  /* Separator = the bottom edge of the player/transcript region, scoped to this
+     column (not the full hero) so it reads as the region's own boundary aligned
+     with the cover, not a page-wide rule. Because the transcript panel lives
+     inside `.audio-panel`, opening the transcript grows the region and carries
+     this line downward with it (the line "expands down" rather than a panel
+     pushing past a fixed rule). */
+  border-bottom: 1px solid var(--dc-line);
+}
+
+/* When the transcript is open the region has grown to a full reading panel, so
+   the separator becomes a full-width rule under the whole hero (over Hosts and
+   Guests) instead of the short cover-aligned line: hand the line off from the
+   player column to the hero. */
+/* Keep the audio-panel padding constant across open/close (only fade the line to
+   transparent) so the panel does not jump at the moment the transcript starts to
+   fold — the height spring is then the only motion. */
+.audio-panel:has(.cast-panel.is-open) {
+  border-bottom-color: transparent;
+}
+
+.episode-hero:has(.cast-panel.is-open) {
+  border-bottom: 1px solid var(--dc-line);
+  padding-bottom: var(--s0);
 }
 
 /* Reserve the player's vertical space on the wrapper, not on

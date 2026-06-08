@@ -400,6 +400,18 @@ growth.
      custom-player browser tests prove speaker headings, sparse timestamps, one
      share control, the loading busy state, and `?t=21` site sharing without
      relying on mutable dev-DB state.
+   Host-review follow-ups (2026-06-08): reproducible diarized demo data via
+   `just manage seed_django_chat_diarized_demo` (assigns the three visible
+   contributors and writes deterministic block speaker labels onto the
+   `django-tasks-jake-howard` cues; run it with staging media to seed the S3
+   transcript that `just dev` reads); a dev-only `DisableTranscriptCacheMiddleware`
+   (local settings) that drops the endpoint's 1-hour browser cache so seeded
+   changes show on the next load; the transcript toggle restyled as a compact
+   borderless panel header (not a pill) with the player pulled up under the
+   headline; the separator rendered short + cover-aligned when closed and
+   full-width over Hosts and Guests when open; the open transcript flattened to
+   read as inline page content; and an upstream django-cast fix making the player
+   focusable so the transport keyboard shortcuts (Space/K/arrows) are reachable.
    Spec:
    [`docs/custom-player-transcript-share-spec.md`](custom-player-transcript-share-spec.md).
 2. **Host review of staging.** With full catalog + RSS-discovery +
