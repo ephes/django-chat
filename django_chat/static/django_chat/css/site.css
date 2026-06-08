@@ -278,27 +278,42 @@ cast-audio-player .cast-player__transport {
   padding-left: 0;
 }
 
-/* The Transcript / Chapters toggle reads as an attached panel header, not a
-   standalone pill button: drop the pill border/fill and the wide padding and
-   left-align it directly under the player, so it occupies a header's worth of
-   space and the hero separator sits close to the player region (the chevron +
-   bold label still signal an expandable control; the open panel reveals below
-   it). Project-specific presentation; the upstream component keeps its default
-   pill for hosts that want it. */
+/* The Transcript / Chapters toggle reads as an attached tab/panel header, not a
+   standalone pill button: drop the pill border/fill and the wide padding, and
+   adopt the sidebar rail's label typography (uppercase mono, letter-spaced,
+   muted) so it reads as a section/tab label rather than a button. The chevron
+   stays as the expand/collapse affordance (and distinguishes this in-place
+   toggle from the rail's "Transcript" page link). Project-specific presentation;
+   the upstream component keeps its default pill for hosts that want it. */
 .audio-panel .cast-panel__toggle {
   /* !important to beat the unlayered upstream player CSS from inside @layer base,
      matching the `.cast-player__transport` override above. */
   border: none !important;
   background: transparent !important;
   padding: 0.1rem 0 !important;
-  gap: 0.4rem;
+  gap: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--dc-muted) !important;
+}
+
+.audio-panel .cast-panel__chevron {
+  color: var(--dc-muted);
 }
 
 .audio-panel .cast-panel__toggle:hover,
 .audio-panel .cast-panel.is-open .cast-panel__toggle {
   background: transparent !important;
   border: none !important;
-  color: var(--dc-accent-dark);
+  color: var(--dc-ink) !important;
+}
+
+.audio-panel .cast-panel__toggle:hover .cast-panel__chevron,
+.audio-panel .cast-panel.is-open .cast-panel__chevron {
+  color: var(--dc-ink);
 }
 
 /* Pull the transcript header tight under the transport so the player region (and
@@ -316,6 +331,15 @@ cast-audio-player .cast-player__transport {
 .audio-panel .cast-panel__reveal {
   border: none !important;
   border-radius: 0 !important;
+}
+
+/* Large transcripts (hundreds of cues) made the open/close height spring stutter
+   because the cue list was re-laid-out as the reveal measured its content height
+   each frame. Containing the scroll region isolates that subtree's layout/paint
+   from the page so the spring stays smooth, without hiding any cue text (so
+   find-in-page, text selection, and the accessibility tree are unaffected). */
+.audio-panel .cast-panel__scroll {
+  contain: content;
 }
 
 /* Tablet-and-up gutter bump. Single global breakpoint that re-tokens
@@ -3418,6 +3442,28 @@ h2[data-vt-episode-title] {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* Anchor the closed player-region separator to the cover height: the content
+     column is kept at least as tall as the episode cover, so when the
+     player + transcript header are shorter than the cover the column's bottom
+     border lands exactly on the cover's bottom edge (logo and line aligned).
+     When the transcript opens the column grows past the cover and the line
+     hands off to a full-width hero rule (below). */
+  min-height: var(--episode-cover-size);
+  border-bottom: 1px solid var(--dc-line);
+}
+
+/* Open: the region has grown to a full reading panel — drop the min-height and
+   the short line, and render a full-width rule under the whole hero (over Hosts
+   and Guests). Only the colour/height swap on `:has`, not padding, so the height
+   spring stays the only motion. */
+.episode-hero-content:has(.cast-panel.is-open) {
+  min-height: 0;
+  border-bottom-color: transparent;
+}
+
+.episode-hero:has(.cast-panel.is-open) {
+  border-bottom: 1px solid var(--dc-line);
+  padding-bottom: var(--s0);
 }
 
 .episode-hero h1 {
@@ -3593,30 +3639,6 @@ h2[data-vt-episode-title] {
   --player-min-height: 112px;
   width: min(37.5rem, 100%);
   margin: var(--s-2) 0 0;
-  padding-bottom: var(--s-3);
-  /* Separator = the bottom edge of the player/transcript region, scoped to this
-     column (not the full hero) so it reads as the region's own boundary aligned
-     with the cover, not a page-wide rule. Because the transcript panel lives
-     inside `.audio-panel`, opening the transcript grows the region and carries
-     this line downward with it (the line "expands down" rather than a panel
-     pushing past a fixed rule). */
-  border-bottom: 1px solid var(--dc-line);
-}
-
-/* When the transcript is open the region has grown to a full reading panel, so
-   the separator becomes a full-width rule under the whole hero (over Hosts and
-   Guests) instead of the short cover-aligned line: hand the line off from the
-   player column to the hero. */
-/* Keep the audio-panel padding constant across open/close (only fade the line to
-   transparent) so the panel does not jump at the moment the transcript starts to
-   fold — the height spring is then the only motion. */
-.audio-panel:has(.cast-panel.is-open) {
-  border-bottom-color: transparent;
-}
-
-.episode-hero:has(.cast-panel.is-open) {
-  border-bottom: 1px solid var(--dc-line);
-  padding-bottom: var(--s0);
 }
 
 /* Reserve the player's vertical space on the wrapper, not on
