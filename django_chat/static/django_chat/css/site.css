@@ -293,15 +293,38 @@ cast-audio-player .cast-player__transport {
   padding: 0.1rem 0 !important;
   gap: var(--s-2);
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
+  /* !important on the metrics that the unlayered upstream `.cast-panel__toggle`
+     also sets (font-size 0.95rem, font-weight 600, letter-spacing -0.01em), so
+     the rail caps treatment actually wins. */
+  font-size: var(--text-sm) !important;
+  font-weight: var(--weight-semibold) !important;
   text-transform: uppercase;
-  letter-spacing: var(--tracking-caps);
+  letter-spacing: var(--tracking-caps) !important;
   color: var(--dc-muted) !important;
 }
 
+/* Replace the upstream chevron SVG with a caret that matches the episode-index
+   filter select control (`.filter-select-icon`: a 12x7 CSS triangle) so the two
+   disclosure triangles read as the same control family. Closed points right,
+   open points down (disclosure), using the same easing as the upstream chevron. */
 .audio-panel .cast-panel__chevron {
-  color: var(--dc-muted);
+  display: none !important;
+}
+
+.audio-panel .cast-panel__toggle::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid currentColor;
+  transform: rotate(-90deg);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.audio-panel .cast-panel.is-open .cast-panel__toggle::before {
+  transform: rotate(0deg);
 }
 
 .audio-panel .cast-panel__toggle:hover,
@@ -311,9 +334,18 @@ cast-audio-player .cast-player__transport {
   color: var(--dc-ink) !important;
 }
 
-.audio-panel .cast-panel__toggle:hover .cast-panel__chevron,
-.audio-panel .cast-panel.is-open .cast-panel__chevron {
-  color: var(--dc-ink);
+/* The niche "keyboard-navigable cues" toggle duplicates the transport's
+   keyboard-shortcuts button (same keyboard glyph) and confuses; hide it here so
+   the player exposes a single keyboard affordance (the cast-transcript-tabbable
+   preference is untouched and still honored if re-enabled upstream). */
+.audio-panel .cast-transcript__iconpref {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .audio-panel .cast-panel__toggle::before {
+    transition: none;
+  }
 }
 
 /* Pull the transcript header tight under the transport so the player region (and
