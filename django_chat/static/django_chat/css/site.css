@@ -3378,6 +3378,15 @@ h2[data-vt-episode-title] {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* Grid-aligned separator marking the bottom of the player/transcript region.
+     It spans only the hero content column (right of the episode-number column)
+     rather than bleeding the full main width, so the transcript reads as content
+     revealed within a bounded panel region — and opening it pushes this line
+     down with the panel instead of leaving an unrelated page-wide rule under a
+     standalone toggle. Replaces the former full-width `.episode-contributors` /
+     `.episode-body` hairline directly below the player. */
+  padding-bottom: var(--s1);
+  border-bottom: 1px solid var(--dc-line);
 }
 
 .episode-hero h1 {
@@ -3466,9 +3475,10 @@ h2[data-vt-episode-title] {
    cast.transcript_sanitization, so the credit list doubles as the public
    speaker allow-list. */
 .episode-contributors {
+  /* The player region above now carries its own grid-aligned bottom separator
+     (`.episode-hero-content`), so the contributors strip no longer needs a
+     full-width top hairline directly under the player. */
   margin: 0 0 var(--s1);
-  padding-top: var(--s1);
-  border-top: 1px solid var(--dc-line);
 }
 
 .episode-contributors__heading {
@@ -3795,6 +3805,14 @@ h2[data-vt-episode-title] {
 .episode-body {
   padding-top: var(--s2);
   border-top: 1px solid var(--dc-line);
+}
+
+/* When no contributors strip sits between the player and the show notes, the
+   player region's own grid-aligned separator (`.episode-hero-content`) already
+   divides them — drop the body's full-width top hairline so the two do not
+   stack directly under the player. */
+.episode-hero + .episode-body {
+  border-top: none;
 }
 
 /* ---------- Transcript page ----------

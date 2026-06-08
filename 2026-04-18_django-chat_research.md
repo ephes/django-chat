@@ -550,8 +550,16 @@ Implementation tracking should stay lightweight:
 
 ## Post-Staging Research Backlog
 
-- [ ] Restore custom player transcript parity and single timestamped share
-      workflow.
+- [x] Restore custom player transcript parity and single timestamped share
+      workflow. Implemented on `feat/custom-player` (dev preview; staging/production
+      keep Podlove until a cutover decision). Generic behavior — sparse labelled
+      timestamps, loading spinner + `aria-busy`, spring reveal honoring
+      `prefers-reduced-motion`, the demoted icon-only keyboard-cues toggle, and the
+      `data-share="none"` transport-share opt-out — landed upstream in django-cast;
+      Django Chat opts the in-transport share button out (one share control),
+      replaces the full-width under-player hairline with a grid-aligned separator,
+      and adds a contributor-backed diarized browser fixture. See
+      [`docs/implementation-status.md`](docs/implementation-status.md) Open Work 1.
   - Context: the custom player branch replaces the Podlove iframe with
     django-cast's vanilla JavaScript player. A 2026-06-08 Playwright comparison
     of `/episodes/django-tasks-jake-howard/` against staging found that the

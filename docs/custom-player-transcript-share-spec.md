@@ -4,6 +4,19 @@ Research and acceptance criteria for bringing the django-cast custom audio
 player branch back to the transcript/share behavior Django Chat already had on
 staging with the Podlove player.
 
+> **Status: implemented on `feat/custom-player` (2026-06-08).** All acceptance
+> criteria below are met. Generic behavior (sparse labelled timestamps, loading
+> spinner + `aria-busy`, spring reveal honoring `prefers-reduced-motion`, the
+> demoted icon-only keyboard-cues toggle, and a `data-share="none"` transport
+> opt-out) landed upstream in django-cast with vitest + pytest coverage; Django
+> Chat bumped its pinned django-cast rev, opted the in-transport share button out,
+> replaced the under-player full-width hairline with a grid-aligned separator, and
+> added a contributor-backed diarized browser fixture. The custom player remains a
+> dev preview (`CAST_AUDIO_PLAYER="custom"` in `config/settings/local.py`);
+> staging and production keep the Podlove player until a cutover decision, so the
+> Podlove-oriented host-review / staging-differences / css-architecture / README
+> docs still describe the deployed player and are intentionally unchanged.
+
 ## Research Snapshot
 
 Compared with Playwright on 2026-06-08:

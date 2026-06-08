@@ -5,8 +5,13 @@
 {% if page.pk %}
   {% if not render_for_feed %}
     {% if audio_player_mode == "custom" %}
-      {# django-cast's custom player; styled to the Django Chat green palette. #}
-      {% cast_custom_player value page %}
+      {% comment %}
+        django-cast's custom player; styled to the Django Chat green palette.
+        transport_share=False suppresses the player's built-in share button so
+        the Django Chat sidebar "Share" rail item is the only share entry point
+        (it still reads the player's current time via getShareState()).
+      {% endcomment %}
+      {% cast_custom_player value page transport_share=False %}
     {% else %}
     <podlove-player
       id="audio_{{ value.pk }}"

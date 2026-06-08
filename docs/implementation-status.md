@@ -378,12 +378,28 @@ growth.
 
 ## Open Work (Highest Signal First)
 
-1. **Custom player transcript/share parity.** The custom-player branch needs a
-   focused polish slice before it replaces staging's Podlove player: restore
-   public speaker labels in the transcript panel, reduce per-line timestamp
-   clutter, make Transcript an attached panel header with a real loading and
-   reveal state, resolve the unclear `Tab cues` control, remove the duplicate
-   in-player share button, and keep site-share `?t=<seconds>` links working.
+1. **Custom player transcript/share parity — implemented on `feat/custom-player`.**
+   The focused polish slice landed (branch only; staging/production still run the
+   Podlove player until a cutover decision). Generic behavior went upstream into
+   django-cast and Django Chat bumped its pinned rev:
+   - Upstream (django-cast): sparse timestamps in labelled transcripts (a muted
+     time anchor only at speaker-run starts; continuation lines keep click-to-seek
+     but hide the timestamp), a loading spinner with `aria-busy`, a restrained
+     spring reveal/collapse that honors `prefers-reduced-motion`, the `Tab cues`
+     control demoted to an icon-only secondary toggle (accessible name +
+     `cast-transcript-tabbable` preserved), and a `data-share="none"`
+     transport-share opt-out (`cast_custom_player ... transport_share=False`).
+     Speaker-label sanitization is unchanged and now regression-tested through
+     `AudioPlayerTranscriptView`. Covered by vitest + pytest.
+   - Django Chat: opts out of the in-transport share button so the sidebar rail
+     is the only share control; the full-width hairline directly below the player
+     is replaced by a grid-aligned separator on `.episode-hero-content` (spans the
+     content column, inset past the episode-number column); a repository-backed
+     browser fixture (`diarized_custom_player_site`) creates a diarized transcript
+     with matching visible contributors (and one stripped non-contributor) so the
+     custom-player browser tests prove speaker headings, sparse timestamps, one
+     share control, the loading busy state, and `?t=21` site sharing without
+     relying on mutable dev-DB state.
    Spec:
    [`docs/custom-player-transcript-share-spec.md`](custom-player-transcript-share-spec.md).
 2. **Host review of staging.** With full catalog + RSS-discovery +
@@ -426,10 +442,14 @@ findings (low/accepted) are tracked in
 
 ## Next Action
 
-On the custom-player branch, address
-[`docs/custom-player-transcript-share-spec.md`](custom-player-transcript-share-spec.md)
-before using that player for host review. If the branch is not part of the host
-review deploy, proceed to host review from the current staging baseline. The
+The custom-player transcript/share parity spec
+([`docs/custom-player-transcript-share-spec.md`](custom-player-transcript-share-spec.md))
+is implemented on `feat/custom-player` and verified (vitest, pytest, fixture-backed
+browser tests, and a Playwright desktop/mobile pass on
+`/episodes/django-tasks-jake-howard/`). It is a dev preview only; staging and
+production keep the Podlove player until a deliberate cutover decision, so the
+host-review baseline is unchanged. Proceed to host review from the current
+staging (Podlove) baseline. The
 latest-entries feed mitigation and Lighthouse/Web Vitals fixes have been
 deployed, a 2026-06-02 staging RSS probe confirms both RSS routes return 205
 items, and the host-review public pages scored 98-100 in final mobile and
