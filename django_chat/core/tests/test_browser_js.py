@@ -612,10 +612,12 @@ def test_custom_player_transcript_speakers_and_sparse_timestamps(
     page.wait_for_selector(".cast-transcript__cue")
 
     # Speaker headings render for the visible contributors; the non-contributor
-    # label is stripped (privacy contract) and never appears. Headings are
-    # uppercased via CSS text-transform, so compare case-insensitively.
+    # label is stripped (privacy contract) and never appears. The heading name
+    # span carries the speaker (the heading row also holds the initial chip and
+    # the run timestamp); names are uppercased via CSS text-transform, so
+    # compare case-insensitively.
     speakers = [
-        text.upper() for text in page.locator(".cast-transcript__speaker").all_inner_texts()
+        text.upper() for text in page.locator(".cast-transcript__speaker-name").all_inner_texts()
     ]
     assert "ADA LOVELACE" in speakers
     assert "GRACE HOPPER" in speakers
@@ -624,13 +626,16 @@ def test_custom_player_transcript_speakers_and_sparse_timestamps(
     # the non-contributor's cue text is still present (only the label is gated)
     assert "I am not a listed contributor." in cues_text
 
-    # Labelled mode: a time anchor only at speaker-run starts, not every line.
+    # Labelled mode: the heading rows carry the timestamps (one per speaker
+    # run); the per-cue gutter timestamps are fully hidden.
     cue_count = page.locator(".cast-transcript__cue").count()
     run_starts = page.locator(".cast-transcript__cue.is-run-start").count()
-    visible_times = page.locator(".cast-transcript__time:visible").count()
+    heading_times = page.locator(".cast-transcript__speaker-time:visible").count()
+    gutter_times = page.locator(".cast-transcript__time:visible").count()
     classes = page.locator(".cast-transcript__cues").get_attribute("class") or ""
     assert "cast-transcript__cues--labelled" in classes
-    assert 0 < visible_times == run_starts < cue_count
+    assert gutter_times == 0
+    assert 0 < heading_times == run_starts < cue_count
 
     # Click-to-seek stays per cue even where the timestamp is hidden: the
     # continuation cue is a real button with seek data.

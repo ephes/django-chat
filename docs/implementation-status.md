@@ -412,6 +412,22 @@ growth.
    full-width over Hosts and Guests when open; the open transcript flattened to
    read as inline page content; and an upstream django-cast fix making the player
    focusable so the transport keyboard shortcuts (Space/K/arrows) are reachable.
+   Transcript beauty/UX review follow-ups (2026-06-11, upstream django-cast
+   `1ad2748e`): diarized transcripts render a heading row per speaker run (an
+   initial chip echoing the Hosts-and-Guests chips, the name, and the run's
+   timestamp; speakerless runs get a time-only anchor) and the per-cue gutter
+   collapses; the current-cue highlight drops the per-line underline band (it
+   painted past the end of each line and read as a glitch) for a single accent
+   border + tint idiom; follow-along keeps look-ahead via `scroll-margin`
+   instead of pinning the active line to the panel's bottom edge; far jumps
+   (search/chapter) land instantly instead of smooth-scrolling for seconds;
+   searching suspends follow (dimmed toggle, Escape clears and re-anchors);
+   speaker comparison is trimmed and labelled cue buttons carry a
+   visually-hidden speaker prefix for screen-reader focus context.
+   Dev caveat: Django's `runserver` serves media without HTTP `Range` support,
+   so Chromium reports the audio unseekable locally — scrubbing and `?t=`
+   deep-links silently no-op under `just dev`. Production serving (nginx/S3)
+   supports ranges and is unaffected; test share-with-timestamp against staging.
    Spec:
    [`docs/custom-player-transcript-share-spec.md`](custom-player-transcript-share-spec.md).
 2. **Host review of staging.** With full catalog + RSS-discovery +
