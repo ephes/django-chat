@@ -17,6 +17,19 @@ staging with the Podlove player.
 > Podlove-oriented host-review / staging-differences / css-architecture / README
 > docs still describe the deployed player and are intentionally unchanged.
 
+> **Addendum (2026-06-11): historical snapshot — the as-built transcript moved
+> on.** This spec is the 2026-06-08 acceptance snapshot; do not treat its
+> detailed timestamp treatment as current. The "muted time anchor at speaker-run
+> starts" plan was superseded by a beauty/UX review round (django-cast
+> `1ad2748e`): speaker runs now open with a heading row (initial chip, name, and
+> the run's timestamp; time-only anchors for speakerless runs) and the per-cue
+> gutter timestamps are fully hidden in labelled mode. The same round replaced
+> the current-cue underline band with an accent-border + tint highlight, added
+> follow-along look-ahead via `scroll-margin`, instant far jumps, and
+> search-suspends-follow. Current behavior is documented in
+> [`docs/implementation-status.md`](implementation-status.md) and the django-cast
+> 0.2.59 release notes.
+
 ## Research Snapshot
 
 Compared with Playwright on 2026-06-08:
