@@ -86,6 +86,23 @@ def page_with_diarized_custom_player(diarized_custom_player_site: None) -> Itera
     yield from _playwright_page(ignore_media_errors=True)
 
 
+@pytest.fixture
+def long_title_custom_player_site(diarized_custom_player_site: None) -> Iterator[None]:
+    # The episode-204 "How France Ditched Microsoft" shape: wraps to two lines
+    # at desktop widths (where the cover is sized to still fit the content)
+    # and to three lines at narrow two-column widths (where the content
+    # outgrows the cover and the separator hands off to the full-width rule).
+    Episode.objects.filter(slug="django-tasks-jake-howard").update(
+        title="How France Ditched Microsoft - Samuel Paccoud",
+    )
+    yield
+
+
+@pytest.fixture
+def page_with_long_title_custom_player(long_title_custom_player_site: None) -> Iterator[Page]:
+    yield from _playwright_page(ignore_media_errors=True)
+
+
 def _is_media_load_error(text: str) -> bool:
     """Benign console noise from the fake (non-decodable) test audio bytes.
 
@@ -706,6 +723,154 @@ def test_custom_player_site_share_uses_player_current_time(
         dialog.locator('.share-pill[data-share-net="twitter"]').get_attribute("href") or ""
     )
     assert "t%3D21" in twitter_href or "t=21" in twitter_href
+
+
+HERO_GEOMETRY_SCRIPT = """
+() => {
+  const hero = document.querySelector('.episode-hero');
+  const cover = hero.querySelector('.episode-number-badge--detail');
+  const content = hero.querySelector('.episode-hero-content');
+  const coverRect = cover.getBoundingClientRect();
+  const contentRect = content.getBoundingClientRect();
+  return {
+    overflowAttr: hero.hasAttribute('data-hero-overflow'),
+    contentBorderColor: getComputedStyle(content).borderBottomColor,
+    heroBorderStyle: getComputedStyle(hero).borderBottomStyle,
+    separatorDelta: (contentRect.y + contentRect.height) - (coverRect.y + coverRect.height),
+  };
+}
+"""
+
+
+@override_settings(CAST_AUDIO_PLAYER="custom")
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_closed_hero_separator_lands_on_cover_bottom_for_short_titles(
+    live_server: Any,
+    page_with_diarized_custom_player: Page,
+) -> None:
+    # Content shorter than the cover: the column's bottom border lands exactly
+    # on the cover's bottom edge (the 1d08d77 min-height anchor).
+    page = page_with_diarized_custom_player
+    page.goto(f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}")
+    page.locator("cast-audio-player .cast-player__transport").wait_for()
+    geometry = page.evaluate(HERO_GEOMETRY_SCRIPT)
+    assert geometry["overflowAttr"] is False
+    assert geometry["contentBorderColor"] != "rgba(0, 0, 0, 0)"
+    assert geometry["heroBorderStyle"] == "none"
+    assert abs(geometry["separatorDelta"]) < 1
+
+
+@override_settings(CAST_AUDIO_PLAYER="custom")
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_closed_hero_separator_stays_on_cover_bottom_for_two_line_titles(
+    live_server: Any,
+    page_with_long_title_custom_player: Page,
+) -> None:
+    # At desktop widths the cover is sized so even a two-line title plus
+    # player + transcript header still fits inside it — the separator must
+    # land on the cover's bottom edge exactly like for short titles.
+    page = page_with_long_title_custom_player
+    page.set_viewport_size({"width": 1500, "height": 1100})
+    page.goto(f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}")
+    page.locator("cast-audio-player .cast-player__transport").wait_for()
+    title_box = page.locator(".episode-hero h1").bounding_box()
+    assert title_box is not None
+    assert title_box["height"] > 60  # actually wraps to two lines
+    geometry = page.evaluate(HERO_GEOMETRY_SCRIPT)
+    assert geometry["overflowAttr"] is False
+    assert geometry["contentBorderColor"] != "rgba(0, 0, 0, 0)"
+    assert geometry["heroBorderStyle"] == "none"
+    assert abs(geometry["separatorDelta"]) < 1
+
+
+@override_settings(CAST_AUDIO_PLAYER="custom")
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_closed_hero_separator_hands_off_when_content_taller_than_cover(
+    live_server: Any,
+    page_with_long_title_custom_player: Page,
+) -> None:
+    # At narrow two-column widths the long title wraps to three lines and the
+    # closed content outgrows the cover: the short line must not stick out
+    # below the cover — episode-hero.js hands off to the full-width hero
+    # rule, the same one the open-transcript state uses.
+    page = page_with_long_title_custom_player
+    page.set_viewport_size({"width": 1000, "height": 1100})
+    page.goto(f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}")
+    page.locator("cast-audio-player .cast-player__transport").wait_for()
+    geometry = page.evaluate(HERO_GEOMETRY_SCRIPT)
+    assert geometry["overflowAttr"] is True
+    assert geometry["contentBorderColor"] == "rgba(0, 0, 0, 0)"
+    assert geometry["heroBorderStyle"] == "solid"
+
+
+HERO_CLOSE_STABILITY_SCRIPT = """
+async () => {
+  const hero = document.querySelector('.episode-hero');
+  const toggle = document.querySelector('.cast-panel__toggle');
+  const states = new Set();
+  const t0 = performance.now();
+  toggle.click();  // fold the open transcript back in
+  const below = document.querySelector('.episode-contributors')
+    || document.querySelector('.show-notes-title');
+  const frames = [];
+  await new Promise((resolve) => {
+    const tick = () => {
+      states.add(JSON.stringify({
+        attr: hero.hasAttribute('data-hero-overflow'),
+        minH: getComputedStyle(hero.querySelector('.episode-hero-content')).minHeight,
+        padB: getComputedStyle(hero).paddingBottom,
+      }));
+      frames.push({t: performance.now() - t0, y: below.getBoundingClientRect().top});
+      if (performance.now() - t0 < 1200) requestAnimationFrame(tick);
+      else resolve();
+    };
+    requestAnimationFrame(tick);
+  });
+  // Stall-then-snap detector: once the fold's spring has decayed below
+  // 0.3px/frame, the page content below the hero must not move again.
+  // (Catches discrete end-of-animation cleanup, e.g. a flex row-gap dying
+  // with the panel body's display:none.)
+  let snapAfterStall = 0;
+  let stalled = false;
+  for (let i = 1; i < frames.length; i++) {
+    const dy = Math.abs(frames[i].y - frames[i - 1].y);
+    if (!stalled && frames[i].t > 150 && dy < 0.3) stalled = true;
+    else if (stalled) snapAfterStall = Math.max(snapAfterStall, dy);
+  }
+  return {styleStates: [...states], snapAfterStall};
+}
+"""
+
+
+@override_settings(CAST_AUDIO_PLAYER="custom")
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.parametrize("viewport_width", [1500, 1000])
+def test_hero_styles_do_not_flip_while_transcript_folds_in(
+    live_server: Any,
+    page_with_long_title_custom_player: Page,
+    viewport_width: int,
+) -> None:
+    # Regression for the close-animation stutter: data-hero-overflow used to
+    # be derived from live geometry, so it flipped (and snapped min-height,
+    # hero border and padding) right as the fold-in spring settled. The
+    # closed-extent measurement keeps every one of those style inputs
+    # constant from the first frame of the close to well past its end —
+    # at both the aligned (1500px) and handed-off (1000px) widths.
+    page = page_with_long_title_custom_player
+    page.set_viewport_size({"width": viewport_width, "height": 1100})
+    page.goto(f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}")
+    page.locator(".cast-panel__toggle", has_text="Transcript").click()
+    page.wait_for_selector(".cast-transcript__cue")
+    page.wait_for_timeout(900)  # open spring settles
+
+    result = page.evaluate(HERO_CLOSE_STABILITY_SCRIPT)
+    states = result["styleStates"]
+    assert len(states) == 1, f"hero separator styles changed mid-close: {states}"
+    # The page below the hero must come to rest with the spring — no late
+    # one-frame snap (e.g. the panels row-gap collapsing on display:none).
+    assert result["snapAfterStall"] < 1, (
+        f"content below hero snapped {result['snapAfterStall']:.2f}px after the close settled"
+    )
 
 
 def episode_index_path() -> str:

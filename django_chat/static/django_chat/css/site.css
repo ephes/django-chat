@@ -350,8 +350,26 @@ cast-audio-player .cast-player__transport {
 
 /* Pull the transcript header tight under the transport so the player region (and
    its separator) ends close to the cover's bottom edge. !important to beat the
-   unlayered upstream `.cast-player__panels { margin-top }`. */
+   unlayered upstream `.cast-player__panels { margin-top }`.
+
+   `row-gap: 0`: the collapsing panel body shares this wrapping flex container
+   with the toggle header, and the container's row-gap belongs to the body's
+   flex LINE — it only disappears when the body flips to `display: none` at the
+   end of the fold animation, snapping everything below the hero by the gap in
+   a single frame (visible whenever the closed hero content is within a gap's
+   height of the cover, e.g. two-line titles). The spacing moves inside the
+   animated reveal (below) so it folds smoothly with the panel; the column-gap
+   between header pills is preserved. */
 .audio-panel .cast-player__panels {
+  margin-top: var(--s-2) !important;
+  row-gap: 0 !important;
+}
+
+/* The open panel's breathing room against the toggle header, relocated from
+   the panels row-gap (see above): inside `.cast-panel__clip` it is clipped by
+   the reveal's 0fr↔1fr track and animates with the fold instead of dying
+   discretely. */
+.audio-panel .cast-panel__clip > :first-child {
   margin-top: var(--s-2) !important;
 }
 
@@ -3340,8 +3358,14 @@ h2[data-vt-episode-title] {
   --episode-natural-top-gap: 4.875rem;
   /* Shared cover size: capping the badge and the sidebar logo at the same
      height keeps the show-notes hairline and the rail hairline on the same
-     baseline (cross-column invariant). */
-  --episode-cover-size: clamp(11.25rem, 18cqi, 13rem);
+     baseline (cross-column invariant). Sized so the closed hero content
+     (eyebrow + a TWO-line title at the capped font size + player + transcript
+     toggle, ~235px) fits inside the cover wherever the title font is capped
+     (container ≳960px) — that keeps the separator on the cover's bottom edge
+     even for long titles like episode 204. Narrower two-column widths wrap
+     long titles to three lines and hand off to the full-width hero rule
+     (see [data-hero-overflow] below). */
+  --episode-cover-size: clamp(11.25rem, 25cqi, 15rem);
   padding: clamp(0.75rem, 3vw, 2.25rem) 0 4rem;
   display: grid;
   /* Sidebar min (`--dc-aside-width` lower bound) fits the logo at its
@@ -3487,13 +3511,19 @@ h2[data-vt-episode-title] {
 /* Open: the region has grown to a full reading panel — drop the min-height and
    the short line, and render a full-width rule under the whole hero (over Hosts
    and Guests). Only the colour/height swap on `:has`, not padding, so the height
-   spring stays the only motion. */
-.episode-hero-content:has(.cast-panel.is-open) {
+   spring stays the only motion.
+   `[data-hero-overflow]` is the same handoff for the *closed* state when the
+   content column is naturally taller than the cover (e.g. a two-line title
+   plus player and transcript header) — episode-hero.js sets it, since CSS
+   cannot compare the column's natural height against the cover. */
+.episode-hero-content:has(.cast-panel.is-open),
+.episode-hero[data-hero-overflow] .episode-hero-content {
   min-height: 0;
   border-bottom-color: transparent;
 }
 
-.episode-hero:has(.cast-panel.is-open) {
+.episode-hero:has(.cast-panel.is-open),
+.episode-hero[data-hero-overflow] {
   border-bottom: 1px solid var(--dc-line);
   padding-bottom: var(--s0);
 }
