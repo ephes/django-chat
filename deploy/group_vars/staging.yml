@@ -3,6 +3,9 @@ django_chat_environment: staging
 django_chat_wagtail_fqdn: djangochat.staging.django-cast.com
 django_chat_traefik_host_rule: "Host(`{{ django_chat_wagtail_fqdn }}`)"
 django_chat_django_allowed_hosts: "{{ django_chat_wagtail_fqdn }},localhost"
+# Hosts review the django-cast custom audio player on staging (production
+# keeps Podlove until sign-off; see django_chat.yml).
+django_chat_audio_player: "custom"
 
 wagtail_fqdn: "{{ django_chat_wagtail_fqdn }}"
 wagtail_traefik_host_rule: "{{ django_chat_traefik_host_rule }}"

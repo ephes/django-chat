@@ -379,8 +379,12 @@ growth.
 ## Open Work (Highest Signal First)
 
 1. **Custom player transcript/share parity — implemented on `feat/custom-player`.**
-   The focused polish slice landed (branch only; staging/production still run the
-   Podlove player until a cutover decision). Generic behavior went upstream into
+   The focused polish slice landed. Player cutover (2026-06-11):
+   `CAST_AUDIO_PLAYER` is env-configurable in production settings and the
+   staging deploy sets it to `"custom"` (`deploy/group_vars/staging.yml`), so
+   hosts review the custom player on staging; production keeps the Podlove
+   player (`"podlove"` default) until host sign-off. Generic behavior went
+   upstream into
    django-cast and Django Chat bumped its pinned rev:
    - Upstream (django-cast): sparse timestamps in labelled transcripts (a muted
      time anchor only at speaker-run starts; continuation lines keep click-to-seek

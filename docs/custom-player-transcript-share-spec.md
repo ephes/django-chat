@@ -13,9 +13,12 @@ staging with the Podlove player.
 > replaced the under-player full-width hairline with a grid-aligned separator, and
 > added a contributor-backed diarized browser fixture. The custom player remains a
 > dev preview (`CAST_AUDIO_PLAYER="custom"` in `config/settings/local.py`);
-> staging and production keep the Podlove player until a cutover decision, so the
-> Podlove-oriented host-review / staging-differences / css-architecture / README
-> docs still describe the deployed player and are intentionally unchanged.
+> staging and production kept the Podlove player at the time of this snapshot.
+> Since 2026-06-11 staging deploys with the custom player
+> (`django_chat_audio_player: "custom"` in `deploy/group_vars/staging.yml`);
+> production keeps Podlove until host sign-off, so the Podlove-oriented
+> host-review / staging-differences / css-architecture / README docs still
+> describe the production player.
 
 > **Addendum (2026-06-11): historical snapshot — the as-built transcript moved
 > on.** This spec is the 2026-06-08 acceptance snapshot; do not treat its
