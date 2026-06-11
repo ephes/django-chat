@@ -40,7 +40,13 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'django_chat/favicon.svg' %}">
     <link rel="alternate icon" type="image/x-icon" href="{% static 'django_chat/favicon.ico' %}">
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'django_chat/apple-touch-icon.png' %}">
-    <script defer src="{% static 'django_chat/js/view-transitions.js' %}?v=vt-prototype-13"></script>
+    {% comment %}
+      Classic parser-blocking on purpose: the pageswap/pagereveal listeners must
+      be registered before the first rendering opportunity or the inbound-page
+      handler (scroll restore, morph-element naming, transition types) never
+      runs. defer/async lose that race on cross-document view transitions.
+    {% endcomment %}
+    <script src="{% static 'django_chat/js/view-transitions.js' %}?v=vt-prototype-13"></script>
     {% comment %}
       Set the reveal gate pre-paint so card-reveal.js's start offset never flashes.
       Guard on reduced-motion + IntersectionObserver so unsupported / opted-out

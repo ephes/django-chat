@@ -280,6 +280,19 @@ Done:
   critical-CLS height guard whose `podlove-player` selectors no longer
   matched anything. The custom player is server-rendered, so no replacement
   CLS reserve is needed (measured CLS stayed near zero without it).
+- 2026-06-11: Reverted the 2026-05-19 `view-transitions.js` defer. The deferred
+  script registered its `pagereveal` listener only after the full document
+  parse (readyState `interactive`), while the browser fires `pagereveal` at the
+  first rendering opportunity — on staging the listener lost that race on
+  every cross-document navigation (instrumented Chromium showed the event
+  firing 13–160 ms before registration), so detail-to-overview navigations
+  landed at the top without the reverse morph. The earlier local timing probe
+  that justified the defer passed only because localhost wins the race. The
+  file must stay a classic parser-blocking head script (~5.5 KiB transfer);
+  a browser regression test now pins the registration to readyState
+  `loading`. Do not re-defer; if its render-blocking cost ever matters,
+  the only safe alternative is `async` plus `blocking="render"`, which still
+  blocks first render by design.
 
 Planned:
 

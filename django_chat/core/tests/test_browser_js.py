@@ -229,6 +229,57 @@ def test_filter_navigation_keeps_replaced_form_enhanced(
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_back_to_episodes_restores_scroll_and_clears_remembered_index_state(
+    live_server: Any,
+    page: Page,
+) -> None:
+    # Regression test: view-transitions.js must register its pagereveal
+    # listener before the first rendering opportunity (classic head script,
+    # not defer/async). When the listener loses that race, the inbound index
+    # page never restores the remembered scroll position and the one-shot
+    # sessionStorage state is never consumed.
+    #
+    # The race itself is timing-dependent (localhost usually wins it even with
+    # defer), so pin the deterministic mechanism: the listener must be added
+    # while the document is still parsing. defer/async scripts run at
+    # readyState "interactive", after the parser — and after the browser may
+    # already have fired pagereveal on slower real-world loads.
+    page.add_init_script(
+        """
+        window.__vtPagerevealListenerReadyState = null;
+        const originalAddEventListener = window.addEventListener.bind(window);
+        window.addEventListener = function (type, listener, options) {
+            if (type === "pagereveal" && window.__vtPagerevealListenerReadyState === null) {
+                window.__vtPagerevealListenerReadyState = document.readyState;
+            }
+            return originalAddEventListener(type, listener, options);
+        };
+        """
+    )
+    page.goto(f"{live_server.url}{episode_index_path()}")
+    assert page.evaluate("window.__vtPagerevealListenerReadyState") == "loading"
+    row = page.locator("a.episode-row").last
+    slug = row.get_attribute("data-vt-episode-slug")
+    row.scroll_into_view_if_needed()
+    scroll_before = page.evaluate("window.scrollY")
+    assert scroll_before > 0
+    row.click()
+
+    page.locator("[data-vt-page='episode-detail']").wait_for()
+    stored = page.evaluate("JSON.parse(sessionStorage.getItem('djangoChatEpisodeIndexUrl'))")
+    assert stored["episodeSlug"] == slug
+    assert stored["scrollY"] == scroll_before
+    # With a recorded scroll position the static #all-episodes fallback hash
+    # is dropped so the scroll restore owns the landing position.
+    page.wait_for_function("() => !document.querySelector('a.back-link').href.includes('#')")
+    page.locator("a.back-link").click()
+
+    page.locator("[data-vt-page='episode-index']").wait_for()
+    page.wait_for_function(f"() => Math.abs(window.scrollY - {scroll_before}) < 1")
+    assert page.evaluate("sessionStorage.getItem('djangoChatEpisodeIndexUrl')") is None
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_share_rail_button_opens_share_dialog_and_close_button_dismisses_it(
     live_server: Any,
     page: Page,

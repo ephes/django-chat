@@ -457,10 +457,13 @@ growth.
    and browser-network follow-ups in
    [`docs/lighthouse-performance.md#performance-optimization-backlog`](lighthouse-performance.md#performance-optimization-backlog).
    The HTML-discoverable `/episodes/` hero background has been verified on
-   staging, view-transition JavaScript is deferred, and first-party CSS
-   minification now runs during `collectstatic`. Remaining choices are whether
-   to split or critical-inline CSS and whether the render-blocking `rel="expect"`
-   hints should stay.
+   staging, and first-party CSS minification now runs during `collectstatic`.
+   The view-transition JavaScript defer was reverted on 2026-06-11: the script
+   must stay a classic parser-blocking head script so its `pagereveal` listener
+   is registered before the first rendering opportunity (deferred, it lost that
+   race on staging and broke the detail-to-overview transition and scroll
+   restore). Remaining choices are whether to split or critical-inline CSS and
+   whether the render-blocking `rel="expect"` hints should stay.
 6. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
