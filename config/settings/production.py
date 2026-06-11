@@ -23,12 +23,6 @@ CSRF_TRUSTED_ORIGINS = env.list(
     default=[f"https://{host}" for host in ALLOWED_HOSTS if host not in {"localhost", "127.0.0.1"}],
 )
 
-# Episode-page audio player. Staging sets CAST_AUDIO_PLAYER="custom" (deploy
-# group_vars) so hosts review the django-cast custom player; production keeps
-# the Podlove Web Player until that sign-off. Validated by the cast system
-# checks ("podlove" or "custom").
-CAST_AUDIO_PLAYER = env("CAST_AUDIO_PLAYER", default="podlove")
-
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)

@@ -17,7 +17,7 @@ Current live state:
 - Full-catalog audio has been copied to the configured S3 bucket and is served
   through the public media host. All live imported episodes have
   `podcast_audio` set and episode detail pages render the django-cast
-  **Podlove web player** (`<podlove-player>` element).
+  **custom audio player** (`<cast-audio-player>` element).
 - `/episodes/preview/transcript/` demonstrates a Voxhelm-generated
   django-cast transcript for the preview episode.
 - The deployed staging database should still be measured before host handoff
@@ -53,8 +53,8 @@ command has been run against production settings on the staging host.
 Sample MP3s are stored in the Django Chat staging bucket and reachable
 through the public media host with HTTP 200 and `Content-Type: audio/mpeg`,
 providing an end-to-end playback proof. The show artwork has been attached
-as the podcast page's `cover_image` (a `wagtail.images.Image`). The compact
-Podlove player no longer displays a large cover slot, and episode detail
+as the podcast page's `cover_image` (a `wagtail.images.Image`). The player
+does not display a large cover slot, and episode detail
 heroes render the static Django Chat SVG logo. The imported raster artwork
 still feeds django-cast metadata, feed, and player API image data.
 Project-level social image tags use `PodcastSourceMetadata.image_url` when
@@ -63,16 +63,11 @@ available, not this Wagtail `cover_image`.
 Expected differences from Simplecast:
 
 - Audio URLs come from the Django Chat media host, not Simplecast.
-- Simplecast player JavaScript is not used. Episode detail pages embed a
-  compact Podlove web player, loaded via `django-vite` against django-cast's
-  prebuilt manifest and a Django Chat local `data-template` endpoint. Django
-  Chat declares the public site as a light theme so user-agent dark-mode
-  preferences do not switch the compact player iframe background.
-- The heavy embed script (`cast/js/web-player/embed.5.js`, ~138 KB)
-  loads only after the user interacts with the lightweight player-shaped
-  facade by hover, focus, tap, or click, keeping it off the critical render
-  path. The facade keeps the compact player footprint stable until the real
-  iframe is ready.
+- Simplecast player JavaScript is not used. Episode detail pages render
+  django-cast's custom audio player (`<cast-audio-player>`), loaded via
+  `django-vite` against django-cast's prebuilt manifest and themed through
+  the `--cast-player-*` token API. The transport is server-rendered, so no
+  third-party player iframe or heavy embed script is involved.
 - Simplecast analytics, dynamic ad insertion, and Simplecast download tracking
   are not reproduced.
 - Browser playback behavior may differ because the player comes from the

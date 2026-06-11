@@ -28,10 +28,6 @@ def active_filter_parameters(request: HttpRequest) -> QueryDict:
     return parameters
 
 
-def podlove_player_template(request: HttpRequest) -> HttpResponse:
-    return render(request, "cast/django_chat/player_template.html", {})
-
-
 @xframe_options_exempt
 def episode_embed(request: HttpRequest, episode_slug: str) -> HttpResponse:
     """Minimal player-only view suitable for `<iframe>` embedding on third-party sites."""

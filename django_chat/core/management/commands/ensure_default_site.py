@@ -6,9 +6,7 @@ updates the default ``wagtail.models.Site`` row when it differs. Also
 ensures the site's ``TemplateBaseDirectory`` setting matches
 ``DJANGO_CHAT_SITE_TEMPLATE_BASE_DIR`` (default ``django_chat``) so the
 django-cast theme lookup resolves to the project theme without each
-request needing a query param. The theme assignment is what makes
-``CAST_PODLOVE_PLAYER_THEMES`` actually take effect for player config
-requests.
+request needing a query param.
 
 Saving the Site row triggers Wagtail's ``post_save`` signal, which
 clears the cache of site root paths used to build canonical / OG URLs.

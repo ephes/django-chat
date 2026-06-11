@@ -1,7 +1,7 @@
 {% load static %}
 {% load wagtailimages_tags %}
 <!DOCTYPE html>
-{# Pin light theme so django-cast does not request dark Podlove iframe chrome on this light site. #}
+{# Pin light theme so django-cast components render light chrome on this light site. #}
 <html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8">
@@ -40,28 +40,6 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'django_chat/favicon.svg' %}">
     <link rel="alternate icon" type="image/x-icon" href="{% static 'django_chat/favicon.ico' %}">
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'django_chat/apple-touch-icon.png' %}">
-    <style>
-      /* Critical CLS guard: reserve Podlove height before external CSS loads. */
-      podlove-player {
-        display: block;
-        height: 302px !important;
-        min-height: 302px !important;
-      }
-      podlove-player[data-template] {
-        height: auto !important;
-        min-height: 112px !important;
-      }
-      @media (max-width: 47.5em) {
-        podlove-player {
-          height: 514px !important;
-          min-height: 514px !important;
-        }
-        podlove-player[data-template] {
-          height: auto !important;
-          min-height: 168px !important;
-        }
-      }
-    </style>
     <script defer src="{% static 'django_chat/js/view-transitions.js' %}?v=vt-prototype-13"></script>
     {% comment %}
       Set the reveal gate pre-paint so card-reveal.js's start offset never flashes.

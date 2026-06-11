@@ -20,7 +20,7 @@ fallbacks](#color-tokens-and-color-mix-fallbacks).
 The stylesheet declares a single explicit layer order near the top:
 
 ```css
-@layer base, components, podlove, modals;
+@layer base, components, modals;
 ```
 
 Later layers win over earlier ones regardless of selector specificity, and
@@ -33,9 +33,13 @@ needs to look up by name regardless of cascade position) always apply.
 | Layer        | Owns                                                                                                                       |
 |--------------|----------------------------------------------------------------------------------------------------------------------------|
 | `base`       | Tokens (`:root`), resets, typography, `html`/`body`, sticky-footer skeleton, `.site-header`, `.site-nav`, `.site-footer`. |
-| `components` | Ordinary site components: `.show-*`, `.episode-*`, `.filter-*`, `.feed-*`, `.subscribe-*`, `.sponsor-*`, `.transcript-*`, page-header pattern, layout primitives, pagination, status pages, cards. |
-| `podlove`    | `.audio-panel`, the Podlove player facade, Podlove vendor-shadow overrides, and the Podlove-specific mobile container query. |
+| `components` | Ordinary site components: `.show-*`, `.episode-*`, `.filter-*`, `.feed-*`, `.subscribe-*`, `.sponsor-*`, `.transcript-*`, `.audio-panel`, page-header pattern, layout primitives, pagination, status pages, cards. |
 | `modals`     | Share dialog, embed dialog, their overlay/`::backdrop` styling and animation. |
+
+(A dedicated `podlove` vendor layer existed while episode pages rendered the
+Podlove Web Player; it was removed with the player after the custom-player
+cutover. The django-cast custom player is styled through its `--cast-player-*`
+tokens and `.cast-*` overrides in `base`/`components`.)
 
 ### Unlayered, on purpose
 
@@ -58,8 +62,8 @@ identity-keyed; wrapping them in a layer adds nothing.
 ### Reopening layers
 
 The same layer name may be reopened any number of times. The file does this
-on purpose: `components` is reopened after the view-transition block, then
-again after the podlove mobile block, etc. The layer order declared at the
+on purpose: `components` is reopened after the view-transition block, etc.
+The layer order declared at the
 top of the file fixes the cascade — reopening only appends rules to the
 named bucket. Treat layer boundaries as the architectural seam:
 
@@ -73,7 +77,7 @@ named bucket. Treat layer boundaries as the architectural seam:
 
 All globally exposed design tokens use the `--dc-*` prefix. The prefix marks
 "this is a Django Chat design token" and prevents collisions with vendor
-custom properties from Podlove or Wagtail.
+custom properties from django-cast (`--cast-player-*`) or Wagtail.
 
 Examples:
 
@@ -225,23 +229,21 @@ class instead of growing the global list.
   pure progressive enhancement (no JS → static hero, brand hidden, hero
   logo visible as the only mark). New components must keep that contract.
 
-## Vendor / Podlove rules
+## Vendor / player rules
 
-- Podlove component styling and vendor-shadow overrides belong in the
-  `podlove` layer. That covers the player facade, layout, colours,
-  `.audio-panel` chrome, and any rule that targets `.podlove-*` classes for
-  visual reasons.
-- Cross-cutting **global policies** may still mention Podlove selectors
-  when the rule applies site-wide. Examples in `base` today: the
-  view-transition opt-out (`view-transition-name: none` on `.audio-panel`,
-  `podlove-player`, and their descendants so the player never participates
-  in view transitions) and the cursor-pointer policy that lists every real
-  `<button>` selector on the site, including the Podlove player button.
-  These are part of a global rule, not Podlove styling, and stay in `base`.
-- **Do not rename Podlove classes** — they come from the vendor element's
-  shadow-DOM template. Override them by selector instead.
-- Keep `!important` declarations local to Podlove overrides. Outside the
-  vendor layer they are a code smell.
+- The episode audio player is django-cast's custom player. Theme it through
+  its `--cast-player-*` tokens first; targeted `.cast-*` selector overrides
+  (e.g. `.cast-panel__toggle`, `.cast-player__transport`) are acceptable for
+  project-specific presentation the token API does not cover.
+- Cross-cutting **global policies** may still mention player selectors when
+  the rule applies site-wide. Example in `base` today: the view-transition
+  opt-out (`view-transition-name: none` on `.audio-panel` and its
+  descendants so the player never participates in view transitions).
+- **Do not rename `.cast-*` classes** — they come from the upstream
+  component. Override them by selector instead.
+- Keep `!important` declarations local to vendor overrides (the upstream
+  player ships unlayered CSS, so beating it from inside a layer needs
+  `!important`). Outside vendor overrides they are a code smell.
 
 ## Pattern rules
 
@@ -325,10 +327,10 @@ make every button page-specific override a fight against the abstraction.
 
 - Don't move `@font-face`, `@view-transition`, `::view-transition-*`, or
   `@keyframes dc-vt-*` rules into a layer.
-- Don't change the order of `@layer base, components, podlove, modals;`.
+- Don't change the order of `@layer base, components, modals;`.
 - Don't introduce a generic button system or rename the contextual button
   classes.
-- Don't rename Podlove (`.podlove-*`) classes.
+- Don't rename upstream django-cast (`.cast-*`) classes.
 - Don't add support for browsers below iOS/Safari 16.
 - Don't grow the global un-prefixed class list (`.eyebrow`, `.back-link`,
   `.card`, …). New components get a domain prefix.

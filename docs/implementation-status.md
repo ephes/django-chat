@@ -261,8 +261,9 @@ PRD section "Acceptance Criteria For The Research Spike".
       the 8/8 copied sample; a 2026-04-29 staging catalog measurement reported
       full copied-audio coverage for the then-current 202 live episodes. A
       2026-06-02 public RSS probe found 205 current podcast items with 205
-      `audio/mpeg` enclosures. Detail pages render Podlove
-      `<podlove-player>` elements with django-vite-loaded init module.
+      `audio/mpeg` enclosures. Detail pages render django-cast custom
+      `<cast-audio-player>` elements with a django-vite-loaded player module
+      (Podlove elements before the 2026-06-11 cutover).
 - [x] Public URL patterns `/`, `/episodes/`, `/episodes/<slug>`, and
       `/episodes/<slug>/transcript` represented or redirected. `/episodes/`
       and imported episode detail pages are live; generated django-cast
@@ -303,15 +304,14 @@ polished site:
 - Black header with show artwork mark, single-column episode rows,
   Roboto type stack self-hosted, filterset search/date facets/ordering,
   branded error pages, favicon trio, OG/Twitter metadata.
-- Compact Podlove player on episode detail, themed with the Django-green brand
-  tokens via `CAST_PODLOVE_PLAYER_THEMES` and a local `data-template` endpoint.
-  The page renders a lightweight click-to-load facade first; the external
-  Podlove bundle and iframe load after hover, focus, tap, or click. The compact
-  template keeps the transcript tab available; the transcript tab uses Podlove's
-  transcript-results list as the only vertical scroller, avoiding a redundant
-  outer panel scrollbar, while non-transcript tabs retain a 420px internal panel
-  cap. Episodes with an attached django-cast `Transcript` expose transcript data
-  through the Podlove API and link to the themed transcript route.
+- django-cast custom audio player (`<cast-audio-player>`) on episode detail,
+  themed to the Django Chat green palette via the `--cast-player-*` token API
+  with the in-transport share button suppressed (the sidebar Share rail item is
+  the only share entry point). Episodes with an attached django-cast
+  `Transcript` render the inline Transcript panel and link to the themed
+  transcript route. The earlier compact Podlove player path (click-to-load
+  facade, theme settings, template-proxy endpoint, loader script) was removed
+  on 2026-06-11 after the staging cutover.
 - Episode detail heroes render the static Django Chat SVG logo; imported show
   artwork stays attached to `Podcast.cover_image` for django-cast metadata,
   feed, and player API image paths.
@@ -354,8 +354,9 @@ growth.
   `/episodes/`, `/episodes/django-tasks-jake-howard/`, and `/episodes/feed/`
   in both mobile and desktop modes with final scores of 98-100 across
   Performance, Accessibility, Best Practices, and SEO. See
-  `docs/lighthouse-performance.md` for commands, artifact paths, before/after
-  scores, and the remaining Podlove unused-CSS/JS caveat.
+  `docs/lighthouse-performance.md` for commands, artifact paths, and
+  before/after scores; a 2026-06-11 re-run against the custom player scored
+  99-100.
 - Latest-entries feed query behavior has a scoped Django Chat mitigation.
   Staging measurement on 2026-04-29 reported `queries=620` across 202 items
   because django-cast's latest-entries feed builds podcast feeds from base
@@ -378,13 +379,14 @@ growth.
 
 ## Open Work (Highest Signal First)
 
-1. **Custom player transcript/share parity — implemented on `feat/custom-player`.**
-   The focused polish slice landed. Player cutover (2026-06-11):
-   `CAST_AUDIO_PLAYER` is env-configurable in production settings and the
-   staging deploy sets it to `"custom"` (`deploy/group_vars/staging.yml`), so
-   hosts review the custom player on staging; production keeps the Podlove
-   player (`"podlove"` default) until host sign-off. Generic behavior went
-   upstream into
+1. **Custom player transcript/share parity — implemented and cut over.**
+   The focused polish slice landed. Player cutover (2026-06-11): staging
+   serves the custom player, and the Podlove player path was then removed
+   from the repo entirely (loader script, facade markup/CSS, theme settings,
+   template-proxy endpoint, deploy toggle); `CAST_AUDIO_PLAYER` is pinned to
+   `"custom"` in base settings for all environments. Reverting to Podlove
+   would mean reverting the removal commit, not flipping a setting. Generic
+   behavior went upstream into
    django-cast and Django Chat bumped its pinned rev:
    - Upstream (django-cast): sparse timestamps in labelled transcripts (a muted
      time anchor only at speaker-run starts; continuation lines keep click-to-seek
@@ -476,12 +478,13 @@ findings (low/accepted) are tracked in
 
 The custom-player transcript/share parity spec
 ([`docs/custom-player-transcript-share-spec.md`](custom-player-transcript-share-spec.md))
-is implemented on `feat/custom-player` and verified (vitest, pytest, fixture-backed
+is implemented and verified (vitest, pytest, fixture-backed
 browser tests, and a Playwright desktop/mobile pass on
-`/episodes/django-tasks-jake-howard/`). It is a dev preview only; staging and
-production keep the Podlove player until a deliberate cutover decision, so the
-host-review baseline is unchanged. Proceed to host review from the current
-staging (Podlove) baseline. The
+`/episodes/django-tasks-jake-howard/`). Staging was cut over to the custom
+player and the Podlove player path has been removed from the repo
+(2026-06-11); a fresh staging Lighthouse pass against the custom player
+scored 99-100 across all categories. Proceed to host review from the current
+staging (custom player) baseline. The
 latest-entries feed mitigation and Lighthouse/Web Vitals fixes have been
 deployed, a 2026-06-02 staging RSS probe confirms both RSS routes return 205
 items, and the host-review public pages scored 98-100 in final mobile and

@@ -1,56 +1,12 @@
-{% load dc_filters %}
-{% load static %}
 {% load cast_audio_player %}
-{% cast_audio_player_mode as audio_player_mode %}
 {% if page.pk %}
   {% if not render_for_feed %}
-    {% if audio_player_mode == "custom" %}
-      {% comment %}
-        django-cast's custom player; styled to the Django Chat green palette.
-        transport_share=False suppresses the player's built-in share button so
-        the Django Chat sidebar "Share" rail item is the only share entry point
-        (it still reads the player's current time via getShareState()).
-      {% endcomment %}
-      {% cast_custom_player value page transport_share=False %}
-    {% else %}
-    <podlove-player
-      id="audio_{{ value.pk }}"
-      data-variant="xl"
-      data-url="{% url 'cast:api:audio_podlove_detail' pk=value.pk post_id=page.pk %}"
-      data-embed="{% static 'cast/js/web-player/embed.5.js' %}"
-      {# Django Chat ships a single local theme, so pin the player config to its token override. #}
-      data-config="{% url 'cast:api:player_config' %}?template_base_dir=django_chat"
-      data-template="{% url 'django_chat_podlove_player_template' %}"
-      data-load-mode="click"
-      data-django-chat-load-on-hover="true"
-    >
-      <div class="podlove-player-container podlove-player-click-to-load">
-        <button class="podlove-player-button podlove-hover-placeholder podlove-player-facade" type="button" data-django-chat-player-placeholder aria-label="Load audio player">
-          <span class="podlove-facade-controls" aria-hidden="true">
-            <span class="podlove-facade-play">
-              <span class="podlove-facade-play-icon"></span>
-              <span class="podlove-facade-spinner"></span>
-            </span>
-            <span class="podlove-facade-time">00:00</span>
-            <span class="podlove-facade-progress">
-              <span></span>
-            </span>
-            {% with duration=page.django_chat_source_metadata.duration_seconds %}
-              {% with duration_label=duration|duration_minutes %}
-                <span class="podlove-facade-duration">{% if duration_label %}{{ duration_label }}{% else %}--:--{% endif %}</span>
-              {% endwith %}
-            {% endwith %}
-          </span>
-          <span class="podlove-facade-tabs" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
-        </button>
-      </div>
-    </podlove-player>
-    {% endif %}
+    {% comment %}
+      django-cast's custom player; styled to the Django Chat green palette.
+      transport_share=False suppresses the player's built-in share button so
+      the Django Chat sidebar "Share" rail item is the only share entry point
+      (it still reads the player's current time via getShareState()).
+    {% endcomment %}
+    {% cast_custom_player value page transport_share=False %}
   {% endif %}
 {% endif %}

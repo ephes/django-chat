@@ -6,6 +6,8 @@ SSRF/local-file-read guards on outbound fetches.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from django_chat.imports.import_sample import _episode_body
@@ -331,17 +333,43 @@ class TestSafeLinkURL:
 
 
 class TestExtractPodloveAPIURL:
-    def test_same_host_relative_url_is_accepted(self) -> None:
-        html = '<podlove-player data-url="/api/audios/podlove/1/"></podlove-player>'
-        result = extract_podlove_api_url(html, base_url="https://staging.example.test/episodes/x/")
-        assert result == "https://staging.example.test/api/audios/podlove/1/"
+    """The API URL is rebuilt from the page's own origin and two numeric ids.
 
-    def test_file_scheme_data_url_is_rejected(self) -> None:
-        html = '<podlove-player data-url="file:///etc/passwd"></podlove-player>'
-        with pytest.raises(ValueError, match="not on the expected staging host"):
+    URL strings inside the (untrusted) payload are never fetched directly, so
+    a tampered page cannot point the follow-up request at `file:///…` or an
+    internal/metadata host.
+    """
+
+    @staticmethod
+    def _html(transcript_url: str, audio_id: object = 1) -> str:
+        payload = json.dumps({"audioId": audio_id, "transcript": {"url": transcript_url}})
+        return (
+            f'<script id="cast-player-data-1" type="application/json">{payload}</script>'
+            '<cast-audio-player id="cast-player-1" data-payload="cast-player-data-1">'
+            "</cast-audio-player>"
+        )
+
+    def test_api_url_is_built_on_the_page_host(self) -> None:
+        html = self._html("/api/audios/1/player-transcript/?post_id=4")
+        result = extract_podlove_api_url(html, base_url="https://staging.example.test/episodes/x/")
+        assert result == "https://staging.example.test/api/audios/podlove/1/post/4/"
+
+    def test_cross_host_transcript_url_cannot_redirect_the_fetch(self) -> None:
+        html = self._html("http://169.254.169.254/meta?post_id=4")
+        result = extract_podlove_api_url(html, base_url="https://staging.example.test/episodes/x/")
+        assert result == "https://staging.example.test/api/audios/podlove/1/post/4/"
+
+    def test_file_scheme_transcript_url_cannot_redirect_the_fetch(self) -> None:
+        html = self._html("file:///etc/passwd?post_id=4")
+        result = extract_podlove_api_url(html, base_url="https://staging.example.test/episodes/x/")
+        assert result == "https://staging.example.test/api/audios/podlove/1/post/4/"
+
+    def test_non_numeric_post_id_is_rejected(self) -> None:
+        html = self._html("/api/audios/1/player-transcript/?post_id=../../admin")
+        with pytest.raises(ValueError, match="no numeric post_id"):
             extract_podlove_api_url(html, base_url="https://staging.example.test/episodes/x/")
 
-    def test_cross_host_data_url_is_rejected(self) -> None:
-        html = '<podlove-player data-url="http://169.254.169.254/meta"></podlove-player>'
-        with pytest.raises(ValueError, match="not on the expected staging host"):
+    def test_non_numeric_audio_id_is_rejected(self) -> None:
+        html = self._html("/api/audios/1/player-transcript/?post_id=4", audio_id="1/../../etc")
+        with pytest.raises(ValueError, match="no numeric audioId"):
             extract_podlove_api_url(html, base_url="https://staging.example.test/episodes/x/")

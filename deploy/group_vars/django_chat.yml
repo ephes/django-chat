@@ -4,11 +4,6 @@ django_chat_repo_root: "{{ (inventory_dir ~ '/../..') | realpath }}"
 django_chat_source_path: "{{ lookup('env', 'DJANGO_CHAT_SOURCE_PATH') | default(django_chat_repo_root, true) }}"
 django_chat_secret_file: "{{ playbook_dir }}/secrets/{{ django_chat_environment }}.sops.yml"
 
-# Episode-page audio player ("podlove" or "custom"). Staging overrides this to
-# "custom" so hosts review the django-cast custom player; production keeps the
-# Podlove Web Player until that sign-off.
-django_chat_audio_player: "podlove"
-
 django_chat_bootstrap_apt_packages:
   - acl
   - ca-certificates
@@ -77,4 +72,3 @@ wagtail_env_extra:
   CAST_VOXHELM_API_KEY: "{{ service_secrets.cast_voxhelm_api_key | default('') }}"
   CAST_VOXHELM_MODEL: "{{ service_secrets.cast_voxhelm_model | default('auto') }}"
   CAST_VOXHELM_LANGUAGE: "{{ service_secrets.cast_voxhelm_language | default('en') }}"
-  CAST_AUDIO_PLAYER: "{{ django_chat_audio_player }}"

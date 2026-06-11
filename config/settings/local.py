@@ -5,10 +5,6 @@ from .base import env
 
 DEBUG = env.bool("DJANGO_DEBUG", default=True)
 
-# Preview the django-cast custom audio player on the dev server (replaces the
-# Podlove Web Player on episode pages). Set back to "podlove" to restore.
-CAST_AUDIO_PLAYER = "custom"
-
 # The player transcript endpoint sends a 1-hour browser cache (good in
 # production). In dev that masks freshly seeded/edited transcript data, so
 # disable it locally — seeded speaker changes then show on the next page load

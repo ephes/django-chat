@@ -239,9 +239,13 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap4"]
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 CAST_COMMENTS_ENABLED = False
+# Episode-page audio player: django-cast's custom player, in all environments.
+# The Podlove Web Player path was removed after the staging cutover; restoring
+# it would mean reverting the removal commit, not flipping this setting.
+CAST_AUDIO_PLAYER = "custom"
 # Registered themes in the Wagtail TemplateBaseDirectory choice list.
-# `django_chat` is the project theme (see CAST_PODLOVE_PLAYER_THEMES below
-# and ensure_default_site for how this gets pinned per-site at deploy time).
+# `django_chat` is the project theme (see ensure_default_site for how this
+# gets pinned per-site at deploy time).
 CAST_CUSTOM_THEMES = [
     ("django_chat", "Django Chat"),
 ]
@@ -271,36 +275,5 @@ DJANGO_VITE = {
 }
 
 CAST_FILTERSET_FACETS = ["search", "date", "date_facets", "o"]
-
-# Podlove player theme override. Keyed by the show's template_base_dir
-# (set on the Podcast model during import; see
-# django_chat/imports/import_sample.py). Tokens map to Podlove's theme
-# token API; see cast/podlove.py DEFAULT_PODLOVE_THEME for the full set.
-# Active when the player config endpoint resolves the theme to
-# `django_chat` — pinned per-site at deploy time by ensure_default_site.
-# Colour decisions:
-#   brand           — same green family as the show artwork (#65a65c),
-#                     darker so white text on brand-coloured chrome
-#                     reaches ~4.7:1 contrast (WCAG AA-large).
-#   brandDark       — hover / emphasis variant.
-#   brandDarkest    — darkest green used for player chrome.
-#   brandLightest   — white player chrome and play glyph contrast.
-#   alt             — white text on expanded player panels. Do not make this
-#                     transparent: Podlove also uses it for transcript text.
-#   shade*          — neutral secondary UI text, intentionally not slate-blue.
-CAST_PODLOVE_PLAYER_THEMES = {
-    "django_chat": {
-        "tokens": {
-            "brand": "#2d8260",
-            "brandDark": "#1f6647",
-            "brandDarkest": "#14513a",
-            "brandLightest": "#ffffff",
-            "shadeDark": "#5f635d",
-            "shadeBase": "#5f635d",
-            "contrast": "#0d0d0d",
-            "alt": "#ffffff",
-        },
-    },
-}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

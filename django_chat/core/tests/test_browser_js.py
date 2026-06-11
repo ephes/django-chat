@@ -43,24 +43,6 @@ def loadable_audio_site(tmp_path: Path) -> Iterator[None]:
 
 
 @pytest.fixture
-def page_with_loadable_audio(loadable_audio_site: None) -> Iterator[Page]:
-    yield from _playwright_page()
-
-
-@pytest.fixture
-def long_transcript_site(loadable_audio_site: None) -> Iterator[None]:
-    episode = Episode.objects.get(slug="django-tasks-jake-howard")
-    assert episode.podcast_audio is not None
-    _create_generated_transcript(episode.podcast_audio)
-    yield
-
-
-@pytest.fixture
-def page_with_long_transcript(long_transcript_site: None) -> Iterator[Page]:
-    yield from _playwright_page()
-
-
-@pytest.fixture
 def diarized_custom_player_site(loadable_audio_site: None) -> Iterator[None]:
     """Repository-backed diarized-transcript state for the custom player.
 
@@ -417,184 +399,6 @@ def test_embed_rail_button_opens_dialog_with_iframe_snippet(
 
 
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
-def test_player_replay_state_keeps_compact_button_icon_only(
-    live_server: Any,
-    page_with_loadable_audio: Page,
-) -> None:
-    page_with_loadable_audio.goto(f"{live_server.url}{episode_detail_path()}")
-    page_with_loadable_audio.locator("[data-django-chat-player-placeholder]").click()
-    iframe = page_with_loadable_audio.locator("podlove-player iframe").first
-    iframe.wait_for(state="attached", timeout=10_000)
-    frame = iframe.element_handle().content_frame()
-    assert frame is not None
-    frame.wait_for_selector("#app.loaded", timeout=15_000)
-
-    frame.evaluate(
-        """() => {
-            // Podlove has no public test hook for forcing the ended state; these are
-            // internal Redux action types from the v5 player runtime.
-            const store = window.PODLOVE_STORE;
-            const duration = store.getState().timepiece.duration;
-            store.dispatch({type: "PLAYER_BACKEND_PLAYTIME", payload: duration});
-            store.dispatch({type: "PLAYER_BACKEND_END"});
-        }"""
-    )
-    frame.wait_for_selector(
-        'button#play-button--restart [data-test="play-button--label"]', state="attached"
-    )
-    expect(frame.get_by_role("button", name="Replay")).to_be_attached()
-
-    metrics = frame.evaluate(
-        """() => {
-            const button = document.querySelector('button#play-button--restart');
-            const label = button.querySelector('[data-test="play-button--label"]');
-            const icon = button.querySelector('svg');
-            const inner = button.querySelector('.wrapper > span');
-            const progress = document.querySelector('[data-test="progress-bar"]');
-            const buttonRect = button.getBoundingClientRect();
-            const iconRect = icon.getBoundingClientRect();
-            const progressRect = progress.getBoundingClientRect();
-            const labelStyles = getComputedStyle(label);
-            const innerStyles = getComputedStyle(inner);
-            return {
-                buttonText: button.innerText.trim(),
-                labelDisplay: labelStyles.display,
-                innerPaddingLeft: innerStyles.paddingLeft,
-                innerPaddingRight: innerStyles.paddingRight,
-                buttonWidth: buttonRect.width,
-                iconWidth: iconRect.width,
-                iconCenterOffset: Math.abs(
-                    (iconRect.left + iconRect.right) / 2 - (buttonRect.left + buttonRect.right) / 2
-                ),
-                buttonRight: buttonRect.right,
-                progressLeft: progressRect.left,
-            };
-        }"""
-    )
-
-    assert metrics["buttonText"] == ""
-    assert metrics["labelDisplay"] == "none"
-    assert metrics["innerPaddingLeft"] == "0px"
-    assert metrics["innerPaddingRight"] == "0px"
-    assert metrics["buttonWidth"] < 70
-    assert metrics["iconWidth"] > 0
-    assert metrics["iconCenterOffset"] < 1
-    assert metrics["buttonRight"] < metrics["progressLeft"]
-
-
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
-def test_player_transcript_tab_uses_single_scroll_container(
-    live_server: Any,
-    page_with_long_transcript: Page,
-) -> None:
-    page_with_long_transcript.goto(
-        f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}"
-    )
-    page_with_long_transcript.locator("[data-django-chat-player-placeholder]").click()
-    iframe = page_with_long_transcript.locator("podlove-player iframe").first
-    iframe.wait_for(state="attached", timeout=10_000)
-    frame = iframe.element_handle().content_frame()
-    assert frame is not None
-    frame.wait_for_selector("#app.loaded", timeout=15_000)
-    frame.evaluate(
-        """() => {
-            const trigger = Array.from(
-                document.querySelectorAll('[data-test="tab-trigger--shownotes"]')
-            ).find((node) => {
-                const rect = node.getBoundingClientRect();
-                return rect.width > 0 && rect.height > 0;
-            });
-            trigger.click();
-        }"""
-    )
-    frame.wait_for_selector("#tab-shownotes", timeout=10_000)
-    frame.evaluate(
-        """() => {
-            const tab = document.querySelector("#tab-shownotes");
-            const spacer = document.createElement("div");
-            spacer.textContent = "Long shownotes content";
-            spacer.style.height = "900px";
-            tab.appendChild(spacer);
-        }"""
-    )
-    frame.wait_for_selector("#tab-shownotes.active", timeout=10_000)
-
-    shownotes_metrics = frame.evaluate(
-        """() => {
-            const shownotes = document.querySelector("#tab-shownotes");
-            const styles = getComputedStyle(shownotes);
-            return {
-                maxHeight: styles.maxHeight,
-                overflowX: styles.overflowX,
-                overflowY: styles.overflowY,
-                clientHeight: shownotes.clientHeight,
-                scrollHeight: shownotes.scrollHeight,
-            };
-        }"""
-    )
-
-    assert shownotes_metrics["maxHeight"] == "420px"
-    assert shownotes_metrics["overflowX"] == "hidden"
-    assert shownotes_metrics["overflowY"] == "auto"
-    assert shownotes_metrics["clientHeight"] <= 420
-    assert shownotes_metrics["scrollHeight"] > shownotes_metrics["clientHeight"] + 1
-
-    frame.evaluate(
-        """() => {
-            const trigger = Array.from(
-                document.querySelectorAll('[data-test="tab-trigger--transcripts"]')
-            ).find((node) => {
-                const rect = node.getBoundingClientRect();
-                return rect.width > 0 && rect.height > 0;
-            });
-            trigger.click();
-        }"""
-    )
-    frame.wait_for_selector('[data-test="tab-transcripts--results"]', timeout=10_000)
-
-    metrics = frame.evaluate(
-        """() => {
-            const results = document.querySelector('[data-test="tab-transcripts--results"]');
-            const transcriptTab = document.querySelector("#tab-transcripts");
-            const outer = Array.from(document.querySelectorAll('.w-full.relative')).find(
-                (node) => node.querySelector('[data-test="tab-transcripts--results"]')
-            );
-            const outerStyles = getComputedStyle(outer);
-            const resultsStyles = getComputedStyle(results);
-            const transcriptTabStyles = getComputedStyle(transcriptTab);
-            return {
-                outerOverflowY: outerStyles.overflowY,
-                outerClientHeight: outer.clientHeight,
-                outerScrollHeight: outer.scrollHeight,
-                transcriptTabMaxHeight: transcriptTabStyles.maxHeight,
-                transcriptTabClientHeight: transcriptTab.clientHeight,
-                resultsOverflowX: resultsStyles.overflowX,
-                resultsOverflowY: resultsStyles.overflowY,
-                resultsClientHeight: results.clientHeight,
-                resultsScrollHeight: results.scrollHeight,
-            };
-        }"""
-    )
-
-    assert metrics["outerOverflowY"] == "visible"
-    assert metrics["outerScrollHeight"] <= metrics["outerClientHeight"] + 1
-    # The transcript tab is bounded rather than "none": while Podlove mounts the
-    # transcript rows there is a frame where they render before the inner results
-    # element receives its scroll styles, and an unbounded tab let that full
-    # height leak into the iframe document, which iframe-resizer then propagated
-    # to the host page as a flicker of the content below the player. The bound
-    # clips that transient at the source while results stays the scroll container.
-    assert metrics["transcriptTabMaxHeight"] == "600px"
-    assert metrics["resultsOverflowX"] == "hidden"
-    assert metrics["resultsOverflowY"] == "auto"
-    assert metrics["resultsScrollHeight"] > metrics["resultsClientHeight"] + 1
-    # The bounded tab clips the transient full-transcript render at the source, so
-    # the tab itself never grows past its cap and cannot push the host page.
-    assert metrics["transcriptTabClientHeight"] <= 600
-
-
-@override_settings(CAST_AUDIO_PLAYER="custom")
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_custom_player_one_share_control_and_demoted_keyboard_pref(
     live_server: Any,
     page_with_diarized_custom_player: Page,
@@ -616,7 +420,6 @@ def test_custom_player_one_share_control_and_demoted_keyboard_pref(
     assert pref.get_attribute("aria-label") == "Keyboard-navigable cues"
 
 
-@override_settings(CAST_AUDIO_PLAYER="custom")
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_custom_player_transcript_speakers_and_sparse_timestamps(
     live_server: Any,
@@ -660,7 +463,6 @@ def test_custom_player_transcript_speakers_and_sparse_timestamps(
     assert continuation.get_attribute("data-start") is not None
 
 
-@override_settings(CAST_AUDIO_PLAYER="custom")
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_custom_player_transcript_shows_loading_busy_state(
     live_server: Any,
@@ -688,7 +490,6 @@ def test_custom_player_transcript_shows_loading_busy_state(
     assert page.locator(".cast-panel__scroll").first.get_attribute("aria-busy") in (None, "false")
 
 
-@override_settings(CAST_AUDIO_PLAYER="custom")
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_custom_player_site_share_uses_player_current_time(
     live_server: Any,
@@ -742,7 +543,6 @@ HERO_GEOMETRY_SCRIPT = """
 """
 
 
-@override_settings(CAST_AUDIO_PLAYER="custom")
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_closed_hero_separator_lands_on_cover_bottom_for_short_titles(
     live_server: Any,
@@ -760,7 +560,6 @@ def test_closed_hero_separator_lands_on_cover_bottom_for_short_titles(
     assert abs(geometry["separatorDelta"]) < 1
 
 
-@override_settings(CAST_AUDIO_PLAYER="custom")
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_closed_hero_separator_stays_on_cover_bottom_for_two_line_titles(
     live_server: Any,
@@ -783,7 +582,6 @@ def test_closed_hero_separator_stays_on_cover_bottom_for_two_line_titles(
     assert abs(geometry["separatorDelta"]) < 1
 
 
-@override_settings(CAST_AUDIO_PLAYER="custom")
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_closed_hero_separator_hands_off_when_content_taller_than_cover(
     live_server: Any,
@@ -842,7 +640,6 @@ async () => {
 """
 
 
-@override_settings(CAST_AUDIO_PLAYER="custom")
 @pytest.mark.django_db(transaction=True, serialized_rollback=True)
 @pytest.mark.parametrize("viewport_width", [1500, 1000])
 def test_hero_styles_do_not_flip_while_transcript_folds_in(
@@ -894,25 +691,6 @@ class FakeAudioDownloader:
             content_length=len(content),
             filename="sample.mp3",
         )
-
-
-def _create_generated_transcript(audio: Audio) -> Any:
-    transcript_model = apps.get_model("cast", "Transcript")
-    transcript = transcript_model.objects.create(audio=audio)
-    segments = [
-        {
-            "start": _podlove_time(index * 2_000),
-            "start_ms": index * 2_000,
-            "end": _podlove_time((index + 1) * 2_000),
-            "end_ms": (index + 1) * 2_000,
-            "speaker": "Host",
-            "voice": "",
-            "text": f"Generated transcript segment {index + 1} for scroll testing.",
-        }
-        for index in range(80)
-    ]
-    transcript.podlove.save("podlove.json", ContentFile(json.dumps({"transcripts": segments})))
-    return transcript
 
 
 def _podlove_time(milliseconds: int) -> str:

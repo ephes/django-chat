@@ -171,8 +171,8 @@ Current staging media status: full-catalog audio copy has been verified.
 `import_django_chat_catalog --copy-cover-image --copy-audio` on the deployed
 staging app copied audio for all live imported episodes under the `episodes`
 podcast; copied media URLs are served through the configured public media host
-(CloudFront), and episode detail pages render the django-cast Podlove player
-backed by those URLs. The sample command still supports fixture-backed smoke
+(CloudFront), and episode detail pages render the django-cast custom audio
+player backed by those URLs. The sample command still supports fixture-backed smoke
 checks, but representative host review should use the catalog command and
 audio completeness checks below.
 

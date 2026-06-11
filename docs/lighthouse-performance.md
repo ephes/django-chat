@@ -166,6 +166,29 @@ that the corrected minified player selector matches, the facade becomes
 `opacity: 0` with `pointer-events: none`, and the initialized Podlove iframe
 occupies the same slot instead of stacking below the facade.
 
+Current scores after the custom-player cutover on staging:
+
+Measured on 2026-06-11 with Lighthouse 13.4.0 and Chrome for Testing 149.
+Reports are in `/tmp/django-chat-lighthouse-20260611/`.
+
+| Page | Mode | Performance | Accessibility | Best Practices | SEO | FCP | LCP | CLS | TBT | Speed Index |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `/episodes/` | desktop | 100 | 100 | 100 | 100 | 0.3 s | 0.4 s | 0.01 | 0 ms | 0.6 s |
+| `/episodes/` | mobile | 100 | 100 | 100 | 100 | 0.9 s | 1.2 s | 0.002 | 0 ms | 1.1 s |
+| `/episodes/how-france-ditched-microsoft-samuel-paccoud/` | desktop | 99 | 100 | 100 | 100 | 0.7 s | 0.8 s | 0.015 | 0 ms | 0.8 s |
+| `/episodes/how-france-ditched-microsoft-samuel-paccoud/` | mobile | 100 | 100 | 100 | 100 | 1.1 s | 1.1 s | 0.024 | 0 ms | 1.1 s |
+
+The custom `cast-audio-player` did not regress any category: TBT stayed at
+0 ms and CLS stayed near zero on both pages. The single sub-100 cell
+(episode-detail desktop, 99) comes from two known small items: the
+render-blocking `site.css` (~16 KiB transfer, est. 140 ms — the existing
+split/critical-inline backlog decision) and the episode-detail LCP node being
+the sidebar `img.show-artwork`, which is HTML-discoverable but lacks
+`fetchpriority="high"`. At measurement time the episode-detail `<head>` still
+inlined the Podlove critical-CLS height guard (`podlove-player { … }`), which
+matched nothing after the cutover; the guard was removed with the rest of the
+Podlove player path later the same day (see the backlog Done list below).
+
 ## Changes Required
 
 The baseline was already strong for the subscribe page, but the episode index
@@ -251,9 +274,18 @@ Done:
   the lightweight player facade visible above the initialized Podlove iframe on
   staging. A deployed staging browser probe confirmed the corrected minified
   selector matches and the facade hides when the Podlove iframe is ready.
+- 2026-06-11: Removed the entire Podlove player path (loader script, facade
+  markup and CSS layer, theme settings, template-proxy endpoint, deploy
+  toggle) after the custom-player cutover, including the inline Podlove
+  critical-CLS height guard whose `podlove-player` selectors no longer
+  matched anything. The custom player is server-rendered, so no replacement
+  CLS reserve is needed (measured CLS stayed near zero without it).
 
 Planned:
 
+- 2026-06-11: Consider `fetchpriority="high"` on the episode-detail sidebar
+  `img.show-artwork` — Lighthouse identifies it as the LCP node (discoverable,
+  not priority-hinted). Worth at most ~1 desktop performance point.
 - Split or critical-inline CSS for the public host-review pages only if the
   remaining CSS render-blocking estimate is worth the added complexity. The
   current single `site.css` keeps the system simple, and the unminified CSS and
@@ -265,10 +297,10 @@ Planned:
 
 ## Caveats
 
-The 2026-04-29 Lighthouse reports predate the click-to-load player facade.
-Subsequent browser network checks confirm that the third-party Podlove web
-player bundle is not requested on initial episode detail page load; it is loaded
-after the user hovers, focuses, taps, or clicks the player facade.
+The 2026-04-29 through 2026-05-19 Lighthouse reports measured the Podlove
+player era (click-to-load facade keeping the third-party bundle off the
+initial load). The 2026-06-11 reports are the first taken against the
+django-cast custom player, which has since become the only player path.
 
 The root URL intentionally redirects to `/episodes/`. Lighthouse records that
 redirect but final root scores are still 98-100.

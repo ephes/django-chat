@@ -6,7 +6,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import Any, cast
-from urllib.parse import quote, urljoin, urlparse
+from urllib.parse import parse_qs, quote, urljoin, urlparse
 from uuid import uuid4
 
 from cast.models import Episode
@@ -182,22 +182,45 @@ def import_staging_transcript_for_episode(
 
 
 def extract_podlove_api_url(html: str, *, base_url: str) -> str:
-    parser = _PodlovePlayerParser()
+    """Locate the staging Podlove transcript API URL for an episode page.
+
+    Staging renders django-cast's custom player, whose JSON payload script
+    carries the audio id and a transcript URL with a ``post_id`` query
+    parameter. The Podlove API URL is rebuilt from those two numeric ids on
+    the page's own origin — never from a URL string in the (untrusted) page
+    body — so a tampered/compromised page cannot point the follow-up fetch at
+    `file:///…` or an internal/metadata host (SSRF / local file read).
+    """
+    parser = _CastPlayerPayloadParser()
     parser.feed(html)
-    if not parser.data_url:
-        msg = "staging episode page did not contain a podlove-player data-url"
+    payload_text = parser.payload_text()
+    if not payload_text:
+        msg = "staging episode page did not contain a cast-audio-player payload"
         raise ValueError(msg)
-    # The data-url comes from the (untrusted) remote page body. Resolve it
-    # against the page URL, then require it to stay on the same host over
-    # http(s) — otherwise a tampered/compromised page could point the fetch at
-    # `file:///…` or an internal/metadata host (SSRF / local file read).
-    api_url = urljoin(base_url, parser.data_url)
+    try:
+        payload = json.loads(payload_text)
+    except json.JSONDecodeError as exc:
+        msg = f"staging cast-audio-player payload is not valid JSON: {exc}"
+        raise ValueError(msg) from None
+    audio_id = payload.get("audioId") if isinstance(payload, dict) else None
+    if not isinstance(audio_id, int) or isinstance(audio_id, bool):
+        msg = "staging cast-audio-player payload has no numeric audioId"
+        raise ValueError(msg)
+    transcript = payload.get("transcript")
+    transcript_url = str(transcript.get("url") or "") if isinstance(transcript, dict) else ""
+    if not transcript_url:
+        msg = "staging episode page exposes no transcript for this episode"
+        raise ValueError(msg)
+    post_id_values = parse_qs(urlparse(transcript_url).query).get("post_id", [])
+    post_id = post_id_values[0] if post_id_values else ""
+    if not post_id.isdigit():
+        msg = "staging cast-audio-player transcript URL has no numeric post_id"
+        raise ValueError(msg)
     base = urlparse(base_url)
-    resolved = urlparse(api_url)
-    if resolved.scheme not in {"http", "https"} or resolved.netloc != base.netloc:
-        msg = f"podlove-player data-url is not on the expected staging host: {api_url!r}"
+    if base.scheme not in {"http", "https"} or not base.netloc:
+        msg = f"unexpected staging episode page URL: {base_url!r}"
         raise ValueError(msg)
-    return api_url
+    return f"{base.scheme}://{base.netloc}/api/audios/podlove/{audio_id}/post/{post_id}/"
 
 
 def podlove_segments_to_vtt(segments: list[JsonObject]) -> str:
@@ -318,13 +341,37 @@ def _staging_episode_url(host: str, podcast_slug: str, episode_slug: str) -> str
     return urljoin(base, f"{quote(podcast_slug.strip('/'))}/{quote(episode_slug)}/")
 
 
-class _PodlovePlayerParser(HTMLParser):
+class _CastPlayerPayloadParser(HTMLParser):
+    """Collect the JSON payload script of the first <cast-audio-player>.
+
+    The payload `<script id="…" type="application/json">` precedes the player
+    element in django-cast's markup, so every id'd script's text is collected
+    and the player's ``data-payload`` id is resolved after the full parse.
+    """
+
     def __init__(self) -> None:
         super().__init__()
-        self.data_url = ""
+        self._payload_id = ""
+        self._scripts: dict[str, list[str]] = {}
+        self._open_script_id = ""
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag != "podlove-player" or self.data_url:
-            return
         data = dict(attrs)
-        self.data_url = data.get("data-url") or ""
+        if tag == "cast-audio-player" and not self._payload_id:
+            self._payload_id = data.get("data-payload") or ""
+        elif tag == "script":
+            script_id = data.get("id") or ""
+            self._open_script_id = script_id
+            if script_id:
+                self._scripts.setdefault(script_id, [])
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "script":
+            self._open_script_id = ""
+
+    def handle_data(self, data: str) -> None:
+        if self._open_script_id:
+            self._scripts[self._open_script_id].append(data)
+
+    def payload_text(self) -> str:
+        return "".join(self._scripts.get(self._payload_id, [])).strip()

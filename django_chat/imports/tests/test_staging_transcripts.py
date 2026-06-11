@@ -21,8 +21,8 @@ from django_chat.imports.staging_transcripts import (
 )
 
 
-def test_extract_podlove_api_url_resolves_staging_relative_url() -> None:
-    html = '<podlove-player data-url="/api/audios/podlove/1/post/4/"></podlove-player>'
+def test_extract_podlove_api_url_reads_custom_player_payload() -> None:
+    html = _custom_player_html(audio_id=1, post_id=4)
 
     url = extract_podlove_api_url(
         html,
@@ -30,6 +30,16 @@ def test_extract_podlove_api_url_resolves_staging_relative_url() -> None:
     )
 
     assert url == "https://djangochat.staging.django-cast.com/api/audios/podlove/1/post/4/"
+
+
+def test_extract_podlove_api_url_reports_missing_transcript() -> None:
+    html = _custom_player_html(audio_id=1, post_id=4, with_transcript=False)
+
+    with pytest.raises(ValueError, match="exposes no transcript"):
+        extract_podlove_api_url(
+            html,
+            base_url="https://djangochat.staging.django-cast.com/episodes/example/",
+        )
 
 
 def test_podlove_segments_are_rendered_as_feed_transcript_formats() -> None:
@@ -209,7 +219,7 @@ class FakeStagingFetcher:
     def __call__(self, url: str, _timeout: float) -> str:
         self.urls.append(url)
         if url.endswith("/django-tasks-jake-howard/"):
-            return '<podlove-player data-url="/api/audios/podlove/1/post/4/"></podlove-player>'
+            return _custom_player_html(audio_id=1, post_id=4)
         if url.endswith("/api/audios/podlove/1/post/4/"):
             return json.dumps({"transcripts": [_podlove_segment()]})
         msg = f"unexpected URL: {url}"
@@ -248,3 +258,29 @@ def _podlove_segment() -> dict[str, Any]:
         "voice": "",
         "text": "Generated transcript segment for an imported episode.",
     }
+
+
+def _custom_player_html(
+    *,
+    audio_id: int,
+    post_id: int,
+    with_transcript: bool = True,
+    host: str = "https://staging.example.test",
+) -> str:
+    """Episode-page markup shaped like django-cast's custom player output."""
+    payload: dict[str, Any] = {
+        "audioId": audio_id,
+        "title": "Example Episode",
+        "sources": [{"type": "audio/mpeg", "src": f"{host}/media/example.mp3"}],
+    }
+    if with_transcript:
+        payload["transcript"] = {
+            "url": f"{host}/api/audios/{audio_id}/player-transcript/?post_id={post_id}"
+        }
+    payload_json = json.dumps(payload)
+    return (
+        f'<script id="cast-player-data-{post_id}" type="application/json">'
+        f"{payload_json}</script>"
+        f'<cast-audio-player id="cast-player-{post_id}" '
+        f'data-payload="cast-player-data-{post_id}" data-share="none"></cast-audio-player>'
+    )

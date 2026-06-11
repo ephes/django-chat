@@ -1,7 +1,18 @@
 # Contributors and diarized speaker labels
 
 How Django Chat renders episode contributors and how diarized transcript
-speaker labels reach the public Podlove player and transcript detail page.
+speaker labels reach the public player transcript surfaces and the transcript
+detail page.
+
+> **Player note (2026-06-11):** episode pages now render django-cast's custom
+> player; the Podlove Web Player path was removed after the staging cutover.
+> The sanitization contract below is unchanged (it lives in django-cast, not
+> the player), and the Podlove **API** endpoint
+> (`/api/audios/podlove/<id>/post/<id>/`) still exists upstream, so the
+> API-based verification commands still work. Mentions of the Podlove player
+> *UI* (iframe, transcript tab, `[data-django-chat-player-placeholder]`) in
+> the operational logs below are historical; verify current behavior on the
+> custom player's inline Transcript panel instead.
 
 ## django-cast dependency / source choice
 

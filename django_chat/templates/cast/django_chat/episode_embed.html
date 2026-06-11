@@ -1,5 +1,4 @@
 {% load static %}
-{% load cast_audio_player %}
 {% load django_vite %}<!DOCTYPE html>
 <html lang="en" data-theme="light">
   <head>
@@ -31,19 +30,6 @@
         text-decoration: none;
       }
       .embed-title a:hover { text-decoration: underline; }
-      /* `.audio-panel` (from site.css) already sets `--player-min-height: 112px`
-         on this element's parent; we override it for the mobile breakpoint
-         since the @container scope used in site.css doesn't fire in the embed. */
-      podlove-player {
-        display: block;
-        height: auto !important;
-        min-height: var(--player-min-height) !important;
-      }
-      @media (max-width: 47.5em) {
-        podlove-player {
-          --player-min-height: 168px;
-        }
-      }
       .embed-placeholder {
         display: flex;
         align-items: center;
@@ -91,14 +77,8 @@
         </div>
       {% endif %}
     </div>
-    {% cast_audio_player_mode as audio_player_mode %}
     {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
-      {% if audio_player_mode == "custom" %}
-        {% vite_asset 'src/audio/custom-player.ts' app="cast" %}
-      {% else %}
-        {% vite_asset 'src/audio/podlove-player.ts' app="cast" %}
-        <script defer src="{% static 'django_chat/js/podlove-loader.js' %}?v=podlove-4"></script>
-      {% endif %}
+      {% vite_asset 'src/audio/custom-player.ts' app="cast" %}
     {% endif %}
   </body>
 </html>

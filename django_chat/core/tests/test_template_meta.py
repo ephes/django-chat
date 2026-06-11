@@ -171,7 +171,7 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert "::view-transition-group(dc-episode-badge)" in css
     assert "::view-transition-group(dc-episode-title)" in css
     assert ".episode-number-badge--detail {" in css
-    assert ".audio-panel,\n.audio-panel *,\npodlove-player,\npodlove-player * {" in css
+    assert ".audio-panel,\n.audio-panel * {" in css
     assert "background-color: var(--dc-surface-deep);" in _css_blocks(css, "html")[0]
     assert "overflow-x: clip;" in _css_blocks(css, "html")[0]
     assert "--dc-muted: #5f635d;" in css
@@ -180,17 +180,6 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert "--dc-django: #0ea342;" in css
     assert "--dc-surface-django-tint: #dfeede;" in css
     assert "--dc-error: #c0392b;" in css
-    assert "--dc-player-surface: transparent;" in css
-    assert (
-        ".audio-panel podlove-player[data-template] .podlove-hover-placeholder {\n"
-        "  align-items: start;\n"
-        "  background: var(--dc-player-surface);"
-    ) in css
-    assert (
-        ".audio-panel podlove-player[data-template] .podlove-player-container iframe {\n"
-        "  /* Podlove's custom element injects light iframe backgrounds after this stylesheet. */\n"
-        "  background: var(--dc-player-surface) !important;"
-    ) in css
     assert "RobotoFlex-Variable.woff2" not in css
     assert "Roboto Flex" not in css  # dead font fallback retired
     assert '--font-body: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;' in css
@@ -211,28 +200,6 @@ def test_site_css_pins_django_chat_palette() -> None:
     assert "width: var(--episode-badge-size);" in css
     assert "height: var(--episode-badge-size);" in css
     assert "font-size: clamp(2.25rem, 4.5vw, 4.5rem);" in css
-    assert (
-        'podlove-player[data-django-chat-player-ready="true"] '
-        "[data-django-chat-player-placeholder]" in css
-    )
-    ready_container_blocks = _css_blocks(
-        css,
-        '.audio-panel podlove-player[data-django-chat-player-ready="true"] '
-        ".podlove-player-container",
-    )
-    assert len(ready_container_blocks) == 1
-    assert "min-height: 0;" in ready_container_blocks[0]
-    assert "position: relative;" in ready_container_blocks[0]
-    assert "opacity: 0;" not in ready_container_blocks[0]
-    assert not re.search(r"(?<!min-)height: 112px !important;", css)
-    assert not re.search(r"(?<!min-)height: 168px !important;", css)
-    # Player sizing now reserves on the .audio-panel wrapper, not on
-    # <podlove-player>. Make sure the wrapper picks up the reserve only
-    # when a player actually exists (no hollow reserve for the
-    # "Audio copy pending" fallback).
-    assert ".audio-panel {\n  --player-min-height: 112px;" in css
-    assert ".audio-panel {\n    --player-min-height: 168px;\n  }" in css
-    assert ".audio-panel:has(podlove-player) {\n  min-height: var(--player-min-height);" in css
     assert (
         ".button-primary,\n"
         ".platform-band-links a,\n"
@@ -288,121 +255,6 @@ def test_episode_detail_uses_svg_logo_when_cover_image_is_imported(
     assert "/media/images/" not in artwork_html
     assert 'width="280"' in artwork_html
     assert 'height="256"' in artwork_html
-
-
-@pytest.mark.django_db
-def test_podlove_player_config_uses_django_chat_brand_colors(client: Client) -> None:
-    import_django_chat_sample()
-
-    # template_base_dir=django_chat selects the project's theme override
-    response = client.get("/api/audios/player_config/?template_base_dir=django_chat")
-
-    assert response.status_code == 200
-    config = response.json()
-    tokens = config["theme"]["tokens"]
-    # Brand colour is in the Django green family (darker than the show
-    # artwork mark itself, so white text reaches WCAG AA contrast on
-    # brand-coloured player chrome).
-    assert tokens["brand"] == "#2d8260"
-    # The Podlove default orange must NOT bleed through:
-    assert tokens["brand"] != "#E64415"
-    # Used by Podlove for light chrome and the play-button glyph; keep it
-    # opaque so the icon stays visible on the green play button.
-    assert tokens["brandLightest"] == "#ffffff"
-    # Keep the native Podlove chrome tokens dark. The expanded tab panel is
-    # restyled from the same-origin iframe hook so changing these tokens does
-    # not accidentally alter the play button/progress controls.
-    assert tokens["brandDarkest"] == "#14513a"
-    # Secondary player chrome should stay neutral rather than slate-blue.
-    assert tokens["shadeDark"] == "#5f635d"
-    assert tokens["shadeBase"] == "#5f635d"
-    # Contrast pinned to the project ink token.
-    assert tokens["contrast"] == "#0d0d0d"
-    # Podlove's native tab text token stays valid for the default dark panel;
-    # the iframe hook overrides transcript/readability styling for this site.
-    assert tokens["alt"] == "#ffffff"
-
-
-@pytest.mark.django_db
-def test_podlove_player_template_endpoint_renders_compact_template(client: Client) -> None:
-    response = client.get(reverse("django_chat_podlove_player_template"))
-
-    assert response.status_code == 200
-    body = response.content.decode()
-    assert "<root" in body
-    assert "<play-button" in body
-    assert "<progress-bar" in body
-    assert "<timer-duration" in body
-    assert '<tab-trigger tab="shownotes"' in body
-    assert '<tab-trigger tab="chapters"' in body
-    assert '<tab-trigger tab="transcripts">' in body
-    assert "<tab-transcripts></tab-transcripts>" in body
-    assert '<tab-trigger tab="share">' not in body
-    assert "<tab-share></tab-share>" not in body
-    assert '<div class="w-full relative">' in body
-    assert "overflow-auto" not in body
-    assert "max-height:420px" not in body
-    # The wrapper must stay visually neutral when no tab is open. Panel chrome
-    # is injected into Podlove's same-origin iframe after the player loads.
-    assert "<style" not in body
-    assert "dc-player-tabs" not in body
-    assert "#e6f0dc" not in body
-    assert "border-radius:16px" not in body
-
-
-def test_podlove_loader_injects_iframe_panel_styles() -> None:
-    loader_path = settings.ROOT_DIR / "django_chat/static/django_chat/js/podlove-loader.js"
-    loader = loader_path.read_text()
-
-    assert 'const playerPanelStyleId = "django-chat-player-panel-style";' in loader
-    assert 'style.setAttribute("data-django-chat-player-style", "");' in loader
-    assert "installPlayerPanelStyles(iframeDocument);" in loader
-    assert '[data-test="tab"] {' in loader
-    assert "background: #e6f0dc !important;" in loader
-    assert '[data-test="tab"]:not(#tab-transcripts) {' in loader
-    assert "max-height: 420px !important;" in loader
-    assert "#tab-transcripts {" in loader
-    # The transcript tab is bounded (not "none") so the full transcript height
-    # cannot leak into the iframe document for a frame while Podlove mounts the
-    # rows, which previously made content below the player flicker.
-    assert "max-height: 600px !important;" in loader
-    assert "max-height: none !important;" not in loader
-    assert '[data-test="tab-title--close"] {' in loader
-    assert '[data-test="tab"] [data-test="tab-title--close"] {' in loader
-    assert '[data-test="tab-title--close"] svg {' in loader
-    assert "stroke-width: 3 !important;" in loader
-    assert '[data-test="tab-transcripts--follow"] {' in loader
-    assert '[data-test="tab"] [data-test="tab-transcripts--follow"] {' in loader
-    assert '[data-test="tab-transcripts--results"] {' in loader
-    assert "overflow-x: hidden !important;" in loader
-    assert "overflow-y: auto !important;" in loader
-    assert '[data-test="divider"] {' in loader
-    assert "background: #d8d8d8 !important;" in loader
-    assert "background-image: none !important;" in loader
-    assert '[data-test="play-button"]:focus-visible {' in loader
-    assert '[data-test="play-button"]:focus:not(:focus-visible) {' in loader
-    assert 'button#play-button--restart [data-test="play-button--label"] {' in loader
-    assert "button#play-button--restart > .wrapper > span {" in loader
-    assert (
-        'const replayButtonA11yObserverAttribute = "data-django-chat-replay-a11y-observer";'
-        in loader
-    )
-    assert 'restartButton.setAttribute("aria-label", "Replay");' in loader
-    assert 'restartButton.setAttribute("title", "Replay");' in loader
-    assert '[data-test^="tab-trigger--"]:focus-visible,' in loader
-    assert '[data-test^="tab-trigger--"][aria-selected="true"] {' in loader
-    assert '[data-test^="tab-trigger--"]:focus:not(:focus-visible) {' in loader
-    assert '[data-test="play-button"]:focus,' not in loader
-    assert '[data-test^="tab-trigger--"]:focus,' not in loader
-    assert "border-radius: 999px !important;" in loader
-    assert "border-radius: 8px !important;" in loader
-    assert "box-shadow: 0 0 0 2px #0ea342 !important;" in loader
-    assert "outline: none !important;" in loader
-    assert "Podlove renders the selected-tab marker as the final direct span child." in loader
-    assert '[data-test^="tab-trigger--"][aria-selected="true"] > span:last-child,' in loader
-    assert "fill: #0ea342 !important;" in loader
-    assert '[data-test="tab-transcripts--results"] .active-transcript {' in loader
-    assert "background: linear-gradient(to top, rgb(14 163 66 / 0.28)" in loader
 
 
 def episode_index_path() -> str:

@@ -22,21 +22,17 @@ Verified live behavior:
 - A staging-only `host-review-admin` superuser exists for review bootstrap.
 
 Full-catalog audio is copied to the staging media bucket and served through the
-public media host. Episode detail pages render a compact **Podlove web
-player** (`<podlove-player>`) — django-cast's player component loaded via
-`django-vite`, with a Django Chat local `data-template` URL for the
-compact hero layout with constrained tab panels and django-cast's existing
-player config endpoint for brand colors. The light page theme is declared
-explicitly so browser dark-mode preferences do not switch the compact iframe
-to Podlove's dark background. Episodes with converted transcripts expose
-segments through the Podlove API, keep the compact player's transcript tab
-available, and link to the themed transcript route. The compact player
-constrains expanded tab panels so transcript content does not stretch the
-episode hero logo.
-The heavy embed script (`cast/js/web-player/embed.5.js`, ~138 KB) loads after
-interaction with the player facade, keeping it out of the critical render path.
-Copied MP3 URLs respond with HTTP 200 and `audio/mpeg`. Audio playback is
-therefore available end-to-end on staging.
+public media host. Episode detail pages render django-cast's **custom audio
+player** (`<cast-audio-player>`) — server-rendered transport controls themed to
+the Django Chat green palette via the `--cast-player-*` token API, with the
+player module loaded via `django-vite`. The in-transport share button is
+suppressed so the sidebar "Share" rail item is the only share entry point (it
+still reads the player's current time for share-with-timestamp links).
+Episodes with converted transcripts keep an inline Transcript panel under the
+player — diarized transcripts show contributor speaker headings with sparse
+timestamps and follow-along highlighting — and link to the themed transcript
+route. Copied MP3 URLs respond with HTTP 200 and `audio/mpeg`. Audio playback
+is therefore available end-to-end on staging.
 
 As of 2026-06-02, both generated staging RSS routes return HTTP 200 with 205
 items, and the podcast RSS route exposes 205 `audio/mpeg` enclosures. Earlier
@@ -134,21 +130,12 @@ Before sending or refreshing the staging URL for hosts, confirm:
 - `https://<staging-fqdn>/`, `/episodes/`, at least one episode detail page,
   and `/cms/` return expected HTTPS responses.
 - Static assets load.
-- An episode detail page renders a `<podlove-player>` element with
-  `data-url` pointing at `/api/audios/podlove/<id>/post/<id>/` and
-  `data-config` at `/api/audios/player_config/?template_base_dir=django_chat`,
-  plus `data-template` pointing at `/podlove-player-template/` and
-  `data-load-mode="click"` so the heavy player loads only after user
-  interaction. Django Chat renders a lightweight player-shaped facade that
-  starts the player on hover, focus, tap, or button click and stays in place
-  while the real iframe initializes. The referenced MP3 URL returns HTTP 200
+- An episode detail page renders a `<cast-audio-player>` element with its
+  server-rendered JSON payload, and the django-vite `customPlayer-*` module
+  loads as a deferred ES module. The referenced MP3 URL returns HTTP 200
   with `Content-Type: audio/mpeg` through the public media host.
-  Episodes with attached django-cast transcripts expose transcript segments
-  through the Podlove API, keep the compact player's transcript tab available
-  after loading the player, and link to the themed transcript route.
-- Browser DevTools network panel shows `cast/js/web-player/embed.5.js`
-  is fetched after interacting with the player facade, not as part of the
-  critical render path.
+  Episodes with attached django-cast transcripts show the inline Transcript
+  panel under the player and link to the themed transcript route.
 - `/episodes/feed/` renders the Django Chat-branded subscribe page, exposes
   `/episodes/feed/podcast/mp3/rss.xml` as the only visible podcast RSS feed,
   emits RSS auto-discovery links in the page head, and labels
@@ -189,7 +176,7 @@ Once the full host-review gate opens, hosts should start with:
    recognizable for Django Chat.
 3. Open at least one episode detail page and review the show notes, metadata,
    audio area, and current URL shape.
-4. Press play on the rendered Podlove player; pressing play streams the
+4. Press play on the rendered audio player; pressing play streams the
    MP3 from the public media host.
 5. Log into `/cms/`, inspect the podcast and sample episode pages, and try a
    harmless draft edit without publishing over reviewed content.

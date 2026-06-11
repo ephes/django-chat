@@ -221,29 +221,18 @@ def test_imported_sample_episode_detail_renders_copied_audio(
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "<podlove-player" in content
-    assert f'data-template="{reverse("django_chat_podlove_player_template")}"' in content
+    assert "<cast-audio-player" in content
+    # The sidebar "Share" rail item is the only share entry point.
+    assert 'data-share="none"' in content
     assert 'data-transcript-overlay="true"' not in content
     assert 'class="audio-transcript-toggle"' not in content
     assert "simplecast_transcript_html" not in content
     assert "Jake Howard" in content
-    assert 'data-config="/api/audios/player_config/?template_base_dir=django_chat"' in content
-    assert 'data-load-mode="click"' in content
-    assert 'data-django-chat-load-on-hover="true"' in content
-    assert "data-django-chat-player-placeholder" in content
-    assert 'aria-label="Load audio player"' in content
-    assert "podlove-facade-play" in content
-    assert "podlove-facade-progress" in content
-    assert "podlove-placeholder-artwork" not in content
-    assert "Load player" not in content
-    assert "placeholder.hidden = true" not in content
-    # The Podlove click/hover initializer now lives in a shared external script.
-    assert "django_chat/js/podlove-loader.js" in content
     assert "<audio" not in content
     assert "/media/cast_audio/django-chat-sample/django-tasks-jake-howard-" in content
-    # The django-vite asset tag must emit the prebuilt Podlove init module on
+    # The django-vite asset tag must emit the prebuilt custom-player module on
     # episode pages with copied audio.
-    assert "/static/cast/vite/podlovePlayer-" in content
+    assert "/static/cast/vite/customPlayer-" in content
     assert 'type="module"' in content
     assert "Audio copy pending." not in content
     assert Audio.objects.count() == 8
@@ -279,19 +268,15 @@ def test_imported_sample_episode_surfaces_attached_generated_transcript(
     assert detail_response.status_code == 200
     detail_content = detail_response.content.decode()
     assert f'href="{absolute_url(transcript_path("django-tasks-jake-howard"))}"' in detail_content
-    assert "<podlove-player" in detail_content
+    assert "<cast-audio-player" in detail_content
     # Contributors render in the django-chat theme via cast/contributors.html.
     assert 'class="episode-contributors"' in detail_content
     assert "Hosts and Guests" in detail_content
     assert "Host" in detail_content
-    assert f'data-template="{reverse("django_chat_podlove_player_template")}"' in detail_content
     assert 'data-transcript-overlay="true"' not in detail_content
     assert 'class="audio-transcript-toggle"' not in detail_content
     assert 'class="audio-transcript-panel"' not in detail_content
     assert "Generated transcript segment for an imported episode." not in detail_content
-    assert (
-        'data-config="/api/audios/player_config/?template_base_dir=django_chat"' in detail_content
-    )
     assert "Audio copy pending." not in detail_content
 
     assert transcript_response.status_code == 200
@@ -359,7 +344,6 @@ def test_public_url_reversals_still_match_current_shapes() -> None:
     assert reverse("wagtailadmin_home") == "/cms/"
     assert reverse("cast:styleguide") == "/styleguide/"
     assert resolve("/styleguide/").namespace == "cast"
-    assert reverse("django_chat_podlove_player_template") == "/podlove-player-template/"
 
 
 class FakeAudioDownloader:

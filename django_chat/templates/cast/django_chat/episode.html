@@ -86,17 +86,10 @@
 
 {% block javascript %}
   {{ block.super }}
-  {% load cast_audio_player %}
-  {% cast_audio_player_mode as audio_player_mode %}
   <script defer src="{% static 'django_chat/js/share-modal.js' %}?v=share-2"></script>
   <script defer src="{% static 'django_chat/js/embed-modal.js' %}?v=embed-2"></script>
   {% if episode.podcast_audio and episode.podcast_audio.mp3 %}
-    {% if audio_player_mode == "custom" %}
-      {# django-cast ships the custom player; include it with app="cast". #}
-      {% vite_asset 'src/audio/custom-player.ts' app="cast" %}
-    {% else %}
-      {% vite_asset 'src/audio/podlove-player.ts' app="cast" %}
-      <script defer src="{% static 'django_chat/js/podlove-loader.js' %}?v=podlove-4"></script>
-    {% endif %}
+    {# django-cast ships the custom player; include it with app="cast". #}
+    {% vite_asset 'src/audio/custom-player.ts' app="cast" %}
   {% endif %}
 {% endblock javascript %}

@@ -50,9 +50,11 @@ default fetcher (catalog text/JSON, audio, cover image, staging transcript):
 - HTTP redirects are re-validated and re-pinned, so a public host cannot 30x the
   fetch to an internal address.
 
-The staging transcript importer additionally requires the remote page's
-`podlove-player data-url` to resolve to the **same host** over http(s)
-(`extract_podlove_api_url`).
+The staging transcript importer additionally never fetches a URL string taken
+from the remote page body: it reads the custom player's JSON payload, validates
+the `audioId` and `post_id` values as integers, and rebuilds the Podlove API
+URL on the episode page's **own origin** (`extract_podlove_api_url`), so a
+tampered payload cannot steer the follow-up fetch off-host.
 
 ## Remediation of already-imported data
 

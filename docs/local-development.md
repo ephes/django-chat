@@ -220,9 +220,8 @@ Then browse:
   page.
 - `http://localhost:8000/episodes/django-tasks-jake-howard/` renders an
   imported episode detail page. After running the sample import with
-  `--copy-audio`, the page renders the compact Podlove player; metadata-only
-  imports show `Audio copy pending.` instead. The player uses the local
-  compact `data-template` endpoint and the Django Chat brand config URL. The
+  `--copy-audio`, the page renders django-cast's custom audio player;
+  metadata-only imports show `Audio copy pending.` instead. The
   visible episode hero artwork is the static Django Chat SVG logo, even when
   the import has attached the original show artwork to `Podcast.cover_image`.
 
@@ -251,8 +250,7 @@ storage, creates or updates a `cast.Audio` row, and attaches that row to
 attaches it to `Podcast.cover_image`. That imported raster image remains
 available to django-cast metadata, feed, and player API paths; episode detail
 pages render the static SVG logo directly instead of sending the Wagtail image
-through the rendition pipeline. Django Chat's compact Podlove player keeps the
-same django-cast config endpoint and brand tokens, and transcript tabs are
+through the rendition pipeline. The custom player's inline Transcript panel is
 available when an audio row has an attached django-cast `Transcript`. The flag
 is idempotent: subsequent runs do nothing when `cover_image` is already set.
 Project-level Open Graph and Twitter image tags use
@@ -350,9 +348,10 @@ Limit the import to one episode while checking behavior:
 just import-staging-transcripts --slug django-tasks-jake-howard
 ```
 
-The command fetches each staging episode page, follows the Podlove player
-`data-url`, and stores local `cast.Transcript` files in the same formats
-django-cast serves: Podlove JSON, WebVTT, and DOTe. The `just` recipe uses the
+The command fetches each staging episode page, reads the custom player's JSON
+payload to locate the episode's Podlove transcript API, and stores local
+`cast.Transcript` files in the same formats django-cast serves: Podlove JSON,
+WebVTT, and DOTe. The `just` recipe uses the
 staging media secrets so the artifacts are readable when you run `just dev`.
 Use this `just` recipe rather than `just manage
 import_django_chat_staging_transcripts` for normal local review, because the
@@ -442,7 +441,7 @@ measuring a fresh database.
 
 Run Lighthouse/Web Vitals checks against deployed staging when preparing a host
 handoff. Local sample data is useful for template iteration, but it does not
-exercise the full catalog, deployed static files, media host, or Podlove player
+exercise the full catalog, deployed static files, media host, or player
 network behavior.
 
 The current repeatable staging workflow, command flags, report locations, final
