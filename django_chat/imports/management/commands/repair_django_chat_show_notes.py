@@ -60,6 +60,7 @@ def _format_summary(result: ShowNoteRepairResult, *, write: bool) -> str:
         f"source_detail_blocks_restored={result.source_detail_blocks_restored}, "
         f"implicit_link_lists_converted={result.implicit_link_lists_converted}, "
         f"implicit_link_list_headings_hidden={result.implicit_link_list_headings_hidden}, "
+        f"implicit_link_list_headings_added={result.implicit_link_list_headings_added}, "
         f"implicit_link_lists_skipped={result.implicit_link_lists_skipped}, "
         f"support_copy_sections_restored={result.support_copy_sections_restored}, "
         f"raw_markdown_like_episodes={result.raw_markdown_like_episodes}."
@@ -78,6 +79,8 @@ def _format_item(item: EpisodeShowNoteRepair) -> str:
         actions.append(f"converted_lists={item.implicit_link_lists_converted}")
     if item.implicit_link_list_headings_hidden:
         actions.append(f"hidden_implicit_link_headings={item.implicit_link_list_headings_hidden}")
+    if item.implicit_link_list_headings_added:
+        actions.append(f"added_implicit_link_headings={item.implicit_link_list_headings_added}")
     if item.implicit_link_lists_skipped:
         actions.append(f"skipped_lists={item.implicit_link_lists_skipped}")
     if item.support_copy_sections_restored:

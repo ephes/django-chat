@@ -22,6 +22,7 @@ class EpisodeShowNoteRepair:
     source_detail_blocks_restored: int
     implicit_link_lists_converted: int
     implicit_link_list_headings_hidden: int
+    implicit_link_list_headings_added: int
     implicit_link_lists_skipped: int
     support_copy_sections_restored: int
     raw_markdown_like: bool
@@ -34,6 +35,7 @@ class EpisodeShowNoteRepair:
             or self.source_detail_blocks_restored > 0
             or self.implicit_link_lists_converted > 0
             or self.implicit_link_list_headings_hidden > 0
+            or self.implicit_link_list_headings_added > 0
             or self.implicit_link_lists_skipped > 0
             or self.support_copy_sections_restored > 0
             or self.raw_markdown_like
@@ -48,6 +50,7 @@ class ShowNoteRepairResult:
     source_detail_blocks_restored: int = 0
     implicit_link_lists_converted: int = 0
     implicit_link_list_headings_hidden: int = 0
+    implicit_link_list_headings_added: int = 0
     implicit_link_lists_skipped: int = 0
     support_copy_sections_restored: int = 0
     raw_markdown_like_episodes: int = 0
@@ -91,6 +94,7 @@ def _repair_queryset(
     source_detail_blocks_restored = 0
     implicit_link_lists_converted = 0
     implicit_link_list_headings_hidden = 0
+    implicit_link_list_headings_added = 0
     implicit_link_lists_skipped = 0
     support_copy_sections_restored = 0
     raw_markdown_like_episodes = 0
@@ -118,6 +122,7 @@ def _repair_queryset(
         source_detail_blocks_restored += body_report.source_detail_blocks_restored
         implicit_link_lists_converted += body_report.implicit_link_lists_converted
         implicit_link_list_headings_hidden += body_report.implicit_link_list_headings_hidden
+        implicit_link_list_headings_added += body_report.implicit_link_list_headings_added
         implicit_link_lists_skipped += body_report.implicit_link_lists_skipped
         support_copy_sections_restored += body_report.support_copy_sections_restored
         if body_report.raw_markdown_like:
@@ -132,6 +137,7 @@ def _repair_queryset(
             source_detail_blocks_restored=body_report.source_detail_blocks_restored,
             implicit_link_lists_converted=body_report.implicit_link_lists_converted,
             implicit_link_list_headings_hidden=body_report.implicit_link_list_headings_hidden,
+            implicit_link_list_headings_added=body_report.implicit_link_list_headings_added,
             implicit_link_lists_skipped=body_report.implicit_link_lists_skipped,
             support_copy_sections_restored=body_report.support_copy_sections_restored,
             raw_markdown_like=body_report.raw_markdown_like,
@@ -155,6 +161,7 @@ def _repair_queryset(
         source_detail_blocks_restored=source_detail_blocks_restored,
         implicit_link_lists_converted=implicit_link_lists_converted,
         implicit_link_list_headings_hidden=implicit_link_list_headings_hidden,
+        implicit_link_list_headings_added=implicit_link_list_headings_added,
         implicit_link_lists_skipped=implicit_link_lists_skipped,
         support_copy_sections_restored=support_copy_sections_restored,
         raw_markdown_like_episodes=raw_markdown_like_episodes,

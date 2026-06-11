@@ -33,10 +33,10 @@ package = false
 
 [tool.uv.sources]
 # django-cast Contributor snippets/episode assignments, the diarized transcript
-# speaker-label workflow, and CAST_POST_BODY_BLOCKS currently ship from the
-# develop branch, which `../python-podcast` also tracks. Pin the exact commit for
-# reproducible builds; bump deliberately when develop advances.
-django-cast = { git = "https://github.com/ephes/django-cast", rev = "f795ed5f9dfb2d97fb40f30ad5a3827e5d6c41fb" }
+# speaker-label workflow, CAST_POST_BODY_BLOCKS, and the custom audio player ship
+# from the develop branch, which `../python-podcast` also tracks. Pin the exact
+# commit for reproducible builds; bump deliberately when develop advances.
+django-cast = { git = "https://github.com/ephes/django-cast", rev = "5f5db2460ced9d604415dc926520eac7d56af62b" }
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.test"

@@ -60,7 +60,54 @@ def page_with_long_transcript(long_transcript_site: None) -> Iterator[Page]:
     yield from _playwright_page()
 
 
-def _playwright_page() -> Iterator[Page]:
+@pytest.fixture
+def diarized_custom_player_site(loadable_audio_site: None) -> Iterator[None]:
+    """Repository-backed diarized-transcript state for the custom player.
+
+    Creates a multi-speaker transcript with speaker labels that match visible
+    ``EpisodeContributor`` records (so they survive sanitization) plus one
+    non-contributor label (so its label is stripped) — no reliance on mutable
+    dev-DB state. The matching custom-player browser tests prove
+    contributor-approved speaker headings, sparse timestamps, and the privacy
+    contract.
+    """
+    episode = Episode.objects.get(slug="django-tasks-jake-howard")
+    assert episode.podcast_audio is not None
+    _assign_contributor(episode, display_name="Ada Lovelace", slug="ada-lovelace")
+    _assign_contributor(episode, display_name="Grace Hopper", slug="grace-hopper")
+    _create_diarized_transcript(episode.podcast_audio)
+    yield
+
+
+@pytest.fixture
+def page_with_diarized_custom_player(diarized_custom_player_site: None) -> Iterator[Page]:
+    # The fake audio bytes cannot decode; ignore the resulting media-load console
+    # noise (the transcript/share UI under test does not need playback).
+    yield from _playwright_page(ignore_media_errors=True)
+
+
+def _is_media_load_error(text: str) -> bool:
+    """Benign console noise from the fake (non-decodable) test audio bytes.
+
+    The custom player's <audio> points at the tiny ``FakeAudioDownloader`` bytes,
+    which the browser cannot decode — it logs a media-load/format error. That is
+    expected in the test harness (the UI under test does not need playback), so it
+    must not fail the page-error assertion. Real JS errors still do.
+    """
+    lowered = text.lower()
+    return any(
+        token in lowered
+        for token in (
+            "failed to load because no supported source",
+            "media",
+            "demuxer",
+            "decode",
+            "err_",
+        )
+    )
+
+
+def _playwright_page(ignore_media_errors: bool = False) -> Iterator[Page]:
     """Create a Playwright page for fixtures with different Django data setup."""
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
@@ -69,7 +116,12 @@ def _playwright_page() -> Iterator[Page]:
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.on(
             "console",
-            lambda message: errors.append(message.text) if message.type == "error" else None,
+            lambda message: (
+                errors.append(message.text)
+                if message.type == "error"
+                and not (ignore_media_errors and _is_media_load_error(message.text))
+                else None
+            ),
         )
 
         yield page
@@ -524,6 +576,138 @@ def test_player_transcript_tab_uses_single_scroll_container(
     assert metrics["transcriptTabClientHeight"] <= 600
 
 
+@override_settings(CAST_AUDIO_PLAYER="custom")
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_custom_player_one_share_control_and_demoted_keyboard_pref(
+    live_server: Any,
+    page_with_diarized_custom_player: Page,
+) -> None:
+    page = page_with_diarized_custom_player
+    page.goto(f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}")
+    page.locator("cast-audio-player .cast-player__transport").wait_for()
+
+    # Exactly one user-facing share control: the sidebar rail item, not the
+    # in-transport player button (suppressed via transport_share=False).
+    expect(page.locator('.rail-item[data-action="share"]')).to_have_count(1)
+    expect(page.locator(".cast-player__share")).to_have_count(0)
+
+    # The ambiguous "Tab cues" text is gone; the preference survives as an
+    # icon-only secondary control with its accessible name preserved.
+    assert page.get_by_text("Tab cues").count() == 0
+    pref = page.locator(".cast-transcript__iconpref")
+    expect(pref).to_have_count(1)
+    assert pref.get_attribute("aria-label") == "Keyboard-navigable cues"
+
+
+@override_settings(CAST_AUDIO_PLAYER="custom")
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_custom_player_transcript_speakers_and_sparse_timestamps(
+    live_server: Any,
+    page_with_diarized_custom_player: Page,
+) -> None:
+    page = page_with_diarized_custom_player
+    page.goto(f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}")
+
+    page.locator(".cast-panel__toggle", has_text="Transcript").click()
+    page.wait_for_selector(".cast-transcript__cue")
+
+    # Speaker headings render for the visible contributors; the non-contributor
+    # label is stripped (privacy contract) and never appears. The heading name
+    # span carries the speaker (the heading row also holds the initial chip and
+    # the run timestamp); names are uppercased via CSS text-transform, so
+    # compare case-insensitively.
+    speakers = [
+        text.upper() for text in page.locator(".cast-transcript__speaker-name").all_inner_texts()
+    ]
+    assert "ADA LOVELACE" in speakers
+    assert "GRACE HOPPER" in speakers
+    cues_text = page.locator(".cast-transcript__cues").inner_text()
+    assert "MYSTERY CALLER" not in cues_text.upper()
+    # the non-contributor's cue text is still present (only the label is gated)
+    assert "I am not a listed contributor." in cues_text
+
+    # Labelled mode: the heading rows carry the timestamps (one per speaker
+    # run); the per-cue gutter timestamps are fully hidden.
+    cue_count = page.locator(".cast-transcript__cue").count()
+    run_starts = page.locator(".cast-transcript__cue.is-run-start").count()
+    heading_times = page.locator(".cast-transcript__speaker-time:visible").count()
+    gutter_times = page.locator(".cast-transcript__time:visible").count()
+    classes = page.locator(".cast-transcript__cues").get_attribute("class") or ""
+    assert "cast-transcript__cues--labelled" in classes
+    assert gutter_times == 0
+    assert 0 < heading_times == run_starts < cue_count
+
+    # Click-to-seek stays per cue even where the timestamp is hidden: the
+    # continuation cue is a real button with seek data.
+    continuation = page.locator(".cast-transcript__cue:not(.is-run-start)").first
+    assert continuation.get_attribute("data-start") is not None
+
+
+@override_settings(CAST_AUDIO_PLAYER="custom")
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_custom_player_transcript_shows_loading_busy_state(
+    live_server: Any,
+    page_with_diarized_custom_player: Page,
+) -> None:
+    page = page_with_diarized_custom_player
+    page.goto(f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}")
+
+    # Delay the lazy transcript endpoint so the busy state is observable.
+    def _slow(route: Any) -> None:
+        import time
+
+        time.sleep(0.5)
+        route.continue_()
+
+    page.route("**/player-transcript/**", _slow)
+    page.locator(".cast-panel__toggle", has_text="Transcript").click()
+
+    spinner = page.locator(".cast-transcript__spinner")
+    expect(spinner).to_have_count(1)
+    assert page.locator(".cast-panel__scroll").first.get_attribute("aria-busy") == "true"
+
+    page.wait_for_selector(".cast-transcript__cue")
+    expect(spinner).to_have_count(0)
+    assert page.locator(".cast-panel__scroll").first.get_attribute("aria-busy") in (None, "false")
+
+
+@override_settings(CAST_AUDIO_PLAYER="custom")
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+def test_custom_player_site_share_uses_player_current_time(
+    live_server: Any,
+    page_with_diarized_custom_player: Page,
+) -> None:
+    page = page_with_diarized_custom_player
+    page.goto(f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}")
+    page.locator("cast-audio-player .cast-player__transport").wait_for()
+
+    # Report a 21s playback position. Real seeking needs a Range-capable media
+    # host (CloudFront/staging); the test serves non-seekable fake audio, so set
+    # the element's reported position to exercise the genuine getShareState() ->
+    # share-modal.js path the site owns (the read-only API is unchanged by the
+    # transport-share opt-out).
+    page.evaluate(
+        """() => {
+            const a = document.querySelector('cast-audio-player audio');
+            Object.defineProperty(a, 'currentTime', { configurable: true, get: () => 21 });
+        }"""
+    )
+    state = page.evaluate("() => document.querySelector('cast-audio-player').getShareState()")
+    assert round(state["currentTime"]) == 21
+
+    page.locator('.rail-item[data-action="share"]').click()
+    dialog = page.locator("#share-dialog")
+    expect(dialog).to_have_attribute("open", "")
+    expect(dialog.locator("[data-startat-toggle]")).to_be_checked()
+    expect(dialog.locator("[data-startat-time]")).to_have_value("0:21")
+    url_value = dialog.locator("[data-share-url-input]").input_value()
+    assert url_value.endswith("?t=21")
+    twitter_href = (
+        dialog.locator('.share-pill[data-share-net="twitter"]').get_attribute("href") or ""
+    )
+    assert "t%3D21" in twitter_href or "t=21" in twitter_href
+
+
 def episode_index_path() -> str:
     return reverse("django_chat_episode_index")
 
@@ -571,3 +755,50 @@ def _podlove_time(milliseconds: int) -> str:
     minutes, seconds = divmod(total_seconds, 60)
     hours, minutes = divmod(minutes, 60)
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{ms:03d}"
+
+
+def _assign_contributor(episode: Episode, *, display_name: str, slug: str) -> Any:
+    contributor_model = apps.get_model("cast", "Contributor")
+    episode_contributor_model = apps.get_model("cast", "EpisodeContributor")
+    contributor = contributor_model.objects.create(
+        display_name=display_name, slug=slug, visible=True
+    )
+    episode_contributor_model.objects.create(
+        episode=episode,
+        contributor=contributor,
+        role=episode_contributor_model.ROLE_HOST,
+    )
+    return contributor
+
+
+# Diarized cues: two speaker runs each for the visible contributors (so a run has
+# a continuation line whose timestamp is hidden), an Ada run reopening (heading
+# repeats on speaker change), and a final non-contributor label that sanitization
+# must strip to "".
+_DIARIZED_SEGMENTS = (
+    ("Ada Lovelace", "Welcome to the show, everyone."),
+    ("Ada Lovelace", "Today we dig into background tasks in Django."),
+    ("Grace Hopper", "Thanks for having me on."),
+    ("Grace Hopper", "It is great to talk about this work."),
+    ("Ada Lovelace", "Let us start with the basics."),
+    ("Mystery Caller", "I am not a listed contributor."),
+)
+
+
+def _create_diarized_transcript(audio: Audio) -> Any:
+    transcript_model = apps.get_model("cast", "Transcript")
+    transcript = transcript_model.objects.create(audio=audio)
+    segments = [
+        {
+            "start": _podlove_time(index * 2_000),
+            "start_ms": index * 2_000,
+            "end": _podlove_time((index + 1) * 2_000),
+            "end_ms": (index + 1) * 2_000,
+            "speaker": speaker,
+            "voice": speaker,
+            "text": text,
+        }
+        for index, (speaker, text) in enumerate(_DIARIZED_SEGMENTS)
+    ]
+    transcript.podlove.save("podlove.json", ContentFile(json.dumps({"transcripts": segments})))
+    return transcript

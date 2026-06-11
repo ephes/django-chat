@@ -103,10 +103,18 @@ criteria are based on content shape, not on the exact count values.
 
 The repair criteria now cover both content shapes:
 
-- Leading unheaded HTML lists are treated as the first episode-notes list only
-  when every list item is link-only. Lists with source prose around links,
-  linkless items, missing `href` values, or other complex content remain
-  source HTML.
+- Leading unheaded HTML lists are converted to a `show_note_link_list` (iconed
+  `Links`) only when every list item is link-only. A list with source prose
+  around links, multiple anchors per item, or other complex content cannot be
+  losslessly itemized, so its content is kept as verbatim source HTML — but
+  under the icon feature (D5) it now still gets a synthesized iconed `Links`
+  `show_note_heading` before the list (the headingless analog of the
+  non-convertible-heading offload below), as long as the list carries at least
+  one real link. A list with no real links (no anchors / missing `href`) is not
+  a `Links` section and stays unstructured. `0019_add_implicit_link_list_headings`
+  backfills this heading for already-imported episodes; re-structuring is
+  idempotent (a list already following its own stored heading does not regain a
+  synthesized `Links` heading).
 - Raw Markdown-like bodies are converted with the narrow Simplecast-era subset:
   bullet links become lists and Markdown headings become show-note headings.
 - Paragraph-style `Support the Show` sections are preserved as source copy
@@ -225,6 +233,8 @@ restored:
      - source-derived detail blocks restored;
      - converted leading lists;
      - generated implicit `Links` headings hidden (now always 0; see below);
+     - synthesized iconed `Links` headings added before non-convertible leading
+       lists (see `0019`);
      - leading lists skipped because source prose must stay as source HTML;
      - support-copy sections restored from source detail;
      - raw Markdown-like bodies converted or still reportable;

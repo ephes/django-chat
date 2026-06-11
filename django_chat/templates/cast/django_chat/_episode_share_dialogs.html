@@ -1,15 +1,24 @@
 {% comment %}
   Reusable Share + Embed dialogs for a Django-Chat episode.
   Required context: `page` (the Episode page) with `.title` and `.slug`,
-  `episode` (the Episode model), `resolved_canonical_url`. The embed-dialog
-  resolves the embed URL itself via the `django_chat_episode_embed` URL.
+  `episode` (the Episode model), `resolved_canonical_url`, and a relative
+  episode path in `page_url` (episode page) or `episode_url` (transcript page).
+  The embed-dialog resolves the embed URL itself via the
+  `django_chat_episode_embed` URL.
   Pair with `_episode_sidebar.html` to wire the open / close behaviour, and
   load `share-modal.js` + `embed-modal.js` in the page's javascript block.
+
+  Share links are built from the request host (`request.get_host`), not the
+  canonical Site URL, so they resolve in every environment — including the dev
+  server's :8000 port, which the canonical Site URL omits. Canonical/OG meta
+  still use `resolved_canonical_url`.
 {% endcomment %}
 {% load static %}
 
+{% firstof page_url episode_url as episode_share_path %}
+{% with episode_share_url=request.scheme|add:"://"|add:request.get_host|add:episode_share_path %}
 <dialog id="share-dialog" class="share-modal" aria-labelledby="share-dialog-title"
-        data-share-url="{{ resolved_canonical_url }}"
+        data-share-url="{{ episode_share_url }}"
         data-share-title="{{ page.title }}">
   <div class="share-modal-inner stack">
     <header class="share-modal-header">
@@ -24,7 +33,7 @@
     <section class="share-channels stack" aria-label="Share channels">
       <div class="share-pills cluster">
         <a class="share-pill" data-share-net="twitter"
-           href="https://twitter.com/intent/tweet?url={{ resolved_canonical_url|urlencode }}&text={{ page.title|urlencode }}"
+           href="https://twitter.com/intent/tweet?url={{ episode_share_url|urlencode }}&text={{ page.title|urlencode }}"
            target="_blank" rel="noopener noreferrer">
           <svg class="share-pill-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path fill="currentColor" d="M18.244 2H21l-6.52 7.452L22 22h-6.844l-4.62-6.04L4.8 22H2.043l6.97-7.965L2 2h7.018l4.18 5.524L18.244 2zm-2.4 18h1.55L7.27 4H5.61l10.234 16z"/>
@@ -32,7 +41,7 @@
           <span>Twitter</span>
         </a>
         <a class="share-pill" data-share-net="facebook"
-           href="https://www.facebook.com/sharer/sharer.php?u={{ resolved_canonical_url|urlencode }}"
+           href="https://www.facebook.com/sharer/sharer.php?u={{ episode_share_url|urlencode }}"
            target="_blank" rel="noopener noreferrer">
           <svg class="share-pill-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path fill="currentColor" d="M13.5 22v-8.5h2.95l.55-3.5h-3.5V7.7c0-1.05.35-1.7 1.85-1.7h1.85V2.95C16.6 2.85 15.4 2.7 14 2.7c-2.95 0-4.95 1.85-4.95 5v2.3H6v3.5h3.05V22h4.45z"/>
@@ -40,7 +49,7 @@
           <span>Facebook</span>
         </a>
         <a class="share-pill" data-share-net="linkedin"
-           href="https://www.linkedin.com/sharing/share-offsite/?url={{ resolved_canonical_url|urlencode }}"
+           href="https://www.linkedin.com/sharing/share-offsite/?url={{ episode_share_url|urlencode }}"
            target="_blank" rel="noopener noreferrer">
           <svg class="share-pill-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path fill="currentColor" d="M4.98 3.5c0 1.38-1.12 2.5-2.5 2.5S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.22 8h4.56v14H.22V8zm7.34 0h4.37v1.92h.06c.6-1.1 2.05-2.27 4.22-2.27 4.51 0 5.34 2.97 5.34 6.84V22h-4.55v-6.55c0-1.56-.03-3.57-2.17-3.57-2.17 0-2.5 1.7-2.5 3.46V22H7.56V8z"/>
@@ -54,7 +63,7 @@
           <span>Mastodon</span>
         </button>
         <a class="share-pill" data-share-net="email"
-           href="mailto:?subject={{ page.title|urlencode }}&body={{ resolved_canonical_url|urlencode }}">
+           href="mailto:?subject={{ page.title|urlencode }}&body={{ episode_share_url|urlencode }}">
           <svg class="share-pill-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path fill="currentColor" d="M3 5.5h18c.55 0 1 .45 1 1V7l-10 6L2 7v-.5c0-.55.45-1 1-1zm19 4.2v8.3c0 .55-.45 1-1 1H3c-.55 0-1-.45-1-1V9.7l9.45 5.95c.34.22.76.22 1.1 0L22 9.7z"/>
           </svg>
@@ -93,7 +102,7 @@
 
       <div class="share-copy">
         <label for="share-url-input" class="visually-hidden">Episode URL</label>
-        <input type="text" id="share-url-input" data-share-url-input value="{{ resolved_canonical_url }}" readonly>
+        <input type="text" id="share-url-input" data-share-url-input value="{{ episode_share_url }}" readonly>
         <button type="button" class="button-primary share-copy-button js-only" data-share-copy>
           <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <rect x="8" y="3" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
@@ -105,6 +114,7 @@
     </section>
   </div>
 </dialog>
+{% endwith %}
 
 {% url 'django_chat_episode_embed' episode_slug=page.slug as episode_embed_path %}
 <dialog id="embed-dialog" class="share-modal embed-modal" aria-labelledby="embed-dialog-title"

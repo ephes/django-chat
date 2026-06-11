@@ -224,8 +224,28 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       `0007_hide_implicit_link_list_headings`: implicit "Links" lists (a leading
       source list with no heading) now show their iconed heading instead of a
       bare list, since under the icon model `show_heading=False` also hid the
-      icon. See
+      icon. `0019_add_implicit_link_list_headings` closes the remaining gap a
+      full staging crawl surfaced (42 episodes): a *headingless* leading list that
+      is **non-convertible** (items mix prose with links / multiple anchors, so it
+      cannot be cleanly itemized) was left as a bare `<ul>` with no heading or
+      icon — the clean-list path and `0018` never reached it. D5 now synthesizes
+      an iconed `Links` `show_note_heading` before such a list (list kept verbatim
+      as a following paragraph) when it carries real links; the migration re-runs
+      the idempotent in-place structuring so already-offloaded sections do not
+      gain a spurious `Links` heading. See
       [`docs/structured-show-note-blocks-research.md`](structured-show-note-blocks-research.md).
+      A 2026-06-03 read-only crawl of all 203 live episodes (BeautifulSoup
+      structural detector over `div.show-notes`) confirmed the four classes
+      0015–0018 targeted are clean — zero raw/emoji headings, zero `Episode
+      Notes` leftovers, zero leaked German admin strings, zero bad/empty icon
+      kinds — and surfaced this headingless-list gap on 42 episodes (a prior crawl
+      missed it by only inspecting `ul[role="list"]`; these are bare `<ul>`s with
+      no `role`). Replaying the new converter over those 42 episodes' lists
+      produced an iconed `Links` heading for all 43 leading lists (0 still bare);
+      a live staging re-crawl after deploying `0019` remains to confirm in situ.
+      One unrelated one-off (`greening-django-chris-adams`) has all show notes in
+      `block-overview` (detail-only structuring never reaches it) — a separate
+      non-standard data state tracked as a follow-up.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -358,24 +378,80 @@ growth.
 
 ## Open Work (Highest Signal First)
 
-1. **Host review of staging.** With full catalog + RSS-discovery +
+1. **Custom player transcript/share parity — implemented on `feat/custom-player`.**
+   The focused polish slice landed. Player cutover (2026-06-11):
+   `CAST_AUDIO_PLAYER` is env-configurable in production settings and the
+   staging deploy sets it to `"custom"` (`deploy/group_vars/staging.yml`), so
+   hosts review the custom player on staging; production keeps the Podlove
+   player (`"podlove"` default) until host sign-off. Generic behavior went
+   upstream into
+   django-cast and Django Chat bumped its pinned rev:
+   - Upstream (django-cast): sparse timestamps in labelled transcripts (a muted
+     time anchor only at speaker-run starts; continuation lines keep click-to-seek
+     but hide the timestamp), a loading spinner with `aria-busy`, a restrained
+     spring reveal/collapse that honors `prefers-reduced-motion`, the `Tab cues`
+     control demoted to an icon-only secondary toggle (accessible name +
+     `cast-transcript-tabbable` preserved), and a `data-share="none"`
+     transport-share opt-out (`cast_custom_player ... transport_share=False`).
+     Speaker-label sanitization is unchanged and now regression-tested through
+     `AudioPlayerTranscriptView`. Covered by vitest + pytest.
+   - Django Chat: opts out of the in-transport share button so the sidebar rail
+     is the only share control; the full-width hairline directly below the player
+     is replaced by a grid-aligned separator on `.episode-hero-content` (spans the
+     content column, inset past the episode-number column); a repository-backed
+     browser fixture (`diarized_custom_player_site`) creates a diarized transcript
+     with matching visible contributors (and one stripped non-contributor) so the
+     custom-player browser tests prove speaker headings, sparse timestamps, one
+     share control, the loading busy state, and `?t=21` site sharing without
+     relying on mutable dev-DB state.
+   Host-review follow-ups (2026-06-08): reproducible diarized demo data via
+   `just manage seed_django_chat_diarized_demo` (assigns the three visible
+   contributors and writes deterministic block speaker labels onto the
+   `django-tasks-jake-howard` cues; run it with staging media to seed the S3
+   transcript that `just dev` reads); a dev-only `DisableTranscriptCacheMiddleware`
+   (local settings) that drops the endpoint's 1-hour browser cache so seeded
+   changes show on the next load; the transcript toggle restyled as a compact
+   borderless panel header (not a pill) with the player pulled up under the
+   headline; the separator rendered short + cover-aligned when closed and
+   full-width over Hosts and Guests when open; the open transcript flattened to
+   read as inline page content; and an upstream django-cast fix making the player
+   focusable so the transport keyboard shortcuts (Space/K/arrows) are reachable.
+   Transcript beauty/UX review follow-ups (2026-06-11, upstream django-cast
+   `1ad2748e`): diarized transcripts render a heading row per speaker run (an
+   initial chip echoing the Hosts-and-Guests chips, the name, and the run's
+   timestamp; speakerless runs get a time-only anchor) and the per-cue gutter
+   collapses; the current-cue highlight drops the per-line underline band (it
+   painted past the end of each line and read as a glitch) for a single accent
+   border + tint idiom; follow-along keeps look-ahead via `scroll-margin`
+   instead of pinning the active line to the panel's bottom edge; far jumps
+   (search/chapter) land instantly instead of smooth-scrolling for seconds;
+   searching suspends follow (dimmed toggle, Escape clears and re-anchors);
+   speaker comparison is trimmed and labelled cue buttons carry a
+   visually-hidden speaker prefix for screen-reader focus context.
+   Dev caveat: Django's `runserver` serves media without HTTP `Range` support,
+   so Chromium reports the audio unseekable locally — scrubbing and `?t=`
+   deep-links silently no-op under `just dev`. Production serving (nginx/S3)
+   supports ranges and is unaffected; test share-with-timestamp against staging.
+   Spec:
+   [`docs/custom-player-transcript-share-spec.md`](custom-player-transcript-share-spec.md).
+2. **Host review of staging.** With full catalog + RSS-discovery +
    Voxhelm transcript handling + Lighthouse/Web Vitals readiness + documented
    production migration risks + pre-review UI polish in place, the staging site
    is ready for host review. Send hosts the URL + `host-review-admin`
    credential.
-2. **Episode tags/taxonomy import decision.** Decide whether source keywords
+3. **Episode tags/taxonomy import decision.** Decide whether source keywords
    should also become Wagtail/taggit episode tags. Do not blindly mirror generic
    RSS keywords into public tags without a UI/editor use case and a preservation
    policy for manual Wagtail tags; if implemented later, prefer a filtered
    source-managed tag strategy that does not wipe editor-curated tags.
-3. **Live feed parity checker.** Add a command/script that compares the current
+4. **Live feed parity checker.** Add a command/script that compares the current
    Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
    generated or S3/CDN-served Django Chat podcast feed. It should fail on item
    count, missing/extra GUIDs, GUID order, publication-date, title, enclosure
    type, latest-episode, and copied-media byte-size regressions, with explicit
    warnings for approved differences such as moved enclosure URLs or equivalent
    duration formatting.
-4. **Performance optimization backlog.** Continue tracking concrete Lighthouse
+5. **Performance optimization backlog.** Continue tracking concrete Lighthouse
    and browser-network follow-ups in
    [`docs/lighthouse-performance.md#performance-optimization-backlog`](lighthouse-performance.md#performance-optimization-backlog).
    The HTML-discoverable `/episodes/` hero background has been verified on
@@ -383,7 +459,7 @@ growth.
    minification now runs during `collectstatic`. Remaining choices are whether
    to split or critical-inline CSS and whether the render-blocking `rel="expect"`
    hints should stay.
-5. **Production VPS, DNS cutover, URL redirects, podcast directory
+6. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
    [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.
@@ -398,10 +474,18 @@ findings (low/accepted) are tracked in
 
 ## Next Action
 
-Proceed to host review. The latest-entries feed mitigation and Lighthouse/Web
-Vitals fixes have been deployed, a 2026-06-02 staging RSS probe confirms both
-RSS routes return 205 items, and the host-review public pages scored 98-100 in
-final mobile and desktop Lighthouse runs. The pre-review cleanup added
+The custom-player transcript/share parity spec
+([`docs/custom-player-transcript-share-spec.md`](custom-player-transcript-share-spec.md))
+is implemented on `feat/custom-player` and verified (vitest, pytest, fixture-backed
+browser tests, and a Playwright desktop/mobile pass on
+`/episodes/django-tasks-jake-howard/`). It is a dev preview only; staging and
+production keep the Podlove player until a deliberate cutover decision, so the
+host-review baseline is unchanged. Proceed to host review from the current
+staging (Podlove) baseline. The
+latest-entries feed mitigation and Lighthouse/Web Vitals fixes have been
+deployed, a 2026-06-02 staging RSS probe confirms both RSS routes return 205
+items, and the host-review public pages scored 98-100 in final mobile and
+desktop Lighthouse runs. The pre-review cleanup added
 production migration notes, pagination focus/scroll behavior, episode filter
 styling including custom date/select popovers, Wagtail 7.4, and an editable
 Wagtail `SponsorPage` at

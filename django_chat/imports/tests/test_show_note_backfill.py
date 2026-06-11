@@ -22,6 +22,9 @@ offload_migration = import_module(
 unhide_migration = import_module(
     "django_chat.imports.migrations.0018_unhide_implicit_link_list_headings"
 )
+add_headings_migration = import_module(
+    "django_chat.imports.migrations.0019_add_implicit_link_list_headings"
+)
 
 
 @pytest.mark.django_db
@@ -158,6 +161,131 @@ def test_migration_0017_offloads_raw_headings_and_preserves_overrides() -> None:
     offload_migration.offload_raw_show_note_headings(django_apps, None)
     episode.refresh_from_db()
     assert _body_children(episode, "detail") == before
+
+
+@pytest.mark.django_db
+def test_migration_0019_adds_links_heading_to_headingless_mixed_list() -> None:
+    import_django_chat_sample()
+    metadata = EpisodeSourceMetadata.objects.get(episode_number=200)
+    _isolate_metadata(metadata)
+    episode = metadata.episode
+    episode.body = [
+        ("overview", [("paragraph", "Summary.")]),
+        (
+            "detail",
+            [
+                # Headingless leading list with a prose+multi-anchor item: it has
+                # real links but cannot be cleanly itemized, so pre-fix it stayed a
+                # bare <ul> with no heading or icon.
+                (
+                    "paragraph",
+                    "<ul>"
+                    '<li>@brettcannon <a href="https://github.com/brettcannon">on GitHub</a> '
+                    'and <a href="https://fosstodon.org/@brettcannon">Fosstodon</a></li>'
+                    "</ul>",
+                ),
+            ],
+        ),
+    ]
+    episode.save(update_fields=["body"])
+
+    add_headings_migration.add_implicit_link_list_headings(django_apps, None)
+
+    episode.refresh_from_db()
+    detail = _body_children(episode, "detail")
+    # A synthesized iconed "Links" heading now precedes the verbatim list.
+    assert [c["type"] for c in detail] == ["show_note_heading", "paragraph"]
+    assert detail[0]["value"]["heading"] == "Links"
+    assert detail[0]["value"]["icon"] == "links"
+    assert "@brettcannon" in detail[1]["value"]
+
+    # Idempotent: a second run leaves the detail block unchanged.
+    before = _body_children(episode, "detail")
+    add_headings_migration.add_implicit_link_list_headings(django_apps, None)
+    episode.refresh_from_db()
+    assert _body_children(episode, "detail") == before
+
+
+@pytest.mark.django_db
+def test_migration_0019_leaves_offloaded_headed_section_alone() -> None:
+    import_django_chat_sample()
+    metadata = EpisodeSourceMetadata.objects.get(episode_number=200)
+    _isolate_metadata(metadata)
+    episode = metadata.episode
+    # An episode already offloaded by 0017: a Books heading followed by its
+    # verbatim (non-convertible) list. 0019 must NOT inject a spurious "Links"
+    # heading between the heading and its list.
+    episode.body = [
+        ("overview", [("paragraph", "Summary.")]),
+        (
+            "detail",
+            [
+                (
+                    "show_note_heading",
+                    {"heading": "Books", "kind": "auto", "icon": "books"},
+                ),
+                (
+                    "paragraph",
+                    '<ul><li><a href="https://a.test/">Big Panda</a> by James Norbury</li></ul>',
+                ),
+            ],
+        ),
+    ]
+    episode.save(update_fields=["body"])
+    before = _body_children(episode, "detail")
+
+    add_headings_migration.add_implicit_link_list_headings(django_apps, None)
+
+    episode.refresh_from_db()
+    detail = _body_children(episode, "detail")
+    assert [c["type"] for c in detail] == ["show_note_heading", "paragraph"]
+    assert detail[0]["value"]["heading"] == "Books"
+    assert _body_children(episode, "detail") == before
+
+
+@pytest.mark.django_db
+def test_show_note_repair_adds_links_heading_idempotently_via_source_path() -> None:
+    import_django_chat_sample()
+    metadata = EpisodeSourceMetadata.objects.get(episode_number=200)
+    _isolate_metadata(metadata)
+    episode = metadata.episode
+    leading_list = (
+        "<ul>"
+        '<li>@x <a href="https://gh.test/">on GitHub</a> '
+        'and <a href="https://m.test/">Mastodon</a></li>'
+        "</ul>"
+    )
+    metadata.simplecast_long_description_html = leading_list
+    metadata.save(update_fields=["simplecast_long_description_html"])
+    episode.body = [
+        ("overview", [("paragraph", "Summary.")]),
+        ("detail", [("paragraph", leading_list)]),
+    ]
+    episode.search_description = "Summary."
+    episode.save(update_fields=["body", "search_description"])
+
+    first = repair_imported_episode_show_notes(
+        Episode=Episode,
+        EpisodeSourceMetadata=EpisodeSourceMetadata,
+        write=True,
+    )
+
+    episode.refresh_from_db()
+    detail = _body_children(episode, "detail")
+    assert [c["type"] for c in detail] == ["show_note_heading", "paragraph"]
+    assert detail[0]["value"]["heading"] == "Links"
+    # The new repair class is surfaced in the audit result.
+    assert first.implicit_link_list_headings_added == 1
+
+    # Idempotent through the source-detail path: a second run is a no-op and does
+    # not re-report the synthesized heading.
+    second = repair_imported_episode_show_notes(
+        Episode=Episode,
+        EpisodeSourceMetadata=EpisodeSourceMetadata,
+        write=True,
+    )
+    assert second.body_rows_changed == 0
+    assert second.implicit_link_list_headings_added == 0
 
 
 @pytest.mark.django_db

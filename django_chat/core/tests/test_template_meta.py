@@ -54,6 +54,25 @@ def test_episode_detail_emits_article_og_type(client: Client) -> None:
 
 
 @pytest.mark.django_db
+def test_share_dialog_url_uses_request_host_not_canonical_site(client: Client) -> None:
+    import_django_chat_sample()
+    detail = episode_detail_path("django-tasks-jake-howard")
+
+    # The share dialog builds its URL from the request host (the test client's
+    # "testserver") rather than the canonical Wagtail Site host, so share links
+    # resolve on whatever origin the reader is on — e.g. the dev server's :8000
+    # port, which the canonical Site URL omits. No Site is ever "testserver", so
+    # the request host appearing here proves the URL is request-based.
+    body = client.get(detail).content.decode()
+    assert f'data-share-url="http://testserver{detail}"' in body
+    assert f'id="share-url-input" data-share-url-input value="http://testserver{detail}"' in body
+    # urlencode keeps "/" but encodes ":" — see share-pill hrefs.
+    assert f"url=http%3A//testserver{detail}" in body  # twitter / facebook / linkedin
+    # Canonical/OG meta stays canonical (Site-based), not switched to the request host.
+    assert '<link rel="canonical"' in body
+
+
+@pytest.mark.django_db
 def test_episode_index_loads_self_hosted_fonts_css(client: Client) -> None:
     import_django_chat_sample()
 

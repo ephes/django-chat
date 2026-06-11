@@ -218,6 +218,7 @@ class ShowNoteStructureReport:
         self.source_detail_blocks_restored = 0
         self.implicit_link_lists_converted = 0
         self.implicit_link_list_headings_hidden = 0
+        self.implicit_link_list_headings_added = 0
         self.implicit_link_lists_skipped = 0
         self.support_copy_sections_restored = 0
         self.raw_markdown_like = False
@@ -364,6 +365,21 @@ def _structured_show_note_detail_blocks(
                 index += 1
                 continue
             report.implicit_link_lists_skipped += 1
+            # D5 for headingless sources: a leading link list that cannot be
+            # cleanly itemized (items mix prose with links, multiple anchors, …)
+            # still gets a synthesized iconed "Links" heading, with the list kept
+            # verbatim as a following paragraph. Only when the list carries real
+            # links — a link-less bullet list is not a "Links" section.
+            if _links_from_nodes([node]):
+                _flush_paragraph_block(pending_nodes, blocks)
+                pending_nodes = []
+                blocks.append(_heading_block_tuple("Links", "links"))
+                _flush_paragraph_block([node], blocks)
+                report.changed = True
+                report.added_structured_block = True
+                report.implicit_link_list_headings_added += 1
+                index += 1
+                continue
 
         heading_text = node.get_text(" ", strip=True) if _is_heading_tag(node) else ""
         if heading_text:
@@ -445,6 +461,9 @@ def structure_episode_body_show_notes_with_report(
             has_detail_block = True
             structured_children = []
             current_body_report = ShowNoteStructureReport()
+            original_children = (
+                structured_block["value"] if isinstance(structured_block.get("value"), list) else []
+            )
             if isinstance(structured_block.get("value"), list):
                 for child in structured_block["value"]:
                     if (
@@ -455,6 +474,19 @@ def structure_episode_body_show_notes_with_report(
                         child_blocks, paragraph_report = _structured_show_note_detail_blocks(
                             child["value"]
                         )
+                        # Keep re-structuring idempotent: a list already preceded by
+                        # its own (separately stored) heading block is not a
+                        # headingless leading list, so drop the synthesized "Links"
+                        # heading it would otherwise regain. Done before the
+                        # single-paragraph branch so an unchanged list keeps its
+                        # original stream id (no spurious re-write).
+                        if (
+                            child_blocks
+                            and _is_synthesized_links_heading(child_blocks[0], child["value"])
+                            and structured_children
+                            and structured_children[-1].get("type") == "show_note_heading"
+                        ):
+                            child_blocks = child_blocks[1:]
                         if len(child_blocks) == 1 and child_blocks[0][0] == "paragraph":
                             value = child_blocks[0][1]
                             if value != child["value"]:
@@ -479,9 +511,13 @@ def structure_episode_body_show_notes_with_report(
                     report.source_detail_blocks_restored += 1
                     if source_report is not None:
                         _merge_structure_report(report, source_report)
-                elif current_body_report.changed:
+                elif current_body_report.changed and not _stream_children_match_ignoring_ids(
+                    structured_children, original_children
+                ):
                     _merge_structure_report(report, current_body_report)
-            elif current_body_report.changed:
+            elif current_body_report.changed and not _stream_children_match_ignoring_ids(
+                structured_children, original_children
+            ):
                 _merge_structure_report(report, current_body_report)
 
             structured_block["value"] = structured_children
@@ -512,6 +548,7 @@ def _merge_structure_report(
     target.source_detail_blocks_restored += source.source_detail_blocks_restored
     target.implicit_link_lists_converted += source.implicit_link_lists_converted
     target.implicit_link_list_headings_hidden += source.implicit_link_list_headings_hidden
+    target.implicit_link_list_headings_added += source.implicit_link_list_headings_added
     target.implicit_link_lists_skipped += source.implicit_link_lists_skipped
     target.support_copy_sections_restored += source.support_copy_sections_restored
     target.raw_markdown_like = target.raw_markdown_like or source.raw_markdown_like
@@ -672,6 +709,31 @@ def _heading_block_tuple(heading_text: str, label_key: str | None = None) -> Blo
     value: dict[str, Any] = {"heading": heading_text, "kind": "auto"}
     value["icon"] = materialize_icon(value)
     return ("show_note_heading", value)
+
+
+def _is_synthesized_links_heading(block: BlockTuple, source_html: str) -> bool:
+    """True when ``block`` is the "Links" heading synthesized for a headingless
+    leading list (rather than a heading carried by the source). Used to keep
+    re-structuring idempotent: the synthesized heading must not be re-added when
+    the list already follows its own stored heading block.
+
+    The synthesized heading is emitted only for a *leading list* — after the same
+    markdown/heading normalization the structurer applies, the first meaningful
+    node of the source is a ``<ul>``/``<ol>``. A source that leads with its own
+    heading or a label paragraph (e.g. ``<p>Links</p>``, which normalizes to a
+    heading) is an offloaded section, not a synthesized one, so its heading is
+    kept."""
+    name, value = block
+    if name != "show_note_heading" or not isinstance(value, dict):
+        return False
+    if value.get("heading") != "Links":
+        return False
+    markdown_html, _markdown_changed = _render_legacy_markdown_notes(source_html)
+    soup = BeautifulSoup(normalize_show_notes_html(markdown_html), "html.parser")
+    for node in soup.contents:
+        if _node_has_meaning(node):
+            return isinstance(node, Tag) and node.name in {"ul", "ol"}
+    return False
 
 
 def _convert_section(label_key: str, section_nodes: list[PageElement]) -> BlockTuple | None:

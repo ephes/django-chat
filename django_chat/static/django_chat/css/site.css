@@ -64,6 +64,18 @@
   --dc-accent: #2d8260;
   --dc-accent-dark: #14513a;
   --dc-django: #0ea342;
+  /* django-cast custom audio player — map its tokens to the Django Chat
+     forest-green palette so it reads like the Podlove player it replaces:
+     a dark-green play button + thin progress bar on the light page. */
+  --cast-player-accent: #1f6647;
+  --cast-player-on-accent: #ffffff;
+  --cast-player-bg: var(--dc-paper);
+  --cast-player-surface: transparent;
+  --cast-player-fg: #1a1a1a;
+  --cast-player-muted: var(--dc-muted);
+  --cast-player-line: #cfe0d7;
+  --cast-player-progress-track: #c9d8cf;
+  --cast-player-focus: var(--dc-accent);
   /* AAA-safe sibling of `--dc-django`: the bright brand green only reaches
      3.15:1 on paper, so large numeric figures (sponsor stat bubbles, pricing
      tiers) use this slightly deeper #0a7d33 — 4.99:1 on `--dc-paper`, clearing
@@ -255,6 +267,111 @@
      (centered `<main>`), independent of viewport zoom or embeds. */
   --dc-aside-width: clamp(14.375rem, 24cqi, 17.5rem);  /* ~230–280px */
   --dc-aside-column-gap: clamp(1.5rem, 4cqi, 3rem);    /* ~24–48px */
+}
+
+/* Match Podlove's borderless transport: the controls float on the page rather
+   than inside an outlined pill. The share/shortcuts buttons keep their own
+   outline; the transcript/chapters panels keep their subtle card. */
+cast-audio-player .cast-player__transport {
+  border: none !important;
+  background: transparent !important;
+  padding-left: 0;
+}
+
+/* The Transcript / Chapters toggle reads as an attached tab/panel header, not a
+   standalone pill button: drop the pill border/fill and the wide padding, and
+   adopt the sidebar rail's label typography (uppercase mono, letter-spaced,
+   muted) so it reads as a section/tab label rather than a button. The chevron
+   stays as the expand/collapse affordance (and distinguishes this in-place
+   toggle from the rail's "Transcript" page link). Project-specific presentation;
+   the upstream component keeps its default pill for hosts that want it. */
+.audio-panel .cast-panel__toggle {
+  /* !important to beat the unlayered upstream player CSS from inside @layer base,
+     matching the `.cast-player__transport` override above. */
+  border: none !important;
+  background: transparent !important;
+  padding: 0.1rem 0 !important;
+  gap: var(--s-2);
+  font-family: var(--font-mono);
+  /* !important on the metrics that the unlayered upstream `.cast-panel__toggle`
+     also sets (font-size 0.95rem, font-weight 600, letter-spacing -0.01em), so
+     the rail caps treatment actually wins. */
+  font-size: var(--text-sm) !important;
+  font-weight: var(--weight-semibold) !important;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps) !important;
+  color: var(--dc-muted) !important;
+}
+
+/* Replace the upstream chevron SVG with a caret that matches the episode-index
+   filter select control (`.filter-select-icon`: a 12x7 CSS triangle) so the two
+   disclosure triangles read as the same control family. Closed points right,
+   open points down (disclosure), using the same easing as the upstream chevron. */
+.audio-panel .cast-panel__chevron {
+  display: none !important;
+}
+
+.audio-panel .cast-panel__toggle::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid currentColor;
+  transform: rotate(-90deg);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.audio-panel .cast-panel.is-open .cast-panel__toggle::before {
+  transform: rotate(0deg);
+}
+
+.audio-panel .cast-panel__toggle:hover,
+.audio-panel .cast-panel.is-open .cast-panel__toggle {
+  background: transparent !important;
+  border: none !important;
+  color: var(--dc-ink) !important;
+}
+
+/* The niche "keyboard-navigable cues" toggle duplicates the transport's
+   keyboard-shortcuts button (same keyboard glyph) and confuses; hide it here so
+   the player exposes a single keyboard affordance (the cast-transcript-tabbable
+   preference is untouched and still honored if re-enabled upstream). */
+.audio-panel .cast-transcript__iconpref {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .audio-panel .cast-panel__toggle::before {
+    transition: none;
+  }
+}
+
+/* Pull the transcript header tight under the transport so the player region (and
+   its separator) ends close to the cover's bottom edge. !important to beat the
+   unlayered upstream `.cast-player__panels { margin-top }`. */
+.audio-panel .cast-player__panels {
+  margin-top: var(--s-2) !important;
+}
+
+/* The opened transcript should read as inline page content, not a floating
+   window/card: drop the panel card's border and rounded corners (its surface is
+   already transparent in the Django Chat tokens) so the cues sit on the page,
+   bounded only by the player region's separator below — which slides down with
+   the transcript as it expands. */
+.audio-panel .cast-panel__reveal {
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Large transcripts (hundreds of cues) made the open/close height spring stutter
+   because the cue list was re-laid-out as the reveal measured its content height
+   each frame. Containing the scroll region isolates that subtree's layout/paint
+   from the page so the spring stays smooth, without hiding any cue text (so
+   find-in-page, text selection, and the accessibility tree are unaffected). */
+.audio-panel .cast-panel__scroll {
+  contain: content;
 }
 
 /* Tablet-and-up gutter bump. Single global breakpoint that re-tokens
@@ -3357,6 +3474,28 @@ h2[data-vt-episode-title] {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* Anchor the closed player-region separator to the cover height: the content
+     column is kept at least as tall as the episode cover, so when the
+     player + transcript header are shorter than the cover the column's bottom
+     border lands exactly on the cover's bottom edge (logo and line aligned).
+     When the transcript opens the column grows past the cover and the line
+     hands off to a full-width hero rule (below). */
+  min-height: var(--episode-cover-size);
+  border-bottom: 1px solid var(--dc-line);
+}
+
+/* Open: the region has grown to a full reading panel — drop the min-height and
+   the short line, and render a full-width rule under the whole hero (over Hosts
+   and Guests). Only the colour/height swap on `:has`, not padding, so the height
+   spring stays the only motion. */
+.episode-hero-content:has(.cast-panel.is-open) {
+  min-height: 0;
+  border-bottom-color: transparent;
+}
+
+.episode-hero:has(.cast-panel.is-open) {
+  border-bottom: 1px solid var(--dc-line);
+  padding-bottom: var(--s0);
 }
 
 .episode-hero h1 {
@@ -3445,9 +3584,10 @@ h2[data-vt-episode-title] {
    cast.transcript_sanitization, so the credit list doubles as the public
    speaker allow-list. */
 .episode-contributors {
+  /* The player region above now carries its own grid-aligned bottom separator
+     (`.episode-hero-content`), so the contributors strip no longer needs a
+     full-width top hairline directly under the player. */
   margin: 0 0 var(--s1);
-  padding-top: var(--s1);
-  border-top: 1px solid var(--dc-line);
 }
 
 .episode-contributors__heading {
@@ -3530,7 +3670,7 @@ h2[data-vt-episode-title] {
 .audio-panel {
   --player-min-height: 112px;
   width: min(37.5rem, 100%);
-  margin: var(--s1) 0 0;
+  margin: var(--s-2) 0 0;
 }
 
 /* Reserve the player's vertical space on the wrapper, not on
@@ -3774,6 +3914,14 @@ h2[data-vt-episode-title] {
 .episode-body {
   padding-top: var(--s2);
   border-top: 1px solid var(--dc-line);
+}
+
+/* When no contributors strip sits between the player and the show notes, the
+   player region's own grid-aligned separator (`.episode-hero-content`) already
+   divides them — drop the body's full-width top hairline so the two do not
+   stack directly under the player. */
+.episode-hero + .episode-body {
+  border-top: none;
 }
 
 /* ---------- Transcript page ----------
