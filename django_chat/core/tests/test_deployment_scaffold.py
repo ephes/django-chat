@@ -211,6 +211,25 @@ def test_css_minifier_preserves_descendant_attribute_selector_spacing() -> None:
     )
 
 
+def test_css_minifier_preserves_descendant_pseudo_and_attribute_spacing() -> None:
+    # A space before `:` or `[` in a selector is a descendant combinator;
+    # removing it turns e.g. `.filter-form :is(input)` into the compound
+    # selector `.filter-form:is(input)` and silently breaks the rule.
+    css = """
+    .filter-form :is(input, select):focus {
+      outline: 2px solid red;
+    }
+    html.js-reveal [data-reveal] {
+      opacity: 0;
+    }
+    """
+
+    assert minify_css(css) == (
+        ".filter-form :is(input,select):focus{outline:2px solid red} "
+        "html.js-reveal [data-reveal]{opacity:0}"
+    )
+
+
 def test_collectstatic_minifies_project_css_before_manifest_hashing(tmp_path: Path) -> None:
     source_root = tmp_path / "source"
     static_root = tmp_path / "staticfiles"
@@ -259,6 +278,45 @@ def test_collectstatic_minifies_project_css_before_manifest_hashing(tmp_path: Pa
     assert "keep   spacing" in hashed_css
     assert f'url("../img/{Path(hashed_image_name).name}")' in hashed_css
     assert "  " not in hashed_css.replace("keep   spacing", "")
+
+
+def test_collectstatic_reminifies_from_source_over_stale_collected_copy(tmp_path: Path) -> None:
+    # The minifier rewrites the collected copy in place, so a later
+    # collectstatic run must not trust it: when the source is unchanged,
+    # collectstatic skips the copy step and post-processing would otherwise
+    # re-minify stale (e.g. produced by an older, buggier minifier) output
+    # forever. Minification has to restart from the pristine source.
+    source_root = tmp_path / "source"
+    static_root = tmp_path / "staticfiles"
+    css_path = source_root / "django_chat" / "css" / "site.css"
+    css_path.parent.mkdir(parents=True)
+    css_path.write_text(".hero {\n  color: red;\n}\n", encoding="utf-8")
+
+    storages = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {
+            "BACKEND": (
+                "django_chat.core.staticfiles.MinifiedCompressedManifestStaticFilesStorage"
+            ),
+        },
+    }
+    with override_settings(
+        STATICFILES_DIRS=[source_root],
+        STATIC_ROOT=static_root,
+        STATICFILES_FINDERS=["django.contrib.staticfiles.finders.FileSystemFinder"],
+        STORAGES=storages,
+    ):
+        call_command("collectstatic", interactive=False, verbosity=0)
+
+        collected_css_path = static_root / "django_chat" / "css" / "site.css"
+        collected_css_path.write_text(".hero{color:stale}", encoding="utf-8")
+
+        call_command("collectstatic", interactive=False, verbosity=0)
+
+    manifest = json.loads((static_root / "staticfiles.json").read_text(encoding="utf-8"))
+    hashed_css_name = manifest["paths"]["django_chat/css/site.css"]
+    assert collected_css_path.read_text(encoding="utf-8") == ".hero{color:red}"
+    assert (static_root / hashed_css_name).read_text(encoding="utf-8") == ".hero{color:red}"
 
 
 def test_collectstatic_minification_does_not_mutate_source_when_linking(tmp_path: Path) -> None:

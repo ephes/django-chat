@@ -125,10 +125,13 @@ No frontend build is configured in this slice because the required Vite
 manifests are bundled with installed Python packages. First-party Django Chat
 CSS is minified inside Django's staticfiles storage during `collectstatic`:
 `django_chat.core.staticfiles.MinifiedCompressedManifestStaticFilesStorage`
-minifies copied `django_chat/css/*.css` files in `STATIC_ROOT` before Django's
+re-minifies `django_chat/css/*.css` into `STATIC_ROOT` before Django's
 manifest hashing rewrites URLs and before WhiteNoise writes compressed
-variants. Source CSS remains readable in the repository, and no Node/npm
-toolchain is required on the deployment host.
+variants. Minification always restarts from the pristine finder source (not
+the previously collected, already-minified copy), so minifier changes take
+effect on the next deploy even when the CSS source itself is unchanged.
+Source CSS remains readable in the repository, and no Node/npm toolchain is
+required on the deployment host.
 
 The deployed application also needs `gunicorn` available in the app virtualenv,
 because the generated systemd unit starts `{{ wagtail_venv_bin }}/gunicorn`,

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from django.conf import settings
+from django.contrib.staticfiles import finders
 from whitenoise.storage import CompressedManifestStaticFilesStorage
 
 
@@ -28,7 +29,14 @@ class MinifiedCompressedManifestStaticFilesStorage(CompressedManifestStaticFiles
             if not self.should_minify_css(name):
                 continue
             collected_path = Path(self.path(name))
-            minified = minify_css(collected_path.read_text(encoding="utf-8"))
+            # Minify from the pristine finder source, not the collected copy:
+            # the collected copy was overwritten with minified output on the
+            # previous run, and collectstatic skips re-copying when the source
+            # is unchanged — re-minifying the collected copy would keep stale
+            # output alive even after the minifier itself changes.
+            source_path = finders.find(name)
+            css_path = Path(source_path) if isinstance(source_path, str) else collected_path
+            minified = minify_css(css_path.read_text(encoding="utf-8"))
             if collected_path.is_symlink():
                 collected_path.unlink()
             collected_path.write_text(minified, encoding="utf-8")
@@ -131,7 +139,10 @@ def _compact_css(css: str) -> str:
             output.append(" ")
         pending_space = False
 
-        if char in "{}:;,":
+        # `:` is deliberately absent here: a preserved space before it is a
+        # descendant combinator (see _needs_css_space), so it must not eat
+        # the space the way `{};,` do.
+        if char in "{};,":
             while output and output[-1] == " ":
                 output.pop()
             if char == "}" and output and output[-1] == ";":
@@ -149,6 +160,8 @@ def _compact_css(css: str) -> str:
 
 
 def _needs_css_space(left: str, right: str) -> bool:
-    if left == "]" and right == "[":
-        return True
-    return not (left in "{(:;,[>~" or right in "{}):;,[>~")
+    # A space before `:` or `[` can be a descendant combinator in a selector
+    # (`.form :is(input)`, `html [data-x]`) or a grid line name in a value
+    # (`[full-start] 1fr`); dropping it would splice a different compound
+    # selector, so those characters never absorb a preceding space.
+    return not (left in "{(:;,[>~" or right in "{});,>~")
