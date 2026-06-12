@@ -293,6 +293,13 @@ Done:
   `loading`. Do not re-defer; if its render-blocking cost ever matters,
   the only safe alternative is `async` plus `blocking="render"`, which still
   blocks first render by design.
+- 2026-06-12: Switched the custom player to `preload="none"` (django-cast
+  `7d8e91bc`). The eager `preload="metadata"` range request for the episode
+  MP3 intermittently surfaced as a `net::ERR_CONNECTION_FAILED` console error
+  in Lighthouse runs (Best Practices 96 on episode detail pages) when the
+  in-flight media request was cut off; the file itself was verified healthy.
+  The transport UI renders from server-provided duration, so no media bytes
+  are needed until the visitor presses play.
 
 Planned:
 
