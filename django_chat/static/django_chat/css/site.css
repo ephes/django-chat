@@ -389,6 +389,16 @@ cast-audio-player .cast-player__transport {
    find-in-page, text selection, and the accessibility tree are unaffected). */
 .audio-panel .cast-panel__scroll {
   contain: content;
+  /* Match the transcript-detail page's green scrollbar (`--dc-django`) so the
+     unfolded transcript in the player reads the same as the standalone page.
+     Upstream tints the thumb with `color-mix(--_accent 55%, transparent)`,
+     which fades the player accent (#1f6647) out to a grey. `!important` to beat
+     the unlayered upstream player CSS from inside @layer base (see above). */
+  scrollbar-color: var(--dc-django) transparent !important;
+}
+
+.audio-panel .cast-panel__scroll::-webkit-scrollbar-thumb {
+  background: var(--dc-django) !important;
 }
 
 /* Tablet-and-up gutter bump. Single global breakpoint that re-tokens
