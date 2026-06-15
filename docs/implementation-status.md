@@ -446,14 +446,23 @@ growth.
    RSS keywords into public tags without a UI/editor use case and a preservation
    policy for manual Wagtail tags; if implemented later, prefer a filtered
    source-managed tag strategy that does not wipe editor-curated tags.
-4. **Live feed parity checker.** Add a command/script that compares the current
+4. **Wagtail-created episode numbering.** Research is captured in
+   [`docs/episode-numbering-research.md`](episode-numbering-research.md).
+   Imported episode numbers currently live in `EpisodeSourceMetadata`, but new
+   Wagtail-created `cast.Episode` pages have no canonical number field, no
+   number badge source, and no `itunes:episode` feed source. Before production
+   cutover or the first post-cutover manual episode, decide whether the metadata
+   belongs upstream in django-cast or in a local Django Chat publishing metadata
+   model; then backfill imported values, expose an editor-visible workflow, and
+   update templates plus podcast feed output.
+5. **Live feed parity checker.** Add a command/script that compares the current
    Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
    generated or S3/CDN-served Django Chat podcast feed. It should fail on item
    count, missing/extra GUIDs, GUID order, publication-date, title, enclosure
    type, latest-episode, and copied-media byte-size regressions, with explicit
    warnings for approved differences such as moved enclosure URLs or equivalent
    duration formatting.
-5. **Performance optimization backlog.** Continue tracking concrete Lighthouse
+6. **Performance optimization backlog.** Continue tracking concrete Lighthouse
    and browser-network follow-ups in
    [`docs/lighthouse-performance.md#performance-optimization-backlog`](lighthouse-performance.md#performance-optimization-backlog).
    The HTML-discoverable `/episodes/` hero background has been verified on
@@ -464,7 +473,7 @@ growth.
    race on staging and broke the detail-to-overview transition and scroll
    restore). Remaining choices are whether to split or critical-inline CSS and
    whether the render-blocking `rel="expect"` hints should stay.
-6. **Production VPS, DNS cutover, URL redirects, podcast directory
+7. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
    [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.
