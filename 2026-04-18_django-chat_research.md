@@ -617,6 +617,31 @@ Implementation tracking should stay lightweight:
     importer/backfill with clear acceptance criteria instead of guessing from
     anecdotal show-note examples.
 
+- [ ] Use Simplecast's native 301 RSS Feed Redirect as the primary feed cutover
+      lever, reversing the original "Simplecast will not redirect" decision.
+  - Context: the original plan accepted that direct subscribers polling
+    `https://feeds.simplecast.com/WpQaX_cs` could be orphaned forever, treating
+    it as the central unavoidable migration risk. A 2026-06-15 review found that
+    Simplecast natively supports exactly the redirect needed: show settings →
+    Distribution → Advanced Settings → **RSS Feed Redirect** issues a 301 to a
+    new feed URL, propagates to directories within ~24h, and persists after
+    account closure. So "Simplecast will not redirect" was a policy choice, not
+    a technical limit. The only real residual concerns are ordering (closing the
+    account before setting the redirect deletes the feed and drops the show from
+    directories) and long-term trust in SiriusXM honoring the redirect.
+  - Analysis:
+    [`docs/feed-cutover-analysis.md`](docs/feed-cutover-analysis.md) (revised
+    2026-06-15, with sources).
+  - Scope: confirm host access to the Simplecast dashboard (or the
+    support@simplecast.com escalation path); set the **RSS Feed Redirect** on the
+    old feed only after the new `djangochat.com` feed is live and verified (with
+    `itunes:new-feed-url` set in the new feed, not the old one); keep the account
+    open at least four weeks; keep directory updates as a backup that does not
+    depend on the redirect persisting.
+  - Done when: the cutover runbook sequences the Simplecast 301 redirect as the
+    primary lever with the ordering and trust caveats captured, and host access
+    to set the redirect is confirmed before any directory update.
+
 ## Production Migration Considerations
 
 Production migration is not just deploying the app.
@@ -626,8 +651,14 @@ Fixed production decisions:
 - `djangochat.com` remains the canonical site domain.
 - The podcast feed moves from Simplecast to this repo.
 - The production feed and audio are served from S3/CDN.
-- Simplecast will not redirect the old feed URL.
-- Simplecast is retired after migration.
+- Simplecast's native RSS Feed Redirect (301) is set on the old feed, pointing
+  at the canonical `djangochat.com` feed, as the primary migration lever. It
+  must be set before the account is closed; closing/deleting first deletes the
+  Simplecast feed and drops the show from directories. Directory-by-directory
+  updates are a complement and backup, not the only path. (Revised 2026-06-15;
+  see [`docs/feed-cutover-analysis.md`](docs/feed-cutover-analysis.md).)
+- Simplecast is retired after migration, but only after the 301 redirect is set
+  and verified, and after at least a four-week transition window.
 
 Open production details:
 
@@ -643,6 +674,10 @@ Podcast feed continuity checklist:
 - Preserve existing GUIDs for migrated episodes; GUID changes can cause podcast clients to treat old catalog items as new episodes.
 - Verify artwork dimensions and podcast namespace fields.
 - Confirm `itunes:new-feed-url` behavior in the new feed.
+- Set Simplecast's RSS Feed Redirect (301) on the old feed before retiring the
+  account, and verify the 301 resolves to the new feed. (`itunes:new-feed-url` is
+  set in the new feed, not the old Simplecast feed, which returns a 301 once the
+  redirect is active.)
 - Coordinate podcast directory updates with hosts.
 - Test Apple Podcasts, Spotify, Pocket Casts, and generic RSS clients before switching.
 
