@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import replace
 from io import StringIO
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
-from cast.models import Audio, Episode
+from cast.models import Audio, Episode, Season
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
@@ -86,6 +86,10 @@ def test_catalog_import_can_import_more_than_fixture_sample() -> None:
     assert EpisodeAudioImportMetadata.objects.count() == 0
     extra_metadata = EpisodeSourceMetadata.objects.get(episode_number=10_000)
     assert extra_metadata.episode.keywords == "extra keyword 10000, django"
+    assert extra_metadata.episode.episode_number == 10_000
+    assert extra_metadata.episode.episode_type == "full"
+    assert extra_metadata.episode.season is None
+    assert cast(Any, Season).objects.count() == 1
 
 
 @pytest.mark.django_db

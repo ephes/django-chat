@@ -134,7 +134,11 @@ Observed on 2026-05-13:
     2026-05-13 10:00 UTC
   - episode 202, `EuroPython 2026 - Mia Bajic`, published
     2026-05-06 10:00 UTC
-- Staging omits `itunes:episode` values for all common items.
+- At the time of the 2026-05-13 observation, staging omitted
+  `itunes:episode` values for all common items. The Django Chat importer and
+  django-cast pin now support canonical episode metadata, so updated generated
+  feeds should emit positive imported episode numbers after deployment/reimport;
+  the preview source value `0` remains an approved omission.
 - Staging formats `itunes:duration` differently for all common items
   (`1:14:01` instead of `01:14:01`, for example). This is probably harmless,
   but should be normalized or accepted explicitly in tooling.
@@ -339,7 +343,7 @@ Failure modes:
 - show artwork URL, dimensions, MIME type, or cache behavior changes
 - required iTunes fields are missing or malformed
 - category, explicit flag, author, owner email, language, or copyright changes
-- episode type, season, or episode number tags disappear
+- episode type, season, or positive episode number tags disappear
 - descriptions are escaped differently or contain unsupported markup
 - feed item count is capped unexpectedly
 - channel link, canonical site URL, and feed auto-discovery disagree
@@ -349,7 +353,8 @@ Mitigation:
 - validate the exact production feed URL in Apple Podcasts Connect before
   directory update
 - compare show-level fields and item-level fields against Simplecast
-- either preserve `itunes:episode` or document why clients do not need it
+- preserve positive `itunes:episode` values from canonical episode metadata and
+  keep the preview source value `0` as an explicit approved omission
 - keep old and new feeds available for diffing during the whole cutover window
 
 ### Web URL Redirects Are Missing Or Wrong
@@ -619,8 +624,10 @@ Long term:
   the static XML artifact to S3/CDN with correct headers and invalidation.
 - Add production configuration for `itunes:new-feed-url` and test that staging
   cannot accidentally point at production.
-- Make `itunes:episode` preservation explicit in the generated podcast feed or
-  document an approved reason for omitting it.
+- After deploying the upstream podcast metadata adoption, re-run feed parity
+  against the generated/candidate production feed and confirm positive
+  `itunes:episode` values are present. Keep the preview episode source value
+  `0` as an approved generated-feed omission.
 - Normalize or explicitly accept duration formatting differences when parsed
   seconds match.
 - Trim imported title whitespace or explicitly preserve source whitespace after

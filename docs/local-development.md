@@ -193,7 +193,13 @@ GUIDs, Simplecast IDs and slugs, episode numbers, source URLs, original
 enclosure URLs, duration, descriptions, long descriptions, and transcript HTML
 in local source metadata rows so repeated runs do not duplicate pages or
 metadata. It also stores fixture-derived Simplecast menu, social, and
-distribution links in local metadata rows for template rendering.
+distribution links in local metadata rows for template rendering. Valid podcast
+publishing metadata is also copied onto django-cast's canonical fields:
+positive episode numbers become `Episode.episode_number`, valid RSS episode
+types (`full`, `trailer`, `bonus`) become `Episode.episode_type`, and valid
+Simplecast season numbers create/reuse podcast-scoped `cast.Season` rows. The
+historical preview source episode number `0` stays in source metadata only
+because django-cast's canonical episode number field accepts positive integers.
 
 The command creates a local `django-chat-importer` user with an unusable
 password when no existing import user is available. Imported sample pages use
@@ -381,6 +387,10 @@ The strict smoke checks cover:
 - item GUID order and GUID values
 - item titles
 - item publication dates
+- positive item episode numbers in `itunes:episode` and `podcast:episode`
+- valid RSS item episode types in `itunes:episodeType`
+- generated iTunes and Podcasting 2.0 season tags for internally consistent
+  imported seasons
 - item durations when both feeds expose them
 - enclosure presence and media type
 - generated enclosure length against the copied byte size recorded in
@@ -403,6 +413,12 @@ file size. When tests use fake in-memory audio, copied sizes intentionally
 differ from Simplecast source sizes; the feed smoke check reports that as a
 warning, not a failure, as long as the generated feed length matches copied
 bytes.
+
+The preview item in the source fixture has `itunes:episode` value `0`.
+Generated django-cast feeds intentionally omit `itunes:episode` and
+`podcast:episode` for that item while preserving the source value in
+`EpisodeSourceMetadata`; positive imported episode numbers are strict parity
+checks.
 
 Generated enclosure URLs are also warning-only when they differ from the
 Simplecast fixture, because local filesystem media or a Django Chat S3 bucket

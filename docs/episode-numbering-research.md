@@ -1,43 +1,47 @@
 # Episode Numbering Research
 
-Status: research and backlog note, not an implementation plan.
+Status: resolved research and backlog note. The upstream-vs-local decision is
+resolved in favor of upstream django-cast. Django Chat now adopts django-cast's
+canonical podcast publishing metadata fields for imported episodes; future
+manual auto-numbering remains a separate backlog item.
 
 ## Problem
 
-Imported Django Chat episodes carry their Simplecast/RSS episode numbers in
-`EpisodeSourceMetadata.episode_number`. Episodes created directly in Wagtail do
-not get that metadata row, because the row is import provenance rather than
-canonical publishing data. As a result, manually authored episodes can publish
-without a visible episode-number badge and without an `itunes:episode` feed
-value.
+Imported Django Chat episodes still carry their Simplecast/RSS episode numbers
+in `EpisodeSourceMetadata.episode_number` as source provenance. Canonical
+publishing metadata now lives on upstream `cast.Episode` and `cast.Season`, so
+episodes created directly in Wagtail can have editor-visible episode number,
+episode type, and season fields without creating fake import provenance rows.
 
-This matters for both the public site and feed parity. The current feed cutover
-analysis already records that staging omits `itunes:episode` for common source
-items and has an open item to either preserve that tag or explicitly accept its
-absence. Future Wagtail-created episodes need the same answer, otherwise the
-site will regress immediately after cutover.
+This matters for both the public site and feed parity. The generated feed now
+has a canonical source for `itunes:episode`, `itunes:episodeType`,
+`itunes:season`, `podcast:episode`, and `podcast:season` when those fields are
+set. The remaining workflow gap is automatic next-number assignment for future
+Wagtail-authored episodes.
 
 ## Current Implementation
 
-- `cast.Episode` comes from django-cast and currently has fields for
-  `visible_date`, `podcast_audio`, taxonomy, body, keywords, explicit/block, and
-  contributors, but no episode number, season number, or episode type field.
+- `cast.Episode` comes from django-cast and now has canonical publishing fields
+  for `episode_number`, `episode_type`, and `season`.
+- `cast.Season` stores reusable positive season numbers scoped to a podcast.
 - Django Chat stores imported episode numbers on
   `django_chat.imports.models.EpisodeSourceMetadata.episode_number`, a nullable
-  positive integer on a one-to-one import metadata row.
-- The importer writes `episode_source.episode_number` into that metadata row and
-  uses it for import-derived metadata, source-metadata ordering, and fallback
-  slugs.
-- The episode list and detail templates render badges from
-  `page.django_chat_source_metadata.episode_number`. Manually authored pages
-  without source metadata render the empty badge placeholder on the list page
-  and no number badge on the detail page.
-- django-cast's RSS iTunes item elements currently emit author, subtitle,
-  summary, duration, keywords, explicit, and block, but not `itunes:episode` or
-  `itunes:episodeType`.
-- Django Chat already subclasses django-cast's latest-entries feed for local
-  repository and description behavior, so a local feed extension is possible.
-  The canonical podcast RSS feed still uses django-cast's podcast feed classes.
+  positive integer on a one-to-one import metadata row. That row remains source
+  provenance, not editorial metadata.
+- The importer keeps writing source metadata, and also copies valid positive
+  source episode numbers to `Episode.episode_number`. The historical preview
+  episode's source number `0` remains only in `EpisodeSourceMetadata`.
+- The importer maps valid RSS `itunes:episodeType` values (`full`, `trailer`,
+  `bonus`) to `Episode.episode_type`. Explicit `full` is preserved so generated
+  sample feeds keep source parity.
+- The importer creates or reuses podcast-scoped `cast.Season` rows from valid
+  positive Simplecast season numbers and assigns imported episodes to them.
+- The episode list and detail templates render badges from canonical
+  `Episode.episode_number` first, with `EpisodeSourceMetadata.episode_number` as
+  a temporary compatibility fallback for import gaps.
+- django-cast's podcast feed emits `itunes:episode`, `itunes:episodeType`,
+  `itunes:season`, `podcast:episode`, and `podcast:season` from those canonical
+  fields without changing RSS GUID behavior.
 
 ## External Constraints
 
@@ -146,8 +150,8 @@ Cons:
 - If django-cast later adds the same fields upstream, this local model will need
   a migration path.
 
-Assessment: best local path if this is needed before upstream django-cast takes
-the feature.
+Assessment: not chosen. Upstream django-cast now provides the canonical fields,
+so Django Chat should not add a local side table.
 
 ### Option C: Upstream django-cast Episode Fields
 
@@ -172,8 +176,9 @@ Cons:
 - More coordination risk if this becomes part of the production feed cutover
   critical path.
 
-Assessment: best long-term shape. If production timing allows, prefer upstream.
-If timing does not, implement Option B with a documented future migration path.
+Assessment: chosen. Django Chat pins a django-cast revision containing these
+fields, backfills imported metadata through the import path, and leaves source
+metadata as provenance.
 
 ## Number Assignment Policy
 
@@ -201,60 +206,49 @@ Recommended local policy:
 
 The historical imported catalog has episode `0` for the preview. Apple episode
 metadata describes positive integer episode numbers in common specs, while the
-legacy feed has `0`. Preserve the historical source value for imported parity,
-but do not auto-assign `0` to new manual episodes. Before feed output is changed,
-decide whether the legacy preview emits `<itunes:episode>0</itunes:episode>` for
-source parity or suppresses that tag as a special case.
+legacy feed has `0`. Django Chat preserves the historical source value in
+`EpisodeSourceMetadata` but does not copy it to `Episode.episode_number`, so
+generated feeds intentionally omit `itunes:episode` and `podcast:episode` for
+that item.
 
 ## Feed Implications
 
 Feed parity and future authoring need one source of truth. The candidate feed
 logic should:
 
-- Emit `itunes:episode` when canonical publishing metadata has a number.
-- Optionally emit `itunes:episodeType`, defaulting to `full` only if the project
-  explicitly accepts that default.
-- Continue preserving imported historical numbers after backfill.
-- Avoid pulling episode numbers directly from `EpisodeSourceMetadata` once the
-  canonical model exists, except during the migration window.
-- Coordinate this with the live feed parity checker. Current analysis records
-  staging as missing `itunes:episode`; adding it should be treated as satisfying
-  source parity for imported items, while any intentional omissions or special
-  cases, such as the legacy preview `0`, need to be explicit approved
-  differences.
-
-This likely touches django-cast's podcast RSS feed path, not only Django Chat's
-latest-entries feed subclass.
+- Emit `itunes:episode` and `podcast:episode` when canonical publishing metadata
+  has a positive number.
+- Emit `itunes:episodeType` when the import source explicitly provided a valid
+  value. Django Chat preserves explicit `full` from RSS for feed parity instead
+  of relying on the blank-is-full convention.
+- Emit `itunes:season` and `podcast:season` when imported Simplecast data has a
+  valid positive season number.
+- Continue preserving imported historical source values after backfill.
+- Avoid pulling episode numbers directly from `EpisodeSourceMetadata` except as
+  a temporary public badge fallback during migration/import gaps.
+- Treat the preview episode's source `0` as an approved generated-feed omission.
 
 ## Recommended Backlog Slice
 
-Implement episode publishing metadata before production cutover or before the
-first post-cutover Wagtail-authored episode, whichever comes first.
+The adoption/backfill slice is implemented:
 
-Suggested implementation sequence:
+1. django-cast upstream metadata support is used as the canonical model.
+2. Imported positive episode numbers, valid episode types, and valid Simplecast
+   season numbers are copied onto `cast.Episode`/`cast.Season`.
+3. The preview source episode `0` remains provenance only.
+4. Public badges read canonical metadata first.
+5. Generated podcast feeds emit the upstream iTunes and Podcasting 2.0 tags for
+   valid imported metadata.
+6. Feed smoke checks assert positive episode-number parity and the approved
+   preview omission.
 
-1. Decide upstream-vs-local. Prefer upstream django-cast if timing is acceptable;
-   otherwise use a local Django Chat canonical metadata model.
-2. Audit imported episode numbers for duplicates, nulls, and legacy special
-   values before adding canonical uniqueness constraints.
-3. Add canonical metadata and a data migration/backfill from
-   `EpisodeSourceMetadata`.
-4. Add editor-visible fields or a small admin panel so hosts can confirm or
-   override the next number.
-5. Add publish-time assignment for blank numbers with database uniqueness,
-   transaction protection, and coverage for both normal editor publishing and
-   bulk publish paths.
-6. Update templates to read canonical publishing metadata.
-7. Update podcast feed generation to emit `itunes:episode` and, if modeled,
-   `itunes:episodeType`.
-8. Update feed parity tooling expectations.
-9. Document the host workflow in the Wagtail/admin or host-review docs.
+Remaining backlog:
 
-Open decisions before implementation:
-
-- Should this be contributed upstream to django-cast first?
-- Should Django Chat model `episode_type` and `season_number` now, or only
-  `episode_number`?
+- Add an editor workflow for suggesting or assigning the next number.
+- Add publish-time assignment for blank numbers with database uniqueness,
+  transaction protection, and coverage for both normal editor publishing and
+  bulk publish paths.
+- Document the host workflow once auto-numbering exists.
 - Should trailers/bonus episodes share the main number sequence?
 - Should slugs for future manual episodes include numbers, or remain title-only?
 - Should editors be required to explicitly accept a suggested number before

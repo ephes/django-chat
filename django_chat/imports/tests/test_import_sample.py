@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from cast.models import Audio, Episode, Podcast
+from cast.models import Audio, Episode, Podcast, Season
 from django.apps import apps
 from django.core.management import call_command
 from django.test import override_settings
@@ -58,6 +58,8 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
     assert PodcastSourceLink.objects.count() == 11
     assert EpisodeSourceMetadata.objects.count() == 8
     assert EpisodeAudioImportMetadata.objects.count() == 0
+    season_model = cast(Any, Season)
+    assert season_model.objects.count() == 1
 
     podcast = Podcast.objects.get()
     assert podcast.title == "Django Chat"
@@ -111,8 +113,18 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
     assert latest_metadata.episode.podcast_audio is None
     assert latest_metadata.episode.comments_enabled is False
     assert latest_metadata.episode.owner.username == "django-chat-importer"
+    assert latest_metadata.episode.episode_number == 200
+    assert latest_metadata.episode.episode_type == "full"
+    assert latest_metadata.episode.season == season_model.objects.get(podcast=podcast, number=1)
     first_metadata = EpisodeSourceMetadata.objects.get(episode_number=1)
     assert first_metadata.episode.keywords == EPISODE_ONE_KEYWORDS
+    assert first_metadata.episode.episode_number == 1
+    assert first_metadata.episode.episode_type == "full"
+    assert first_metadata.episode.season == latest_metadata.episode.season
+    preview_metadata = EpisodeSourceMetadata.objects.get(episode_number=0)
+    assert preview_metadata.episode.episode_number is None
+    assert preview_metadata.episode.episode_type == "full"
+    assert preview_metadata.episode.season == latest_metadata.episode.season
     assert cast(Any, first_metadata.episode).tags.count() == 0
     assert Audio.objects.count() == 0
     assert _transcript_count() == 0
@@ -241,6 +253,8 @@ def test_sample_import_is_idempotent_on_second_run() -> None:
     podcast_metadata_ids = set(PodcastSourceMetadata.objects.values_list("id", flat=True))
     episode_metadata_ids = set(EpisodeSourceMetadata.objects.values_list("id", flat=True))
     source_link_ids = set(PodcastSourceLink.objects.values_list("id", flat=True))
+    season_model = cast(Any, Season)
+    season_ids = set(season_model.objects.values_list("id", flat=True))
 
     second_result = import_django_chat_sample()
 
@@ -253,8 +267,10 @@ def test_sample_import_is_idempotent_on_second_run() -> None:
     assert set(PodcastSourceMetadata.objects.values_list("id", flat=True)) == podcast_metadata_ids
     assert set(EpisodeSourceMetadata.objects.values_list("id", flat=True)) == episode_metadata_ids
     assert set(PodcastSourceLink.objects.values_list("id", flat=True)) == source_link_ids
+    assert set(season_model.objects.values_list("id", flat=True)) == season_ids
     assert Podcast.objects.count() == 1
     assert Episode.objects.count() == 8
+    assert season_model.objects.count() == 1
     assert PodcastSourceMetadata.objects.count() == 1
     assert PodcastSourceLink.objects.count() == 11
     assert EpisodeSourceMetadata.objects.count() == 8
@@ -359,6 +375,9 @@ def test_sample_import_can_copy_audio_with_fake_downloader(tmp_path: Path) -> No
     assert latest_audio_fields.data["size"]["mp3"] == len(
         _fake_audio_content(audio_metadata.source_url)
     )
+    preview_metadata = EpisodeSourceMetadata.objects.get(episode_number=0)
+    preview_audio = preview_metadata.audio_import_metadata.audio
+    assert cast(Any, preview_audio).subtitle == ""
 
 
 @pytest.mark.django_db

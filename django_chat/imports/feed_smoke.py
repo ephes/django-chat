@@ -16,12 +16,15 @@ from django_chat.imports.import_sample import DEFAULT_SOURCE_FIXTURE_DIR
 from django_chat.imports.models import EpisodeSourceMetadata
 from django_chat.imports.source_data import (
     RSS_NAMESPACES,
+    VALID_EPISODE_TYPES,
     RssEpisode,
     RssPodcast,
     parse_rss_feed,
 )
 
 Severity = Literal["failure", "warning"]
+PODCAST_NAMESPACE = "https://podcastindex.org/namespace/1.0/"
+GENERATED_FEED_NAMESPACES = RSS_NAMESPACES | {"podcast": PODCAST_NAMESPACE}
 
 
 @dataclass(frozen=True)
@@ -43,6 +46,11 @@ class GeneratedFeedItem:
     title: str
     published_at: datetime | None
     duration_seconds: int | None
+    episode_number: int | None
+    podcast_episode_number: int | None
+    episode_type: str | None
+    season_number: int | None
+    podcast_season_number: int | None
     keywords: str | None
     enclosure: FeedSmokeEnclosure | None
 
@@ -244,6 +252,13 @@ def compare_source_to_generated_feed(
                 source_value=source_item.duration_seconds,
                 generated_value=generated_item.duration_seconds,
             )
+        _compare_episode_number(messages, source_item=source_item, generated_item=generated_item)
+        _compare_episode_type(messages, source_item=source_item, generated_item=generated_item)
+        _compare_podcast_metadata_consistency(
+            messages,
+            item_label=item_label,
+            generated_item=generated_item,
+        )
 
         _compare_enclosure(
             messages,
@@ -302,6 +317,95 @@ def format_feed_smoke_result(result: FeedSmokeResult) -> str:
     for warning in result.warnings:
         lines.append(f"WARN {warning.text}")
     return "\n".join(lines)
+
+
+def _compare_episode_number(
+    messages: list[FeedSmokeMessage],
+    *,
+    source_item: RssEpisode,
+    generated_item: GeneratedFeedItem,
+) -> None:
+    item_label = f"{source_item.guid} ({source_item.title})"
+    if source_item.episode_number is None:
+        return
+    if source_item.episode_number <= 0:
+        if generated_item.episode_number is not None:
+            messages.append(
+                FeedSmokeMessage(
+                    "failure",
+                    f"{item_label} should omit non-positive itunes:episode "
+                    f"{source_item.episode_number!r}, but generated "
+                    f"{generated_item.episode_number!r}.",
+                )
+            )
+        if generated_item.podcast_episode_number is not None:
+            messages.append(
+                FeedSmokeMessage(
+                    "failure",
+                    f"{item_label} should omit non-positive podcast:episode "
+                    f"{source_item.episode_number!r}, but generated "
+                    f"{generated_item.podcast_episode_number!r}.",
+                )
+            )
+        return
+
+    _compare_equal(
+        messages,
+        label=f"{item_label} itunes:episode",
+        source_value=source_item.episode_number,
+        generated_value=generated_item.episode_number,
+    )
+    _compare_equal(
+        messages,
+        label=f"{item_label} podcast:episode",
+        source_value=source_item.episode_number,
+        generated_value=generated_item.podcast_episode_number,
+    )
+
+
+def _compare_episode_type(
+    messages: list[FeedSmokeMessage],
+    *,
+    source_item: RssEpisode,
+    generated_item: GeneratedFeedItem,
+) -> None:
+    if source_item.episode_type is None:
+        return
+    source_type = source_item.episode_type.strip().lower()
+    if source_type not in VALID_EPISODE_TYPES:
+        return
+    _compare_equal(
+        messages,
+        label=f"{source_item.guid} ({source_item.title}) itunes:episodeType",
+        source_value=source_type,
+        generated_value=generated_item.episode_type,
+    )
+
+
+def _compare_podcast_metadata_consistency(
+    messages: list[FeedSmokeMessage],
+    *,
+    item_label: str,
+    generated_item: GeneratedFeedItem,
+) -> None:
+    if generated_item.episode_number != generated_item.podcast_episode_number:
+        messages.append(
+            FeedSmokeMessage(
+                "failure",
+                f"{item_label} has inconsistent episode metadata: "
+                f"itunes:episode={generated_item.episode_number!r}, "
+                f"podcast:episode={generated_item.podcast_episode_number!r}.",
+            )
+        )
+    if generated_item.season_number != generated_item.podcast_season_number:
+        messages.append(
+            FeedSmokeMessage(
+                "failure",
+                f"{item_label} has inconsistent season metadata: "
+                f"itunes:season={generated_item.season_number!r}, "
+                f"podcast:season={generated_item.podcast_season_number!r}.",
+            )
+        )
 
 
 def _compare_enclosure(
@@ -407,6 +511,11 @@ def _parse_generated_item(item: ElementTree.Element) -> GeneratedFeedItem:
         title=_required_child_text(item, "title"),
         published_at=_parse_rss_datetime(_child_text(item, "pubDate")),
         duration_seconds=_parse_duration(_child_text(item, "itunes:duration")),
+        episode_number=_parse_int(_child_text(item, "itunes:episode")),
+        podcast_episode_number=_parse_int(_child_text(item, "podcast:episode")),
+        episode_type=_child_text(item, "itunes:episodeType"),
+        season_number=_parse_int(_child_text(item, "itunes:season")),
+        podcast_season_number=_parse_int(_child_text(item, "podcast:season")),
         keywords=_child_text(item, "itunes:keywords"),
         enclosure=_parse_enclosure(enclosure) if enclosure is not None else None,
     )
@@ -421,14 +530,14 @@ def _parse_enclosure(enclosure: ElementTree.Element) -> FeedSmokeEnclosure:
 
 
 def _atom_self_url(channel: ElementTree.Element) -> str | None:
-    for atom_link in channel.findall("atom:link", RSS_NAMESPACES):
+    for atom_link in channel.findall("atom:link", GENERATED_FEED_NAMESPACES):
         if atom_link.attrib.get("rel") == "self":
             return atom_link.attrib.get("href")
     return None
 
 
 def _child_text(element: ElementTree.Element, path: str) -> str | None:
-    child = element.find(path, RSS_NAMESPACES)
+    child = element.find(path, GENERATED_FEED_NAMESPACES)
     if child is None or child.text is None:
         return None
     return child.text.strip()

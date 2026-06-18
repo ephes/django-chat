@@ -21,6 +21,7 @@ RSS_NAMESPACES = {
     "content": "http://purl.org/rss/1.0/modules/content/",
     "itunes": "http://www.itunes.com/dtds/podcast-1.0.dtd",
 }
+VALID_EPISODE_TYPES = frozenset({"full", "trailer", "bonus"})
 
 JsonObject = dict[str, Any]
 

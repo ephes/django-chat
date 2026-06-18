@@ -92,10 +92,29 @@ def test_imported_sample_index_hides_platform_section_without_distribution_links
 
 
 @pytest.mark.django_db
+def test_imported_sample_index_falls_back_to_source_episode_number(
+    client: Client,
+) -> None:
+    import_django_chat_sample()
+    Episode.objects.filter(slug="django-tasks-jake-howard").update(episode_number=None)
+
+    response = client.get(episode_index_path())
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Django Tasks - Jake Howard" in content
+    assert '<span class="episode-number-badge" aria-hidden="true" data-vt-episode-badge>' in content
+    assert "<span>200</span>" in content
+    assert "Episode 200:" in content
+    assert ">EP</span>" not in content
+
+
+@pytest.mark.django_db
 def test_imported_sample_index_handles_missing_episode_number(
     client: Client,
 ) -> None:
     import_django_chat_sample()
+    Episode.objects.filter(slug="django-tasks-jake-howard").update(episode_number=None)
     EpisodeSourceMetadata.objects.filter(
         episode__slug="django-tasks-jake-howard",
     ).update(episode_number=None)
@@ -108,6 +127,36 @@ def test_imported_sample_index_handles_missing_episode_number(
     assert 'class="episode-number-badge episode-number-badge-empty" aria-hidden="true"' in content
     assert ">EP</span>" not in content
     assert "Episode 200:" not in content
+
+
+@pytest.mark.django_db
+def test_manual_episode_without_source_metadata_renders_without_badge_errors(
+    client: Client,
+) -> None:
+    result = import_django_chat_sample()
+    manual_episode = Episode(
+        title="Manual CMS Episode",
+        slug="manual-cms-episode",
+        body=[("overview", [("paragraph", "Manual episode summary.")])],
+        episode_number=None,
+    )
+    result.podcast.add_child(instance=manual_episode)
+
+    index_response = client.get(episode_index_path())
+    detail_response = client.get(episode_detail_path("manual-cms-episode"))
+
+    assert index_response.status_code == 200
+    assert detail_response.status_code == 200
+    index_content = index_response.content.decode()
+    detail_content = detail_response.content.decode()
+    assert "Manual CMS Episode" in index_content
+    assert "Manual CMS Episode" in detail_content
+    assert "Manual episode summary." in detail_content
+    assert 'class="episode-number-badge episode-number-badge-empty" aria-hidden="true"' in (
+        index_content
+    )
+    assert "Episode None" not in detail_content
+    assert EpisodeSourceMetadata.objects.filter(episode__slug="manual-cms-episode").count() == 0
 
 
 @pytest.mark.django_db

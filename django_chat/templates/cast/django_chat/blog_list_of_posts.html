@@ -128,7 +128,7 @@
         <section class="episode-list" aria-label="Episodes">
           {% for post in posts %}
             <a class="episode-row" href="{{ post.page_url }}" data-vt-episode-slug="{{ post.slug }}">
-              {% with episode_number=post.django_chat_source_metadata.episode_number %}
+              {% with episode_number=post.episode_number|default:post.django_chat_source_metadata.episode_number %}
                 {% if episode_number %}
                   <span class="episode-number-badge" aria-hidden="true" data-vt-episode-badge>
                     <svg class="episode-number-hash" viewBox="69 -20 1469 1498" aria-hidden="true" focusable="false">

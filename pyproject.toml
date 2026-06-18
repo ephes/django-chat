@@ -36,7 +36,7 @@ package = false
 # speaker-label workflow, CAST_POST_BODY_BLOCKS, and the custom audio player ship
 # from the develop branch, which `../python-podcast` also tracks. Pin the exact
 # commit for reproducible builds; bump deliberately when develop advances.
-django-cast = { git = "https://github.com/ephes/django-cast", rev = "fa739d4642b5e3679dc91be0aa010459cd279bb6" }
+django-cast = { git = "https://github.com/ephes/django-cast", rev = "f49858d94eed983e10c95af073210c52f4aace85" }
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.test"

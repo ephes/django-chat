@@ -246,6 +246,20 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       One unrelated one-off (`greening-django-chris-adams`) has all show notes in
       `block-overview` (detail-only structuring never reaches it) — a separate
       non-standard data state tracked as a follow-up.
+- [x] **9m. Adopt upstream podcast publishing metadata** — django-cast is
+      pinned to `f49858d9` for `Season`, `Episode.episode_number`,
+      `Episode.episode_type`, `Episode.season`, Wagtail panels, and generated
+      iTunes/Podcasting 2.0 feed tags. The shared sample/catalog import path
+      copies positive imported episode numbers to canonical `cast.Episode`
+      metadata, preserves the preview source value `0` only in
+      `EpisodeSourceMetadata`, maps valid RSS episode types including explicit
+      `full`, and creates/reuses podcast-scoped `cast.Season` rows from valid
+      Simplecast season numbers. Public episode badges read canonical
+      `Episode.episode_number` first with a temporary source-metadata fallback,
+      and feed smoke checks now assert positive `itunes:episode` /
+      `podcast:episode` parity plus the approved preview omission. Automatic
+      next-number assignment for future Wagtail-created episodes remains
+      deferred.
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.
@@ -446,15 +460,13 @@ growth.
    RSS keywords into public tags without a UI/editor use case and a preservation
    policy for manual Wagtail tags; if implemented later, prefer a filtered
    source-managed tag strategy that does not wipe editor-curated tags.
-4. **Wagtail-created episode numbering.** Research is captured in
+4. **Manual Wagtail episode auto-numbering.** Research is captured in
    [`docs/episode-numbering-research.md`](episode-numbering-research.md).
-   Imported episode numbers currently live in `EpisodeSourceMetadata`, but new
-   Wagtail-created `cast.Episode` pages have no canonical number field, no
-   number badge source, and no `itunes:episode` feed source. Before production
-   cutover or the first post-cutover manual episode, decide whether the metadata
-   belongs upstream in django-cast or in a local Django Chat publishing metadata
-   model; then backfill imported values, expose an editor-visible workflow, and
-   update templates plus podcast feed output.
+   Canonical podcast publishing metadata now lives upstream on `cast.Episode`
+   and imported episodes are backfilled during import. The remaining work is a
+   first-publish workflow that suggests or assigns the next number safely for
+   manually authored episodes, including locking/uniqueness and clear behavior
+   for trailers and bonus episodes.
 5. **Live feed parity checker.** Add a command/script that compares the current
    Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
    generated or S3/CDN-served Django Chat podcast feed. It should fail on item

@@ -13,7 +13,7 @@ from typing import Any, cast
 from urllib.parse import unquote, urlparse
 from uuid import UUID
 
-from cast.models import Audio, Episode, Podcast
+from cast.models import Audio, Episode, Podcast, Season
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files import File
@@ -38,6 +38,7 @@ from django_chat.imports.show_notes import (
     structured_show_note_detail_blocks,
 )
 from django_chat.imports.source_data import (
+    VALID_EPISODE_TYPES,
     EpisodeSourceData,
     RssPodcast,
     SimplecastEpisode,
@@ -222,7 +223,7 @@ def import_django_chat_source_data(
         episodes_created = 0
         for episode_source in source_data.episodes:
             episode, episode_created = _get_or_create_episode_page(podcast, episode_source)
-            _update_episode_page(episode, episode_source)
+            _update_episode_page(episode, episode_source, podcast=podcast)
             episodes.append(episode)
             episode_metadata.append(_update_episode_metadata(episode, episode_source))
             if episode_created:
@@ -551,17 +552,27 @@ def _get_or_create_episode_page(
         raise RuntimeError(msg)
 
     episode = Episode(title=episode_source.title, slug=slug)
-    _update_episode_page_fields(episode, episode_source)
+    _update_episode_page_fields(episode, episode_source, podcast=podcast)
     podcast.add_child(instance=episode)
     return episode, True
 
 
-def _update_episode_page(episode: Episode, episode_source: EpisodeSourceData) -> None:
-    _update_episode_page_fields(episode, episode_source)
+def _update_episode_page(
+    episode: Episode,
+    episode_source: EpisodeSourceData,
+    *,
+    podcast: Podcast,
+) -> None:
+    _update_episode_page_fields(episode, episode_source, podcast=podcast)
     episode.save()
 
 
-def _update_episode_page_fields(episode: Episode, episode_source: EpisodeSourceData) -> None:
+def _update_episode_page_fields(
+    episode: Episode,
+    episode_source: EpisodeSourceData,
+    *,
+    podcast: Podcast,
+) -> None:
     summary = _episode_summary(episode_source)
     page = cast(Any, episode)
     page.title = episode_source.title
@@ -579,6 +590,9 @@ def _update_episode_page_fields(episode: Episode, episode_source: EpisodeSourceD
         _join_text(episode_source.rss.keywords if episode_source.rss else ()),
         255,
     )
+    page.episode_number = _episode_publishing_number(episode_source)
+    page.episode_type = _episode_publishing_type(episode_source)
+    page.season = _episode_publishing_season(podcast, episode_source)
     page.explicit = _episode_explicit_choice(episode_source)
     page.block = False
 
@@ -876,7 +890,7 @@ def _audio_data(
 
 def _audio_subtitle(metadata: EpisodeSourceMetadata) -> str:
     episode_number = cast(int | None, metadata.episode_number)
-    if episode_number is None:
+    if episode_number is None or episode_number <= 0:
         return ""
     return f"Episode {episode_number}"
 
@@ -1107,6 +1121,37 @@ def _episode_explicit_choice(episode_source: EpisodeSourceData) -> int:
     if explicit is None and rss is not None:
         explicit = rss.explicit
     return _explicit_choice(explicit)
+
+
+def _episode_publishing_number(episode_source: EpisodeSourceData) -> int | None:
+    episode_number = episode_source.episode_number
+    if (
+        isinstance(episode_number, int)
+        and not isinstance(episode_number, bool)
+        and episode_number > 0
+    ):
+        return episode_number
+    return None
+
+
+def _episode_publishing_type(episode_source: EpisodeSourceData) -> str:
+    if episode_source.rss is None or episode_source.rss.episode_type is None:
+        return ""
+    episode_type = episode_source.rss.episode_type.strip().lower()
+    return episode_type if episode_type in VALID_EPISODE_TYPES else ""
+
+
+def _episode_publishing_season(
+    podcast: Podcast,
+    episode_source: EpisodeSourceData,
+) -> Season | None:
+    simplecast = episode_source.simplecast
+    season_number = simplecast.season_number if simplecast is not None else None
+    if not isinstance(season_number, int) or isinstance(season_number, bool) or season_number <= 0:
+        return None
+    season_model = cast(Any, Season)
+    season, _ = season_model.objects.get_or_create(podcast=podcast, number=season_number)
+    return cast(Season, season)
 
 
 def _explicit_choice(is_explicit: bool | None) -> int:

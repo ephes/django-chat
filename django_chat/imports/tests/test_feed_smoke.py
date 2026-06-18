@@ -27,6 +27,7 @@ def test_generated_feed_parser_reads_smoke_fields() -> None:
         b"""<?xml version="1.0"?>
         <rss xmlns:atom="http://www.w3.org/2005/Atom"
              xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+             xmlns:podcast="https://podcastindex.org/namespace/1.0/"
              version="2.0">
           <channel>
             <atom:link href="http://testserver/episodes/feed/podcast/mp3/rss.xml"
@@ -39,6 +40,11 @@ def test_generated_feed_parser_reads_smoke_fields() -> None:
               <pubDate>Wed, 15 Apr 2026 08:00:00 +0000</pubDate>
               <enclosure url="/media/sample.mp3" type="audio/mpeg" length="123" />
               <itunes:duration>01:17:43</itunes:duration>
+              <itunes:episode>200</itunes:episode>
+              <itunes:episodeType>full</itunes:episodeType>
+              <itunes:season>1</itunes:season>
+              <podcast:episode>200</podcast:episode>
+              <podcast:season>1</podcast:season>
               <itunes:keywords>technology, web, programming</itunes:keywords>
             </item>
           </channel>
@@ -54,6 +60,11 @@ def test_generated_feed_parser_reads_smoke_fields() -> None:
     assert item.published_at is not None
     assert item.published_at.isoformat() == "2026-04-15T08:00:00+00:00"
     assert item.duration_seconds == 4663
+    assert item.episode_number == 200
+    assert item.podcast_episode_number == 200
+    assert item.episode_type == "full"
+    assert item.season_number == 1
+    assert item.podcast_season_number == 1
     assert item.keywords == "technology, web, programming"
     assert item.enclosure is not None
     assert item.enclosure.length == 123
@@ -91,6 +102,35 @@ def test_generated_feed_emits_imported_episode_keywords(tmp_path: Path) -> None:
     assert by_guid["608e4ca7-a6b0-4e07-b138-97ad41ef17b1"].keywords == (
         "technology, web, programming, python, django"
     )
+
+
+@pytest.mark.django_db
+def test_generated_feed_emits_imported_podcast_publishing_metadata(tmp_path: Path) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
+        preview_guid = EpisodeSourceMetadata.objects.get(episode_number=0).rss_guid
+        response = fetch_generated_feed(
+            reverse("cast:podcast_feed_rss", args=["episodes", "mp3"]),
+            host="testserver",
+        )
+
+    assert response.status_code == 200
+    generated = parse_generated_podcast_feed(response.content)
+    by_guid = {item.guid: item for item in generated.items}
+
+    latest = by_guid["2c78bb02-8162-44f0-b22d-a188f5bbdb9e"]
+    assert latest.episode_number == 200
+    assert latest.podcast_episode_number == 200
+    assert latest.episode_type == "full"
+    assert latest.season_number == 1
+    assert latest.podcast_season_number == 1
+
+    preview = by_guid[preview_guid]
+    assert preview.episode_number is None
+    assert preview.podcast_episode_number is None
+    assert preview.episode_type == "full"
+    assert preview.season_number == 1
+    assert preview.podcast_season_number == 1
 
 
 @pytest.mark.django_db
