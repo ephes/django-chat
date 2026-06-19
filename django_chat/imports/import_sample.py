@@ -20,7 +20,7 @@ from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Max, Q
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.text import slugify
@@ -228,6 +228,7 @@ def import_django_chat_source_data(
             episode_metadata.append(_update_episode_metadata(episode, episode_source))
             if episode_created:
                 episodes_created += 1
+        _update_podcast_automatic_numbering(podcast)
 
     audio_results = (
         copy_django_chat_sample_audio(tuple(episode_metadata), audio_downloader=audio_downloader)
@@ -449,6 +450,26 @@ def _update_podcast_page_fields(
         if simplecast_podcast.is_explicit is not None
         else rss_podcast.explicit
     )
+
+
+def _update_podcast_automatic_numbering(podcast: Podcast) -> None:
+    max_episode_number = (
+        Episode.objects.descendant_of(podcast).aggregate(max_episode_number=Max("episode_number"))[
+            "max_episode_number"
+        ]
+        or 0
+    )
+    page = cast(Any, podcast)
+    next_episode_number = max(page.next_episode_number, max_episode_number + 1)
+    update_fields = []
+    if not page.automatic_episode_numbering_enabled and page.next_episode_number == 1:
+        page.automatic_episode_numbering_enabled = True
+        update_fields.append("automatic_episode_numbering_enabled")
+    if page.next_episode_number != next_episode_number:
+        page.next_episode_number = next_episode_number
+        update_fields.append("next_episode_number")
+    if update_fields:
+        podcast.save(update_fields=update_fields)
 
 
 def _update_podcast_metadata(

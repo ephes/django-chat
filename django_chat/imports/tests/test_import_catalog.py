@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from cast.models import Audio, Episode, Season
+from cast.models import Audio, Episode, Podcast, Season
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
@@ -90,6 +90,17 @@ def test_catalog_import_can_import_more_than_fixture_sample() -> None:
     assert extra_metadata.episode.episode_type == "full"
     assert extra_metadata.episode.season is None
     assert cast(Any, Season).objects.count() == 1
+    podcast_page = cast(Any, Podcast.objects.get())
+    max_episode_number = max(
+        number
+        for number in Episode.objects.descendant_of(podcast_page).values_list(
+            "episode_number",
+            flat=True,
+        )
+        if number is not None
+    )
+    assert podcast_page.automatic_episode_numbering_enabled is True
+    assert podcast_page.next_episode_number == max_episode_number + 1
 
 
 @pytest.mark.django_db

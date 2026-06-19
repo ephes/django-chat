@@ -68,6 +68,9 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
     assert podcast.email == "will@wsvincent.com"
     assert podcast.comments_enabled is False
     assert podcast.template_base_dir == "django_chat"
+    podcast_page = cast(Any, podcast)
+    assert podcast_page.automatic_episode_numbering_enabled is True
+    assert podcast_page.next_episode_number == 201
 
     podcast_metadata = PodcastSourceMetadata.objects.get()
     assert podcast_metadata.podcast == podcast
@@ -248,6 +251,11 @@ def test_show_note_structuring_preserves_existing_h3_and_ordinary_paragraphs() -
 @pytest.mark.django_db
 def test_sample_import_is_idempotent_on_second_run() -> None:
     first_result = import_django_chat_sample()
+    podcast = cast(Any, Podcast.objects.get())
+    assert podcast.automatic_episode_numbering_enabled is True
+    assert podcast.next_episode_number == 201
+    podcast.next_episode_number = 250
+    podcast.save(update_fields=["next_episode_number"])
     podcast_ids = set(Podcast.objects.values_list("id", flat=True))
     episode_ids = set(Episode.objects.values_list("id", flat=True))
     podcast_metadata_ids = set(PodcastSourceMetadata.objects.values_list("id", flat=True))
@@ -277,6 +285,43 @@ def test_sample_import_is_idempotent_on_second_run() -> None:
     assert EpisodeAudioImportMetadata.objects.count() == 0
     assert Audio.objects.count() == 0
     assert _transcript_count() == 0
+    podcast.refresh_from_db()
+    assert podcast.automatic_episode_numbering_enabled is True
+    assert podcast.next_episode_number == 250
+
+
+@pytest.mark.django_db
+def test_sample_import_does_not_re_enable_deliberately_disabled_numbering() -> None:
+    import_django_chat_sample()
+    podcast = cast(Any, Podcast.objects.get())
+    podcast.automatic_episode_numbering_enabled = False
+    podcast.next_episode_number = 250
+    podcast.save(update_fields=["automatic_episode_numbering_enabled", "next_episode_number"])
+
+    import_django_chat_sample()
+
+    podcast.refresh_from_db()
+    assert podcast.automatic_episode_numbering_enabled is False
+    assert podcast.next_episode_number == 250
+
+
+@pytest.mark.django_db
+def test_sample_reimport_preserves_preview_without_canonical_episode_number() -> None:
+    import_django_chat_sample()
+    podcast = cast(Any, Podcast.objects.get())
+    assert podcast.automatic_episode_numbering_enabled is True
+    assert podcast.next_episode_number == 201
+    preview_metadata = EpisodeSourceMetadata.objects.get(episode_number=0)
+    assert preview_metadata.episode.episode_number is None
+
+    import_django_chat_sample()
+
+    podcast.refresh_from_db()
+    preview_metadata.refresh_from_db()
+    preview_metadata.episode.refresh_from_db()
+    assert podcast.automatic_episode_numbering_enabled is True
+    assert podcast.next_episode_number == 201
+    assert preview_metadata.episode.episode_number is None
 
 
 @pytest.mark.django_db

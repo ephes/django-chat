@@ -200,6 +200,13 @@ types (`full`, `trailer`, `bonus`) become `Episode.episode_type`, and valid
 Simplecast season numbers create/reuse podcast-scoped `cast.Season` rows. The
 historical preview source episode number `0` stays in source metadata only
 because django-cast's canonical episode number field accepts positive integers.
+The imported podcast also enables django-cast automatic episode numbering and
+sets `Podcast.next_episode_number` to the next value after the highest existing
+canonical episode number under that podcast, without lowering an already
+advanced counter on re-import. Once the counter has been seeded, re-imports also
+preserve an operator's later choice to disable automatic numbering. Future blank
+full episodes created in Wagtail therefore receive the next podcast-scoped
+number on first publish while numbering remains enabled.
 
 The command creates a local `django-chat-importer` user with an unusable
 password when no existing import user is available. Imported sample pages use

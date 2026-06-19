@@ -2,8 +2,8 @@
 
 Status: resolved research and backlog note. The upstream-vs-local decision is
 resolved in favor of upstream django-cast. Django Chat now adopts django-cast's
-canonical podcast publishing metadata fields for imported episodes; future
-manual auto-numbering remains a separate backlog item.
+canonical podcast publishing metadata fields and opt-in automatic
+first-publish numbering for imported podcasts.
 
 ## Problem
 
@@ -16,8 +16,8 @@ episode type, and season fields without creating fake import provenance rows.
 This matters for both the public site and feed parity. The generated feed now
 has a canonical source for `itunes:episode`, `itunes:episodeType`,
 `itunes:season`, `podcast:episode`, and `podcast:season` when those fields are
-set. The remaining workflow gap is automatic next-number assignment for future
-Wagtail-authored episodes.
+set. Imported podcasts also enable django-cast's automatic numbering so future
+blank full episodes receive the next podcast-scoped number on first publish.
 
 ## Current Implementation
 
@@ -36,6 +36,12 @@ Wagtail-authored episodes.
   sample feeds keep source parity.
 - The importer creates or reuses podcast-scoped `cast.Season` rows from valid
   positive Simplecast season numbers and assigns imported episodes to them.
+- The importer enables django-cast automatic episode numbering on the imported
+  podcast and seeds `Podcast.next_episode_number` to at least one greater than
+  the highest existing canonical episode number under that podcast. Re-imports
+  do not lower a counter that has already advanced, and they do not re-enable
+  automatic numbering after an operator disables it once the counter has been
+  seeded.
 - The episode list and detail templates render badges from canonical
   `Episode.episode_number` first, with `EpisodeSourceMetadata.episode_number` as
   a temporary compatibility fallback for import gaps.
@@ -185,24 +191,20 @@ metadata as provenance.
 Do not silently consume a number when an editor only creates a draft. Drafts can
 be abandoned, copied, or heavily revised, and gaps would become hard to explain.
 
-Recommended local policy:
+Implemented upstream policy:
 
-1. Show a suggested next number in the Wagtail editor, but let editors override
-   it.
+1. The podcast page owns an opt-in `automatic_episode_numbering_enabled` flag
+   and a `next_episode_number` counter.
 2. Assign only when an episode is first published and the canonical number is
    blank.
 3. Never change an existing number automatically after first publish.
-4. Enforce uniqueness at the database level for non-null numbers within the
-   podcast/catalog scope.
-5. Use a transaction plus a real serialization mechanism around number
-   assignment, such as a dedicated counter row, Postgres advisory lock, or
-   sequence. Do not rely on an unlocked "max number + 1" query.
-6. Treat trailers and bonus episodes as an explicit editorial decision:
-   initially they should not auto-consume the full-episode sequence unless the
-   hosts choose otherwise.
-7. Cover every publish path. If Wagtail publish hooks do not run for bulk
-   publish actions, use a lower-level publish signal or explicitly disable/audit
-   bulk publishing for episodes so blank numbers cannot slip through.
+4. Serialize assignment by locking the podcast row while choosing and advancing
+   the counter.
+5. Skip already used numbers within the podcast before assigning.
+6. Treat blank episode type as full; blank/full episodes consume the sequence,
+   while trailer and bonus episodes do not.
+7. Do not assign for draft saves or future scheduled publishes before their
+   go-live time.
 
 The historical imported catalog has episode `0` for the preview. Apple episode
 metadata describes positive integer episode numbers in common specs, while the
@@ -230,7 +232,7 @@ logic should:
 
 ## Recommended Backlog Slice
 
-The adoption/backfill slice is implemented:
+The adoption/backfill and automatic-numbering slice is implemented:
 
 1. django-cast upstream metadata support is used as the canonical model.
 2. Imported positive episode numbers, valid episode types, and valid Simplecast
@@ -241,15 +243,13 @@ The adoption/backfill slice is implemented:
    valid imported metadata.
 6. Feed smoke checks assert positive episode-number parity and the approved
    preview omission.
+7. Imported podcasts enable django-cast automatic numbering and seed the next
+   counter from existing canonical episode numbers under the podcast.
 
-Remaining backlog:
+Remaining follow-ups:
 
-- Add an editor workflow for suggesting or assigning the next number.
-- Add publish-time assignment for blank numbers with database uniqueness,
-  transaction protection, and coverage for both normal editor publishing and
-  bulk publish paths.
-- Document the host workflow once auto-numbering exists.
-- Should trailers/bonus episodes share the main number sequence?
+- Document and verify the staging/production host workflow after deployment and
+  re-import.
 - Should slugs for future manual episodes include numbers, or remain title-only?
-- Should editors be required to explicitly accept a suggested number before
-  publish, or should the system auto-fill when blank?
+- Should editors get a preview/suggested number in the Wagtail form before
+  publish, or is publish-time assignment enough?
