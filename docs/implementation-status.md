@@ -2,7 +2,7 @@
 
 Lightweight status tracker for the Django Chat staging proof of concept. The
 canonical scope, slice list, and acceptance criteria live in
-[`2026-04-18_django-chat_research.md`](../2026-04-18_django-chat_research.md).
+[`2026-04-18_django-chat_research.md`](https://github.com/ephes/django-chat/blob/main/2026-04-18_django-chat_research.md).
 This file is a pointer: which slices have shipped, which acceptance criteria
 are still open, and what the next agent should do.
 
@@ -314,8 +314,10 @@ PRD section "Acceptance Criteria For The Research Spike".
 
 ## Where We Are
 
-The staging proof-of-concept slices through 9k have landed on `main`. Staging
-at `https://djangochat.staging.django-cast.com` is deployed and serving the
+The staging proof-of-concept slices through 9m have landed on `main`, and the
+custom-player transcript/share parity work (Open Work item 1) has also been
+implemented and cut over (2026-06-11). Staging at
+`https://djangochat.staging.django-cast.com` is deployed and serving the
 polished site:
 
 - Black header with show artwork mark, single-column episode rows,

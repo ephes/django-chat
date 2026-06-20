@@ -278,6 +278,33 @@ restored:
      system-derived `kind` values back to `"auto"`, preserving genuine editor
      overrides. It is icon-only: it never re-parses or sanitizes stored HTML, so
      authored RichText attributes are left untouched. Idempotent; forward-only.
+   - `imports.0016_heal_show_note_icons` corrects a bug in the initial `0015`
+     shipment, which mistook the legacy `ShowNoteLinkListBlock.kind="links"`
+     default for a deliberate editor override and froze the icon on link-list
+     blocks whose heading resolves to a different kind (e.g. a "Books" heading
+     kept the links icon). `0016` re-runs the corrected `0015` backfill so
+     environments that applied the buggy version are healed. Idempotent;
+     forward-only; genuine overrides are preserved.
+   - `imports.0017_offload_raw_show_note_headings` (D5 follow-up) re-runs the
+     in-place show-note structuring to offload non-convertible section headings
+     — e.g. a `📚 Books` or `SHAMELESS PLUGS` list whose items have surrounding
+     prose — into iconed `show_note_heading` blocks, with the list kept verbatim
+     as a following paragraph. These headings were originally left as raw
+     `<h3>…</h3>` HTML inside `paragraph` blocks and rendered with no icon. The
+     prior icon migrations (`0015`/`0016`) only touched already-structured
+     blocks, so this pass is needed to reach them. Scoped to imported episodes;
+     idempotent; forward-only.
+   - `imports.0018_unhide_implicit_link_list_headings` reverses `0007`: removes
+     the `show_heading=False` flag on stored implicit link-list blocks so the
+     already-materialised "Links" heading and icon render (the icon model wants
+     every section to show its iconed heading).
+   - `imports.0019_add_implicit_link_list_headings` adds a synthesized iconed
+     "Links" `show_note_heading` block before headingless leading link lists
+     that could not be cleanly itemized (items mix prose with links or have
+     multiple anchors) and were therefore left as a raw `<ul>` inside a
+     `paragraph` block with no heading or icon. Idempotent: a list that already
+     follows its own stored heading does not gain a spurious "Links" heading; a
+     link-less bullet list is not treated as a "Links" section.
    - Reverse migrations should be no-ops because reconstructing the exact old
      StreamField serialization is not required and would be risky.
 

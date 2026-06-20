@@ -129,8 +129,7 @@ Browsers that do not understand the second declaration keep the first
 declaration's value; supporting browsers override it. The currently
 fallback-paired tokens are:
 
-- `--dc-django-soft`, `--dc-django-tint`
-- `--dc-focus-ring-soft`, `--dc-focus-outline`
+- `--dc-django-soft`, `--dc-django-tint`, `--dc-django-hover`, `--dc-django-veil`
 - `--dc-shadow-sm`, `--dc-shadow-md`, `--dc-shadow-lg`, `--dc-shadow-xl`
 
 Keep the literal `rgb()` value in sync with `--dc-django` (#0ea342 →

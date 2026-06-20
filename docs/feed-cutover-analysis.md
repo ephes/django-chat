@@ -253,8 +253,9 @@ Mitigation:
 
 ### Directory Migration Splits The Audience
 
-Without an old-feed redirect, directories are the main migration lever, and each
-directory can behave differently.
+With the Simplecast 301 RSS Feed Redirect as the primary lever, directories are
+a backup path for audience continuity, and each directory can still behave
+differently.
 
 Failure modes:
 
@@ -447,8 +448,8 @@ Required behavior:
 
 ### Communication Window
 
-Because the old feed will not redirect, communication is part of the technical
-plan, not a nice-to-have.
+Even with the Simplecast 301 redirect as the primary migration lever,
+communication is part of the technical plan, not a nice-to-have.
 
 Choices:
 

@@ -9,16 +9,17 @@ staging with the Podlove player.
 > spinner + `aria-busy`, spring reveal honoring `prefers-reduced-motion`, the
 > demoted icon-only keyboard-cues toggle, and a `data-share="none"` transport
 > opt-out) landed upstream in django-cast with vitest + pytest coverage; Django
-> Chat bumped its pinned django-cast rev, opted the in-transport share button out,
+> Chat bumped its pinned django-cast rev, opted the in-transport share button out
+> via `transport_share=False` in `django_chat/templates/cast/django_chat/audio.html`
+> (rendered as `data-share="none"` on the `<cast-audio-player>` element),
 > replaced the under-player full-width hairline with a grid-aligned separator, and
-> added a contributor-backed diarized browser fixture. The custom player remains a
-> dev preview (`CAST_AUDIO_PLAYER="custom"` in `config/settings/local.py`);
-> staging and production kept the Podlove player at the time of this snapshot.
-> Since 2026-06-11 staging deploys with the custom player
-> (`django_chat_audio_player: "custom"` in `deploy/group_vars/staging.yml`);
-> production keeps Podlove until host sign-off, so the Podlove-oriented
-> host-review / staging-differences / css-architecture / README docs still
-> describe the production player.
+> added a contributor-backed diarized browser fixture. The custom player is now
+> active in all environments: `CAST_AUDIO_PLAYER = "custom"` is set in
+> `config/settings/base.py` with a comment noting that the Podlove Web Player path
+> was removed after the staging cutover. There is no per-environment override in
+> `deploy/group_vars/`; the Podlove-oriented
+> host-review / staging-differences / css-architecture / README docs may still
+> carry Podlove references that were not updated during the cutover.
 
 > **Addendum (2026-06-11): historical snapshot — the as-built transcript moved
 > on.** This spec is the 2026-06-08 acceptance snapshot; do not treat its
@@ -284,7 +285,7 @@ leaving the real staging behavior unproven.
   templates, so Django Chat can override `cast/audio/_custom_player.html` if a
   local template hook is needed. Prefer an explicit upstream extension point
   over a template override when the behavior is generally useful.
-- The existing browser-test helper `_create_generated_transcript()` in
+- The existing browser-test helper `_create_diarized_transcript()` in
   `django_chat/core/tests/test_browser_js.py` creates speaker-labelled cues.
   Reuse or extend it together with matching visible `EpisodeContributor` records
   so browser tests prove contributor-approved labelled rendering without relying

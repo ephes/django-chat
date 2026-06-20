@@ -21,9 +21,9 @@ first-class blocks for those categories in the first pass; their differences
 are heading text, icon choice, and editor labeling, not separate saved
 StreamField schema.
 
-The implementation also needs to bump `django-cast` from the current pinned
-commit `d6ce2c7980baaece847d8495d22832208cd73f88` to `f795ed5f` or later,
-because that is where `CAST_POST_BODY_BLOCKS` was added.
+The implementation bumped `django-cast` from `d6ce2c7980baaece847d8495d22832208cd73f88`
+to `f795ed5f` (where `CAST_POST_BODY_BLOCKS` was added) and then further to the
+current pin `151a4fa8d306def60783d50d7f4f3e052a057533` in `pyproject.toml`.
 
 ## Show-Note Icons (auto/override, materialized at save time)
 

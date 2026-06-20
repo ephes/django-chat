@@ -70,7 +70,7 @@ Dependencies are installed under `deploy/.ansible/`, which is ignored by Git.
 Committed inventory uses the live staging host and a production placeholder:
 
 - `django-chat-staging`: `djangochat.staging.django-cast.com`
-- `django-chat-production`: `.example.invalid`
+- `django-chat-production`: `production.djangochat.example.invalid`
 
 Before any production deploy, replace the production placeholder
 `ansible_host`, `django_chat_wagtail_fqdn`, host rule, and allowed-host values
@@ -235,9 +235,9 @@ a small VPS:
 - `wagtail_gunicorn_timeout: 120`
 - `uv_version: "0.11.7"`
 
-The `cast_transcripts` database worker is enabled for staging so Wagtail's
-Generate transcript action can queue Voxhelm completion work outside the web
-request. Web sizing remains intentionally small.
+The `cast_transcripts` database worker is enabled for all environments so
+Wagtail's Generate transcript action can queue Voxhelm completion work outside
+the web request. Web sizing remains intentionally small.
 
 The shared deploy vars also set `wagtail_traefik_cert_resolver: "letsencrypt"`
 so the generated Traefik route requests a real ACME certificate instead of
@@ -245,7 +245,8 @@ falling back to Traefik's default self-signed certificate.
 
 ## Transcript Worker
 
-Staging enables the django-tasks database worker for transcript generation:
+The shared group vars enable the django-tasks database worker for all
+environments:
 
 ```yaml
 wagtail_db_worker_enabled: true

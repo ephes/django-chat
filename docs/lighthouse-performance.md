@@ -203,26 +203,24 @@ and episode detail page needed small fixes:
   marked `fetchpriority="high"` and `decoding="async"`.
 - The episode filter date inputs now have explicit labels, fixing the
   Lighthouse accessibility failure on `/episodes/`.
-- The Podlove player host element originally used a fixed, critical height
-  reservation before the third-party player initialized: 302 px desktop and
-  514 px mobile. The compact Django Chat player template now has its own
-  shorter `podlove-player[data-template]` reservation, so the one-line-style
-  player does not leave the old tall blank space while still guarding against
-  layout shift. The base template also declares `data-theme="light"` so the
-  player initializer does not request Podlove's dark color scheme on an
-  otherwise light page.
-- The compact player mobile reservation is kept in sync between the critical
-  inline CSS and the site stylesheet so the show notes do not move when the
-  player iframe is inserted.
+- During the Podlove player era (through 2026-06-11): the Podlove player host
+  element originally used a fixed, critical height reservation (302 px desktop,
+  514 px mobile). A compact `podlove-player[data-template]` reservation was
+  added so the one-line-style player did not leave the old tall blank space;
+  the base template declared `data-theme="light"` so the player initializer
+  did not request the dark color scheme. The compact player mobile reservation
+  was kept in sync between a critical inline CSS block and the site stylesheet
+  to avoid layout shift when the player iframe was inserted. Episode detail
+  pages used a click-to-load facade so the heavyweight Podlove embed script,
+  player API response, and third-party player assets were deferred until user
+  interaction. The entire Podlove player path (loader script, facade markup and
+  CSS, theme settings, template-proxy endpoint) was removed on 2026-06-11 after
+  the django-cast custom player cutover (see backlog Done list). The
+  `data-theme="light"` attribute remains on `<html>` for page-level theme
+  signalling.
 - Public runtime CSS uses the smaller Roboto variable font for headings and
   episode-number badges instead of loading the larger Roboto Flex display font
   on Lighthouse-critical pages.
-- Episode detail pages keep the Podlove player's click-to-load mode under the
-  hood so the heavyweight embed script, player API response, and third-party
-  player assets are requested only after user interaction. Django Chat renders
-  its own lightweight player-shaped facade, keeps that footprint stable while
-  the iframe initializes, and starts the player on hover, focus, tap, or button
-  click.
 
 ## Performance Optimization Backlog
 

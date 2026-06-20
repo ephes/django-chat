@@ -24,10 +24,10 @@ django-cast PyPI release (latest `0.2.57` lacks both). They ship only on the
 
 ```toml
 [tool.uv.sources]
-django-cast = { git = "https://github.com/ephes/django-cast", rev = "d6ce2c7980baaece847d8495d22832208cd73f88" }
+django-cast = { git = "https://github.com/ephes/django-cast", rev = "151a4fa8d306def60783d50d7f4f3e052a057533" }
 ```
 
-That commit reports `cast.__version__ == "0.2.58"`. Bump the `rev` deliberately
+That commit reports `cast.__version__ == "0.2.61"`. Bump the `rev` deliberately
 when develop advances and re-run `uv sync` + `just manage migrate`.
 
 ### Migrations introduced by the upgrade
@@ -1100,7 +1100,7 @@ Carlton = Speaker 1, Will = Speaker 2). No host-swap guessing was ever needed.
 
 ### Additional batch (2026-05-30) — contributor links + seven more episodes
 
-This batch added the **contributor-link layer** (see [§5b](#5b-contributor-links-strip-anchors--podcastperson-href))
+This batch added the **contributor-link layer** (see [§5b](#5b-contributor-links-strip-anchors-podcastperson-href))
 and diarized seven more previously-undiarized episodes (five required + two
 bonus), DB-only. Speaker identification used the intro self-ID as the primary
 anchor; per-episode evidence below. All browser-verified (strip + player tab +

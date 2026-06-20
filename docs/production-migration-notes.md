@@ -32,15 +32,20 @@ The production migration has these fixed decisions:
 - `djangochat.com` remains the canonical site domain
 - the podcast feed moves from Simplecast to this repo
 - the production podcast feed and media are served from S3/CDN
-- Simplecast will not redirect the old feed URL
-- Simplecast is retired after migration
+- Simplecast's native 301 RSS Feed Redirect is the primary migration lever:
+  it is set on the old feed to point at the canonical `djangochat.com` feed
+  before the Simplecast account is retired. (This revises the original decision
+  that "Simplecast will not redirect"; see
+  [`feed-cutover-analysis.md`](feed-cutover-analysis.md) for the full plan.)
+- Simplecast is retired after migration, but only after the 301 redirect is
+  set, verified, and given at least a four-week transition window.
 
 The old feed URL is `https://feeds.simplecast.com/WpQaX_cs`. Because it is not
-under `djangochat.com`, this repo cannot redirect it without Simplecast
-cooperation. The replacement podcast feed must be a `djangochat.com` URL, likely
-`/episodes/feed/podcast/mp3/rss.xml` or a friendly same-domain alias that points
-there. `/episodes/feed/rss.xml` is the latest-entries feed, not the podcast
-client feed.
+under `djangochat.com`, this repo cannot redirect it directly; the redirect is
+configured inside Simplecast. The replacement podcast feed must be a
+`djangochat.com` URL, likely `/episodes/feed/podcast/mp3/rss.xml` or a
+friendly same-domain alias. `/episodes/feed/rss.xml` is the latest-entries
+feed, not the podcast client feed.
 
 Open production details:
 
