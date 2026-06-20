@@ -158,8 +158,36 @@ Observed on 2026-05-13:
   Enclosure URLs differ by design because staging uses copied media, but copied
   byte lengths must be checked against the actual stored objects.
 
-Conclusion: the current staging feed proves the basic shape, but it is not a
-production feed cutover candidate yet.
+Observed on 2026-06-20 (live `compare_django_chat_live_feed` run, source = live
+Simplecast, candidate = staging feed):
+
+- Both feeds now have 205 items; the 2026-05-13 202-vs-204 gap is closed. Staging
+  was re-imported after that snapshot, so it carries episodes 202 and 203 and the
+  later catalog growth.
+- Every strict parity gate passed structurally: equal item count, identical GUID
+  set and order, latest source episode present, and matching titles (after
+  whitespace normalization), publication instants, durations, and enclosure
+  types.
+- Enclosure URLs differ for all 205 items by design — staging serves copied media
+  from its own CloudFront distribution
+  (`d3bhztlgsx3bsw.cloudfront.net/cast_audio/…`) rather than Simplecast/Podtrac.
+  This is an approved warning, and confirms the architecture: feed served by the
+  app, media on S3/CDN.
+- 16 items report a source-reported-vs-copied enclosure byte-length difference —
+  the approved "copied object size ≠ Simplecast-reported size" warning.
+- The enclosure copied-byte-size gate is also validated, two independent ways
+  across all 205 items. A CDN HEAD sweep confirmed every feed-declared enclosure
+  `length` equals the actual CloudFront object `Content-Length` (type
+  `audio/mpeg`), and a read-only check on the staging host confirmed every feed
+  `length` equals staging's recorded `EpisodeAudioImportMetadata.copied_byte_size`
+  (205/205, zero mismatches, every item has a copied-size row).
+
+Conclusion: as of 2026-06-20 the staging feed is a verified match for the live
+Simplecast feed (205 = 205; all strict parity gates pass with only approved
+warnings, and enclosure byte sizes are confirmed both against the actual CDN
+objects and against staging's import DB). No staging feed changes are needed; the
+remaining cutover gates are off-staging (Simplecast 301 redirect access and the
+production-environment work at cutover).
 
 ## Ways This Can Go Wrong
 
@@ -537,12 +565,16 @@ validates the staging feed route now and the production `djangochat.com` feed
 URL at cutover. Covered by
 `django_chat/imports/tests/test_live_feed_parity.py`; no test hits the network.
 
-The current staging feed would fail this phase because it has 202 items while
-Simplecast has 204; it is missing episode 203,
-`Deploy on Day One - Calvin Hendryx-Parker`, and episode 202,
-`EuroPython 2026 - Mia Bajic`. A real green run therefore still depends on
-re-importing the candidate catalog to the current live item count before
-cutover review — an operator action, not part of the checker.
+A 2026-06-20 run against the staging feed passed every structural gate (205 = 205
+items; matching GUID set/order, latest episode, titles, publication instants,
+durations, and enclosure types), with only the approved warnings (moved enclosure
+URLs, and 16 source-reported-vs-copied byte-length differences). The 2026-05-13
+202-vs-204 gap (missing episodes 203 `Deploy on Day One` and 202
+`EuroPython 2026`) is closed; staging has since been re-imported. The enclosure
+copied-byte-size gate is validated too: a CDN HEAD sweep (feed `length` vs the
+real object) and a read-only on-staging DB check (feed `length` vs recorded
+`copied_byte_size`) both passed 205/205. Staging is a verified feed-parity match;
+no staging changes are needed.
 
 ### Phase 3: Build URL Compatibility Redirects
 
@@ -662,8 +694,11 @@ Long term:
   feed to a specified candidate feed URL through the SSRF guard and enforces the
   Phase 2 hard-failure/warning rules. It can point at any candidate URL — the
   staging feed route now, the production `djangochat.com` feed URL at cutover. A
-  real green run still depends on re-importing the candidate catalog to the
-  current live item count (the staging 202-vs-204 gap above).
+  2026-06-20 run against the staging feed passed every structural gate
+  (205 = 205, only approved warnings), and the enclosure byte sizes were
+  confirmed 205/205 against both the actual CDN objects and staging's import DB.
+  Note: the command is committed but not yet deployed to staging — deploy this
+  slice so operators can run `just compare-live-feed` there directly.
 - Add production configuration for `itunes:new-feed-url` and test that staging
   cannot accidentally point at production.
 - After deploying the upstream podcast metadata adoption, re-run feed parity
@@ -674,8 +709,9 @@ Long term:
   seconds match.
 - Trim imported title whitespace or explicitly preserve source whitespace after
   comparison.
-- Re-import staging/production candidate catalog so it includes episodes 202
-  and 203 before any further feed cutover review.
+- Re-import staging/production candidate catalog to the current live item count —
+  done for staging (2026-06-20 parity run confirmed 205 = 205, with episodes 202
+  and 203 present); still required for the production environment at cutover.
 - Add media object byte-size checks against actual storage metadata for the
   full catalog.
 - Implement and test `djangochat.com` URL compatibility redirects for known

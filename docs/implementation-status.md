@@ -493,9 +493,14 @@ growth.
    (`EpisodeAudioImportMetadata.copied_byte_size`), not the RSS-reported length.
    Covered by `django_chat/imports/tests/test_live_feed_parity.py` (parity rules,
    fetch failures, SSRF refusal, command exit codes); no test hits the network.
-   Remaining: a real green run still depends on re-importing the
-   staging/production candidate catalog to the current live item count (the
-   cutover doc records staging at 202 vs Simplecast's 204); at cutover, point the
+   A 2026-06-20 run against the staging feed passed every structural gate
+   (source=205, generated=205; matching GUID set/order, latest episode, titles,
+   pubdates, durations, enclosure types) with only approved warnings, so the
+   2026-05-13 202-vs-204 gap is closed. The enclosure byte-size gate is validated
+   205/205 too, two ways: a CDN HEAD sweep (feed `length` vs the real object) and
+   a read-only on-staging DB check (feed `length` vs recorded `copied_byte_size`).
+   Remaining: the command is committed but not yet deployed to staging (deploy so
+   operators can run `just compare-live-feed` there), and at cutover point the
    checker at the production `djangochat.com` feed URL.
 6. **Performance optimization backlog.** Continue tracking concrete Lighthouse
    and browser-network follow-ups in
