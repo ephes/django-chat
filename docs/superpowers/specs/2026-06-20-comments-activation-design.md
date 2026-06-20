@@ -282,13 +282,14 @@ Screenshots saved under `.playwright-verify/` per repo convention.
 A spot check of `docs/css-architecture.md` against `site.css` (4933 lines)
 found the doc is an accurate, reliable build guide — layer order
 (`@layer base, components, modals;`), `--dc-*` token prefixing, and class-naming
-conventions all match the implementation. One minor drift to fix as part of
-this work:
+conventions all match the implementation. Drift found and its disposition:
 
 - `--dc-radius-card` (`0.75rem`, the card/panel corner — directly relevant to
-  the comment card) exists in `site.css:149` but is **not** listed in the
-  doc's geometry-token section. Add it.
-- Add the new `.comment-*` domain prefix to the class-naming section.
+  the comment card) existed in `site.css:149` but was **not** listed in the
+  doc's geometry-token section. **Resolved separately** in commit `e83e6f4`,
+  which also added `--dc-container-max` and a radius-scale gloss.
+- Add the new `.comment-*` domain prefix to the class-naming section (still
+  pending; handled by the implementation plan's CSS task).
 
 (A fuller token-by-token doc/CSS audit is not warranted; the doc is otherwise
 current.)

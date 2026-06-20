@@ -491,15 +491,15 @@ Capture before/after screenshots into `.playwright-verify/` per repo convention 
 
 - [ ] **Step 4: Reconcile `docs/css-architecture.md`**
 
-Two edits:
-
-a) In the **Token naming → Geometry** bullet, add `--dc-radius-card` to the list, e.g. change `` `--dc-radius`, `--dc-radius-pill`, `--dc-tap`, …`` to include `` `--dc-radius-card` `` with a short note "(12px card/panel corner)".
-
-b) In **Class naming → Domain prefixes**, add a bullet:
+In **Class naming → Domain prefixes**, add a bullet:
 
 ```markdown
 - `.comment-*` — comment list, comment cards, and the comment/reply form.
 ```
+
+(The `--dc-radius-card` geometry-token gap noted in the spec was already
+reconciled separately in commit `e83e6f4`, so no token-list edit is needed
+here — verify it is present before skipping.)
 
 - [ ] **Step 5: Commit**
 
