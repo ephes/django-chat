@@ -161,6 +161,7 @@ to. New components should pick the most specific prefix that fits:
 - `.share-*` — share modal, copy-link UI, mastodon share row.
 - `.embed-*` — embed modal and the embed-only stylesheet.
 - `.transcript-*` — transcript section and view.
+- `.comment-*` — comment list, comment cards, and the comment/reply form.
 - `.page-header-*` — reusable subpage header pattern.
 - `.pagination-*`, `.platform-*`, `.audio-*`.
 
