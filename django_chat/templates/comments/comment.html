@@ -1,0 +1,13 @@
+{% load i18n %}
+<div{% if preview %} id="comment-preview"{% else %} id="c{{ comment.id }}"{% endif %} class="comment">
+  {% block comment_item %}
+    {% if preview %}<p class="comment-preview-label">{% trans "Preview of your comment" %}</p>{% endif %}
+    <p class="comment-meta">
+      <span class="comment-author">{% if comment.url %}<a href="{{ comment.url }}" rel="nofollow">{% endif %}{% if comment.name %}{{ comment.name }}{% else %}{% trans "Anonymous" %}{% endif %}{% if comment.url %}</a>{% endif %}</span>
+      <time class="comment-date" datetime="{{ comment.submit_date|date:'c' }}">{% blocktrans with submit_date=comment.submit_date %}on {{ submit_date }}{% endblocktrans %}</time>
+      {% if request.user.is_staff and not comment.is_public %}<span class="comment-moderated-flag">({% trans "moderated" %})</span>{% endif %}
+      {% if USE_THREADEDCOMMENTS and not preview %}<a href="#c{{ comment.id }}" data-comment-id="{{ comment.id }}" class="comment-reply-link">{% trans "reply" %}</a>{% endif %}
+    </p>
+    <div class="comment-text">{{ comment.comment|linebreaks }}</div>
+  {% endblock %}
+</div>

@@ -307,6 +307,29 @@ Both `--copy-audio` and `--copy-cover-image` download real bytes when run
 without fake downloaders, so use them deliberately. Tests use in-memory
 fakes and never require live network access or real S3.
 
+## Comments
+
+Comments are off by default at two independent levels:
+
+1. The global `CAST_COMMENTS_ENABLED` flag (default `false`).
+2. Each page's `comments_enabled` toggle. The Django Chat importer ships the
+   podcast and every episode with `comments_enabled=False`, so comments are
+   opt-in per object — flipping the global flag alone surfaces nothing.
+
+To exercise comments locally:
+
+1. Set `CAST_COMMENTS_ENABLED=true` in your `.env` (or export it) and restart
+   `just runserver-local-media`.
+2. In the Wagtail admin, tick **comments_enabled** on the Podcast page and on
+   each episode/post that should accept comments.
+
+With JavaScript enabled, posting is AJAX (inline, threaded replies, preview).
+With JavaScript disabled, the form does a normal POST and redirects back.
+Identity is anonymous name/email only (the URL and title fields are excluded).
+Spam handling uses django-cast's native `SpamFilter` (auto-publish + honeypot);
+seeding a trained filter from the python-podcast corpus is a separate
+pre-launch ops step.
+
 ## Full Catalog Import
 
 The live catalog importer reads the canonical RSS feed and enriches it from

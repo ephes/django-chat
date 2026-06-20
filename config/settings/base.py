@@ -238,7 +238,16 @@ DJANGO_CHAT_PODCAST_SLUG = "episodes"
 CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap4"]
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
-CAST_COMMENTS_ENABLED = False
+# Activate django-cast's comment app as the django-contrib-comments backend
+# (threaded CastComment model, CastCommentForm, honeypot, and the
+# cast.moderation.Moderator + SpamFilter). cast.comments is already installed;
+# without this routing, django_comments would fall back to its own plain model
+# and form.
+COMMENTS_APP = "cast.comments"
+CAST_COMMENTS_ENABLED = env.bool("CAST_COMMENTS_ENABLED", default=False)
+# Identity is anonymous name/email only (see the comments-activation spec): drop
+# the optional URL and title fields from the comment form so they never render.
+CAST_COMMENTS_EXCLUDE_FIELDS = ("url", "title")
 # Episode-page audio player: django-cast's custom player, in all environments.
 # The Podlove Web Player path was removed after the staging cutover; restoring
 # it would mean reverting the removal commit, not flipping this setting.

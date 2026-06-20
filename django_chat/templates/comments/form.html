@@ -1,0 +1,37 @@
+{% load i18n comments fluent_comments_tags %}
+
+{% if not form.target_object|comments_are_open %}
+  <p class="comments-closed">{% trans "Comments are closed." %}</p>
+{% else %}
+  <form id="comment-form-{{ form.target_object.pk }}"
+        class="js-comments-form comment-form stack"
+        method="post"
+        action="{% comment_form_target %}"
+        data-object-id="{{ form.target_object.pk }}"
+        data-ajax-action="{% url 'comments-post-comment-ajax' %}">
+    {% csrf_token %}
+    {% with next_url=next|default:request.get_full_path %}
+      {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+    {% endwith %}
+
+    {% for field in form %}
+      {% if field.is_hidden %}
+        {{ field }}
+      {% elif field.name == "honeypot" %}
+        <div class="comment-field comment-field--honeypot" aria-hidden="true">{{ field.label_tag }}{{ field }}</div>
+      {% else %}
+        <div class="comment-field{% if field.errors %} comment-field--error{% endif %}">
+          {{ field.label_tag }}
+          {{ field }}
+          {% if field.errors %}<span class="js-errors">{{ field.errors.as_text }}</span>{% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    <div class="comment-form-actions cluster">
+      <button type="submit" name="post" value="post" class="button-primary">{% trans "Post comment" %}</button>
+      <button type="submit" name="preview" value="preview" class="comment-preview-button">{% trans "Preview" %}</button>
+      {% ajax_comment_tags for form.target_object %}
+    </div>
+  </form>
+{% endif %}
