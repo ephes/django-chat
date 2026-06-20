@@ -4942,7 +4942,11 @@ body:has(.share-modal:not([open]):target) {
   }
 
   .comments-title {
-    font-family: var(--font-heading);
+    /* Match the sibling "Show notes" section heading (.show-notes-title uses
+       --font-body bold), not the global Ubuntu heading default, so the two
+       episode-page section headings read as a set. */
+    font-family: var(--font-body);
+    font-weight: var(--weight-bold);
     font-size: var(--text-h2);
     line-height: var(--leading-heading);
     color: var(--dc-heading);
