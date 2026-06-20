@@ -517,6 +517,14 @@ growth.
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
    [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.
+   The **URL-compatibility slice (cutover Phase 3) is done**: `APPEND_SLASH`
+   covers the trailing-slash forms, `/` redirects to the episode index, and a
+   friendly `/feed/rss.xml` alias permanently redirects to the canonical podcast
+   feed (`/episodes/feed/podcast/mp3/rss.xml`) while `/episodes/feed/rss.xml`
+   stays the latest-entries feed. The public URL contract is pinned by
+   regression tests in
+   `django_chat/imports/tests/test_sample_site_routes.py`. The remaining VPS/DNS/
+   directory work stays deferred to the production cutover.
 
 The import pipeline treats third-party Simplecast/RSS/staging content as
 untrusted: it sanitizes imported show-note HTML, scheme-checks imported link

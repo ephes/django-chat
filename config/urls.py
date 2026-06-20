@@ -4,7 +4,7 @@ from cast.views import defaults as cast_default_views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, reverse_lazy
 from django.views.decorators.cache import cache_page
 from django.views.generic import RedirectView
 from django_chat.core.feeds import DjangoChatLatestEntriesFeed
@@ -48,6 +48,20 @@ urlpatterns = [
         f"{settings.DJANGO_CHAT_PODCAST_SLUG}/<slug:episode_slug>/embed/",
         episode_embed,
         name="django_chat_episode_embed",
+    ),
+    # Optional friendly alias for the canonical generated podcast feed. It is a
+    # convenience redirect only; the canonical feed URL stays the django-cast
+    # route and is what directories and `itunes:new-feed-url` must point at.
+    path(
+        "feed/rss.xml",
+        RedirectView.as_view(
+            url=reverse_lazy(
+                "cast:podcast_feed_rss",
+                args=[settings.DJANGO_CHAT_PODCAST_SLUG, "mp3"],
+            ),
+            permanent=True,
+        ),
+        name="django_chat_feed_alias",
     ),
     path("", include("cast.urls", namespace="cast")),
     path("", include(wagtail_urls)),

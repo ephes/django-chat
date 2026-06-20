@@ -594,6 +594,17 @@ Do not invent broad redirects for unknown Simplecast paths. The old Simplecast
 site returned HTTP 200 for many arbitrary paths, so status-code probing is not
 a safe source of redirect rules.
 
+Status: this phase is largely implemented. `/` already 302-redirects to the
+episode index, and the trailing-slash forms (`/episodes`, `/episodes/<slug>`,
+`/episodes/<slug>/transcript`) are handled by Django's `APPEND_SLASH` (301 to the
+canonical slashed route). The optional friendly feed alias is implemented:
+`/feed/rss.xml` permanently redirects to the canonical podcast feed
+(`/episodes/feed/podcast/mp3/rss.xml`), while `/episodes/feed/rss.xml` keeps
+serving the latest-entries feed directly. This public URL contract is pinned by
+regression tests in `django_chat/imports/tests/test_sample_site_routes.py` so a
+future routing change cannot silently break a path. Remaining for cutover: verify
+these against the real `djangochat.com` origin during the Phase 4 dry run.
+
 ### Phase 4: Production Dry Run
 
 Before any directory update:
@@ -714,8 +725,10 @@ Long term:
   and 203 present); still required for the production environment at cutover.
 - Add media object byte-size checks against actual storage metadata for the
   full catalog.
-- Implement and test `djangochat.com` URL compatibility redirects for known
-  Simplecast page paths and django-cast route-shape differences.
+- URL compatibility redirects are implemented and pinned by tests (see Phase 3):
+  `APPEND_SLASH` covers trailing-slash forms, `/` redirects to the episode index,
+  and `/feed/rss.xml` aliases the canonical podcast feed. Remaining is to verify
+  them against the real `djangochat.com` origin during the Phase 4 dry run.
 - Write the final cutover runbook with owners, exact URLs, exact commands, the
   media publish steps and feed-serving/caching config, the Simplecast RSS Feed
   Redirect setup and verification, directory dashboards, communication steps,

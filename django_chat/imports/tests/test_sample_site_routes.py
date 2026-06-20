@@ -24,6 +24,53 @@ def test_root_redirects_to_episode_index(client: Client) -> None:
 
 
 @pytest.mark.django_db
+def test_trailing_slash_redirects_pin_public_url_contract(client: Client) -> None:
+    # APPEND_SLASH must keep redirecting the no-slash forms of the known public
+    # URLs to their canonical slashed routes, so a future routing change cannot
+    # silently 404 a path a podcast listener or directory may already hold.
+    import_django_chat_sample()
+    slug = podcast_slug()
+    cases = [
+        (f"/{slug}", f"/{slug}/"),
+        (f"/{slug}/django-tasks-jake-howard", f"/{slug}/django-tasks-jake-howard/"),
+        (
+            f"/{slug}/django-tasks-jake-howard/transcript",
+            f"/{slug}/django-tasks-jake-howard/transcript/",
+        ),
+    ]
+    for no_slash, slashed in cases:
+        response = client.get(no_slash)
+        assert response.status_code == 301, no_slash
+        assert response["Location"] == slashed, no_slash
+
+
+@pytest.mark.django_db
+def test_feed_rss_alias_redirects_to_podcast_feed(client: Client) -> None:
+    # The optional friendly feed alias permanently redirects to the canonical
+    # generated podcast feed route (it does not become a second canonical URL).
+    import_django_chat_sample()
+
+    response = client.get("/feed/rss.xml")
+
+    assert response.status_code == 301
+    assert response["Location"] == podcast_feed_path()
+
+
+@pytest.mark.django_db
+def test_episodes_feed_rss_stays_latest_entries_not_podcast_feed(client: Client) -> None:
+    # /episodes/feed/rss.xml is the latest-entries/site feed and must keep
+    # serving directly — never redirect to the podcast feed (per the cutover
+    # plan, those are different feeds).
+    import_django_chat_sample()
+
+    response = client.get(latest_entries_feed_path())
+
+    assert response.status_code == 200
+    assert latest_entries_feed_path() != podcast_feed_path()
+    assert response["Content-Type"].startswith("application/rss+xml")
+
+
+@pytest.mark.django_db
 def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     client: Client,
 ) -> None:
