@@ -4955,6 +4955,17 @@ body:has(.share-modal:not([open]):target) {
     color: var(--dc-heading);
   }
 
+  /* The threaded markup emits one top-level <ul class="comment-list-wrapper">
+     per root thread (a root comment plus its descendants), all siblings inside
+     .comments. Flex `gap` only spaces items within a single <ul>, so space the
+     threads at the container level too — otherwise consecutive root comments
+     touch (the gap between threads would be 0). */
+  .comments {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+  }
+
   .comment-list-wrapper {
     list-style: none;
     margin: 0;
