@@ -4938,6 +4938,9 @@ body:has(.share-modal:not([open]):target) {
     --stack-space: var(--s2);
     margin-top: var(--s3);
     padding-top: var(--s2);
+    /* The comments form is the last block before the footer; give the buttons
+       real breathing room so they do not butt against the dark footer band. */
+    padding-bottom: var(--s3);
     border-top: 1px solid var(--dc-line);
   }
 
@@ -4999,6 +5002,17 @@ body:has(.share-modal:not([open]):target) {
   .comment-text > :last-child { margin-bottom: 0; }
 
   .comment-form { --stack-space: var(--s1); max-width: var(--dc-measure); }
+  /* Reply mode: ajaxcomments.js appends the form into the target comment's
+     <li class="comment-wrapper"> (in the new-comment spot it sits inside
+     .js-comments-form-orig-position). Mark the relocated form as an attached
+     reply so composing a reply looks distinct from a new top-level comment. */
+  .comment-wrapper > .comment-form {
+    margin-top: var(--s1);
+    padding: var(--s1) clamp(1rem, 2.5vw, 1.5rem);
+    border-left: 3px solid var(--dc-django);
+    border-radius: var(--dc-radius);
+    background: var(--dc-django-soft);
+  }
   .comment-field { display: flex; flex-direction: column; gap: var(--s-2); }
   .comment-field label { font-weight: var(--weight-medium); font-size: var(--text-sm); }
   .comment-field input,
