@@ -321,9 +321,12 @@ current.)
 - **Spam-filter seeding** before public launch (ops): import python-podcast's
   labeled corpus and `retrain_from_scratch`. Tracked as a follow-up, not this
   slice.
-- **Per-object default**: decide whether newly imported episodes should default
-  `comments_enabled` on or off (recommend: off by default; opt-in per episode,
-  or globally via the blog toggle).
+- **Per-object default** (resolved during implementation): newly imported
+  episodes keep `comments_enabled=False` — comments are opt-in per object.
+  Enablement requires the `CAST_COMMENTS_ENABLED` flag AND the per-blog /
+  per-episode toggles, and the gate is enforced server-side (a
+  `comment_will_be_posted` receiver rejects posts to disabled objects), not just
+  hidden in the template.
 
 ## Key references (absolute-ish paths)
 

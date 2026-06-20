@@ -529,7 +529,10 @@ growth.
    shell for the preview/posted pages. Locked decisions delivered: threaded
    replies, anonymous name/email only, auto-publish + native honeypot/`SpamFilter`.
    Verified in-browser (AJAX post, threaded reply, inline preview, hidden
-   honeypot) at desktop + mobile widths.
+   honeypot) at desktop + mobile widths. Post-verification refinements: heading
+   font aligned to the section-heading convention, footer spacing, a distinct
+   reply-compose state, even thread spacing, and the server-side enablement gate
+   (commits `edaf382`, `a6dcb14`, `00dd4a7`, `14614e6`).
 
    **Enablement is opt-in at two levels:** the global `CAST_COMMENTS_ENABLED`
    env flag (default off) AND each page's `comments_enabled` toggle. The Django
