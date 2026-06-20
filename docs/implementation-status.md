@@ -536,7 +536,10 @@ growth.
    Chat importer ships the podcast and every episode with `comments_enabled=False`,
    so switching comments on for staging requires **both** `CAST_COMMENTS_ENABLED=true`
    **and** ticking `comments_enabled` on the Podcast page and each episode in the
-   Wagtail admin — the global flag alone surfaces nothing.
+   Wagtail admin — the global flag alone surfaces nothing. The gate is enforced
+   server-side: a `comment_will_be_posted` receiver
+   (`django_chat/core/receivers.py`) rejects a direct POST to a disabled object,
+   so the no-JS and AJAX post endpoints cannot be used to bypass the UI gate.
 
    **Pre-launch ops follow-up (not in this slice):** seed the `SpamFilter` by
    importing `../python-podcast`'s labeled comment corpus and retraining;

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import django_comments
 import pytest
 from cast.models import Episode
 from django.conf import settings
@@ -10,6 +11,20 @@ from django.urls import NoReverseMatch, reverse
 from django_chat.imports.import_sample import import_django_chat_sample
 
 EPISODE_SLUG = "django-tasks-jake-howard"
+
+
+def _comment_post_data(target: object, **overrides: str) -> dict[str, str]:
+    # django_comments needs valid security fields (content_type/object_pk/
+    # timestamp/security_hash) to accept a POST; generate them for the target.
+    security = django_comments.get_form()(target).generate_security_data()
+    return {
+        **security,
+        "name": "Spammer",
+        "email": "spammer@example.com",
+        "comment": "Direct POST bypass attempt.",
+        "honeypot": "",
+        **overrides,
+    }
 
 
 def _episode_detail_path() -> str:
@@ -84,3 +99,63 @@ def test_comment_posted_page_uses_site_shell() -> None:
     html = render_to_string("comments/posted.html", {"next": "/episodes/"})
     assert 'class="site-header"' in html
     assert "Django Chat" in html
+
+
+@pytest.mark.django_db
+def test_no_js_post_rejected_when_comments_globally_disabled(client: Client) -> None:
+    # The episode template only HIDES the UI when comments are off; the post
+    # endpoint must also refuse to create a comment server-side. Here the
+    # per-object toggles are on but the global CAST_COMMENTS_ENABLED flag is off
+    # (default), so comments_are_enabled is False and the POST must be rejected.
+    import_django_chat_sample()
+    _enable_comments_on_imported_episode()
+    episode = Episode.objects.get(slug=EPISODE_SLUG)
+    comment_model = django_comments.get_model()
+    before = comment_model.objects.count()
+
+    response = client.post(reverse("comments-post-comment"), _comment_post_data(episode))
+
+    assert response.status_code == 400
+    assert comment_model.objects.count() == before
+
+
+@pytest.mark.django_db
+@override_settings(CAST_COMMENTS_ENABLED=True)
+def test_ajax_post_rejected_when_comments_disabled_per_object(client: Client) -> None:
+    # Global flag on, but the importer ships the podcast/episode with
+    # comments_enabled=False (comments are opt-in per object), so the AJAX post
+    # endpoint must reject a direct POST too.
+    import_django_chat_sample()
+    episode = Episode.objects.get(slug=EPISODE_SLUG)
+    comment_model = django_comments.get_model()
+    before = comment_model.objects.count()
+
+    response = client.post(
+        reverse("comments-post-comment-ajax"),
+        _comment_post_data(episode),
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    assert response.status_code == 400
+    assert comment_model.objects.count() == before
+
+
+@pytest.mark.django_db
+@override_settings(CAST_COMMENTS_ENABLED=True)
+def test_ajax_post_accepted_when_comments_enabled(client: Client) -> None:
+    # The server-side gate must not over-reject: with the global flag and both
+    # per-object toggles on, a valid POST still creates a comment.
+    import_django_chat_sample()
+    _enable_comments_on_imported_episode()
+    episode = Episode.objects.get(slug=EPISODE_SLUG)
+    comment_model = django_comments.get_model()
+    before = comment_model.objects.count()
+
+    response = client.post(
+        reverse("comments-post-comment-ajax"),
+        _comment_post_data(episode),
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    assert response.status_code == 200
+    assert comment_model.objects.count() == before + 1
