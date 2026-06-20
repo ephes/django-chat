@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 from cast.models import Episode
 from django.conf import settings
+from django.template.loader import render_to_string
 from django.test import Client, override_settings
 from django.urls import NoReverseMatch, reverse
 
@@ -75,3 +76,11 @@ def test_comments_section_renders_django_chat_markup_when_enabled(client: Client
     # Bootstrap/crispy markup is gone (proves the override replaced the default)
     assert "form-horizontal" not in content
     assert "col-sm-" not in content
+
+
+def test_comment_posted_page_uses_site_shell() -> None:
+    # preview.html/posted.html extend comments/base.html; our override makes
+    # that the Django Chat site shell instead of cast's bare page.
+    html = render_to_string("comments/posted.html", {"next": "/episodes/"})
+    assert 'class="site-header"' in html
+    assert "Django Chat" in html
