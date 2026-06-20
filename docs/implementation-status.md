@@ -513,21 +513,34 @@ growth.
    race on staging and broke the detail-to-overview transition and scroll
    restore). Remaining choices are whether to split or critical-inline CSS and
    whether the render-blocking `rel="expect"` hints should stay.
-7. **Activate comments on episodes/posts.** Spec:
-   [`docs/superpowers/specs/2026-06-20-comments-activation-design.md`](superpowers/specs/2026-06-20-comments-activation-design.md).
-   The django-cast comment backend (`cast.comments` + `threadedcomments` +
-   native `SpamFilter`) is already wired; the only gate is
-   `CAST_COMMENTS_ENABLED = False` (`config/settings/base.py:241`). The missing
-   work is frontend: bespoke `comments/comment.html` + `comments/form.html`
-   overrides and a `.comment-*` block in `site.css` aligned to the `--dc-*`
-   design language (the default cast/Bootstrap markup does not fit a
-   non-Bootstrap site), a comments section inserted into `episode.html`, and
-   conditional AJAX/honeypot wiring. Decisions locked: threaded replies,
-   anonymous name/email, auto-publish + native spam filter. Pre-launch ops
-   follow-up: seed the `SpamFilter` by importing `../python-podcast`'s labeled
-   comment corpus and retraining. The slice also folds in a small
-   `css-architecture.md` reconciliation (document `--dc-radius-card` and the new
-   `.comment-*` prefix).
+7. **Activate comments on episodes/posts — shipped.** Spec:
+   [`docs/superpowers/specs/2026-06-20-comments-activation-design.md`](superpowers/specs/2026-06-20-comments-activation-design.md);
+   plan:
+   [`docs/superpowers/plans/2026-06-20-comments-activation.md`](superpowers/plans/2026-06-20-comments-activation.md).
+   Commits: `da4c820` mounts the `cast.comments` URLs; `b0fe1a6` makes
+   `CAST_COMMENTS_ENABLED` env-driven, **activates the cast comment backend via
+   `COMMENTS_APP = "cast.comments"`** (it was installed but never routed, so
+   `django_comments` had been falling back to its plain form/model), excludes
+   the `url`/`title` fields, adds the crispy-free `comments/comment.html` +
+   `comments/form.html`, and wires the episode-page section plus the conditional
+   `ajaxcomments.js`; `6b6f696` adds the `.comment-*` block to `site.css` and the
+   `css-architecture.md` reconciliation (the `--dc-radius-card` token plus the
+   new `.comment-*` prefix); `7b7a5bb` adds the no-JS `comments/base.html` site
+   shell for the preview/posted pages. Locked decisions delivered: threaded
+   replies, anonymous name/email only, auto-publish + native honeypot/`SpamFilter`.
+   Verified in-browser (AJAX post, threaded reply, inline preview, hidden
+   honeypot) at desktop + mobile widths.
+
+   **Enablement is opt-in at two levels:** the global `CAST_COMMENTS_ENABLED`
+   env flag (default off) AND each page's `comments_enabled` toggle. The Django
+   Chat importer ships the podcast and every episode with `comments_enabled=False`,
+   so switching comments on for staging requires **both** `CAST_COMMENTS_ENABLED=true`
+   **and** ticking `comments_enabled` on the Podcast page and each episode in the
+   Wagtail admin — the global flag alone surfaces nothing.
+
+   **Pre-launch ops follow-up (not in this slice):** seed the `SpamFilter` by
+   importing `../python-podcast`'s labeled comment corpus and retraining;
+   untrained, the moderator auto-publishes every comment.
 8. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
