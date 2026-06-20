@@ -464,11 +464,11 @@ and podcast-client testing before any cutover.
 ## Live Feed Parity Check
 
 For production cutover, `compare_django_chat_live_feed` compares the **live**
-Simplecast feed against a candidate self-hosted feed URL (the django-cast route,
-staging, or the published S3/CDN XML a podcast client would actually fetch),
-rather than the committed fixture. Both feeds are fetched through the import
-SSRF guard (`safe_urlopen` — scheme check, connect-time IP pinning, redirect
-re-validation):
+Simplecast feed against a candidate self-hosted feed URL — the app-served
+django-cast feed route a podcast client would actually fetch (staging now, the
+production `djangochat.com` feed at cutover) — rather than the committed
+fixture. Both feeds are fetched through the import SSRF guard (`safe_urlopen` —
+scheme check, connect-time IP pinning, redirect re-validation):
 
 ```sh
 just compare-live-feed --candidate-url https://djangochat.com/episodes/feed/podcast/mp3/rss.xml

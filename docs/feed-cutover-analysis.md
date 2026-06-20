@@ -2,7 +2,11 @@
 
 Date: 2026-05-13 (revised 2026-06-15: Simplecast's native 301 RSS Feed Redirect
 is now the primary migration lever, reversing the original "Simplecast will not
-redirect" decision; see "Key Constraint" and "Sources").
+redirect" decision; see "Key Constraint" and "Sources". Revised 2026-06-20: the
+production podcast feed is generated and served dynamically by the django-cast
+app at a stable `djangochat.com` route — the same way `../python-podcast` and the
+current staging deploy serve it — not pre-rendered to a static S3/CDN RSS object.
+S3/CDN stays media-only, for audio enclosures and artwork).
 
 This document is the production feed migration plan for replacing the current
 Simplecast-served Django Chat site/feed with output from this repository.
@@ -15,8 +19,12 @@ The production migration has these known decisions:
 
 - `djangochat.com` remains the canonical site domain.
 - the podcast feed will move from Simplecast to this repo.
-- the production podcast feed and audio enclosures will be served from S3/CDN
-  under `djangochat.com` or a Django Chat-controlled media hostname.
+- the production podcast feed is generated and served by the django-cast app at
+  a stable `djangochat.com` route, behind the same reverse proxy/caching as the
+  rest of the site — the same shape `../python-podcast` and the current staging
+  deploy use. The feed is not pre-rendered to a static object. Audio enclosures
+  and show artwork are served from S3/CDN (media storage) under a Django
+  Chat-controlled media hostname.
 - Simplecast's native RSS Feed Redirect (301) is the primary migration lever.
   It is set on the old feed to point at the canonical `djangochat.com` feed
   before the Simplecast account is retired. (This revises the original
@@ -43,7 +51,7 @@ Simplecast documents that this redirect activates within minutes, propagates to
 directories within roughly 24 hours, and stays in place after the account is
 closed — provided it is set *before* the show or account is deleted.
 
-The likely final self-hosted feed URL is an S3/CDN-served object exposed under
+The final self-hosted feed URL is the django-cast podcast route under
 `djangochat.com`, for example:
 
 - `https://djangochat.com/episodes/feed/podcast/mp3/rss.xml`
@@ -52,13 +60,16 @@ That final URL can still be hidden behind a friendlier same-domain alias such
 as `https://djangochat.com/feed/rss.xml`, but the actual canonical feed URL
 must be chosen once and then kept stable.
 
-Operationally, django-cast can be the feed generator, but the production
-distribution artifact should be a static RSS XML object published to S3/CDN.
-That means cutover validation must check both the generated Django/django-cast
-feed and the exact CDN-served XML that podcast clients will fetch.
-The intended publish path is: django-cast generates the podcast RSS, the
-deployment/publish step writes that XML to the chosen S3 object path, and the
-CDN serves that object at the canonical `djangochat.com` feed URL.
+Operationally, django-cast both generates and serves the podcast RSS: the app
+renders the feed on request at that route, behind the same reverse proxy and
+caching as the rest of the site (django-cast already sends a `cache-control`
+max-age on the feed; a longer edge/proxy cache can front it if feed load ever
+warrants). There is no separate step that pre-renders the RSS to a static S3/CDN
+object — that is how `../python-podcast` and the current staging deploy already
+work, and it keeps the generated feed the single source of truth instead of
+introducing a second, separately-published copy that can drift stale. Cutover
+validation therefore checks the feed URL the app serves under `djangochat.com`
+(and, before that, the staging feed route), not a static object.
 
 Important route distinction:
 
@@ -235,8 +246,8 @@ Failure modes:
 - the final feed URL changes after directories have already been updated
 - the final feed is reachable in a browser but blocked or malformed for podcast
   clients
-- the generated django-cast feed is correct, but the static S3/CDN copy is
-  stale, missing the latest episode, or served with the wrong content type
+- a reverse-proxy or CDN cache in front of the app keeps serving a stale feed
+  after a new episode is published
 
 Mitigation:
 
@@ -249,7 +260,8 @@ Mitigation:
   after directory updates and feed health are verified
 - monitor feed item count, latest GUID, latest publication date, and HTTP status
   continuously during the first week
-- monitor the exact S3/CDN-served feed object, not only the Django origin
+- monitor the live `djangochat.com` feed URL as podcast clients see it (through
+  any reverse-proxy/CDN cache), not only the Django origin response
 
 ### Directory Migration Splits The Audience
 
@@ -315,10 +327,9 @@ Failure modes:
 - media host does not support HEAD or byte-range requests consistently
 - CloudFront/S3 permissions, cache behavior, TLS, or CORS changes block player
   or client downloads
-- CDN invalidation or object upload order exposes a new feed before all
-  referenced MP3/artwork objects are available
-- the CDN-served feed has the wrong `Content-Type`, compression, cache headers,
-  or stale object version
+- an episode is published (so it appears in the generated feed) before its
+  referenced MP3/artwork objects are available on S3/CDN
+- the served feed has the wrong `Content-Type`, compression, or cache headers
 - signed or expiring URLs are accidentally used in RSS
 - Podtrac/Simplecast analytics redirects are removed without host approval
 - dynamic ad insertion or ad-marker behavior changes
@@ -329,8 +340,10 @@ Mitigation:
 - sample-download and hash representative MP3 files
 - test HTTP HEAD and range requests against production media URLs
 - keep feed enclosure URLs public, stable, HTTPS, and non-expiring
-- publish media objects before publishing feed XML that references them
-- verify the exact CDN response headers for feed, artwork, and MP3 URLs
+- upload media objects to S3/CDN before publishing an episode that references
+  them in the feed
+- verify response headers for the served feed URL and the S3/CDN artwork and
+  MP3 URLs
 - get host approval on the analytics/ad-insertion tradeoff before replacing
   Simplecast/PODTRAC URLs with direct CloudFront URLs
 
@@ -413,7 +426,7 @@ Mitigation:
 
 ## Remaining Tactical Choices
 
-The main migration shape: a Simplecast 301 RSS Feed Redirect to an S3/CDN-served
+The main migration shape: a Simplecast 301 RSS Feed Redirect to the app-served
 `djangochat.com` feed, backed by directory updates, with Simplecast retired
 after a transition window. The remaining choices are tactical.
 
@@ -433,18 +446,21 @@ Recommendation:
 - choose one URL as canonical in directory dashboards and
   `itunes:new-feed-url`
 
-### Static Feed Publishing
+### Feed Serving And Media Publishing
 
-The feed should be generated from Django/django-cast, then published as a static
-object to S3/CDN.
+The feed is generated and served by django-cast at its `djangochat.com` route;
+it is not pre-rendered to a static object. Media (audio enclosures, artwork) is
+published to S3/CDN exactly as it already is on staging.
 
 Required behavior:
 
-- upload referenced media/artwork objects before the RSS object
-- publish RSS atomically enough that clients do not see half-published state
-- use correct `Content-Type`, cache headers, and invalidation behavior
-- retain the last known-good feed object for rollback comparison
-- make the publish command idempotent and observable
+- upload referenced media/artwork objects to S3/CDN before publishing an episode
+  that makes them appear in the feed
+- serve the feed with a correct `Content-Type` and a sensible `cache-control`;
+  if feed load ever warrants, cache it at the reverse proxy/CDN edge rather than
+  pre-publishing a static copy
+- keep a last-known-good capture of both the old and new feed XML before cutover
+  for rollback comparison (a saved response body, not a published object)
 
 ### Communication Window
 
@@ -475,8 +491,9 @@ Recommendation:
 - optional friendly canonical URL:
   `https://djangochat.com/feed/rss.xml`
 
-The chosen canonical URL must be the exact S3/CDN-served URL that directories
-and podcast clients fetch. Once directories are updated, do not change it again.
+The chosen canonical URL must be the exact app-served `djangochat.com` URL that
+directories and podcast clients fetch. Once directories are updated, do not
+change it again.
 
 ### Phase 2: Build Strict Live Feed Parity
 
@@ -515,8 +532,9 @@ candidate enclosure byte-size truth is the copied object size recorded in the
 local import DB (`EpisodeAudioImportMetadata.copied_byte_size`), not the
 source-reported RSS length. The command prints a PASS/FAIL report and exits
 non-zero on any failure, so it can gate the Phase 4 dry run and the Phase 5
-cutover. Because the candidate URL is operator-supplied, the same command also
-validates the exact S3/CDN-served XML once that publish path exists. Covered by
+cutover. Because the candidate URL is operator-supplied, the same command
+validates the staging feed route now and the production `djangochat.com` feed
+URL at cutover. Covered by
 `django_chat/imports/tests/test_live_feed_parity.py`; no test hits the network.
 
 The current staging feed would fail this phase because it has 202 items while
@@ -548,14 +566,14 @@ a safe source of redirect rules.
 
 Before any directory update:
 
-- deploy the production app and S3/CDN feed/media publishing path under
-  `djangochat.com` or a production-equivalent hostname
+- deploy the production app under `djangochat.com` (or a production-equivalent
+  hostname), with media publishing to S3/CDN
 - import the complete current Simplecast catalog
 - copy production media to the final media backend
-- render the final candidate feed XML and publish it to the final S3/CDN path
+- confirm the app serves the final candidate feed at the canonical route
 - set Wagtail `Site`, canonical URLs, media URLs, RSS auto-discovery, and
   subscribe page URLs for `djangochat.com`
-- run strict live feed parity against the exact S3/CDN-served XML
+- run strict live feed parity against the app-served production feed URL
 - validate the feed in Apple Podcasts Connect
 - subscribe to the candidate feed manually in test clients
 - test web URL redirects and canonical links
@@ -576,11 +594,12 @@ Production site cutover gate:
 2. Freeze publishing in Simplecast.
 3. Import the latest catalog one final time.
 4. Publish all referenced media/artwork to S3/CDN.
-5. Generate and publish the final RSS XML to S3/CDN.
-6. Run strict live feed parity against the exact CDN-served XML.
+5. Confirm the production app serves the final feed at the canonical
+   `djangochat.com` route.
+6. Run strict live feed parity against the app-served production feed URL.
 7. Set `itunes:new-feed-url` in the new production feed to the final production
-   feed URL and republish the RSS object. This is a self-canonical marker for
-   clients that already reach the new feed.
+   feed URL and redeploy/refresh so the served feed includes it. This is a
+   self-canonical marker for clients that already reach the new feed.
 8. Verify the production feed XML directly.
 9. Set Simplecast's **RSS Feed Redirect** (show settings → Distribution →
    Advanced Settings) to the final `djangochat.com` feed URL. This is the
@@ -608,7 +627,8 @@ For the first week:
 
 - check new feed HTTP status and XML parseability
 - check item count and latest GUID
-- check the exact CDN object version/ETag or equivalent freshness marker
+- check the served feed's freshness as clients see it (latest GUID/pubDate plus
+  any reverse-proxy/CDN cache age)
 - check media HEAD/range behavior for recent and old episodes
 - watch web/CDN logs for feed and MP3 errors
 - watch Apple/Spotify/Pocket Casts listings for latest episode visibility
@@ -640,12 +660,10 @@ Long term:
 - Strict live feed parity tooling is implemented: `compare_django_chat_live_feed`
   (`just compare-live-feed --candidate-url <url>`) compares the live Simplecast
   feed to a specified candidate feed URL through the SSRF guard and enforces the
-  Phase 2 hard-failure/warning rules. It can point at any candidate URL,
-  including the exact S3/CDN-served XML, once that publish path exists. A real
-  green run still depends on re-importing the candidate catalog to the current
-  live item count (the staging 202-vs-204 gap above).
-- Add a production feed publish step that generates django-cast RSS and writes
-  the static XML artifact to S3/CDN with correct headers and invalidation.
+  Phase 2 hard-failure/warning rules. It can point at any candidate URL — the
+  staging feed route now, the production `djangochat.com` feed URL at cutover. A
+  real green run still depends on re-importing the candidate catalog to the
+  current live item count (the staging 202-vs-204 gap above).
 - Add production configuration for `itunes:new-feed-url` and test that staging
   cannot accidentally point at production.
 - After deploying the upstream podcast metadata adoption, re-run feed parity
@@ -662,10 +680,10 @@ Long term:
   full catalog.
 - Implement and test `djangochat.com` URL compatibility redirects for known
   Simplecast page paths and django-cast route-shape differences.
-- Write the final cutover runbook with owners, exact URLs, exact commands,
-  S3/CDN publish steps, the Simplecast RSS Feed Redirect setup and verification,
-  directory dashboards, communication steps, Simplecast retirement timing, and
-  rollback steps.
+- Write the final cutover runbook with owners, exact URLs, exact commands, the
+  media publish steps and feed-serving/caching config, the Simplecast RSS Feed
+  Redirect setup and verification, directory dashboards, communication steps,
+  Simplecast retirement timing, and rollback steps.
 
 ## Sources
 

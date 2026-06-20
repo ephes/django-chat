@@ -9,7 +9,7 @@ The detailed feed-specific failure analysis, remaining tactical choices, and
 proposed cutover plan live in
 [`feed-cutover-analysis.md`](feed-cutover-analysis.md). Treat that document as
 the planning checklist before the feed moves from Simplecast to the final
-S3/CDN-served `djangochat.com` feed.
+app-served `djangochat.com` feed.
 
 ## Current Boundary
 
@@ -31,7 +31,9 @@ The production migration has these fixed decisions:
 
 - `djangochat.com` remains the canonical site domain
 - the podcast feed moves from Simplecast to this repo
-- the production podcast feed and media are served from S3/CDN
+- the production podcast feed is generated and served by the django-cast app at
+  a stable `djangochat.com` route (not pre-rendered to a static object); media
+  (audio enclosures, artwork) is served from S3/CDN
 - Simplecast's native 301 RSS Feed Redirect is the primary migration lever:
   it is set on the old feed to point at the canonical `djangochat.com` feed
   before the Simplecast account is retired. (This revises the original decision
@@ -83,11 +85,13 @@ old catalog episodes as new downloads.
 ## Media And Analytics
 
 The current staging media setup uses Django Chat-specific S3-compatible storage
-and CloudFront. Production feed and media distribution will use the same class
-of S3/CDN-backed architecture. Production still needs explicit details for:
+and CloudFront. Production media distribution will use the same class of
+S3/CDN-backed architecture; the feed itself is served by the django-cast app,
+not from S3/CDN. Production still needs explicit details for:
 
 - the final media bucket and CloudFront distribution
-- the final static RSS object path, headers, and cache/invalidation behavior
+- the served feed's `Content-Type`, `cache-control`, and any reverse-proxy/CDN
+  cache placed in front of it
 - whether direct CloudFront MP3 URLs are acceptable for public enclosures
 - whether a different CDN, redirect service, or analytics layer should sit in
   front of media
@@ -114,9 +118,11 @@ The safest rollback before feed/directory cutover is to leave Simplecast
 unchanged. After directory updates, rollback needs a written operator path
 covering:
 
-- who can change DNS, S3/CDN feed objects, and podcast directory settings
+- who can change DNS, the deployed app/feed configuration, and podcast directory
+  settings
 - how to return podcast directories to the previous feed if needed
-- how to preserve the last known-good CDN-served feed output for comparison
+- how to preserve a last known-good capture of the served feed output for
+  comparison
 - how to avoid changing GUIDs or enclosure URLs during rollback
 
 ## Pre-Cutover Checklist
@@ -125,8 +131,8 @@ Run this only after hosts approve a production migration:
 
 - import the intended full catalog in the production environment
 - copy production media to the final Django Chat media backend
-- publish the static production RSS XML to the final S3/CDN path
-- run strict live feed parity against the exact published feed XML with
+- confirm the production app serves the final feed at the canonical route
+- run strict live feed parity against the app-served production feed URL with
   `just compare-live-feed --candidate-url <production-feed-url>` (and
   `just compare-feed` for the fixture-backed smoke check)
 - measure the catalog with `measure_django_chat_catalog --host=<production-host>`

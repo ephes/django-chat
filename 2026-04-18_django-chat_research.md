@@ -124,9 +124,9 @@ Self-hosting is feasible. The lowest-risk technical base is to build a fresh Dja
 The project splits into two scopes:
 
 1. Staging proof of concept: import content and media, deploy to a staging domain, provide admin/repo access, and let hosts judge fit.
-2. Production migration: preserve podcast client continuity while moving the canonical feed and media to S3/CDN under `djangochat.com`, update podcast directories, add any needed `djangochat.com` URL redirects, and retire Simplecast.
+2. Production migration: preserve podcast client continuity while moving the canonical feed to the django-cast app under `djangochat.com` (with media served from S3/CDN), update podcast directories, add any needed `djangochat.com` URL redirects, and retire Simplecast.
 
-The staging proof of concept is moderate effort because the local deployment pattern already exists. Production migration is higher-risk because podcast feed continuity, S3/CDN feed publishing, media URLs, directory updates, analytics changes, and the no-Simplecast-redirect constraint need careful coordination.
+The staging proof of concept is moderate effort because the local deployment pattern already exists. Production migration is higher-risk because podcast feed continuity, S3/CDN media URLs, directory updates, analytics changes, and the no-Simplecast-redirect constraint need careful coordination.
 
 ## Proposed MVP
 
@@ -521,12 +521,12 @@ Recommended contents:
 - `docs/production-migration-notes.md`
   - Feed cutover risks.
   - GUID preservation.
-  - Canonical domain and S3/CDN feed/media requirements.
+  - Canonical domain, app-served feed, and S3/CDN media requirements.
   - Podcast directory coordination without a Simplecast feed redirect.
   - Analytics, CDN, and ad insertion questions after Simplecast retirement.
 - `docs/feed-cutover-analysis.md`
   - Detailed feed migration failure modes.
-  - Fixed constraints for the `djangochat.com` S3/CDN-served feed move.
+  - Fixed constraints for the `djangochat.com` app-served feed move.
   - Proposed live-feed parity, URL redirect, monitoring, and rollback plan.
 
 Do not move this PRD into `docs/` immediately. It is easier to find while the
@@ -650,7 +650,8 @@ Fixed production decisions:
 
 - `djangochat.com` remains the canonical site domain.
 - The podcast feed moves from Simplecast to this repo.
-- The production feed and audio are served from S3/CDN.
+- The production feed is generated and served by the django-cast app under
+  `djangochat.com`; audio enclosures and artwork are served from S3/CDN.
 - Simplecast's native RSS Feed Redirect (301) is set on the old feed, pointing
   at the canonical `djangochat.com` feed, as the primary migration lever. It
   must be set before the account is closed; closing/deleting first deletes the

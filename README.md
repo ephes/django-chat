@@ -93,9 +93,9 @@ just compare-feed
 ```
 
 Run strict live feed parity for the production cutover: compare the live
-Simplecast feed against a candidate self-hosted feed URL (the django-cast
-route, staging, or the published S3/CDN XML). Both feeds are fetched through the
-import SSRF guard; the command exits non-zero on any subscriber-affecting
+Simplecast feed against a candidate self-hosted feed URL (the app-served
+django-cast feed route on staging or production). Both feeds are fetched through
+the import SSRF guard; the command exits non-zero on any subscriber-affecting
 regression:
 
 ```sh
@@ -225,10 +225,9 @@ smoke-level feed comparison for the
 imported sample, catalog performance measurement tooling, and deployment
 scaffolding.
 
-It does not include full-catalog transcript conversion, exhaustive production
-feed parity, real production deployment, production DNS changes, static
-S3/CDN feed publishing, podcast directory updates, Simplecast retirement, or
-production URL redirects. Full-catalog audio has been copied into staging and
+It does not include full-catalog transcript conversion, a verified production
+feed-parity run, real production deployment, production DNS changes, podcast
+directory updates, Simplecast retirement, or production URL redirects. Full-catalog audio has been copied into staging and
 is reachable through the public media host, so internal review can inspect the
 deployed site/CMS, Wagtail-triggered transcript generation, and end-to-end
 playback before the full host-review gate.

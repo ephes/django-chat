@@ -89,8 +89,10 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
 - [x] **9d. Feed cutover risk analysis and plan** —
       `docs/feed-cutover-analysis.md` documents the ways a feed migration can
       break subscribers, compares the 2026-05-13 Simplecast and staging feed
-      state, records the fixed no-Simplecast-redirect/S3-CDN-served-feed
-      constraints, and proposes a phased cutover plan.
+      state, records the fixed feed-cutover constraints (the app-served
+      `djangochat.com` feed with S3/CDN media; both later revised in the doc —
+      Simplecast's 301 redirect is now the primary lever), and proposes a phased
+      cutover plan.
 - [x] **9e. Show-notes heading normalization during import** — imported
       episode detail show-note labels now normalize into semantic `h3` markup
       before assignment to `page.body`; legacy imported `h4` headings are also
@@ -480,8 +482,9 @@ growth.
    the live Simplecast feed `https://feeds.simplecast.com/WpQaX_cs`) fetches both
    feeds through the import SSRF guard (`safe_urlopen`) and runs the shared feed
    comparator (`compare_source_to_generated_feed(..., strict_live_parity=True)`)
-   over the live Simplecast feed and an operator-supplied candidate (generated
-   route, staging, or the published S3/CDN XML). It fails on item-count, any
+   over the live Simplecast feed and an operator-supplied candidate (the
+   app-served django-cast feed route on staging or production). It fails on
+   item-count, any
    missing source GUID, any extra/unknown candidate GUID, GUID order,
    publication-instant, title (after whitespace normalization), enclosure type,
    latest-source-episode-missing, and generated-vs-copied byte-size regressions;
@@ -492,9 +495,8 @@ growth.
    fetch failures, SSRF refusal, command exit codes); no test hits the network.
    Remaining: a real green run still depends on re-importing the
    staging/production candidate catalog to the current live item count (the
-   cutover doc records staging at 202 vs Simplecast's 204), and on pointing the
-   checker at the exact S3/CDN-served feed object once that publish path
-   (cutover Phase 4) exists.
+   cutover doc records staging at 202 vs Simplecast's 204); at cutover, point the
+   checker at the production `djangochat.com` feed URL.
 6. **Performance optimization backlog.** Continue tracking concrete Lighthouse
    and browser-network follow-ups in
    [`docs/lighthouse-performance.md#performance-optimization-backlog`](lighthouse-performance.md#performance-optimization-backlog).
