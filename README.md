@@ -92,6 +92,16 @@ against the committed Simplecast RSS fixture:
 just compare-feed
 ```
 
+Run strict live feed parity for the production cutover: compare the live
+Simplecast feed against a candidate self-hosted feed URL (the django-cast
+route, staging, or the published S3/CDN XML). Both feeds are fetched through the
+import SSRF guard; the command exits non-zero on any subscriber-affecting
+regression:
+
+```sh
+just compare-live-feed --candidate-url https://djangochat.com/episodes/feed/podcast/mp3/rss.xml
+```
+
 Measure generated feed timing/item count and episode-list timing/query count
 after importing data:
 

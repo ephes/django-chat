@@ -126,7 +126,9 @@ Run this only after hosts approve a production migration:
 - import the intended full catalog in the production environment
 - copy production media to the final Django Chat media backend
 - publish the static production RSS XML to the final S3/CDN path
-- run `just compare-feed` and any expanded production feed parity checks
+- run strict live feed parity against the exact published feed XML with
+  `just compare-live-feed --candidate-url <production-feed-url>` (and
+  `just compare-feed` for the fixture-backed smoke check)
 - measure the catalog with `measure_django_chat_catalog --host=<production-host>`
 - smoke-test `/`, `/episodes/`, `/episodes/feed/`, a representative episode
   page, a transcript page, and `/cms/` over HTTPS

@@ -475,13 +475,26 @@ growth.
    host-created blank full episodes publish with the expected next number, and
    decide whether editors need a pre-publish suggested-number display in
    addition to publish-time assignment.
-5. **Live feed parity checker.** Add a command/script that compares the current
-   Simplecast feed (`https://feeds.simplecast.com/WpQaX_cs`) with a candidate
-   generated or S3/CDN-served Django Chat podcast feed. It should fail on item
-   count, missing/extra GUIDs, GUID order, publication-date, title, enclosure
-   type, latest-episode, and copied-media byte-size regressions, with explicit
-   warnings for approved differences such as moved enclosure URLs or equivalent
-   duration formatting.
+5. **Live feed parity checker — implemented.** `compare_django_chat_live_feed`
+   (`just compare-live-feed --candidate-url <url>`; `--source-url` defaults to
+   the live Simplecast feed `https://feeds.simplecast.com/WpQaX_cs`) fetches both
+   feeds through the import SSRF guard (`safe_urlopen`) and runs the shared feed
+   comparator (`compare_source_to_generated_feed(..., strict_live_parity=True)`)
+   over the live Simplecast feed and an operator-supplied candidate (generated
+   route, staging, or the published S3/CDN XML). It fails on item-count, any
+   missing source GUID, any extra/unknown candidate GUID, GUID order,
+   publication-instant, title (after whitespace normalization), enclosure type,
+   latest-source-episode-missing, and generated-vs-copied byte-size regressions;
+   moved enclosure URLs, source-reported-vs-copied byte length, and equivalent
+   duration formatting stay warnings. Byte-size truth is the copied object size
+   (`EpisodeAudioImportMetadata.copied_byte_size`), not the RSS-reported length.
+   Covered by `django_chat/imports/tests/test_live_feed_parity.py` (parity rules,
+   fetch failures, SSRF refusal, command exit codes); no test hits the network.
+   Remaining: a real green run still depends on re-importing the
+   staging/production candidate catalog to the current live item count (the
+   cutover doc records staging at 202 vs Simplecast's 204), and on pointing the
+   checker at the exact S3/CDN-served feed object once that publish path
+   (cutover Phase 4) exists.
 6. **Performance optimization backlog.** Continue tracking concrete Lighthouse
    and browser-network follow-ups in
    [`docs/lighthouse-performance.md#performance-optimization-backlog`](lighthouse-performance.md#performance-optimization-backlog).

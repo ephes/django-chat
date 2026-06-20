@@ -198,8 +198,14 @@ class EpisodeSourceData:
     simplecast: SimplecastEpisode | None
 
 
-def parse_rss_feed(xml_text: str, *, source_url: str = RSS_FEED_URL) -> RssPodcast:
-    """Parse the canonical RSS feed into read-only source structures."""
+def parse_rss_feed(xml_text: str | bytes, *, source_url: str = RSS_FEED_URL) -> RssPodcast:
+    """Parse the canonical RSS feed into read-only source structures.
+
+    Accepts ``bytes`` as well as ``str`` so a live HTTP fetch can be parsed
+    directly: an XML body with an ``encoding`` declaration must stay bytes,
+    because :func:`xml.etree.ElementTree.fromstring` rejects a ``str`` that
+    still carries that declaration.
+    """
 
     root = ElementTree.fromstring(xml_text)
     channel = root.find("channel")

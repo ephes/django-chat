@@ -174,7 +174,19 @@ def compare_source_to_generated_feed(
     *,
     generated_feed_path: str,
     copied_byte_sizes_by_guid: dict[str, int] | None = None,
+    strict_live_parity: bool = False,
 ) -> FeedSmokeResult:
+    """Compare a parsed source feed against a parsed generated/candidate feed.
+
+    With ``strict_live_parity`` enabled the comparison adds the live cutover
+    gates from ``docs/feed-cutover-analysis.md`` Phase 2: any candidate GUID
+    absent from the source feed fails, any source GUID missing from the
+    candidate fails (with a pointed failure when the latest source episode is
+    the one missing), and title comparison normalizes whitespace so
+    whitespace-only differences pass while real differences still fail. The flag
+    defaults off so existing callers keep exact-title semantics unchanged.
+    """
+
     messages: list[FeedSmokeMessage] = []
     source_feed_url = source.feed_url or source.source_url
 
@@ -219,6 +231,14 @@ def compare_source_to_generated_feed(
     generated_by_guid = {
         item.guid: item for item in generated_items if item.guid is not None and item.guid != ""
     }
+
+    if strict_live_parity:
+        _compare_guid_sets(
+            messages,
+            source_items=source_items,
+            generated_by_guid=generated_by_guid,
+        )
+
     source_byte_warnings: list[str] = []
     url_warnings: list[str] = []
 
@@ -233,11 +253,12 @@ def compare_source_to_generated_feed(
             continue
 
         item_label = f"{source_item.guid} ({source_item.title})"
-        _compare_equal(
+        _compare_title(
             messages,
             label=f"{item_label} title",
             source_value=source_item.title,
             generated_value=generated_item.title,
+            normalize_whitespace=strict_live_parity,
         )
         _compare_equal(
             messages,
@@ -300,7 +321,7 @@ def compare_source_to_generated_feed(
 def format_feed_smoke_result(result: FeedSmokeResult) -> str:
     lines = [
         "Django Chat feed smoke check",
-        f"Source fixture feed: {result.source_feed_url}",
+        f"Source feed: {result.source_feed_url}",
         f"Generated feed route: {result.generated_feed_path}",
         (
             "Compared items: "
@@ -502,6 +523,96 @@ def _compare_equal(
                 f"{label} mismatch: source={source_value!r}, generated={generated_value!r}.",
             )
         )
+
+
+def _compare_title(
+    messages: list[FeedSmokeMessage],
+    *,
+    label: str,
+    source_value: str,
+    generated_value: str,
+    normalize_whitespace: bool,
+) -> None:
+    left = source_value
+    right = generated_value
+    if normalize_whitespace:
+        left = _normalize_whitespace(left)
+        right = _normalize_whitespace(right)
+    if left != right:
+        messages.append(
+            FeedSmokeMessage(
+                "failure",
+                f"{label} mismatch: source={source_value!r}, generated={generated_value!r}.",
+            )
+        )
+
+
+def _normalize_whitespace(value: str) -> str:
+    """Collapse runs of whitespace to single spaces and trim the ends.
+
+    Treats leading/trailing/internal whitespace-only differences as equal so the
+    approved trailing-whitespace title differences from the cutover analysis pass
+    while genuine character differences still fail.
+    """
+    return " ".join(value.split())
+
+
+def _compare_guid_sets(
+    messages: list[FeedSmokeMessage],
+    *,
+    source_items: tuple[RssEpisode, ...],
+    generated_by_guid: dict[str, GeneratedFeedItem],
+) -> None:
+    source_guids = [episode.guid for episode in source_items if episode.guid]
+    source_guid_set = set(source_guids)
+    candidate_guid_set = set(generated_by_guid)
+
+    missing = [guid for guid in source_guids if guid not in candidate_guid_set]
+    if missing:
+        messages.append(
+            FeedSmokeMessage(
+                "failure",
+                f"Candidate feed is missing {len(missing)} source GUID(s) present in the live "
+                f"feed. First missing: {missing[0]}.",
+            )
+        )
+
+    extra = sorted(candidate_guid_set - source_guid_set)
+    if extra:
+        messages.append(
+            FeedSmokeMessage(
+                "failure",
+                f"Candidate feed contains {len(extra)} GUID(s) not present in the live feed. "
+                f"First unexpected: {extra[0]}.",
+            )
+        )
+
+    latest = _latest_source_episode(source_items)
+    if latest is not None and latest.guid and latest.guid not in candidate_guid_set:
+        messages.append(
+            FeedSmokeMessage(
+                "failure",
+                f"Candidate feed is missing the latest source episode {latest.guid} "
+                f"({latest.title}), published {latest.published_at}. Subscribers would not "
+                "receive the newest episode.",
+            )
+        )
+
+
+def _latest_source_episode(source_items: tuple[RssEpisode, ...]) -> RssEpisode | None:
+    if not source_items:
+        return None
+    latest: RssEpisode | None = None
+    latest_at: datetime | None = None
+    for episode in source_items:
+        published_at = episode.published_at
+        if published_at is None:
+            continue
+        if latest_at is None or published_at > latest_at:
+            latest = episode
+            latest_at = published_at
+    # Fall back to the conventional newest-first first item when no item is dated.
+    return latest if latest is not None else source_items[0]
 
 
 def _parse_generated_item(item: ElementTree.Element) -> GeneratedFeedItem:

@@ -48,6 +48,11 @@ manage *ARGS:
 compare-feed *ARGS:
     uv run python manage.py compare_django_chat_sample_feed {{ARGS}}
 
+# Strict live feed parity: compare the live Simplecast feed against a candidate
+# self-hosted feed URL. Example: just compare-live-feed --candidate-url https://…/rss.xml
+compare-live-feed *ARGS:
+    uv run python manage.py compare_django_chat_live_feed {{ARGS}}
+
 import-staging-transcripts *ARGS:
     just manage-staging-media import_django_chat_staging_transcripts {{ARGS}}
 

@@ -455,10 +455,40 @@ checks.
 
 Generated enclosure URLs are also warning-only when they differ from the
 Simplecast fixture, because local filesystem media or a Django Chat S3 bucket
-will naturally produce different URLs from Simplecast/Podtrac. Production
-migration hardening still needs exhaustive feed parity, artwork and namespace
-validation, full-catalog checks, feed redirect or new-feed-url decisions, and
-podcast-client testing before any cutover.
+will naturally produce different URLs from Simplecast/Podtrac. The strict live
+feed parity check below now covers the exhaustive comparison against the live
+feed; production migration hardening still needs artwork and namespace
+validation, a full-catalog re-import, feed redirect or new-feed-url decisions,
+and podcast-client testing before any cutover.
+
+## Live Feed Parity Check
+
+For production cutover, `compare_django_chat_live_feed` compares the **live**
+Simplecast feed against a candidate self-hosted feed URL (the django-cast route,
+staging, or the published S3/CDN XML a podcast client would actually fetch),
+rather than the committed fixture. Both feeds are fetched through the import
+SSRF guard (`safe_urlopen` — scheme check, connect-time IP pinning, redirect
+re-validation):
+
+```sh
+just compare-live-feed --candidate-url https://djangochat.com/episodes/feed/podcast/mp3/rss.xml
+```
+
+`--source-url` defaults to the live Simplecast feed
+(`https://feeds.simplecast.com/WpQaX_cs`) and `--timeout` to 30 seconds. The
+command prints a PASS/FAIL report and exits non-zero on any subscriber-affecting
+regression, so it can gate the cutover. On top of the smoke-check rules above it
+adds the strict cutover gates: any source GUID missing from the candidate, any
+extra/unknown candidate GUID, a missing latest source episode, and titles that
+differ after whitespace normalization all fail. Moved enclosure URLs,
+source-reported-vs-copied byte lengths, and duration formatting that parses to
+the same seconds stay warnings. As with the smoke check, enclosure-length truth
+is the copied object size in `EpisodeAudioImportMetadata.copied_byte_size`.
+
+A real green run depends on the candidate catalog first being re-imported to the
+current live item count; see
+[`feed-cutover-analysis.md`](feed-cutover-analysis.md) Phase 2 for the cutover
+sequence and the approved-difference policy.
 
 ## Catalog Performance Measurement
 

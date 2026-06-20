@@ -503,10 +503,28 @@ Warnings or explicit approvals:
 - description HTML differs but renders acceptably
 - show-level metadata differs by host decision
 
+These gates are implemented by the `compare_django_chat_live_feed` management
+command (`just compare-live-feed --candidate-url <url>`; `--source-url` defaults
+to the live Simplecast feed, `--timeout` to 30s). It fetches both feeds through
+the import SSRF guard (`safe_urlopen` — scheme check, connect-time IP pinning,
+redirect re-validation), parses the live Simplecast RSS and the candidate feed,
+and runs the shared feed comparator
+(`compare_source_to_generated_feed(..., strict_live_parity=True)`). It enforces
+every hard failure above and keeps every approved difference a warning. The
+candidate enclosure byte-size truth is the copied object size recorded in the
+local import DB (`EpisodeAudioImportMetadata.copied_byte_size`), not the
+source-reported RSS length. The command prints a PASS/FAIL report and exits
+non-zero on any failure, so it can gate the Phase 4 dry run and the Phase 5
+cutover. Because the candidate URL is operator-supplied, the same command also
+validates the exact S3/CDN-served XML once that publish path exists. Covered by
+`django_chat/imports/tests/test_live_feed_parity.py`; no test hits the network.
+
 The current staging feed would fail this phase because it has 202 items while
 Simplecast has 204; it is missing episode 203,
 `Deploy on Day One - Calvin Hendryx-Parker`, and episode 202,
-`EuroPython 2026 - Mia Bajic`.
+`EuroPython 2026 - Mia Bajic`. A real green run therefore still depends on
+re-importing the candidate catalog to the current live item count before
+cutover review — an operator action, not part of the checker.
 
 ### Phase 3: Build URL Compatibility Redirects
 
@@ -619,8 +637,13 @@ Long term:
   via support@simplecast.com) so the **RSS Feed Redirect** can be set before
   account retirement. This is now the primary migration lever, not a fallback,
   so missing access blocks the whole cutover.
-- Add strict live feed parity tooling that compares the current Simplecast feed
-  to a specified candidate feed URL, including the exact S3/CDN-served XML.
+- Strict live feed parity tooling is implemented: `compare_django_chat_live_feed`
+  (`just compare-live-feed --candidate-url <url>`) compares the live Simplecast
+  feed to a specified candidate feed URL through the SSRF guard and enforces the
+  Phase 2 hard-failure/warning rules. It can point at any candidate URL,
+  including the exact S3/CDN-served XML, once that publish path exists. A real
+  green run still depends on re-importing the candidate catalog to the current
+  live item count (the staging 202-vs-204 gap above).
 - Add a production feed publish step that generates django-cast RSS and writes
   the static XML artifact to S3/CDN with correct headers and invalidation.
 - Add production configuration for `itunes:new-feed-url` and test that staging
