@@ -84,9 +84,14 @@ Examples:
 - Colours: `--dc-ink`, `--dc-paper`, `--dc-django`, `--dc-accent-dark`,
   `--dc-surface-deep`, `--dc-surface-django-tint`, `--dc-error`.
 - Surfaces and textures: `--dc-paper-texture`.
-- Geometry: `--dc-radius`, `--dc-radius-pill`, `--dc-tap`, `--dc-gutter`,
-  `--dc-container`, `--dc-topbar-h`, `--dc-aside-width`,
-  `--dc-aside-column-gap`, `--dc-measure`. `--dc-gutter` is the
+- Geometry: `--dc-radius`, `--dc-radius-card`, `--dc-radius-pill`, `--dc-tap`,
+  `--dc-gutter`, `--dc-container-max`, `--dc-container`, `--dc-topbar-h`,
+  `--dc-aside-width`, `--dc-aside-column-gap`, `--dc-measure`. The corner
+  radii run small to large: `--dc-radius` (~4px) for inputs and small
+  controls, `--dc-radius-card` (~12px) for card/panel corners, and
+  `--dc-radius-pill` (999px) for fully-rounded pills. `--dc-container` is the
+  centered page width, computed as `--dc-container-max` (70rem) clamped to
+  the viewport minus two gutters. `--dc-gutter` is the
   single-source-of-truth page edge inset: 1rem on phones, bumped to 2rem
   from 600 px upward via one media query in `:root`. Every site-wide
   breakout pattern reads `var(--dc-gutter)`; do not re-introduce literal
