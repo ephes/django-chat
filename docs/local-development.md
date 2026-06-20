@@ -102,6 +102,32 @@ SLOPSCOPE_SPEC=../slopscope just loc
 `slopscope` uses `cloc` when it is available and otherwise falls back to its
 Python physical-line counter.
 
+## Documentation Site
+
+The Markdown files under `docs/` render as a documentation site with
+[Zensical](https://zensical.org) (configured in `zensical.toml`). Serve it
+locally with live reload:
+
+```sh
+just docs
+```
+
+It defaults to `localhost:8000`; pass a port to override it (for example when
+`just dev` already holds 8000):
+
+```sh
+just docs 8001
+```
+
+Build a static copy into `site/` (gitignored) without serving:
+
+```sh
+just docs-build
+```
+
+The build validates internal links and heading anchors, so run `just docs-build`
+after editing docs to catch broken cross-references.
+
 ## Browser Checks
 
 Playwright is available in the development dependency group for local rendered

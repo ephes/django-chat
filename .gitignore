@@ -26,6 +26,9 @@ build/
 dist/
 *.egg-info/
 
+# Zensical documentation build output
+site/
+
 # Local secrets and environment
 .env
 .env.*

@@ -1,0 +1,36 @@
+[project]
+site_name = "Django Chat"
+nav = [
+  { "Home" = "index.md" },
+  { "Development" = [
+    { "Local development" = "local-development.md" },
+    { "CSS architecture" = "css-architecture.md" },
+  ] },
+  { "Deployment & operations" = [
+    { "Deployment" = "deployment.md" },
+    { "Operations boundary" = "operations-boundary.md" },
+    { "Staging differences" = "staging-differences.md" },
+    { "Host review guide" = "host-review-guide.md" },
+    { "Production migration notes" = "production-migration-notes.md" },
+  ] },
+  { "Features & specs" = [
+    { "Custom player, transcript & sharing" = "custom-player-transcript-share-spec.md" },
+    { "Structured show-note blocks" = "structured-show-note-blocks-research.md" },
+    { "Contributors & diarization" = "contributors-and-diarization.md" },
+    { "Episode numbering" = "episode-numbering-research.md" },
+  ] },
+  { "Data & migration" = [
+    { "Feed cutover analysis" = "feed-cutover-analysis.md" },
+    { "Show-note backfill & repair" = "show-note-backfill-repair.md" },
+  ] },
+  { "Security" = [
+    { "Import security" = "import-security.md" },
+    { "Known security issues" = "security-known-issues.md" },
+  ] },
+  { "Quality" = [
+    { "Lighthouse performance" = "lighthouse-performance.md" },
+  ] },
+  { "Project status" = [
+    { "Implementation status" = "implementation-status.md" },
+  ] },
+]

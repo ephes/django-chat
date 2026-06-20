@@ -27,6 +27,10 @@ Frontend conventions — cascade-layer order, token naming, class naming, JS
 hooks, and Safari 16 `color-mix()` fallbacks — are documented in
 [`docs/css-architecture.md`](docs/css-architecture.md).
 
+The `docs/` tree renders as a documentation site with [Zensical](https://zensical.org).
+Serve it locally with `just docs` (defaults to `localhost:8000`; pass a port,
+e.g. `just docs 8001`), or build a static copy into `site/` with `just docs-build`.
+
 Install dependencies:
 
 ```sh

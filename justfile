@@ -34,6 +34,14 @@ check:
 loc:
     @uv run --no-project --prerelease allow --with "{{SLOPSCOPE_SPEC}}" --with rich slopscope .
 
+# Serve the rendered documentation site. Example: just docs 8001
+docs port="8000":
+    uv run zensical serve --dev-addr "localhost:{{port}}"
+
+# Build the rendered documentation site into site/.
+docs-build:
+    uv run zensical build
+
 manage *ARGS:
     uv run python manage.py {{ARGS}}
 
