@@ -28,6 +28,10 @@ urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     path(settings.DJANGO_CHAT_WAGTAIL_ADMIN_PATH, include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
+    # Mounted before the cast/wagtail catch-all includes below so the comment
+    # endpoints reverse (and resolve) instead of being swallowed by Wagtail's
+    # page router.
+    path("comments/", include("cast.comments.urls")),
     path(
         f"{settings.DJANGO_CHAT_PODCAST_SLUG}/",
         podcast_episode_index,
