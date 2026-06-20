@@ -82,6 +82,30 @@ prove, with the live catalog loaded, that:
 GUID changes are the highest-risk feed error because podcast clients may treat
 old catalog episodes as new downloads.
 
+## Database Backend And Deploy Safety
+
+Staging uses PostgreSQL (`config.settings.production` → `django.db.backends.postgresql`,
+name `django-chat`), which lives outside the rsync target, so deploys never touch
+the live data. Production may instead use SQLite. If it does, the deploy must not
+be allowed to overwrite the live database:
+
+- `just deploy-*` rsyncs the local working tree with `--delete`. A SQLite file
+  inside the synced tree (e.g. the Django-default `db.sqlite3` in the project
+  root) would be replaced by the deployer's local copy, or deleted. The deploy
+  now excludes `db.sqlite3*` (file plus WAL/SHM/journal sidecars, including any
+  `databases/db.sqlite3`) via `wagtail_rsync_excludes_extra`, so a DB with that
+  name is never shipped or deleted. For any other basename, place the DB under the
+  role-excluded `databases/` directory so the exclusion is name-agnostic —
+  otherwise `--delete` would clobber it despite the snapshot.
+- Set `django_chat_sqlite_backup_paths` (in `deploy/group_vars/<env>.yml`) to the
+  absolute path(s) of the live SQLite DB. Each deploy then takes a consistent
+  `sqlite3 .backup` snapshot into the excluded `backups/` directory before
+  syncing and migrating. Leave it empty for PostgreSQL (the snapshot is a no-op).
+  Set it only after the first deploy has created the database.
+- Because the DB is excluded from rsync, the first deploy does not create it; the
+  app's `migrate` step (run remotely by the deploy) creates and migrates the
+  SQLite file on the host on first run.
+
 ## Media And Analytics
 
 The current staging media setup uses Django Chat-specific S3-compatible storage

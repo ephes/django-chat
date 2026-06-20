@@ -45,6 +45,34 @@
     - name: Deploy | Run clean-VPS baseline tasks
       ansible.builtin.import_tasks: tasks/bootstrap-host.yml
 
+    # In pre_tasks, so it runs before the roles (uv_install / traefik_deploy /
+    # wagtail_deploy) that rsync the source and run migrate — the snapshot is
+    # taken before any deploy step can change the database.
+    - name: Deploy | Snapshot configured SQLite database(s) before sync and migrate
+      ansible.builtin.shell: |
+        set -euo pipefail
+        db="{{ item }}"
+        if [ ! -f "$db" ]; then
+          echo "skip: SQLite DB $db not present yet"
+          exit 0
+        fi
+        mkdir -p "{{ django_chat_backup_dir }}"
+        safe="$(printf '%s' "${db#/}" | tr '/' '_')"
+        dest="{{ django_chat_backup_dir }}/${safe}.$(date +%Y%m%dT%H%M%S).bak"
+        "{{ django_chat_site_path }}/.venv/bin/python" -c 'import sqlite3, sys; src = sqlite3.connect(sys.argv[1]); dst = sqlite3.connect(sys.argv[2]); src.backup(dst); dst.close(); src.close()' "$db" "$dest"
+        echo "backed up $db -> $dest"
+      args:
+        executable: /bin/bash
+      loop: "{{ django_chat_sqlite_backup_paths }}"
+      # Run as the service user (not root) so any WAL/SHM sidecar files the
+      # backup touches stay owned by the app user — opening the DB as root can
+      # create root-owned sidecars and lock the app out. Only enabled after the
+      # first deploy has created the user/DB, so the user exists here.
+      become: true
+      become_user: "{{ django_chat_service_name }}"
+      when: django_chat_sqlite_backup_paths | length > 0
+      changed_when: false
+
   roles:
     - role: local.ops_library.uv_install
     - role: local.ops_library.traefik_deploy

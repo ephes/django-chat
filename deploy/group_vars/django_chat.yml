@@ -37,11 +37,34 @@ wagtail_gunicorn_workers: 3
 wagtail_gunicorn_timeout: 120
 wagtail_db_worker_enabled: true
 wagtail_db_worker_backend: "cast_transcripts"
+# DB safety: the deploy rsync uses --delete, so a SQLite database that lives
+# inside the synced tree would be overwritten by the deployer's local copy (or
+# deleted). Staging/production currently use PostgreSQL (which lives outside the
+# rsync target), but exclude the SQLite files unconditionally so a future
+# SQLite-backed environment can never be clobbered by a deploy. `db.sqlite3*`
+# also covers the WAL/SHM/journal sidecars and any `databases/db.sqlite3`.
 wagtail_rsync_excludes_extra:
   - ".env"
   - ".env.*"
   - "deploy/.ansible"
   - "deploy/secrets"
+  - "db.sqlite3*"
+
+# Pre-deploy SQLite snapshot (no-op for PostgreSQL environments, which leave this
+# empty). Set django_chat_sqlite_backup_paths to the absolute path(s) of the live
+# SQLite database in a SQLite-backed environment, and each deploy takes a
+# consistent snapshot (sqlite3 .backup) into the rsync-excluded backups dir before
+# syncing and migrating. Set it only after the first deploy has created the DB.
+# Each path MUST sit at an rsync-excluded location so --delete cannot overwrite
+# the live DB: either named `db.sqlite3*` (excluded above), or — for any other
+# basename — placed under the role-excluded `databases/` directory. The snapshot
+# protects against a bad migration; the exclude is what stops the file itself
+# from being clobbered, so both are required.
+django_chat_site_path: "/home/{{ django_chat_service_name }}/site"
+# `backups` is already in the wagtail_deploy role's default rsync excludes
+# (merged with the list above), so snapshots placed here survive the --delete sync.
+django_chat_backup_dir: "{{ django_chat_site_path }}/backups"
+django_chat_sqlite_backup_paths: []
 wagtail_staticfiles_required_paths:
   - "staticfiles/staticfiles.json"
   - "staticfiles/cast/vite/manifest.json"
