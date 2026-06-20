@@ -513,7 +513,22 @@ growth.
    race on staging and broke the detail-to-overview transition and scroll
    restore). Remaining choices are whether to split or critical-inline CSS and
    whether the render-blocking `rel="expect"` hints should stay.
-7. **Production VPS, DNS cutover, URL redirects, podcast directory
+7. **Activate comments on episodes/posts.** Spec:
+   [`docs/superpowers/specs/2026-06-20-comments-activation-design.md`](superpowers/specs/2026-06-20-comments-activation-design.md).
+   The django-cast comment backend (`cast.comments` + `threadedcomments` +
+   native `SpamFilter`) is already wired; the only gate is
+   `CAST_COMMENTS_ENABLED = False` (`config/settings/base.py:241`). The missing
+   work is frontend: bespoke `comments/comment.html` + `comments/form.html`
+   overrides and a `.comment-*` block in `site.css` aligned to the `--dc-*`
+   design language (the default cast/Bootstrap markup does not fit a
+   non-Bootstrap site), a comments section inserted into `episode.html`, and
+   conditional AJAX/honeypot wiring. Decisions locked: threaded replies,
+   anonymous name/email, auto-publish + native spam filter. Pre-launch ops
+   follow-up: seed the `SpamFilter` by importing `../python-podcast`'s labeled
+   comment corpus and retraining. The slice also folds in a small
+   `css-architecture.md` reconciliation (document `--dc-radius-card` and the new
+   `.comment-*` prefix).
+8. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the
    [`feed-cutover-analysis.md`](feed-cutover-analysis.md) plan are settled.
