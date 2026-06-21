@@ -3911,6 +3911,20 @@ h2[data-vt-episode-title] {
   max-width: calc(100% - var(--show-note-text-indent) + var(--sponsor-shoutout-pad));
 }
 
+/* The show-notes prose is capped at a 45rem reading measure (`.show-notes`),
+   but the sponsor callout should fill the whole content column on the
+   two-column desktop layout. Rebuild that column width from the grid tokens
+   (container-relative: page-content width minus the sidebar and its gap) and
+   let the box overflow the measure to the column's right edge. Below the
+   sidebar-stack breakpoint the column already is the full width, so the base
+   rule's measure-relative width is correct and this override is skipped. */
+@container episode-detail (min-width: 48.5625rem) {
+  .sponsor-shoutout {
+    width: calc(100cqw - var(--dc-aside-width) - var(--dc-aside-column-gap));
+    max-width: none;
+  }
+}
+
 /* Docked tab — the show's framing of the sponsor. Same green + ink as the CTA
    button (AAA 7.26:1); shares the box's horizontal inset (--sponsor-shoutout-pad)
    so the tab label lines up with the copy below it. */
