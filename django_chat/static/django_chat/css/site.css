@@ -4935,6 +4935,10 @@ body:has(.share-modal:not([open]):target) {
 /* Comments — reopened components layer (cascade order fixed at top of file). */
 @layer components {
   .comments-section {
+    /* Live in the left content column of the `.episode-detail` grid, directly
+       below `.episode-main`, so the thread + form align with the show notes
+       and the sticky `.episode-sidebar` stays in column 2 alongside them. */
+    grid-column: 1;
     --stack-space: var(--s2);
     margin-top: var(--s3);
     padding-top: var(--s2);
@@ -4965,6 +4969,14 @@ body:has(.share-modal:not([open]):target) {
     flex-direction: column;
     gap: var(--s1);
   }
+  /* Once at least one comment exists, close the thread list with a hairline so
+     it reads as a section separate from the "post a comment" form below. The
+     threaded list template adds `.empty` when there are no comments yet, so the
+     rule (and its line) stays hidden until the first comment lands. */
+  .comments:not(.empty) {
+    padding-bottom: var(--s2);
+    border-bottom: 1px solid var(--dc-line);
+  }
 
   .comment-list-wrapper {
     list-style: none;
@@ -4982,12 +4994,21 @@ body:has(.share-modal:not([open]):target) {
   }
   .comment-wrapper { list-style: none; }
 
+  /* Neutral card matching the site's `.card` pattern (paper + hairline +
+     subtle shadow) — distinct from the page without a green tint behind it.
+     A thicker green left edge marks each comment with a Django accent stroke. */
   .comment {
-    background: var(--dc-surface-django-tint);
+    background: var(--dc-paper);
     border: 1px solid var(--dc-line);
+    border-left: 3px solid var(--dc-django);
     border-radius: var(--dc-radius-card);
     box-shadow: var(--dc-shadow-sm);
     padding: var(--s1) clamp(1rem, 2.5vw, 1.5rem);
+  }
+  /* Nested replies carry a darker green stroke than top-level comments, so the
+     thread depth reads at a glance. */
+  .comment-list-wrapper .comment-list-wrapper .comment {
+    border-left-color: var(--dc-accent-dark);
   }
   .comment-preview-label {
     margin: 0 0 var(--s-1);
@@ -5012,19 +5033,35 @@ body:has(.share-modal:not([open]):target) {
   .comment-text > :first-child { margin-top: 0; }
   .comment-text > :last-child { margin-bottom: 0; }
 
-  .comment-form { --stack-space: var(--s1); max-width: var(--dc-measure); }
+  /* Span the full content column — the inputs match the show-notes width,
+     not the narrower reading measure. */
+  .comment-form { --stack-space: var(--s1); }
   /* Reply mode: ajaxcomments.js appends the form into the target comment's
      <li class="comment-wrapper"> (in the new-comment spot it sits inside
      .js-comments-form-orig-position). Mark the relocated form as an attached
      reply so composing a reply looks distinct from a new top-level comment. */
+  /* Reply mode: ajaxcomments.js moves the form under the comment being
+     replied to. Mark it as a reply with the same dark-green stroke + indent as
+     the nested reply cards — no card surface, no green fill, so the compose
+     area reads as part of the thread rather than a tinted panel. */
   .comment-wrapper > .comment-form {
     margin-top: var(--s1);
-    padding: var(--s1) clamp(1rem, 2.5vw, 1.5rem);
-    border-left: 3px solid var(--dc-django);
-    border-radius: var(--dc-radius);
-    background: var(--dc-django-soft);
+    padding-left: var(--s1);
+    border-left: 3px solid var(--dc-accent-dark);
+    background: none;
   }
   .comment-field { display: flex; flex-direction: column; gap: var(--s-2); }
+  /* Name + email sit side by side on the wide two-column layout and fall back
+     to stacked at the same container width where `.episode-detail` drops its
+     sidebar (48.5625rem), so the form follows the sidebar's break. */
+  .comment-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s1);
+  }
+  @container episode-detail (max-width: 48.5625rem) {
+    .comment-field-row { grid-template-columns: 1fr; }
+  }
   .comment-field label { font-weight: var(--weight-medium); font-size: var(--text-sm); }
   .comment-field input,
   .comment-field textarea {
@@ -5036,22 +5073,48 @@ body:has(.share-modal:not([open]):target) {
     border: 1px solid var(--dc-line);
     border-radius: var(--dc-radius);
   }
-  .comment-field textarea { min-height: 8rem; resize: vertical; }
+  /* Pill the single-line fields to match the filter/search inputs
+     (`.filter-form input` — `--dc-radius-pill`, tap-height min, pill padding).
+     The multi-line textarea below keeps a card radius — a 999px pill clamps to
+     half its height and reads as a misshapen stadium. */
+  .comment-field input {
+    min-height: var(--dc-tap);
+    padding: 0 var(--s-1);
+    border-radius: var(--dc-radius-pill);
+  }
+  .comment-field textarea {
+    /* Explicit height overrides the widget's `rows="10"` (which otherwise wins
+       over min-height and makes the box ~10 lines tall); min-height keeps a
+       sensible floor for the vertical resize handle. */
+    height: 100px;
+    min-height: 5rem;
+    resize: vertical;
+    border-radius: var(--dc-radius-card);
+  }
   .comment-field input:focus-visible,
   .comment-field textarea:focus-visible {
     outline: var(--dc-focus-outline);
     outline-offset: 3px;
   }
   .comment-field--honeypot { display: none; }
+  /* `.comment-field--error` is set server-side (full-page POST render);
+     `:has(.js-errors)` also catches the AJAX path, where ajaxcomments.js
+     injects the `.js-errors` span into the field but does not add our error
+     class. Both turn the field border red. */
   .comment-field--error input,
-  .comment-field--error textarea { border-color: var(--dc-error); }
+  .comment-field--error textarea,
+  .comment-field:has(.js-errors) input,
+  .comment-field:has(.js-errors) textarea { border-color: var(--dc-error); }
   .js-errors { color: var(--dc-error); font-size: var(--text-sm); }
 
   .comment-form-actions { --cluster-space: var(--s0); align-items: center; }
   .comment-preview-button {
     display: inline-flex;
     align-items: center;
-    padding: var(--s-1) var(--s0);
+    /* Match `.button-primary`'s height (tap-height min + 1px border) so the
+       two action buttons line up; the ghost styling stays distinct. */
+    min-height: var(--dc-tap);
+    padding: 0 var(--s0);
     border: 1px solid var(--dc-line);
     border-radius: var(--dc-radius-pill);
     background: transparent;

@@ -81,15 +81,15 @@
       </div>
 
       {% include "./_episode_sidebar.html" %}
-    </article>
 
-    {% if comments_are_enabled %}
-      <section class="comments-section stack" id="comments" aria-label="Comments">
-        <h2 class="comments-title">Comments</h2>
-        {% render_comment_list for page %}
-        {% render_comment_form for page %}
-      </section>
-    {% endif %}
+      {% if comments_are_enabled %}
+        <section class="comments-section stack" id="comments" aria-label="Comments">
+          <h2 class="comments-title">Comments</h2>
+          {% render_comment_list for page %}
+          {% render_comment_form for page %}
+        </section>
+      {% endif %}
+    </article>
   </div>
 {% endblock content %}
 
@@ -104,6 +104,7 @@
   {% if comments_are_enabled %}
     {# Pure progressive enhancement: inline AJAX post/reply/preview. The form
        still works as a normal POST when this script does not load. #}
+    <script defer src="{% static 'django_chat/js/comment-enhance.js' %}?v=comment-3"></script>
     <script defer src="{% static 'fluent_comments/js/ajaxcomments.js' %}"></script>
   {% endif %}
 {% endblock javascript %}

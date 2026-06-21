@@ -20,11 +20,14 @@
       {% elif field.name == "honeypot" %}
         <div class="comment-field comment-field--honeypot" aria-hidden="true">{{ field.label_tag }}{{ field }}</div>
       {% else %}
+        {# Pair name + email into one row; collapses to a single column at the sidebar-stack breakpoint (site.css). #}
+        {% if field.name == "name" %}<div class="comment-field-row">{% endif %}
         <div class="comment-field{% if field.errors %} comment-field--error{% endif %}">
           {{ field.label_tag }}
           {{ field }}
           {% if field.errors %}<span class="js-errors">{{ field.errors.as_text }}</span>{% endif %}
         </div>
+        {% if field.name == "email" %}</div>{% endif %}
       {% endif %}
     {% endfor %}
 

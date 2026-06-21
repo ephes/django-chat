@@ -323,8 +323,16 @@ To exercise comments locally:
 2. In the Wagtail admin, tick **comments_enabled** on the Podcast page and on
    each episode/post that should accept comments.
 
-With JavaScript enabled, posting is AJAX (inline, threaded replies, preview).
-With JavaScript disabled, the form does a normal POST and redirects back.
+With JavaScript enabled, posting is AJAX (inline, threaded replies, preview),
+and `comment-enhance.js` sets `novalidate`, then validates on submit via the
+Constraint Validation API: it renders field-specific copy ("Please enter your
+name.", "Please enter a valid email address.", …; the browser's own
+`validationMessage` is the fallback for unmapped constraints) into the site's
+styled `.js-errors` markup (which also turns the field border red via
+`.comment-field:has(.js-errors)`) and blocks the AJAX request until the form is
+valid. With JavaScript disabled, the
+form does a normal POST and redirects back, and the `required` / `type="email"`
+attributes keep native validation (bubbles and all) as the fallback.
 Identity is anonymous name/email only (the URL and title fields are excluded).
 Spam handling uses django-cast's native `SpamFilter` (auto-publish + honeypot);
 seeding a trained filter from the python-podcast corpus is a separate
