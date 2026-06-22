@@ -721,6 +721,68 @@ def test_hero_styles_do_not_flip_while_transcript_folds_in(
     )
 
 
+@pytest.fixture
+def comments_enabled_site() -> None:
+    # Comments are opt-in per object on top of the global flag; the importer
+    # ships them off. Enable them here (in fixture setup, before the Playwright
+    # event loop starts, so the ORM writes are not async-unsafe).
+    import_django_chat_sample()
+    episode = Episode.objects.get(slug="django-tasks-jake-howard")
+    blog = episode.blog
+    blog.comments_enabled = True
+    blog.save(update_fields=["comments_enabled"])
+    episode.comments_enabled = True
+    episode.save(update_fields=["comments_enabled"])
+
+
+@pytest.fixture
+def page_with_comments(comments_enabled_site: None) -> Iterator[Page]:
+    yield from _playwright_page()
+
+
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@override_settings(CAST_COMMENTS_ENABLED=True, CAST_COMMENTS_ALLOW_AUTHOR_EDITS=True)
+def test_comment_author_can_edit_and_delete_own_comment(
+    live_server: Any,
+    page_with_comments: Page,
+) -> None:
+    page = page_with_comments
+    detail_url = f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}"
+    # Accept the delete confirmation dialog (window.confirm) when it appears.
+    page.on("dialog", lambda dialog: dialog.accept())
+
+    page.goto(detail_url)
+    # Post a comment; the AJAX post records session-bound ownership server-side.
+    page.locator("textarea[name='comment']").fill("My first take on this episode.")
+    page.locator("input[name='name']").fill("Ada")
+    page.locator("input[name='email']").fill("ada@example.com")
+    page.get_by_role("button", name="Post comment").click()
+    expect(page.locator(".comment", has_text="My first take on this episode.")).to_be_visible()
+
+    # Reload as the same browser session: the author controls now render for the
+    # owned, still-public, unanswered comment.
+    page.goto(detail_url)
+    comment = page.locator(".comment", has_text="My first take on this episode.")
+    expect(comment.locator(".comment-edit-link")).to_be_visible()
+    expect(comment.locator(".comment-delete-link")).to_be_visible()
+
+    # Edit: open the inline editor, change the text, and save. The replaced
+    # comment shows the new text and the (edited) marker.
+    comment.locator(".comment-edit-link").click()
+    editor = comment.locator(".comment-edit-textarea")
+    expect(editor).to_be_visible()
+    editor.fill("My revised take on this episode.")
+    comment.locator(".comment-edit-save").click()
+    edited = page.locator(".comment", has_text="My revised take on this episode.")
+    expect(edited).to_be_visible()
+    expect(edited.locator(".comment-edited-flag")).to_be_visible()
+
+    # Delete: the confirm dialog is auto-accepted, then the comment is removed
+    # from the DOM.
+    edited.locator(".comment-delete-link").click()
+    expect(page.locator(".comment", has_text="My revised take on this episode.")).to_have_count(0)
+
+
 def episode_index_path() -> str:
     return reverse("django_chat_episode_index")
 

@@ -338,6 +338,28 @@ Spam handling uses django-cast's native `SpamFilter` (auto-publish + honeypot);
 seeding a trained filter from the python-podcast corpus is a separate
 pre-launch ops step.
 
+### Author self-edit and delete
+
+When `CAST_COMMENTS_ALLOW_AUTHOR_EDITS` is on, a commenter can edit and delete
+their own comments from the same browser session, for as long as the comment is
+still public and unanswered (once someone replies, the controls disappear).
+django-cast tracks ownership server-side in the session (`cast_owned_comments`),
+never from anything the client supplies, so it requires a server-side session
+backend — the project default (DB-backed sessions) qualifies; the
+`signed_cookies` backend is rejected by a system check. Edits are re-moderated
+(an edit can flip a comment back to "awaiting moderation"); deletes are soft
+(staff can restore them from the Django admin).
+
+The flag is **off by default per environment** (`base.py`) and **on by default
+in local development** (`config/settings/local.py`), so it is already active on
+the dev server once comments are enabled; set
+`CAST_COMMENTS_ALLOW_AUTHOR_EDITS=false` in your `.env` to turn it off locally.
+The edit/delete links and the inline editor only appear for comments the current
+session owns, so to see them locally: enable comments (above), post a comment,
+then reload the episode page — the `edit` / `delete` controls render next to
+that comment's `reply` link. The behaviour is driven by the package's bundled
+`ajaxcomments.js`; no extra script is loaded.
+
 ## Full Catalog Import
 
 The live catalog importer reads the canonical RSS feed and enriches it from

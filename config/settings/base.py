@@ -248,6 +248,12 @@ CAST_COMMENTS_ENABLED = env.bool("CAST_COMMENTS_ENABLED", default=False)
 # Identity is anonymous name/email only (see the comments-activation spec): drop
 # the optional URL and title fields from the comment form so they never render.
 CAST_COMMENTS_EXCLUDE_FIELDS = ("url", "title")
+# Let comment authors edit and delete their own still-public, unanswered comments
+# from the same browser session (django-cast's session-bound ownership model).
+# Default off per environment; local.py turns it on for development. Requires a
+# server-side session backend — the project default (DB-backed sessions) is fine;
+# cast.E006 rejects the signed_cookies backend when this is on.
+CAST_COMMENTS_ALLOW_AUTHOR_EDITS = env.bool("CAST_COMMENTS_ALLOW_AUTHOR_EDITS", default=False)
 # Episode-page audio player: django-cast's custom player, in all environments.
 # The Podlove Web Player path was removed after the staging cutover; restoring
 # it would mean reverting the removal commit, not flipping this setting.

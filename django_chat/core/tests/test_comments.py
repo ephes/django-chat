@@ -4,9 +4,13 @@ import django_comments
 import pytest
 from cast.models import Episode
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from django.test import Client, override_settings
 from django.urls import NoReverseMatch, reverse
+from django.utils import timezone
+from django_comments.models import Comment
 
 from django_chat.imports.import_sample import import_django_chat_sample
 
@@ -42,6 +46,33 @@ def _enable_comments_on_imported_episode() -> None:
     blog.save(update_fields=["comments_enabled"])
     episode.comments_enabled = True
     episode.save(update_fields=["comments_enabled"])
+
+
+def _create_public_comment(episode: Episode, text: str = "A comment I wrote.") -> Comment:
+    # Build a public, top-level comment directly so author-edit eligibility
+    # (public, not removed, unanswered) is deterministic and does not depend on
+    # the moderation/spam outcome of a posted comment.
+    comment_model = django_comments.get_model()
+    return comment_model.objects.create(
+        content_type=ContentType.objects.get_for_model(episode),
+        object_pk=str(episode.pk),
+        site=Site.objects.get_current(),
+        user_name="Commenter",
+        user_email="commenter@example.com",
+        comment=text,
+        submit_date=timezone.now(),
+        is_public=True,
+        is_removed=False,
+    )
+
+
+def _own_comment_in_session(client: Client, comment: Comment) -> None:
+    # django-cast tracks comment ownership server-side in the session under
+    # ``cast_owned_comments`` (never client-supplied). Seed it so the GET below
+    # renders the page as the comment's author.
+    session = client.session
+    session["cast_owned_comments"] = [str(comment.pk)]
+    session.save()
 
 
 def test_comment_urls_are_mounted() -> None:
@@ -159,3 +190,62 @@ def test_ajax_post_accepted_when_comments_enabled(client: Client) -> None:
 
     assert response.status_code == 200
     assert comment_model.objects.count() == before + 1
+
+
+def test_author_edit_delete_urls_are_mounted() -> None:
+    # The local comment.html override reverses these names for the edit/delete
+    # data attributes; a missing include would 500 an enabled, owned comment.
+    assert reverse("comments-edit-comment-ajax") == "/comments/edit/ajax/"
+    assert reverse("comments-delete-comment-ajax") == "/comments/delete/ajax/"
+
+
+@pytest.mark.django_db
+@override_settings(CAST_COMMENTS_ENABLED=True, CAST_COMMENTS_ALLOW_AUTHOR_EDITS=True)
+def test_author_controls_render_for_own_comment(client: Client) -> None:
+    # With the feature on and the session owning a public, unanswered comment,
+    # the edit/delete controls + hidden raw source render in our local template.
+    import_django_chat_sample()
+    _enable_comments_on_imported_episode()
+    episode = Episode.objects.get(slug=EPISODE_SLUG)
+    comment = _create_public_comment(episode)
+    _own_comment_in_session(client, comment)
+
+    content = client.get(_episode_detail_path()).content.decode()
+    assert "comment-edit-link" in content
+    assert "comment-delete-link" in content
+    assert 'data-edit-action="/comments/edit/ajax/"' in content
+    assert 'data-delete-action="/comments/delete/ajax/"' in content
+    # The inline editor reads the raw (un-linebroken) text from this hidden node.
+    assert 'class="comment-raw"' in content
+
+
+@pytest.mark.django_db
+@override_settings(CAST_COMMENTS_ENABLED=True, CAST_COMMENTS_ALLOW_AUTHOR_EDITS=False)
+def test_author_controls_absent_when_feature_disabled(client: Client) -> None:
+    # Same owned, public comment, but the feature flag is off: no author controls
+    # and no raw source should render (comment_action_context early-returns).
+    import_django_chat_sample()
+    _enable_comments_on_imported_episode()
+    episode = Episode.objects.get(slug=EPISODE_SLUG)
+    comment = _create_public_comment(episode)
+    _own_comment_in_session(client, comment)
+
+    content = client.get(_episode_detail_path()).content.decode()
+    assert "comment-edit-link" not in content
+    assert "comment-delete-link" not in content
+    assert 'class="comment-raw"' not in content
+
+
+@pytest.mark.django_db
+@override_settings(CAST_COMMENTS_ENABLED=True, CAST_COMMENTS_ALLOW_AUTHOR_EDITS=True)
+def test_author_controls_absent_for_comment_not_owned(client: Client) -> None:
+    # The feature is on and the comment is public, but the session does not own
+    # it (no ownership seeded), so a different visitor sees no edit/delete links.
+    import_django_chat_sample()
+    _enable_comments_on_imported_episode()
+    episode = Episode.objects.get(slug=EPISODE_SLUG)
+    _create_public_comment(episode)
+
+    content = client.get(_episode_detail_path()).content.decode()
+    assert "comment-edit-link" not in content
+    assert "comment-delete-link" not in content

@@ -5140,4 +5140,66 @@ body:has(.share-modal:not([open]):target) {
   .comment-cancel-reply-link { color: var(--dc-muted); }
   .js-comments-form-orig-position .comment-cancel-reply-link { display: none; }
   .comments-closed { color: var(--dc-muted); }
+
+  /* Author self-edit/delete controls (django-cast session-bound author edits).
+     Secondary, muted links that follow the reply link on the right of the meta
+     row; delete reddens on hover to flag it as the destructive action. */
+  .comment-author-actions { display: inline-flex; gap: var(--s-1); }
+  .comment-edit-link,
+  .comment-delete-link { color: var(--dc-muted); text-decoration: none; }
+  .comment-edit-link:hover,
+  .comment-edit-link:focus-visible { color: var(--dc-django-aaa); }
+  .comment-delete-link:hover,
+  .comment-delete-link:focus-visible { color: var(--dc-error); }
+  .comment-edited-flag { color: var(--dc-muted); font-style: italic; }
+
+  /* Inline editor injected by ajaxcomments.js after .comment-text when the
+     author opens the editor. The textarea mirrors `.comment-field textarea`;
+     Save/Cancel reuse the post/preview button shapes and flow on one row. */
+  .comment-edit-form { margin-top: var(--s-1); }
+  .comment-edit-textarea {
+    display: block;
+    width: 100%;
+    min-height: 5rem;
+    margin-bottom: var(--s-1);
+    padding: var(--s-1) var(--s0);
+    font: inherit;
+    color: var(--dc-ink);
+    background: var(--dc-paper);
+    border: 1px solid var(--dc-line);
+    border-radius: var(--dc-radius-card);
+    resize: vertical;
+  }
+  .comment-edit-textarea:focus-visible {
+    outline: var(--dc-focus-outline);
+    outline-offset: 3px;
+  }
+  .comment-edit-note { margin: 0 0 var(--s-1); color: var(--dc-muted); font-size: var(--text-sm); }
+  .comment-edit-save,
+  .comment-edit-cancel {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--dc-tap);
+    padding: 0 var(--s0);
+    border-radius: var(--dc-radius-pill);
+    font: inherit;
+    cursor: pointer;
+  }
+  /* Match `.button-primary` (the "Post comment" button): dark-green fill with
+     paper text clears WCAG AA, where the brighter `--dc-django-aaa-light` fill
+     would not. */
+  .comment-edit-save {
+    margin-right: var(--s-1);
+    border: 1px solid var(--dc-accent-dark);
+    background: var(--dc-accent-dark);
+    color: var(--dc-paper);
+  }
+  .comment-edit-save:hover { filter: brightness(1.12); }
+  .comment-edit-cancel {
+    border: 1px solid var(--dc-line);
+    background: transparent;
+    color: var(--dc-ink);
+  }
+  .comment-edit-cancel:hover { background: var(--dc-django-hover); }
+  .comment-edit-status { display: block; margin-top: var(--s-1); color: var(--dc-muted); font-size: var(--text-sm); }
 }

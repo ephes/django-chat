@@ -544,6 +544,22 @@ growth.
    (`django_chat/core/receivers.py`) rejects a direct POST to a disabled object,
    so the no-JS and AJAX post endpoints cannot be used to bypass the UI gate.
 
+   **Author self-edit/delete — added.** Bumped the `django-cast` pin to develop
+   HEAD (`173a3314`) to pick up its session-bound author-edit feature, ran the
+   `cast_comments` `CommentAuthorMeta` migration, and added the
+   `CAST_COMMENTS_ALLOW_AUTHOR_EDITS` flag (off per environment in `base.py`, on
+   in `local.py` for development). The local `comments/comment.html` override now
+   renders the `edit`/`delete` controls, the `(edited)` marker, and the hidden
+   `.comment-raw` source the bundled `ajaxcomments.js` reads; `site.css` styles
+   those controls and the inline editor to match the existing comment design
+   (muted secondary links, red delete hover, a textarea + Save/Cancel that reuse
+   the form's field/button shapes). Ownership is server-side only
+   (`cast_owned_comments` in the session), so the feature requires a server-side
+   session backend — the project default DB sessions qualify, and `cast.E006`
+   rejects `signed_cookies`. Controls render only for a session-owned, still
+   public, unanswered comment; edits are re-moderated and deletes are soft
+   (staff-restorable). See [`local-development.md`](local-development.md#author-self-edit-and-delete).
+
    **Pre-launch ops follow-up (not in this slice):** seed the `SpamFilter` by
    importing `../python-podcast`'s labeled comment corpus and retraining;
    untrained, the moderator auto-publishes every comment.

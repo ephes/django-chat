@@ -18,6 +18,11 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 
 DATABASES["default"]["ATOMIC_REQUESTS"] = False  # noqa: F405
 
+# Author self-edit/delete of comments is on by default in development (still
+# env-overridable) so it can be exercised locally once comments are enabled;
+# base.py keeps it off for staging/production until set there deliberately.
+CAST_COMMENTS_ALLOW_AUTHOR_EDITS = env.bool("CAST_COMMENTS_ALLOW_AUTHOR_EDITS", default=True)
+
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 STORAGES["staticfiles"] = {  # noqa: F405
