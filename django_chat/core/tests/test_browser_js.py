@@ -748,8 +748,10 @@ def test_comment_author_can_edit_and_delete_own_comment(
 ) -> None:
     page = page_with_comments
     detail_url = f"{live_server.url}{episode_detail_path('django-tasks-jake-howard')}"
-    # Accept the delete confirmation dialog (window.confirm) when it appears.
-    page.on("dialog", lambda dialog: dialog.accept())
+    # The delete action confirms through the site-styled dialog
+    # (comment-enhance.js replaces the bundled script's native window.confirm);
+    # fail loudly if a native dialog ever appears instead.
+    page.on("dialog", lambda dialog: pytest.fail(f"unexpected native dialog: {dialog.message}"))
 
     page.goto(detail_url)
     # Post a comment; the AJAX post records session-bound ownership server-side.
@@ -777,9 +779,18 @@ def test_comment_author_can_edit_and_delete_own_comment(
     expect(edited).to_be_visible()
     expect(edited.locator(".comment-edited-flag")).to_be_visible()
 
-    # Delete: the confirm dialog is auto-accepted, then the comment is removed
-    # from the DOM.
+    # Delete: the styled confirmation dialog opens. Cancelling keeps the
+    # comment; confirming removes it from the DOM.
+    dialog = page.locator("#comment-delete-dialog")
     edited.locator(".comment-delete-link").click()
+    expect(dialog).to_have_attribute("open", "")
+    dialog.locator("[data-confirm-cancel]").click()
+    expect(dialog).not_to_have_attribute("open", "")
+    expect(page.locator(".comment", has_text="My revised take on this episode.")).to_have_count(1)
+
+    edited.locator(".comment-delete-link").click()
+    expect(dialog).to_have_attribute("open", "")
+    dialog.locator("[data-confirm-delete]").click()
     expect(page.locator(".comment", has_text="My revised take on this episode.")).to_have_count(0)
 
 

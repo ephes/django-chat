@@ -358,7 +358,10 @@ The edit/delete links and the inline editor only appear for comments the current
 session owns, so to see them locally: enable comments (above), post a comment,
 then reload the episode page — the `edit` / `delete` controls render next to
 that comment's `reply` link. The behaviour is driven by the package's bundled
-`ajaxcomments.js`; no extra script is loaded.
+`ajaxcomments.js`. The delete confirmation, however, is rendered as the
+site-styled `#comment-delete-dialog` modal: `comment-enhance.js` intercepts the
+delete click and replays it once confirmed, in place of the bundled script's
+native `window.confirm`.
 
 ## Full Catalog Import
 

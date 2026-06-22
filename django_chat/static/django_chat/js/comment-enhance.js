@@ -1,4 +1,63 @@
 (() => {
+  // ---- Styled delete confirmation ----------------------------------------
+  // The bundled ajaxcomments.js confirms an author delete with the browser's
+  // native window.confirm(). Swap that for the site-styled <dialog>: intercept
+  // the delete-link click in the capture phase (before ajaxcomments.js's
+  // body-level handler), show our dialog, and on confirm replay the click with
+  // window.confirm forced true so the script's tested delete + DOM removal run
+  // unchanged. Wired before the form-validation early return below so it works
+  // even when the post form is absent (e.g. comments closed but author can
+  // still delete). Without JS there is no delete action at all, so no fallback
+  // is needed here.
+  const deleteDialog = document.getElementById("comment-delete-dialog");
+  if (deleteDialog && typeof deleteDialog.showModal === "function") {
+    let pendingLink = null;
+    let replaying = false;
+
+    document.addEventListener(
+      "click",
+      (event) => {
+        const link = event.target.closest?.(".comment-delete-link");
+        if (!link || replaying) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        pendingLink = link;
+        deleteDialog.showModal();
+      },
+      true,
+    );
+
+    deleteDialog.addEventListener("close", () => {
+      pendingLink = null;
+    });
+
+    deleteDialog
+      .querySelector("[data-confirm-cancel]")
+      ?.addEventListener("click", () => deleteDialog.close());
+
+    deleteDialog
+      .querySelector("[data-confirm-delete]")
+      ?.addEventListener("click", () => {
+        const link = pendingLink;
+        deleteDialog.close();
+        if (!link) return;
+        const originalConfirm = window.confirm;
+        window.confirm = () => true;
+        replaying = true;
+        try {
+          link.click();
+        } finally {
+          replaying = false;
+          window.confirm = originalConfirm;
+        }
+      });
+
+    // Click on the backdrop (the dialog element itself, outside the card) closes.
+    deleteDialog.addEventListener("click", (event) => {
+      if (event.target === deleteDialog) deleteDialog.close();
+    });
+  }
+
   // Progressive enhancement for the comment form's validation UX.
   //
   // Without JS the native `required` / `type="email"` constraints gate the

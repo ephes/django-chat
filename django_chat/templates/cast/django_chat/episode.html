@@ -88,6 +88,18 @@
           {% render_comment_list for page %}
           {% render_comment_form for page %}
         </section>
+        {# Styled confirmation for the JS-only author delete flow; comment-enhance.js
+           shows it in place of the bundled script's native window.confirm(). #}
+        <dialog class="comment-confirm" id="comment-delete-dialog" aria-labelledby="comment-delete-title">
+          <div class="comment-confirm-inner stack">
+            <h2 class="comment-confirm-title" id="comment-delete-title">Delete comment?</h2>
+            <p class="comment-confirm-text">This removes your comment for everyone. It can’t be undone.</p>
+            <div class="comment-confirm-actions cluster">
+              <button type="button" class="comment-confirm-cancel" data-confirm-cancel autofocus>Cancel</button>
+              <button type="button" class="comment-confirm-delete" data-confirm-delete>Delete</button>
+            </div>
+          </div>
+        </dialog>
       {% endif %}
     </article>
   </div>
@@ -104,7 +116,7 @@
   {% if comments_are_enabled %}
     {# Pure progressive enhancement: inline AJAX post/reply/preview. The form
        still works as a normal POST when this script does not load. #}
-    <script defer src="{% static 'django_chat/js/comment-enhance.js' %}?v=comment-3"></script>
+    <script defer src="{% static 'django_chat/js/comment-enhance.js' %}?v=comment-4"></script>
     <script defer src="{% static 'fluent_comments/js/ajaxcomments.js' %}"></script>
   {% endif %}
 {% endblock javascript %}
