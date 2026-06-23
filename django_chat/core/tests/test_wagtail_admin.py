@@ -13,6 +13,12 @@ from django_chat.core.apps import PODCAST_ADMIN_DEFAULT_ORDERING
 from django_chat.imports.import_sample import import_django_chat_sample
 
 
+def test_episode_editor_exposes_comments_enabled_toggle() -> None:
+    assert any(
+        getattr(panel, "field_name", None) == "comments_enabled" for panel in Episode.content_panels
+    )
+
+
 @pytest.mark.django_db
 def test_podcast_explorer_defaults_to_episode_publish_date_order(client: Client) -> None:
     import_django_chat_sample()

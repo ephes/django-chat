@@ -114,7 +114,7 @@ def test_sample_import_creates_podcast_episode_pages_and_source_metadata() -> No
     assert latest_metadata.simplecast_transcript_html.startswith("<p>")
     assert "Jake Howard" in latest_metadata.simplecast_transcript_html
     assert latest_metadata.episode.podcast_audio is None
-    assert latest_metadata.episode.comments_enabled is False
+    assert latest_metadata.episode.comments_enabled is True
     assert latest_metadata.episode.owner.username == "django-chat-importer"
     assert latest_metadata.episode.episode_number == 200
     assert latest_metadata.episode.episode_type == "full"
@@ -303,6 +303,27 @@ def test_sample_import_does_not_re_enable_deliberately_disabled_numbering() -> N
     podcast.refresh_from_db()
     assert podcast.automatic_episode_numbering_enabled is False
     assert podcast.next_episode_number == 250
+
+
+@pytest.mark.django_db
+def test_sample_reimport_preserves_comment_admin_toggles() -> None:
+    import_django_chat_sample()
+    podcast = Podcast.objects.get()
+    episode = Episode.objects.get(slug="django-tasks-jake-howard")
+    assert podcast.comments_enabled is False
+    assert episode.comments_enabled is True
+
+    podcast.comments_enabled = True
+    podcast.save(update_fields=["comments_enabled"])
+    episode.comments_enabled = False
+    episode.save(update_fields=["comments_enabled"])
+
+    import_django_chat_sample()
+
+    podcast.refresh_from_db()
+    episode.refresh_from_db()
+    assert podcast.comments_enabled is True
+    assert episode.comments_enabled is False
 
 
 @pytest.mark.django_db

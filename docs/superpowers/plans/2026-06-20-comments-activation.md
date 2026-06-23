@@ -318,9 +318,10 @@ Comments are off by default. To exercise them locally:
 
 1. Set `CAST_COMMENTS_ENABLED=true` in your `.env` (or export it) and restart
    `just runserver-local-media`.
-2. Comments are then on for every episode/post (django-cast defaults each
-   page's `comments_enabled` to true). To turn them off for a specific
-   episode, uncheck **comments_enabled** on that page in the Wagtail admin.
+2. Tick **comments_enabled** on the Podcast page in Wagtail admin. Imported
+   episodes default to comments-on, so this activates the catalog. To turn
+   comments off for a specific episode, uncheck **comments_enabled** on that
+   page in the Wagtail admin.
 
 With JavaScript enabled, posting is AJAX (inline, threaded replies, preview).
 With JavaScript disabled, the form does a normal POST and redirects back.

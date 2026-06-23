@@ -36,16 +36,13 @@ def _episode_detail_path() -> str:
 
 
 def _enable_comments_on_imported_episode() -> None:
-    # The Django Chat importer ships the podcast and episodes with
-    # comments_enabled=False (comments are opt-in per object). Turning them on
-    # mirrors the operator workflow of the enablement chain: the global
-    # CAST_COMMENTS_ENABLED flag AND blog.comments_enabled AND post.comments_enabled.
+    # The Django Chat importer ships podcast comments off, but imported episodes
+    # on. Enabling the podcast page mirrors the normal operator workflow:
+    # global CAST_COMMENTS_ENABLED flag AND blog.comments_enabled.
     episode = Episode.objects.get(slug=EPISODE_SLUG)
     blog = episode.blog
     blog.comments_enabled = True
     blog.save(update_fields=["comments_enabled"])
-    episode.comments_enabled = True
-    episode.save(update_fields=["comments_enabled"])
 
 
 def _create_public_comment(episode: Episode, text: str = "A comment I wrote.") -> Comment:
@@ -153,11 +150,15 @@ def test_no_js_post_rejected_when_comments_globally_disabled(client: Client) -> 
 @pytest.mark.django_db
 @override_settings(CAST_COMMENTS_ENABLED=True)
 def test_ajax_post_rejected_when_comments_disabled_per_object(client: Client) -> None:
-    # Global flag on, but the importer ships the podcast/episode with
-    # comments_enabled=False (comments are opt-in per object), so the AJAX post
-    # endpoint must reject a direct POST too.
+    # Global flag and podcast switch on, but this specific episode is opted out,
+    # so the AJAX post endpoint must reject a direct POST too.
     import_django_chat_sample()
     episode = Episode.objects.get(slug=EPISODE_SLUG)
+    blog = episode.blog
+    blog.comments_enabled = True
+    blog.save(update_fields=["comments_enabled"])
+    episode.comments_enabled = False
+    episode.save(update_fields=["comments_enabled"])
     comment_model = django_comments.get_model()
     before = comment_model.objects.count()
 

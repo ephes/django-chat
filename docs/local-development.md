@@ -312,16 +312,22 @@ fakes and never require live network access or real S3.
 Comments are off by default at two independent levels:
 
 1. The global `CAST_COMMENTS_ENABLED` flag (default `false`).
-2. Each page's `comments_enabled` toggle. The Django Chat importer ships the
-   podcast and every episode with `comments_enabled=False`, so comments are
-   opt-in per object — flipping the global flag alone surfaces nothing.
+2. The podcast page's `comments_enabled` toggle. The Django Chat importer ships
+   the podcast with `comments_enabled=False`, so flipping the global flag alone
+   surfaces nothing.
+
+Imported episodes default to `comments_enabled=True`, so enabling the podcast
+turns comments on across the catalog. The episode-level toggle is for opt-out
+exceptions.
 
 To exercise comments locally:
 
 1. Set `CAST_COMMENTS_ENABLED=true` in your `.env` (or export it) and restart
    `just runserver-local-media`.
-2. In the Wagtail admin, tick **comments_enabled** on the Podcast page and on
-   each episode/post that should accept comments.
+2. In the Wagtail admin, tick **comments_enabled** on the Podcast page. To hide
+   comments for one episode, untick **comments_enabled** in that episode's
+   editor. Django Chat exposes the episode-level toggle because django-cast's
+   `comments_are_enabled` gate supports per-episode opt-out.
 
 With JavaScript enabled, posting is AJAX (inline, threaded replies, preview),
 and `comment-enhance.js` sets `novalidate`, then validates on submit via the

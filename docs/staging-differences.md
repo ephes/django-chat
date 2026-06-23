@@ -20,6 +20,9 @@ Current live state:
   **custom audio player** (`<cast-audio-player>` element).
 - `/episodes/preview/transcript/` demonstrates a Voxhelm-generated
   django-cast transcript for the preview episode.
+- The global comments gate is enabled on staging. The podcast page's Wagtail
+  `comments_enabled` toggle activates comments across imported episodes;
+  episode-level toggles are available for opt-out exceptions.
 - The deployed staging database should still be measured before host handoff
   to confirm counts and endpoint health.
 
@@ -138,16 +141,19 @@ The initial staging bootstrap account is `host-review-admin`; its generated
 temporary credential is stored only on the staging host for secure handoff and
 must be rotated or replaced after review access is settled.
 
-The public account, comment, Fediverse proxy, and API flows from Python Podcast
-are not part of the Django Chat staging scaffold.
+The public account, Fediverse proxy, and API flows from Python Podcast are not
+part of the Django Chat staging scaffold. Comments use Django Chat's
+django-cast integration and are controlled by the podcast page's Wagtail
+`comments_enabled` toggle once the staging deployment has opened the global
+comments gate. Episode-level toggles remain available for opt-out exceptions.
 
 ## Transcripts
 
 Simplecast transcript HTML is preserved in source metadata where available, but
-it is not used for public transcript rendering. The `cast_transcripts` database
-worker is enabled for all deployed environments (configured in
-`deploy/group_vars/django_chat.yml`) so Wagtail can queue Voxhelm transcript
-generation for individual reviewed episodes. Environments can copy the
+it is not used for public transcript rendering. The `cast_transcripts` database worker
+is enabled for all deployed environments and configured in
+`deploy/group_vars/django_chat.yml`. Wagtail can queue Voxhelm transcript generation
+for individual reviewed episodes. Environments can copy the
 resulting django-cast artifacts from staging with
 `just import-staging-transcripts`.
 

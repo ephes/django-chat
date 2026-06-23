@@ -17,6 +17,7 @@ django_chat_bootstrap_configure_ufw: false
 django_chat_bootstrap_swap_enabled: false
 django_chat_bootstrap_swap_file: /swapfile
 django_chat_bootstrap_swap_size_mb: 2048
+django_chat_cast_comments_enabled: false
 
 uv_version: "0.11.7"
 
@@ -91,6 +92,7 @@ wagtail_env_extra:
   DJANGO_CHAT_WAGTAIL_ADMIN_BASE_URL: "https://{{ django_chat_wagtail_fqdn }}/cms/"
   DJANGO_CHAT_SITE_HOSTNAME: "{{ django_chat_wagtail_fqdn }}"
   DJANGO_CHAT_SITE_PORT: "443"
+  CAST_COMMENTS_ENABLED: "{{ django_chat_cast_comments_enabled | bool | ternary('true', 'false') }}"
   CAST_VOXHELM_API_BASE: "{{ service_secrets.cast_voxhelm_api_base | default('') }}"
   CAST_VOXHELM_API_KEY: "{{ service_secrets.cast_voxhelm_api_key | default('') }}"
   CAST_VOXHELM_MODEL: "{{ service_secrets.cast_voxhelm_model | default('auto') }}"

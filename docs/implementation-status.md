@@ -535,12 +535,15 @@ growth.
    (commits `edaf382`, `a6dcb14`, `00dd4a7`, `14614e6`).
 
    **Enablement is opt-in at two levels:** the global `CAST_COMMENTS_ENABLED`
-   env flag (default off) AND each page's `comments_enabled` toggle. The Django
-   Chat importer ships the podcast and every episode with `comments_enabled=False`,
-   so switching comments on for staging requires **both** `CAST_COMMENTS_ENABLED=true`
-   **and** ticking `comments_enabled` on the Podcast page and each episode in the
-   Wagtail admin — the global flag alone surfaces nothing. The gate is enforced
-   server-side: a `comment_will_be_posted` receiver
+   env flag (default off) AND each page's `comments_enabled` toggle. The staging
+   deploy sets `django_chat_cast_comments_enabled: true`, which renders
+   `CAST_COMMENTS_ENABLED=true`; production inherits the shared `false` default.
+   The Django Chat importer ships the podcast with `comments_enabled=False` and
+   imported episodes with `comments_enabled=True`, so reviewers can activate the
+   catalog on staging by ticking `comments_enabled` on the Podcast page. The
+   Episode editor also exposes `comments_enabled` for opt-out exceptions, without
+   another deploy or environment change.
+   The gate is enforced server-side: a `comment_will_be_posted` receiver
    (`django_chat/core/receivers.py`) rejects a direct POST to a disabled object,
    so the no-JS and AJAX post endpoints cannot be used to bypass the UI gate.
 

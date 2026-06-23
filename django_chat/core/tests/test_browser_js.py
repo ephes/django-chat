@@ -723,16 +723,14 @@ def test_hero_styles_do_not_flip_while_transcript_folds_in(
 
 @pytest.fixture
 def comments_enabled_site() -> None:
-    # Comments are opt-in per object on top of the global flag; the importer
-    # ships them off. Enable them here (in fixture setup, before the Playwright
-    # event loop starts, so the ORM writes are not async-unsafe).
+    # Imported episodes default to comments-on, while the podcast page is the
+    # main Wagtail switch. Enable the podcast here before the Playwright event
+    # loop starts, so the ORM write is not async-unsafe.
     import_django_chat_sample()
     episode = Episode.objects.get(slug="django-tasks-jake-howard")
     blog = episode.blog
     blog.comments_enabled = True
     blog.save(update_fields=["comments_enabled"])
-    episode.comments_enabled = True
-    episode.save(update_fields=["comments_enabled"])
 
 
 @pytest.fixture

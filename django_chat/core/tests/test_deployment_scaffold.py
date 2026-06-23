@@ -86,6 +86,8 @@ def test_deploy_playbook_role_sequence_is_explicit() -> None:
     assert 'uv_version: "0.11.7"' in group_vars
     assert "wagtail_gunicorn_workers: 3" in group_vars
     assert 'wagtail_traefik_cert_resolver: "letsencrypt"' in group_vars
+    assert "django_chat_cast_comments_enabled: false" in group_vars
+    assert "CAST_COMMENTS_ENABLED:" in group_vars
     assert "Deploy | Restart Django Chat transcript worker service" in playbook
     assert "wagtail_db_worker_unit_name" in playbook
 
@@ -125,6 +127,7 @@ def test_host_review_docs_preserve_staging_boundary() -> None:
     assert "Voxhelm-backed" in operations_boundary
     assert "transcript demo" in operations_boundary
     assert "djangochat.staging.django-cast.com" in staging_group_vars
+    assert "django_chat_cast_comments_enabled: true" in staging_group_vars
 
 
 def test_staging_docs_do_not_carry_obsolete_media_blocker_phrases() -> None:

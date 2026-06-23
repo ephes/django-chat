@@ -52,6 +52,14 @@ Staging is live at `https://djangochat.staging.django-cast.com`. Re-run
 `just deploy-staging` after repo-side deployment changes that need to reach the
 host. Do not run production deployment from this slice.
 
+Staging sets `django_chat_cast_comments_enabled: true`, which renders
+`CAST_COMMENTS_ENABLED=true` into the deployed app environment. Production
+inherits the shared default `false`. With the staging global gate open, the
+podcast page's Wagtail `comments_enabled` toggle activates comments across the
+imported catalog. Individual episode/post `comments_enabled` toggles remain
+available as opt-outs, so reviewers can control comments from the admin without
+another deploy or environment change.
+
 ## Ansible Dependencies
 
 `deploy/requirements.yml` installs:
@@ -78,7 +86,8 @@ with Django Chat-specific production values. Do not copy Python Podcast
 hostnames, buckets, credentials, routes, or other service details.
 
 `deploy/group_vars/staging.yml` carries the live shared staging FQDN
-`djangochat.staging.django-cast.com`.
+`djangochat.staging.django-cast.com` and opts staging into the global comments
+gate with `django_chat_cast_comments_enabled: true`.
 
 `ansible_python_interpreter` is pinned to `/usr/bin/python3` for deployed
 hosts so Ansible's PostgreSQL modules use the system Python with distro

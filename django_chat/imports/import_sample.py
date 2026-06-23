@@ -407,6 +407,7 @@ def _get_or_create_podcast_page(
         slug=settings.DJANGO_CHAT_PODCAST_SLUG,
     )
     _update_podcast_page_fields(podcast, rss_podcast, simplecast_podcast)
+    cast(Any, podcast).comments_enabled = False
     parent_page.add_child(instance=podcast)
     return podcast, True
 
@@ -438,7 +439,6 @@ def _update_podcast_page_fields(
     page.subtitle = _truncate(strip_tags(description), 255)
     page.description = description
     page.search_description = strip_tags(description)
-    page.comments_enabled = False
     page.template_base_dir = "django_chat"
     page.itunes_categories = json.dumps(
         {category: [] for category in rss_podcast.categories},
@@ -606,7 +606,6 @@ def _update_episode_page_fields(
     page.visible_date = episode_source.published_at or timezone.now()
     page.body = _episode_body(episode_source)
     page.search_description = _plain_text(summary)
-    page.comments_enabled = False
     page.keywords = _truncate(
         _join_text(episode_source.rss.keywords if episode_source.rss else ()),
         255,

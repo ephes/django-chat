@@ -20,6 +20,9 @@ Verified live behavior:
 - `/episodes/feed/` returns the Django Chat-branded subscribe page.
 - `/cms/` redirects anonymous visitors to the Wagtail login.
 - A staging-only `host-review-admin` superuser exists for review bootstrap.
+- The global comments gate is enabled on staging; the podcast page's Wagtail
+  `comments_enabled` toggle activates comments across imported episodes, while
+  episode-level toggles remain available for opt-out exceptions.
 
 Full-catalog audio is copied to the staging media bucket and served through the
 public media host. Episode detail pages render django-cast's **custom audio
@@ -143,6 +146,10 @@ Before sending or refreshing the staging URL for hosts, confirm:
   podcast feed. Imported platform links are rendered on `/episodes/`.
 - `/episodes/feed/podcast/mp3/rss.xml` and `/episodes/feed/rss.xml` both
   return HTTP 200 after the catalog audio copy.
+- If comments are part of the current review, set `comments_enabled` on the
+  podcast page in Wagtail admin, then confirm that public episode detail pages
+  show comments. Untick `comments_enabled` on one episode to confirm the
+  per-episode opt-out hides comments there.
 - Lighthouse has been run against deployed staging for `/`, `/episodes/`, a
   representative episode detail page, and `/episodes/feed/` in both mobile and
   desktop modes. The 2026-04-29 final gate is cleared with 98-100 scores across
@@ -180,6 +187,9 @@ Once the full host-review gate opens, hosts should start with:
    MP3 from the public media host.
 5. Log into `/cms/`, inspect the podcast and sample episode pages, and try a
    harmless draft edit without publishing over reviewed content.
+6. If comment review is in scope, toggle `comments_enabled` on the podcast,
+   then opt one episode out and confirm the public comments section follows
+   those admin changes.
 
 ## Useful Feedback Categories
 

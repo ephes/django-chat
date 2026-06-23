@@ -251,7 +251,8 @@ Turning comments on for staging therefore requires:
 
 1. `CAST_COMMENTS_ENABLED = True` in settings (and per-environment as desired).
 2. `comments_enabled = True` on the Podcast/Blog page in Wagtail admin.
-3. `comments_enabled = True` on the episodes/posts that should accept comments.
+3. Imported episodes/posts have `comments_enabled=True` by default; untick the
+   field on individual pages only when they should opt out of comments.
 
 The implementation slice flips the global flag in the appropriate settings
 layer; the per-object toggles are an operator action documented in
@@ -321,12 +322,12 @@ current.)
 - **Spam-filter seeding** before public launch (ops): import python-podcast's
   labeled corpus and `retrain_from_scratch`. Tracked as a follow-up, not this
   slice.
-- **Per-object default** (resolved during implementation): newly imported
-  episodes keep `comments_enabled=False` — comments are opt-in per object.
-  Enablement requires the `CAST_COMMENTS_ENABLED` flag AND the per-blog /
-  per-episode toggles, and the gate is enforced server-side (a
-  `comment_will_be_posted` receiver rejects posts to disabled objects), not just
-  hidden in the template.
+- **Per-object default** (resolved during staging review): newly imported
+  episodes keep `comments_enabled=True`, while the podcast page starts with
+  `comments_enabled=False`. Enablement requires the `CAST_COMMENTS_ENABLED`
+  flag AND the per-blog toggle; per-episode toggles are opt-out exceptions. The
+  gate is enforced server-side (a `comment_will_be_posted` receiver rejects
+  posts to disabled objects), not just hidden in the template.
 
 ## Key references (absolute-ish paths)
 
