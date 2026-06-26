@@ -617,7 +617,7 @@ Implementation tracking should stay lightweight:
     importer/backfill with clear acceptance criteria instead of guessing from
     anecdotal show-note examples.
 
-- [ ] Mitigate django-cast private transcript storage migration before the next
+- [x] Mitigate django-cast private transcript storage migration before the next
       django-cast dependency bump.
   - Context: Django Chat currently stores media in its own S3/CloudFront-backed
     `STORAGES["default"]` when `DJANGO_CHAT_MEDIA_STORAGE_BACKEND=s3`, and does
@@ -643,18 +643,22 @@ Implementation tracking should stay lightweight:
     exercised or documented, and the final settings use an explicit public
     transcript storage alias rather than relying on private-media fallback
     behavior.
-  - Mitigation note (2026-06-26): `config/settings/base.py` now binds
-    `STORAGES["cast_private_media"]` to the same durable S3 bucket/media host as
-    `STORAGES["default"]` whenever `DJANGO_CHAT_MEDIA_STORAGE_BACKEND=s3`, but
-    under a separate object prefix (`cast-private-media/` by default) so
-    copy-then-delete migrations cannot delete the destination object by
-    removing the original public-media key. `docs/deployment.md` documents
-    backing up and restoring the S3 `cast_transcript/` prefix before a
-    django-cast transcript-storage migration and verifying transcript
-    pages/player APIs after `migrate`. Keep this item open until django-cast
-    exposes a dedicated public transcript artifact storage alias, that alias is
-    configured explicitly, and the `cast_private_media` public-S3 workaround is
-    removed.
+  - Interim mitigation note (2026-06-26): before the upstream fix landed,
+    Django Chat temporarily bound `STORAGES["cast_private_media"]` to the same
+    durable S3 bucket/media host as `STORAGES["default"]`, but under a separate
+    object prefix (`cast-private-media/` by default) so copy-then-delete
+    migrations could not delete the destination object by removing the original
+    public-media key. That workaround was removed after the upstream
+    `cast_public_transcripts` alias became available.
+  - Completion note (2026-06-26): django-cast commit `47124cec` added the
+    upstream `STORAGES["cast_public_transcripts"]` alias and patched the
+    destructive transcript-artifact migration to keep existing public transcript
+    files in place. Django Chat now pins django-cast to `47124cec`, configures
+    `cast_public_transcripts` to the durable S3/CloudFront media backend when
+    S3 media is enabled, configures `cast_voice_references` to the same durable
+    bucket/keyspace without the public media host for private known-speaker
+    sidecars and voice-reference clips, and removed the temporary
+    `cast_private_media` public-S3 workaround.
 
 - [ ] Use Simplecast's native 301 RSS Feed Redirect as the primary feed cutover
       lever, reversing the original "Simplecast will not redirect" decision.

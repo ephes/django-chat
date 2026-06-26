@@ -231,53 +231,66 @@ exactly; an ARN that names a different bucket will silently deny every
 request from the app principal.
 
 When S3 media storage is enabled, Django Chat also configures
-`STORAGES["cast_private_media"]` to the same S3 bucket and media host as
-`STORAGES["default"]`, but under a separate object prefix. The default prefix is
-`cast-private-media/` and can be overridden with
-`DJANGO_CHAT_CAST_PRIVATE_MEDIA_LOCATION`. This is a deliberate guard for
-django-cast's private transcript artifact migration: if that migration is
-introduced by a future django-cast bump, transcript artifacts are copied within
-durable Django Chat S3 media storage instead of falling back to a local private
-filesystem path, and a copy-then-delete migration cannot delete the destination
-object by deleting the original public-media key.
+`STORAGES["cast_public_transcripts"]` to the same S3 bucket and media host as
+`STORAGES["default"]`. django-cast uses that alias for public Podlove JSON,
+WebVTT, and DOTe transcript artifacts, while private sidecars and voice-reference
+clips use `STORAGES["cast_voice_references"]` with the same durable bucket and
+object keys but without the public media host. This replaces the temporary
+`cast_private_media` public-S3 compatibility workaround.
 
-This alias deliberately uses the public media bucket while it is acting as a
-transcript-migration compatibility guard. Before bumping django-cast, confirm
-that the migration only writes public transcript artifacts through
-`cast_private_media`; do not route genuinely private media through this
-temporary public-S3 alias.
-
-Before bumping django-cast past a transcript-storage migration, back up the
-current public transcript artifact prefix:
+Before bumping or migrating django-cast transcript storage, back up the current
+public transcript artifact prefix and the private known-speaker artifact
+prefixes:
 
 ```sh
 aws s3 sync "s3://$DJANGO_CHAT_S3_STORAGE_BUCKET_NAME/cast_transcript/" \
   "./backups/cast_transcript-$(date +%Y%m%d%H%M%S)/"
+aws s3 sync "s3://$DJANGO_CHAT_S3_STORAGE_BUCKET_NAME/cast_transcript_speakers/" \
+  "./backups/cast_transcript_speakers-$(date +%Y%m%d%H%M%S)/"
+aws s3 sync "s3://$DJANGO_CHAT_S3_STORAGE_BUCKET_NAME/cast_voice_references/" \
+  "./backups/cast_voice_references-$(date +%Y%m%d%H%M%S)/"
 ```
 
 The singular `cast_transcript/` S3 prefix is the django-cast upload prefix for
 the public `Transcript.podlove`, `Transcript.vtt`, and `Transcript.dote`
 artifact fields. It is unrelated to the plural `cast_transcripts` task backend
-name used by the transcript worker. For S3-compatible providers, use the
-provider's equivalent endpoint/profile flags.
+name used by the transcript worker. `cast_transcript_speakers/` stores private
+known-speaker suggestion sidecars and `cast_voice_references/` stores private
+voice-reference clips. For S3-compatible providers, use the provider's
+equivalent endpoint/profile flags.
+
+Django Chat was bumped from django-cast `173a3314`, which did not include
+django-cast migrations `0077_private_transcript_artifact_storage` or
+`0078_private_voice_reference_storage`. Tracked environments upgrading from
+that pin will therefore run the patched no-op `0077` and the private artifact
+`0078` migration from django-cast `47124cec` for the first time. Django Chat's
+`cast_voice_references` alias points at the same bucket/keyspace as default
+media, so `0078` sees existing `cast_transcript_speakers/` and
+`cast_voice_references/` objects in place instead of copying them to local
+private storage and deleting S3 originals. If an environment was manually
+pointed at an intermediate django-cast revision, check the `django_migrations`
+table for `cast` migrations `0077` and `0078` before deploying this bump and
+confirm transcript artifacts still exist under `cast_transcript/`,
+`cast_transcript_speakers/`, and `cast_voice_references/`.
 
 To restore that backup, reverse the sync source and destination:
 
 ```sh
 aws s3 sync "./backups/cast_transcript-YYYYMMDDHHMMSS/" \
   "s3://$DJANGO_CHAT_S3_STORAGE_BUCKET_NAME/cast_transcript/"
+aws s3 sync "./backups/cast_transcript_speakers-YYYYMMDDHHMMSS/" \
+  "s3://$DJANGO_CHAT_S3_STORAGE_BUCKET_NAME/cast_transcript_speakers/"
+aws s3 sync "./backups/cast_voice_references-YYYYMMDDHHMMSS/" \
+  "s3://$DJANGO_CHAT_S3_STORAGE_BUCKET_NAME/cast_voice_references/"
 ```
 
 After `migrate`, verify at least one existing transcript page and the matching
 player transcript API still return transcript cues before deleting the backup.
-If the future migration moves artifacts into the compatibility alias, the
-copied objects will live under `cast-private-media/cast_transcript/` unless the
-location override changes that prefix. Transcript URLs may change from the old
-public key to the compatibility-prefix key; verify generated feeds/pages and
-invalidate CDN objects if old transcript URLs need to disappear immediately.
-When django-cast exposes a dedicated public transcript storage alias, configure
-that explicit alias and remove the temporary `cast_private_media` public-S3
-compatibility guard.
+The configured `cast_public_transcripts` alias uses the same public media host,
+so existing `cast_transcript/` object keys and generated transcript URLs should
+remain stable. Verify known-speaker review still opens existing speaker
+sidecars and voice-reference clips in the Wagtail admin before deleting private
+artifact backups.
 
 Security defaults are conservative for an early staging-capable deploy path:
 `DJANGO_SECURE_HSTS_SECONDS` defaults to `60` seconds. Before production

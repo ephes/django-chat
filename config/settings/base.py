@@ -216,23 +216,27 @@ if MEDIA_STORAGE_BACKEND == "s3":
         "OPTIONS": DJANGO_CHAT_S3_MEDIA_STORAGE_OPTIONS,
     }
     STORAGES["default"] = DJANGO_CHAT_S3_MEDIA_STORAGE
-    DJANGO_CHAT_CAST_PRIVATE_MEDIA_LOCATION = _env_first(
-        "DJANGO_CHAT_CAST_PRIVATE_MEDIA_LOCATION",
-        default="cast-private-media",
-    )
-    # django-cast develop includes a private transcript-artifact migration that
-    # writes through this alias. Keep it in the durable Django Chat S3 bucket,
-    # but under a distinct prefix so copy-then-delete migrations cannot delete
-    # the destination object by removing the original public-media key.
-    DJANGO_CHAT_CAST_PRIVATE_MEDIA_STORAGE_OPTIONS = copy.deepcopy(
+    # django-cast public transcript artifacts are feed/player output. Keep them
+    # on the same public S3/CloudFront media backend, explicitly using the
+    # upstream public transcript storage alias instead of private-media fallback.
+    DJANGO_CHAT_PUBLIC_TRANSCRIPT_STORAGE_OPTIONS = copy.deepcopy(
         DJANGO_CHAT_S3_MEDIA_STORAGE_OPTIONS
     )
-    DJANGO_CHAT_CAST_PRIVATE_MEDIA_STORAGE_OPTIONS["location"] = (
-        DJANGO_CHAT_CAST_PRIVATE_MEDIA_LOCATION
-    )
-    STORAGES["cast_private_media"] = {
+    STORAGES["cast_public_transcripts"] = {
         "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": DJANGO_CHAT_CAST_PRIVATE_MEDIA_STORAGE_OPTIONS,
+        "OPTIONS": DJANGO_CHAT_PUBLIC_TRANSCRIPT_STORAGE_OPTIONS,
+    }
+    # django-cast's known-speaker sidecars and voice-reference clips are private
+    # editorial artifacts. Point their storage alias at the same durable bucket
+    # and object keys for migration compatibility, but do not use the public
+    # media host when Django generates URLs for them.
+    DJANGO_CHAT_PRIVATE_MEDIA_STORAGE_OPTIONS = copy.deepcopy(DJANGO_CHAT_S3_MEDIA_STORAGE_OPTIONS)
+    DJANGO_CHAT_PRIVATE_MEDIA_STORAGE_OPTIONS.pop("custom_domain", None)
+    DJANGO_CHAT_PRIVATE_MEDIA_STORAGE_OPTIONS["querystring_auth"] = True
+    DJANGO_CHAT_PRIVATE_MEDIA_STORAGE_OPTIONS["default_acl"] = "private"
+    STORAGES["cast_voice_references"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": DJANGO_CHAT_PRIVATE_MEDIA_STORAGE_OPTIONS,
     }
     MEDIA_URL = env(
         "DJANGO_CHAT_MEDIA_URL",

@@ -154,10 +154,13 @@ it is not used for public transcript rendering. The `cast_transcripts` database 
 is enabled for all deployed environments and configured in
 `deploy/group_vars/django_chat.yml`. Wagtail can queue Voxhelm transcript generation
 for individual reviewed episodes. When S3 media is enabled, the
-`cast_private_media` storage alias points at the same durable Django Chat S3
-bucket/media host under a separate object prefix, so transcript artifacts are
-not moved to local private storage by future django-cast transcript migrations
-and copy/delete migrations do not collide with the original public-media keys.
+`cast_public_transcripts` storage alias points at the same durable Django Chat
+S3 bucket/media host as public media storage, so transcript artifacts stay in
+public storage and do not rely on the private-media compatibility fallback.
+Private known-speaker sidecars and voice-reference clips use the
+`cast_voice_references` alias against the same durable bucket/keyspace without
+the public media host, so django-cast storage migrations do not move those
+artifacts to local disk.
 Environments can copy the resulting django-cast artifacts from staging with
 `just import-staging-transcripts`.
 

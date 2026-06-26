@@ -424,7 +424,7 @@ def test_production_settings_import_with_empty_allowed_hosts_and_explicit_admin_
     ]
 
 
-def test_s3_media_storage_configures_cast_private_media_alias() -> None:
+def test_s3_media_storage_configures_public_transcript_storage_alias() -> None:
     env = {
         "PATH": os.environ["PATH"],
         "DJANGO_READ_DOT_ENV_FILE": "False",
@@ -437,7 +437,6 @@ def test_s3_media_storage_configures_cast_private_media_alias() -> None:
         "DJANGO_CHAT_S3_STORAGE_BUCKET_NAME": "django-chat-media",
         "DJANGO_CHAT_S3_CUSTOM_DOMAIN": "media.example.invalid",
         "DJANGO_CHAT_MEDIA_URL": "https://media.example.invalid/",
-        "DJANGO_CHAT_CAST_PRIVATE_MEDIA_LOCATION": "cast-private-review",
         "DATABASE_URL": "sqlite:///:memory:",
     }
 
@@ -446,10 +445,21 @@ def test_s3_media_storage_configures_cast_private_media_alias() -> None:
             sys.executable,
             "-c",
             "import json; "
+            "import django; "
             "from django.conf import settings; "
+            "from django.core.files.storage import storages; "
+            "django.setup(); "
+            "from cast.models.contributors import get_voice_reference_storage; "
+            "from cast.private_storage import get_transcript_storage; "
             "print(json.dumps({"
             "'default': settings.STORAGES['default'], "
-            "'cast_private_media': settings.STORAGES['cast_private_media'], "
+            "'cast_public_transcripts': settings.STORAGES['cast_public_transcripts'], "
+            "'cast_voice_references': settings.STORAGES['cast_voice_references'], "
+            "'has_cast_private_media': 'cast_private_media' in settings.STORAGES, "
+            "'transcript_uses_public_alias': "
+            "get_transcript_storage() is storages['cast_public_transcripts'], "
+            "'voice_references_use_private_alias': "
+            "get_voice_reference_storage() is storages['cast_voice_references'], "
             "}, sort_keys=True)); "
             "print(settings.MEDIA_URL)",
         ],
@@ -462,78 +472,34 @@ def test_s3_media_storage_configures_cast_private_media_alias() -> None:
 
     storages = json.loads(result.stdout.splitlines()[0])
     assert storages["default"]["BACKEND"] == "storages.backends.s3.S3Storage"
-    assert storages["cast_private_media"]["BACKEND"] == "storages.backends.s3.S3Storage"
+    assert storages["cast_public_transcripts"]["BACKEND"] == "storages.backends.s3.S3Storage"
+    assert storages["cast_voice_references"]["BACKEND"] == "storages.backends.s3.S3Storage"
     assert storages["default"]["OPTIONS"]["bucket_name"] == "django-chat-media"
-    assert storages["cast_private_media"]["OPTIONS"]["bucket_name"] == "django-chat-media"
-    assert storages["cast_private_media"]["OPTIONS"]["custom_domain"] == "media.example.invalid"
+    assert storages["cast_public_transcripts"]["OPTIONS"]["bucket_name"] == "django-chat-media"
+    assert storages["cast_voice_references"]["OPTIONS"]["bucket_name"] == "django-chat-media"
+    assert (
+        storages["cast_public_transcripts"]["OPTIONS"]["custom_domain"] == "media.example.invalid"
+    )
+    assert "custom_domain" not in storages["cast_voice_references"]["OPTIONS"]
     assert "location" not in storages["default"]["OPTIONS"]
-    assert storages["cast_private_media"]["OPTIONS"]["location"] == "cast-private-review"
+    assert "location" not in storages["cast_public_transcripts"]["OPTIONS"]
+    assert "location" not in storages["cast_voice_references"]["OPTIONS"]
+    assert storages["cast_voice_references"]["OPTIONS"]["querystring_auth"] is True
+    assert storages["cast_voice_references"]["OPTIONS"]["default_acl"] == "private"
+    assert storages["has_cast_private_media"] is False
+    assert storages["transcript_uses_public_alias"] is True
+    assert storages["voice_references_use_private_alias"] is True
     assert result.stdout.splitlines()[1] == "https://media.example.invalid/"
 
 
-def test_s3_cast_private_media_location_ignores_empty_environment_value() -> None:
-    env = {
-        "PATH": os.environ["PATH"],
-        "DJANGO_READ_DOT_ENV_FILE": "False",
-        "DJANGO_SECRET_KEY": "production-test-secret",
-        "DJANGO_ALLOWED_HOSTS": "django-chat.example.invalid,localhost",
-        "DJANGO_SETTINGS_MODULE": "config.settings.production",
-        "DJANGO_CHAT_MEDIA_STORAGE_BACKEND": "s3",
-        "DJANGO_CHAT_S3_ACCESS_KEY_ID": "fake-access-key",
-        "DJANGO_CHAT_S3_SECRET_ACCESS_KEY": "fake-secret-key",
-        "DJANGO_CHAT_S3_STORAGE_BUCKET_NAME": "django-chat-media",
-        "DJANGO_CHAT_S3_CUSTOM_DOMAIN": "media.example.invalid",
-        "DJANGO_CHAT_CAST_PRIVATE_MEDIA_LOCATION": "",
-        "DATABASE_URL": "sqlite:///:memory:",
-    }
+def test_django_cast_private_media_falls_back_to_non_public_filesystem_storage() -> None:
+    from cast.private_storage import get_private_media_storage
 
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            "from django.conf import settings; "
-            "print(settings.STORAGES['cast_private_media']['OPTIONS']['location'])",
-        ],
-        check=True,
-        cwd=ROOT_DIR,
-        env=env,
-        capture_output=True,
-        text=True,
-    )
+    storage = get_private_media_storage()
 
-    assert result.stdout.strip() == "cast-private-media"
-
-
-def test_s3_cast_private_media_location_defaults_when_unset() -> None:
-    env = {
-        "PATH": os.environ["PATH"],
-        "DJANGO_READ_DOT_ENV_FILE": "False",
-        "DJANGO_SECRET_KEY": "production-test-secret",
-        "DJANGO_ALLOWED_HOSTS": "django-chat.example.invalid,localhost",
-        "DJANGO_SETTINGS_MODULE": "config.settings.production",
-        "DJANGO_CHAT_MEDIA_STORAGE_BACKEND": "s3",
-        "DJANGO_CHAT_S3_ACCESS_KEY_ID": "fake-access-key",
-        "DJANGO_CHAT_S3_SECRET_ACCESS_KEY": "fake-secret-key",
-        "DJANGO_CHAT_S3_STORAGE_BUCKET_NAME": "django-chat-media",
-        "DJANGO_CHAT_S3_CUSTOM_DOMAIN": "media.example.invalid",
-        "DATABASE_URL": "sqlite:///:memory:",
-    }
-
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            "from django.conf import settings; "
-            "print(settings.STORAGES['cast_private_media']['OPTIONS']['location'])",
-        ],
-        check=True,
-        cwd=ROOT_DIR,
-        env=env,
-        capture_output=True,
-        text=True,
-    )
-
-    assert result.stdout.strip() == "cast-private-media"
+    assert storage.__class__.__name__ == "PrivateFileSystemStorage"
+    with pytest.raises(ValueError, match="not accessible via a URL"):
+        storage.url("example.json")
 
 
 def test_django_cast_public_transcript_artifacts_use_documented_storage_prefix() -> None:

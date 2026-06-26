@@ -130,12 +130,13 @@ you choose a non-AWS S3-compatible provider that also needs an explicit
 endpoint URL or region override, extend the deploy vars before the first live
 deploy.
 
-When S3 media storage is enabled, Django Chat temporarily maps django-cast's
-`cast_private_media` storage alias to the same public media bucket/media host
-under a separate object prefix so transcript-storage migrations do not fall
-back to local disk. This compatibility alias is only acceptable for public
-transcript artifacts; before a django-cast bump, confirm no genuinely private
-media is routed through it.
+When S3 media storage is enabled, Django Chat maps django-cast's
+`cast_public_transcripts` storage alias to the same public media bucket/media
+host. That alias is for public Podlove JSON, WebVTT, and DOTe transcript
+artifacts. Django Chat also maps `cast_voice_references` to the same durable
+bucket/keyspace without the public media host and with signed private defaults,
+so django-cast private sidecars and voice-reference clips do not fall back to
+local disk during storage migrations.
 
 The deploy playbook validates the local source checkout and encrypted secret
 file before gathering remote facts or changing the target host.

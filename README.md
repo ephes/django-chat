@@ -123,11 +123,13 @@ than the lower-level `just manage import_django_chat_staging_transcripts`
 command for normal local review, because the recipe supplies the staging media
 storage environment.
 
-When S3 media storage is enabled, the django-cast `cast_private_media` storage
-alias is also pointed at the same durable S3 bucket/media host under a separate
-object prefix. This guards future django-cast transcript-storage migrations
-from moving transcript artifacts to a local private-media directory or deleting
-a copied destination by removing the original public-media key.
+When S3 media storage is enabled, the django-cast `cast_public_transcripts`
+storage alias is also pointed at the same durable S3 bucket/media host. Public
+transcript artifacts stay in public media storage and no longer rely on the
+private-media compatibility fallback. Django Chat also configures
+`cast_voice_references` to the same bucket/keyspace without the public media
+host, so private known-speaker sidecars and voice-reference clips remain durable
+through django-cast storage migrations.
 
 Run all local quality checks:
 

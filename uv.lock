@@ -180,7 +180,7 @@ wheels = [
 [[package]]
 name = "django-cast"
 version = "0.2.61"
-source = { git = "https://github.com/ephes/django-cast?rev=173a3314#173a331412cca19359ee3077c6ece5d784452244" }
+source = { git = "https://github.com/ephes/django-cast?rev=47124cec#47124cecb978793a582011c0a277702c8146d922" }
 dependencies = [
     { name = "crispy-bootstrap4" },
     { name = "django" },
@@ -235,7 +235,7 @@ dev = [
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14,<5.0" },
     { name = "django", specifier = ">=6.0,<7.0" },
-    { name = "django-cast", git = "https://github.com/ephes/django-cast?rev=173a3314" },
+    { name = "django-cast", git = "https://github.com/ephes/django-cast?rev=47124cec" },
     { name = "django-environ", specifier = ">=0.13,<0.14" },
     { name = "django-storages", extras = ["s3"], specifier = ">=1.14,<2.0" },
     { name = "django-tasks", specifier = ">=0.12,<0.13" },

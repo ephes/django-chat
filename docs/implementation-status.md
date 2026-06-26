@@ -547,8 +547,9 @@ growth.
    (`django_chat/core/receivers.py`) rejects a direct POST to a disabled object,
    so the no-JS and AJAX post endpoints cannot be used to bypass the UI gate.
 
-   **Author self-edit/delete — added.** Bumped the `django-cast` pin to develop
-   HEAD (`173a3314`) to pick up its session-bound author-edit feature, ran the
+   **Author self-edit/delete — added.** Bumped the `django-cast` pin to the
+   then-current develop commit (`173a3314`) to pick up its session-bound
+   author-edit feature, ran the
    `cast_comments` `CommentAuthorMeta` migration, and added the
    `CAST_COMMENTS_ALLOW_AUTHOR_EDITS` flag (off per environment in `base.py`, on
    in `local.py` for development). The local `comments/comment.html` override now
