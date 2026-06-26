@@ -1,5 +1,6 @@
 """Base settings for the Django Chat project."""
 
+import copy
 import os
 from pathlib import Path
 from types import ModuleType
@@ -182,36 +183,56 @@ if MEDIA_STORAGE_BACKEND == "s3":
         if DJANGO_CHAT_S3_CUSTOM_DOMAIN
         else f"{DJANGO_CHAT_S3_BUCKET_NAME}.s3.amazonaws.com"
     )
-    STORAGES["default"] = {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-            "access_key": _env_required(
-                "DJANGO_CHAT_S3_ACCESS_KEY_ID",
-                "DJANGO_AWS_ACCESS_KEY_ID",
+    DJANGO_CHAT_S3_MEDIA_STORAGE_OPTIONS: dict[str, Any] = {
+        "access_key": _env_required(
+            "DJANGO_CHAT_S3_ACCESS_KEY_ID",
+            "DJANGO_AWS_ACCESS_KEY_ID",
+        ),
+        "secret_key": _env_required(
+            "DJANGO_CHAT_S3_SECRET_ACCESS_KEY",
+            "DJANGO_AWS_SECRET_ACCESS_KEY",
+        ),
+        "bucket_name": DJANGO_CHAT_S3_BUCKET_NAME,
+        "endpoint_url": _env_first("DJANGO_CHAT_S3_ENDPOINT_URL"),
+        "region_name": _env_first("DJANGO_CHAT_S3_REGION_NAME"),
+        "custom_domain": DJANGO_CHAT_S3_CUSTOM_DOMAIN or None,
+        "addressing_style": _env_first("DJANGO_CHAT_S3_ADDRESSING_STYLE"),
+        "signature_version": env("DJANGO_CHAT_S3_SIGNATURE_VERSION", default="s3v4"),
+        "querystring_auth": env.bool(
+            "DJANGO_CHAT_S3_QUERYSTRING_AUTH",
+            default=False,
+        ),
+        "file_overwrite": env.bool("DJANGO_CHAT_S3_FILE_OVERWRITE", default=False),
+        "default_acl": env("DJANGO_CHAT_S3_DEFAULT_ACL", default=None),
+        "object_parameters": {
+            "CacheControl": env(
+                "DJANGO_CHAT_S3_CACHE_CONTROL",
+                default="max-age=604800, s-maxage=604800, must-revalidate",
             ),
-            "secret_key": _env_required(
-                "DJANGO_CHAT_S3_SECRET_ACCESS_KEY",
-                "DJANGO_AWS_SECRET_ACCESS_KEY",
-            ),
-            "bucket_name": DJANGO_CHAT_S3_BUCKET_NAME,
-            "endpoint_url": _env_first("DJANGO_CHAT_S3_ENDPOINT_URL"),
-            "region_name": _env_first("DJANGO_CHAT_S3_REGION_NAME"),
-            "custom_domain": DJANGO_CHAT_S3_CUSTOM_DOMAIN or None,
-            "addressing_style": _env_first("DJANGO_CHAT_S3_ADDRESSING_STYLE"),
-            "signature_version": env("DJANGO_CHAT_S3_SIGNATURE_VERSION", default="s3v4"),
-            "querystring_auth": env.bool(
-                "DJANGO_CHAT_S3_QUERYSTRING_AUTH",
-                default=False,
-            ),
-            "file_overwrite": env.bool("DJANGO_CHAT_S3_FILE_OVERWRITE", default=False),
-            "default_acl": env("DJANGO_CHAT_S3_DEFAULT_ACL", default=None),
-            "object_parameters": {
-                "CacheControl": env(
-                    "DJANGO_CHAT_S3_CACHE_CONTROL",
-                    default="max-age=604800, s-maxage=604800, must-revalidate",
-                ),
-            },
         },
+    }
+    DJANGO_CHAT_S3_MEDIA_STORAGE = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": DJANGO_CHAT_S3_MEDIA_STORAGE_OPTIONS,
+    }
+    STORAGES["default"] = DJANGO_CHAT_S3_MEDIA_STORAGE
+    DJANGO_CHAT_CAST_PRIVATE_MEDIA_LOCATION = _env_first(
+        "DJANGO_CHAT_CAST_PRIVATE_MEDIA_LOCATION",
+        default="cast-private-media",
+    )
+    # django-cast develop includes a private transcript-artifact migration that
+    # writes through this alias. Keep it in the durable Django Chat S3 bucket,
+    # but under a distinct prefix so copy-then-delete migrations cannot delete
+    # the destination object by removing the original public-media key.
+    DJANGO_CHAT_CAST_PRIVATE_MEDIA_STORAGE_OPTIONS = copy.deepcopy(
+        DJANGO_CHAT_S3_MEDIA_STORAGE_OPTIONS
+    )
+    DJANGO_CHAT_CAST_PRIVATE_MEDIA_STORAGE_OPTIONS["location"] = (
+        DJANGO_CHAT_CAST_PRIVATE_MEDIA_LOCATION
+    )
+    STORAGES["cast_private_media"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": DJANGO_CHAT_CAST_PRIVATE_MEDIA_STORAGE_OPTIONS,
     }
     MEDIA_URL = env(
         "DJANGO_CHAT_MEDIA_URL",

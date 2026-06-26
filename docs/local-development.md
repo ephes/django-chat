@@ -682,6 +682,16 @@ DJANGO_CHAT_S3_STORAGE_BUCKET_NAME=...
 # DJANGO_CHAT_S3_CACHE_CONTROL=max-age=604800, s-maxage=604800, must-revalidate
 ```
 
+With S3 media enabled, `STORAGES["cast_private_media"]` is intentionally
+configured to the same S3 bucket/media host as `STORAGES["default"]`, but under
+a separate object prefix. The default prefix is `cast-private-media/`; override
+it with `DJANGO_CHAT_CAST_PRIVATE_MEDIA_LOCATION` only when the deployment needs
+a different S3 key layout. This protects local staging-media review and future
+django-cast migrations from moving transcript artifacts into an unmanaged local
+private-media directory, and avoids copy/delete collisions with the original
+public media keys. Treat it as a temporary compatibility guard until django-cast
+exposes a dedicated public transcript artifact storage alias.
+
 Do not reuse Python Podcast media buckets or credentials for Django Chat.
 Deployment-specific bucket creation and real SOPS/age secret files remain
 operator-owned and must not be committed decrypted.

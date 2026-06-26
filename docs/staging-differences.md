@@ -153,8 +153,12 @@ Simplecast transcript HTML is preserved in source metadata where available, but
 it is not used for public transcript rendering. The `cast_transcripts` database worker
 is enabled for all deployed environments and configured in
 `deploy/group_vars/django_chat.yml`. Wagtail can queue Voxhelm transcript generation
-for individual reviewed episodes. Environments can copy the
-resulting django-cast artifacts from staging with
+for individual reviewed episodes. When S3 media is enabled, the
+`cast_private_media` storage alias points at the same durable Django Chat S3
+bucket/media host under a separate object prefix, so transcript artifacts are
+not moved to local private storage by future django-cast transcript migrations
+and copy/delete migrations do not collide with the original public-media keys.
+Environments can copy the resulting django-cast artifacts from staging with
 `just import-staging-transcripts`.
 
 In Wagtail admin, edit an episode page and use the **Generate transcript** page
