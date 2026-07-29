@@ -340,9 +340,15 @@ valid. With JavaScript disabled, the
 form does a normal POST and redirects back, and the `required` / `type="email"`
 attributes keep native validation (bubbles and all) as the fallback.
 Identity is anonymous name/email only (the URL and title fields are excluded).
-Spam handling uses django-cast's native `SpamFilter` (auto-publish + honeypot);
-seeding a trained filter from the python-podcast corpus is a separate
-pre-launch ops step.
+Spam handling uses django-cast's native `SpamFilter` (auto-publish + honeypot).
+A model copied from the python-podcast corpus was seeded on staging on
+2026-07-27 and turned out to be unusable — its ham class is all German, so it
+classified English ham as spam at `p = 1.0`. Staging now runs a model retrained
+on 2026-07-29 with Django Chat transcript lines as English ham. Locally there is
+no `cast_spamfilter` row unless you create one, so the moderator publishes every
+comment. See [Comment spam filter](spam-filter.md) for the measurements, the
+operating-point trade-off, the four `manage.py` commands that retrain and install
+a model, and why the admin "Retrain" action is destructive here.
 
 ### Author self-edit and delete
 

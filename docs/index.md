@@ -23,6 +23,8 @@ The canonical planning source of truth lives outside this site, in
   local and production.
 - [Host review guide](host-review-guide.md) — what hosts should check on
   staging.
+- [Comment spam filter](spam-filter.md) — why the imported model is not usable
+  as-is, and how to retrain it.
 - [Production migration notes](production-migration-notes.md) — notes for the
   move to production.
 

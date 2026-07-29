@@ -564,9 +564,41 @@ growth.
    public, unanswered comment; edits are re-moderated and deletes are soft
    (staff-restorable). See [`local-development.md`](local-development.md#author-self-edit-and-delete).
 
-   **Pre-launch ops follow-up (not in this slice):** seed the `SpamFilter` by
-   importing `../python-podcast`'s labeled comment corpus and retraining;
-   untrained, the moderator auto-publishes every comment.
+   **Spam filter — seeded, measured unusable, retrained and shipped to staging.**
+   On 2026-07-27 the `SpamFilter` was seeded by copying `../python-podcast`'s
+   trained production model (name `2022-11-20`, 43,159 tokens). It was then
+   measured on staging and found unusable: that corpus is ~9,558 spam / 189
+   almost-entirely-German ham, so it behaves as a German-vs-English classifier
+   and flagged **5/5 English ham messages as spam at `p = 1.0000`**. Django Chat
+   is English-language, so it would have hidden essentially every legitimate
+   comment.
+
+   Retrained on 2026-07-29 and deployed to staging as
+   **`2026-07-29-transcript-ham`** (row 1, 120,094 tokens): 7,797 python-podcast
+   comments plus **40,000 Django Chat transcript lines as English ham**, which is
+   what supplies the missing English vocabulary. Held out: **98.3% spam recall
+   (1,912), 100% German ham (38), 100% synthetic English ham (25)**, worst English
+   ham margin `p(spam) = 0.013`. 40k rather than the ≈30k first identified,
+   because at 30k the last English ham failure sat at `p(spam) = 0.54` — misfiled
+   with effectively no margin; 40k clears it for 0.9pp of spam recall, and a
+   hidden real comment costs more than a published spam one a human can moderate.
+   A re-run ablation confirms the gain is vocabulary, not the shifted prior:
+   forcing a 94%-ham prior onto the baseline vocabulary leaves English ham at 0%,
+   while the 40k vocabulary reaches 96% with the baseline prior pinned back on.
+   Verified end-to-end through `Moderator.moderate()` with the real
+   `CastComment` model. Prior model backed up at
+   `/root/spamfilter-backup-20260729.json` on the staging host. The pipeline is
+   reproducible in-repo via four management commands
+   (`extract_django_chat_spam_corpus`, `extract_django_chat_transcript_ham`,
+   `train_django_chat_spamfilter`, `install_django_chat_spamfilter`) over
+   `django_chat/core/spamfilter/`, with the evaluation-only English ham fixture
+   and tests in `django_chat/core/tests/test_spamfilter.py`; re-running it
+   yields byte-identical priors and token counts to the live staging row. Full
+   ablation, operational cautions, and usage are in
+   [`spam-filter.md`](spam-filter.md) — in particular, the admin "Retrain" action
+   retrains from the *local* `django_comments` table (0 rows on staging) and
+   would destroy the model. Untrained, the moderator auto-publishes every
+   comment, which remains the safe fallback (`delete from cast_spamfilter;`).
 8. **Production VPS, DNS cutover, URL redirects, podcast directory
    updates** — last, per user. Out of scope until host review, production
    migration notes, and the

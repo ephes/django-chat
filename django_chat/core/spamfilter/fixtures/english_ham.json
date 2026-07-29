@@ -1,0 +1,30 @@
+{
+  "_comment": "Synthetic English ham used ONLY to evaluate the comment spam filter, never as training data. It exists to measure the failure mode that made the imported python-podcast model unusable: its ham class is almost entirely German, so English ham scored as spam at p=1.0. Each entry is already in SpamFilter.comment_to_message shape ('{name} {email} {title} {comment}'). Emails use reserved example domains. See docs/spam-filter.md.",
+  "messages": [
+    "Jeff Anna Great episode as always, the part about Django migrations was really helpful.",
+    "Sarah listener@example.com Thanks for having Carlton on, his explanation of async views finally made it click for me.",
+    "Mike m@example.org Could you do a follow up episode on Django Channels? Would love to hear more.",
+    "Tom tom@example.net I have been listening since episode 1 and this is one of the best ones yet.",
+    "Priya p@example.com Really appreciated the discussion about testing strategies in large Django projects.",
+    "Dan Any chance you could interview someone from the Wagtail core team? That would be fascinating.",
+    "Alex alex@example.com The bit about select_related versus prefetch_related was worth the whole episode.",
+    "Chris Just wanted to say thank you for keeping this podcast going for so long, it has taught me a lot.",
+    "Jamie j@example.com I disagree slightly about class based views but I enjoyed hearing the argument.",
+    "Lena Wonderful interview. The section on deployment and Docker was especially useful for my team.",
+    "Sam sam@example.io Listened to this on my commute this morning and immediately refactored some code.",
+    "Robin Please keep doing the news roundups at the start, they are a great way to keep up.",
+    "Nina nina@example.com Question: did you ever cover Django REST Framework versus plain views in depth?",
+    "Oliver This episode convinced me to finally try type hints in my Django codebase. Thanks both.",
+    "Grace g@example.com Love the show. Any plans for a live episode at DjangoCon this year?",
+    "Ben Excellent points about database indexes. I found three missing ones after listening.",
+    "Maya maya@example.com As a beginner I find these episodes approachable even when the topic is advanced.",
+    "Ivan The discussion on ORM query performance answered a problem I have had for weeks.",
+    "Ruth ruth@example.com Small correction, I think the release you mentioned was 5.0 rather than 4.2.",
+    "Leo Great to hear from a guest working on a really large deployment. More of those please.",
+    "Ada ada@example.com Been recommending this podcast to everyone on my team. Keep up the good work.",
+    "Noah The tip about using django-debug-toolbar in staging was something I had never considered.",
+    "Ella ella@example.com Really enjoyed the episode on forms. Django forms are underrated in my opinion.",
+    "Hugo Would be interesting to hear you talk about background tasks and Celery alternatives.",
+    "Iris iris@example.com Thanks for the transcript, it makes it much easier to find the bit I wanted to revisit."
+  ]
+}
