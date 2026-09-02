@@ -48,6 +48,11 @@ deploy re-runs include a brief app restart, but it ensures updated
 dependencies, Gunicorn, and collected static assets are picked up by the live
 process.
 
+The deploy play sets Git's `http.version` to `HTTP/1.1` through task-scoped
+environment variables. This avoids the staging host's unreliable Git/libcurl
+HTTP/2 transport when `uv sync --frozen` fetches django-cast's public
+development branch, without changing host-wide Git configuration.
+
 Staging is live at `https://djangochat.staging.django-cast.com`. Re-run
 `just deploy-staging` after repo-side deployment changes that need to reach the
 host. Do not run production deployment from this slice.
@@ -263,7 +268,8 @@ Django Chat was bumped from django-cast `173a3314`, which did not include
 django-cast migrations `0077_private_transcript_artifact_storage` or
 `0078_private_voice_reference_storage`. Tracked environments upgrading from
 that pin will therefore run the patched no-op `0077` and the private artifact
-`0078` migration from django-cast `47124cec` for the first time. Django Chat's
+`0078` migration from django-cast `0.2.65` at `a1db64f0` for the first time.
+Django Chat's
 `cast_voice_references` alias points at the same bucket/keyspace as default
 media, so `0078` sees existing `cast_transcript_speakers/` and
 `cast_voice_references/` objects in place instead of copying them to local
@@ -272,6 +278,13 @@ pointed at an intermediate django-cast revision, check the `django_migrations`
 table for `cast` migrations `0077` and `0078` before deploying this bump and
 confirm transcript artifacts still exist under `cast_transcript/`,
 `cast_transcript_speakers/`, and `cast_voice_references/`.
+
+The Wagtail 8 dependency upgrade also applies django-cast migrations `0079`
+through `0082`. These
+add the podcast iTunes type, convert django-cast's retired built-in heading
+blocks to rich-text headings, remove that block, and make theme choices safe
+under Wagtail 8. Django Chat's `show_note_heading` is a separate custom block
+and is not targeted by the built-in heading conversion.
 
 To restore that backup, reverse the sync source and destination:
 

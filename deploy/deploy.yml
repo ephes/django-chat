@@ -3,6 +3,13 @@
   hosts: django_chat
   become: true
   gather_facts: false
+  # The staging host's Git/libcurl HTTP/2 transport cannot reliably fetch
+  # public GitHub sources. Keep uv's django-cast fetch non-interactive and
+  # reproducible without changing the host-wide Git configuration.
+  environment:
+    GIT_CONFIG_COUNT: "1"
+    GIT_CONFIG_KEY_0: http.version
+    GIT_CONFIG_VALUE_0: HTTP/1.1
   pre_tasks:
     - name: Deploy | Check Django Chat source path on controller
       ansible.builtin.stat:

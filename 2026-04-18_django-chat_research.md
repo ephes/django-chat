@@ -653,12 +653,16 @@ Implementation tracking should stay lightweight:
   - Completion note (2026-06-26): django-cast commit `47124cec` added the
     upstream `STORAGES["cast_public_transcripts"]` alias and patched the
     destructive transcript-artifact migration to keep existing public transcript
-    files in place. Django Chat now pins django-cast to `47124cec`, configures
+    files in place. Django Chat then pinned django-cast to `47124cec`, configured
     `cast_public_transcripts` to the durable S3/CloudFront media backend when
     S3 media is enabled, configures `cast_voice_references` to the same durable
     bucket/keyspace without the public media host for private known-speaker
     sidecars and voice-reference clips, and removed the temporary
     `cast_private_media` public-S3 workaround.
+  - Upgrade note (2026-09-02): those features are part of the current
+    django-cast development line. Django Chat continues to track `develop`,
+    with the resolved commit recorded in `uv.lock`, and has upgraded its
+    supported stack to Django 6.1 and Wagtail 8.0.
 
 - [ ] Use Simplecast's native 301 RSS Feed Redirect as the primary feed cutover
       lever, reversing the original "Simplecast will not redirect" decision.

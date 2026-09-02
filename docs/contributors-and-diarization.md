@@ -14,21 +14,23 @@ detail page.
 > the operational logs below are historical; verify current behavior on the
 > custom player's inline Transcript panel instead.
 
-## django-cast dependency / source choice
+## django-cast dependency
 
-Contributor snippets and the diarized speaker-label workflow are **not** in any
-django-cast PyPI release (latest `0.2.57` lacks both). They ship only on the
-`develop` branch, which the sibling `../python-podcast` site also tracks.
-
-`pyproject.toml` therefore pins django-cast to the develop branch by commit:
+Contributor snippets, diarized speaker labels, custom post-body blocks, and the
+custom audio player are available on django-cast's `develop` branch. Django
+Chat tracks that branch, matching the sibling `../homepage` and
+`../python-podcast` projects:
 
 ```toml
 [tool.uv.sources]
-django-cast = { git = "https://github.com/ephes/django-cast", rev = "151a4fa8d306def60783d50d7f4f3e052a057533" }
+django-cast = { git = "https://github.com/ephes/django-cast", branch = "develop" }
 ```
 
-That commit reports `cast.__version__ == "0.2.61"`. Bump the `rev` deliberately
-when develop advances and re-run `uv sync` + `just manage migrate`.
+The lockfile records the exact development commit used by deployments. Refresh
+it deliberately with `uv lock --upgrade-package django-cast`, then run
+`uv sync` and `just manage migrate` when adopting a later development head.
+As of the 2026-09-02 Wagtail 8 upgrade, it resolves django-cast `0.2.65` at
+`a1db64f0`.
 
 ### Migrations introduced by the upgrade
 
@@ -43,13 +45,21 @@ when develop advances and re-run `uv sync` + `just manage migrate`.
 | `0069_audio_transcript_diarization_mode` | per-audio `Audio.transcript_diarization_mode` (`inherit`/`enabled`/`disabled`) |
 | `0070_contributorvoicereference` | known-speaker voice references (unused here) |
 | `0071_transcript_speakers_and_more` | `Transcript.speakers` + speaker sanitization plumbing |
+| `0072_transcriptspeakermapping` | persisted transcript speaker assignments |
+| `0073_alter_post_body` | custom post-body block state |
+| `0074_episode_episode_number_episode_episode_type_season_and_more` | podcast publishing metadata |
+| `0075_podcast_automatic_episode_numbering_enabled_and_more` | podcast numbering configuration |
+| `0076_add_media_choose_permissions` | media chooser permissions |
+| `0077_private_transcript_artifact_storage` | rollout-safe private transcript storage transition |
+| `0078_private_voice_reference_storage` | durable private voice-reference storage transition |
+| `0079_podcast_itunes_type` | podcast iTunes type setting |
+| `0080_convert_heading_to_paragraph` | built-in heading blocks converted to rich-text headings |
+| `0081_remove_heading_block` | retired built-in heading block state |
+| `0082_alter_blog_template_base_dir_and_more` | Wagtail 8-compatible lazy theme choices |
 
-> **Known harmless warning.** `makemigrations cast` reports an unmade
-> `0072_alter_..._template_base_dir` migration. django-cast generates this
-> choices-only migration dynamically from `CAST_CUSTOM_THEMES` (Django Chat
-> registers the `django_chat` theme). It is choices/validation-only, predates
-> this upgrade, is identical on local and staging, and must **not** be written
-> into the installed package. `just manage migrate` / `check` are clean.
+The dependency upgrade is complete only after `just manage migrate` applies
+the django-cast migrations and `just manage makemigrations --check` confirms
+that Django Chat's own models need no new migrations.
 
 ## Editor workflow (Wagtail admin)
 

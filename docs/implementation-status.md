@@ -620,6 +620,10 @@ re-validation) all outbound fetches. See
 findings (low/accepted) are tracked in
 [`docs/security-known-issues.md`](security-known-issues.md).
 
+The 2026-09-02 dependency refresh is deployed and verified on staging with
+Django 6.1, Wagtail 8.0, and django-cast `0.2.65` from the `develop` head at
+`a1db64f0`.
+
 ## Next Action
 
 The custom-player transcript/share parity spec
@@ -636,7 +640,7 @@ deployed, a 2026-06-02 staging RSS probe confirms both RSS routes return 205
 items, and the host-review public pages scored 98-100 in final mobile and
 desktop Lighthouse runs. The pre-review cleanup added
 production migration notes, pagination focus/scroll behavior, episode filter
-styling including custom date/select popovers, Wagtail 7.4, and an editable
+styling including custom date/select popovers, Wagtail 8.0, and an editable
 Wagtail `SponsorPage` at
 `/episodes/sponsor/` that replaces the upstream Google-Doc "Sponsor Us" link
 with an on-site pitch (stats, sponsorship slots, pricing, hosts bio, reviews

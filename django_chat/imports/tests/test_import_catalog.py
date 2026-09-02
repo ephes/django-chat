@@ -136,10 +136,11 @@ def test_catalog_import_plan_mixes_simplecast_and_rss_audio_sizes() -> None:
         if episode.simplecast is not None
     )
     expected_size = sum(
-        (
+        cast(
+            int,
             episode.simplecast.audio_file_size
             if episode.simplecast is not None and episode.simplecast.audio_file_size is not None
-            else episode.rss.enclosure.length
+            else episode.rss.enclosure.length,
         )
         for episode in catalog.source_data.episodes
         if episode.rss is not None and episode.rss.enclosure is not None

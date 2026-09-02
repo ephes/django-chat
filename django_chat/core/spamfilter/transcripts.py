@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from typing import Any, cast
 
 from cast.models.transcript import Transcript
 
@@ -20,14 +21,13 @@ def iter_transcript_lines() -> Iterator[tuple[int, str]]:
     expected to surface the count so a silent shortfall is visible.
     """
     # ty cannot see the implicit manager on cast's Transcript model.
-    queryset = Transcript.objects.exclude(dote="").exclude(dote=None).order_by(  # ty: ignore[unresolved-attribute]
-        "id"
-    )
+    transcript_objects = cast(Any, Transcript).objects
+    queryset = transcript_objects.exclude(dote="").exclude(dote=None).order_by("id")
     for transcript in queryset.iterator():
         try:
             with transcript.dote.open("rb") as handle:
                 payload = json.load(handle)
-        except (OSError, ValueError):
+        except OSError, ValueError:
             continue
         for line in payload.get("lines", []):
             text = (line.get("text") or "").strip()
@@ -39,14 +39,13 @@ def unreadable_transcript_ids() -> list[int]:
     """Return the ids of transcripts whose DOTe payload could not be parsed."""
     unreadable: list[int] = []
     # ty cannot see the implicit manager on cast's Transcript model.
-    queryset = Transcript.objects.exclude(dote="").exclude(dote=None).order_by(  # ty: ignore[unresolved-attribute]
-        "id"
-    )
+    transcript_objects = cast(Any, Transcript).objects
+    queryset = transcript_objects.exclude(dote="").exclude(dote=None).order_by("id")
     for transcript in queryset.iterator():
         try:
             with transcript.dote.open("rb") as handle:
                 json.load(handle)
-        except (OSError, ValueError):
+        except OSError, ValueError:
             unreadable.append(transcript.id)
     return unreadable
 

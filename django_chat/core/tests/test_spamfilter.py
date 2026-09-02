@@ -132,7 +132,9 @@ def test_transcript_ham_teaches_english_vocabulary() -> None:
     ham is German -- and asserts that transcript lines fix it.
     """
     comments = [("spam", f"cheap replica watches buy now offer {index}") for index in range(40)]
-    comments += [("ham", f"vielen dank fuer die folge sehr interessant {index}") for index in range(4)]
+    comments += [
+        ("ham", f"vielen dank fuer die folge sehr interessant {index}") for index in range(4)
+    ]
 
     english = "Anna anna@example.com Great episode, the Django testing discussion was helpful"
 
@@ -276,9 +278,7 @@ def test_install_rejects_payload_that_is_not_naive_bayes(tmp_path: Path) -> None
         json.dump({"model": {"class": "SomethingElse"}, "performance": {}}, handle)
 
     with pytest.raises(CommandError, match="not a NaiveBayes model"):
-        call_command(
-            "install_django_chat_spamfilter", str(path), name="bad", stdout=StringIO()
-        )
+        call_command("install_django_chat_spamfilter", str(path), name="bad", stdout=StringIO())
 
 
 def test_extract_corpus_command_writes_json(tmp_path: Path) -> None:
@@ -286,9 +286,7 @@ def test_extract_corpus_command_writes_json(tmp_path: Path) -> None:
     output = tmp_path / "corpus.json"
     out = StringIO()
 
-    call_command(
-        "extract_django_chat_spam_corpus", str(dump), output=str(output), stdout=out
-    )
+    call_command("extract_django_chat_spam_corpus", str(dump), output=str(output), stdout=out)
 
     corpus = json.loads(output.read_text(encoding="utf-8"))
     assert len(corpus) == 3

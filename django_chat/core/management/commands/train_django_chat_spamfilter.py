@@ -115,9 +115,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  spam recall:     {evaluation.spam_recall:.1%}")
         self.stdout.write(f"  de ham recall:   {evaluation.german_ham_recall:.1%}")
         self.stdout.write(f"  en ham recall:   {evaluation.english_ham_recall:.1%}")
-        self.stdout.write(
-            f"  worst en ham:    p(spam) = {evaluation.worst_english_ham_p_spam:.4f}"
-        )
+        self.stdout.write(f"  worst en ham:    p(spam) = {evaluation.worst_english_ham_p_spam:.4f}")
 
         if evaluation.english_ham_recall < 1.0:
             self.stdout.write(
@@ -157,9 +155,7 @@ class Command(BaseCommand):
         self.stdout.write(f"{'ham lines':>12} {'spam recall':>12} {'de ham':>8} {'en ham':>8}")
         self.stdout.write("-" * 44)
         for size in sizes:
-            model = train_model(
-                train_comments, sample_ham_lines(transcript_lines, size, seed=seed)
-            )
+            model = train_model(train_comments, sample_ham_lines(transcript_lines, size, seed=seed))
             result = evaluate_model(model, test_comments, english_ham)
             self.stdout.write(
                 f"{size:>12,} {result.spam_recall:>11.1%} "

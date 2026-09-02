@@ -7,7 +7,7 @@ from django.db.models import Q
 
 
 class PodcastSourceMetadata(models.Model):
-    objects: ClassVar[models.Manager[PodcastSourceMetadata]]
+    objects: ClassVar[models.Manager]
 
     podcast = models.OneToOneField(
         "cast.Podcast",
@@ -36,18 +36,18 @@ class PodcastSourceMetadata(models.Model):
         return f"{self.source_title} ({self.simplecast_podcast_id})"
 
     @property
-    def visible_menu_links(self) -> models.QuerySet[PodcastSourceLink]:
+    def visible_menu_links(self) -> models.QuerySet:
         return self.visible_links_for("menu")
 
     @property
-    def visible_social_links(self) -> models.QuerySet[PodcastSourceLink]:
+    def visible_social_links(self) -> models.QuerySet:
         return self.visible_links_for("social")
 
     @property
-    def visible_distribution_links(self) -> models.QuerySet[PodcastSourceLink]:
+    def visible_distribution_links(self) -> models.QuerySet:
         return self.visible_links_for("distribution")
 
-    def visible_links_for(self, location: str) -> models.QuerySet[PodcastSourceLink]:
+    def visible_links_for(self, location: str) -> models.QuerySet:
         return (
             cast(Any, self)
             .source_links.filter(location=location, is_visible=True)
@@ -59,7 +59,7 @@ class PodcastSourceMetadata(models.Model):
 
 
 class PodcastSourceLink(models.Model):
-    objects: ClassVar[models.Manager[PodcastSourceLink]]
+    objects: ClassVar[models.Manager]
 
     podcast_metadata = models.ForeignKey(
         PodcastSourceMetadata,
@@ -95,7 +95,7 @@ class PodcastSourceLink(models.Model):
 
 
 class EpisodeSourceMetadata(models.Model):
-    objects: ClassVar[models.Manager[EpisodeSourceMetadata]]
+    objects: ClassVar[models.Manager]
 
     episode = models.OneToOneField(
         "cast.Episode",
@@ -154,7 +154,7 @@ class EpisodeSourceMetadata(models.Model):
 
 
 class EpisodeAudioImportMetadata(models.Model):
-    objects: ClassVar[models.Manager[EpisodeAudioImportMetadata]]
+    objects: ClassVar[models.Manager]
 
     episode_metadata = models.OneToOneField(
         EpisodeSourceMetadata,

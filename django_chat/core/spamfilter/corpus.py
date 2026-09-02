@@ -79,7 +79,8 @@ def _parse_copy_header(line: str) -> tuple[str, list[str]] | None:
     if "(" not in body or ")" not in body:
         return None
     columns = [
-        column.strip().strip('"') for column in body[body.index("(") + 1 : body.index(")")].split(",")
+        column.strip().strip('"')
+        for column in body[body.index("(") + 1 : body.index(")")].split(",")
     ]
     return table, columns
 
@@ -133,16 +134,12 @@ def load_tables(path: Path) -> dict[str, list[dict[str, str | None]]]:
 def extract_comment_corpus(path: Path) -> list[LabelledMessage]:
     """Build the labelled `(label, message)` corpus from a python-podcast dump."""
     tables = load_tables(path)
-    titles = {
-        row["comment_ptr_id"]: row.get("title") or "" for row in tables[THREADED_TABLE]
-    }
+    titles = {row["comment_ptr_id"]: row.get("title") or "" for row in tables[THREADED_TABLE]}
     # Author-deleted comments are excluded entirely: a legitimate comment the
     # author removed must not be labelled spam and poison the filter. This
     # mirrors SpamFilter.get_training_data_comments.
     deleted = {
-        row["comment_pk"]
-        for row in tables.get(AUTHOR_META_TABLE, [])
-        if row.get("deleted_at")
+        row["comment_pk"] for row in tables.get(AUTHOR_META_TABLE, []) if row.get("deleted_at")
     }
 
     corpus: list[LabelledMessage] = []

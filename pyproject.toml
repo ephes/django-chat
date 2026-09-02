@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14.4,<3.15"
 dependencies = [
     "beautifulsoup4>=4.14,<5.0",
-    "Django>=6.0,<7.0",
+    "Django>=6.1,<7.0",
     "django-cast",
     "django-environ>=0.13,<0.14",
     "django-storages[s3]>=1.14,<2.0",
@@ -14,7 +14,7 @@ dependencies = [
     "django-tasks-db>=0.12,<0.13",
     "gunicorn>=23.0,<24.0",
     "psycopg[binary]>=3.3,<4.0",
-    "wagtail>=7.4,<8.0",
+    "wagtail>=8.0,<8.1",
     "whitenoise>=6.11,<7.0",
 ]
 
@@ -33,11 +33,9 @@ dev = [
 package = false
 
 [tool.uv.sources]
-# django-cast Contributor snippets/episode assignments, the diarized transcript
-# speaker-label workflow, CAST_POST_BODY_BLOCKS, and the custom audio player ship
-# from the develop branch, which `../python-podcast` also tracks. Pin the exact
-# commit for reproducible builds; bump deliberately when develop advances.
-django-cast = { git = "https://github.com/ephes/django-cast", rev = "47124cec" }
+# Track django-cast's development branch, matching the sibling homepage and
+# python-podcast projects. uv.lock records the exact commit used by deployments.
+django-cast = { git = "https://github.com/ephes/django-cast", branch = "develop" }
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.test"

@@ -4,9 +4,8 @@ from copy import copy
 from typing import Any, cast
 
 from cast.feeds import LatestEntriesFeed
-from cast.models import Episode, Podcast
+from cast.models import Episode, Podcast, Post
 from cast.models.repository import FeedContext
-from django.db.models import Model
 from django.template.loader import render_to_string
 from django.utils.safestring import SafeText
 
@@ -37,14 +36,14 @@ class DjangoChatLatestEntriesFeed(LatestEntriesFeed):
             post_queryset=post_queryset,
         )
 
-    def item_description(self, post: Model) -> SafeText:
-        if not isinstance(post, Episode):
-            return super().item_description(post)
+    def item_description(self, item: Post) -> SafeText:
+        if not isinstance(item, Episode):
+            return super().item_description(item)
         assert self.repository is not None
 
-        repository = self.repository.get_post_detail_repository(post)
-        context_page = copy(post)
-        context_page.owner = post.owner
+        repository = self.repository.get_post_detail_repository(item)
+        context_page = copy(item)
+        context_page.owner = item.owner
         # Mirrors django-cast's dynamic page_url convention used by feed rendering.
         cast(Any, context_page).page_url = repository.absolute_page_url
         context = {
