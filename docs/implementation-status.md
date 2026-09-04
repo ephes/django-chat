@@ -431,9 +431,10 @@ growth.
    `just manage seed_django_chat_diarized_demo` (assigns the three visible
    contributors and writes deterministic block speaker labels onto the
    `django-tasks-jake-howard` cues; run it with staging media to seed the S3
-   transcript that `just dev` reads); a dev-only `DisableTranscriptCacheMiddleware`
-   (local settings) that drops the endpoint's 1-hour browser cache so seeded
-   changes show on the next load; the transcript toggle restyled as a compact
+   transcript that `just dev` reads); an environment-selectable
+   `DisableTranscriptCacheMiddleware` (always on locally and on staging) that
+   drops the endpoint's 1-hour browser cache so seeded/generated speaker changes
+   show on the next load; the transcript toggle restyled as a compact
    borderless panel header (not a pill) with the player pulled up under the
    headline; the separator rendered short + cover-aligned when closed and
    full-width over Hosts and Guests when open; the open transcript flattened to
@@ -620,9 +621,8 @@ re-validation) all outbound fetches. See
 findings (low/accepted) are tracked in
 [`docs/security-known-issues.md`](security-known-issues.md).
 
-The 2026-09-02 dependency refresh is deployed and verified on staging with
-Django 6.1, Wagtail 8.0, and django-cast `0.2.65` from the `develop` head at
-`a1db64f0`.
+The 2026-09-04 dependency refresh is verified for staging with Django 6.1,
+Wagtail 8.0, and django-cast `0.2.65` from the `develop` head at `04fae89a`.
 
 ## Next Action
 

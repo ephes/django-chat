@@ -29,8 +29,8 @@ django-cast = { git = "https://github.com/ephes/django-cast", branch = "develop"
 The lockfile records the exact development commit used by deployments. Refresh
 it deliberately with `uv lock --upgrade-package django-cast`, then run
 `uv sync` and `just manage migrate` when adopting a later development head.
-As of the 2026-09-02 Wagtail 8 upgrade, it resolves django-cast `0.2.65` at
-`a1db64f0`.
+As of the 2026-09-04 transcript-correctness update, it resolves django-cast
+`0.2.65` at `04fae89a`.
 
 ### Migrations introduced by the upgrade
 
@@ -117,8 +117,24 @@ python manage.py shell -c "from cast.models import Audio; a=Audio.objects.get(pk
 CAST_VOXHELM_POLL_TIMEOUT=7200 python manage.py generate_transcripts --audio-id <AUDIO_ID> --force
 ```
 
-Voxhelm returns generic labels (`Speaker 1`, `Speaker 2`, …). Map them to the
-real contributors so the labels survive sanitization:
+With known-speaker enabled, Voxhelm returns generic public labels plus a private
+per-segment suggestion sidecar. Generation does not publish the suggested
+names. Assign the expected contributors before generation so their approved
+voice references are sent, then review the **Known-speaker suggestions** panel
+in the Wagtail transcript editor. Save corrections for uncertain hand-offs,
+then apply confident suggestions with the Wagtail admin action. The equivalent
+shell command is:
+
+```bash
+python manage.py shell -c "from cast.models import Transcript; Transcript.objects.get(audio_id=<AUDIO_ID>).apply_known_speaker_suggestions(smooth=False)"
+```
+
+The explicit `smooth=False` matters: an uncertain rapid exchange must remain
+blank for review instead of inheriting the preceding speaker. The Wagtail
+admin's **Apply confident suggestions** action uses the same semantics.
+
+If no usable known-speaker sidecar is returned, map generic labels to the real
+contributors only after reviewing several turns from across the episode:
 
 1. Create/assign the matching visible Contributors to the episode.
 2. Rewrite the raw labels to the contributor `display_name`s:
@@ -209,18 +225,26 @@ episode's assigned contributors' approved references. With
 `CAST_VOXHELM_KNOWN_SPEAKER_ENABLED=true`, `generate_transcripts` sends it to
 Voxhelm, which returns a private `Transcript.speakers` suggestion sidecar;
 `Transcript.apply_known_speaker_suggestions()` then writes the confident
-suggestions into public Podlove/DOTe (Podlove/DOTe only — not WebVTT).
+suggestions into the public Podlove, DOTe, and WebVTT transcript artifacts that
+are present.
+Generation itself does **not** publish those names: an editor must review and
+apply the private suggestions afterward.
 
-> **Status (2026-05-29): known-speaker auto-ID is blocked at the Voxhelm
-> server.** A known-speaker regeneration of audio 1 sent a valid payload (Will,
-> Carlton, Jake — one reference each) but Voxhelm returned **no `speakers`
-> artifact** (empty suggestion sidecar), i.e. the `pyannote_known_speaker`
-> engine is not active for this deployment. Enabling it requires Voxhelm-server
-> changes (`VOXHELM_DIARIZATION_BACKEND=pyannote`, a Hugging Face token, the
-> CloudFront media host allow-listed) plus `CAST_VOXHELM_KNOWN_SPEAKER_ENABLED`
-> in the staging env — see python-podcast's known-speaker runbook. Until then,
-> the manual label-mapping above is the working path; the seeded voice
-> references are ready for when the engine is enabled.
+> **Status (2026-09-04): known-speaker auto-ID is available on the deployed
+> Voxhelm worker and enabled for Django Chat staging.** Diarized episode jobs
+> send approved contributor references and store a private per-segment
+> suggestion sidecar. Suggestions remain an editorial aid: review and apply
+> them before publication, especially around rapid exchanges or overlapping
+> speech. Do not globally map an anonymous `Speaker N` cluster without checking
+> multiple turns from the beginning, middle, and end of the episode.
+> A live probe for episode 205 returned 681 suggestions: 485 confident and 196
+> uncertain. The uncertain set included the rapid hand-off at 00:12 that must
+> not inherit the preceding host's name.
+>
+> The Voxhelm worker still requires the `pyannote` diarization backend, a
+> Hugging Face token, and the Django Chat CloudFront media host on its URL
+> allow-list. See python-podcast's known-speaker runbook when provisioning or
+> rebuilding that worker.
 
 ## Operator runbook: diarizing additional episodes
 
@@ -1233,12 +1257,13 @@ matters.
   `VoxhelmSettings` / env once a broad rollout is desired.
 - Contributor avatars are optional; the partial falls back to an initial chip.
   Add avatars in Wagtail when host/guest portraits are available.
-- **Enable known-speaker auto-ID** to remove the manual label-mapping step:
-  configure the Voxhelm server (`pyannote` backend + HF token + CloudFront host
-  allow-listed) and set `CAST_VOXHELM_KNOWN_SPEAKER_ENABLED` in the staging env,
-  then regenerate. Voice references are already seeded for both hosts and every
-  diarized guest, so the payload is ready; today the engine returns no `speakers`
-  artifact (see status note above).
+- **Use known-speaker suggestions before anonymous label mapping.** Staging sets
+  `CAST_VOXHELM_KNOWN_SPEAKER_ENABLED=true`, and voice references are seeded for
+  both hosts and every diarized guest. Review the returned per-segment sidecar
+  in the Wagtail transcript editor, correct uncertain rows, and save the segment
+  decisions; generation never publishes suggestions automatically. Treat global
+  `Speaker N` mapping only as a reviewed fallback because anonymous clusters can
+  contain a short turn from another speaker.
 - Verify/correct the best-effort host (Will vs Carlton) attributions by ear if
   precise per-segment accuracy matters; corrections are one-line
   `rewrite_speaker_labels` calls.

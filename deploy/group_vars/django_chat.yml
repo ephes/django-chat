@@ -18,6 +18,8 @@ django_chat_bootstrap_swap_enabled: false
 django_chat_bootstrap_swap_file: /swapfile
 django_chat_bootstrap_swap_size_mb: 2048
 django_chat_cast_comments_enabled: false
+django_chat_cast_voxhelm_known_speaker_enabled: false
+django_chat_disable_transcript_cache: false
 
 uv_version: "0.11.7"
 
@@ -97,3 +99,5 @@ wagtail_env_extra:
   CAST_VOXHELM_API_KEY: "{{ service_secrets.cast_voxhelm_api_key | default('') }}"
   CAST_VOXHELM_MODEL: "{{ service_secrets.cast_voxhelm_model | default('auto') }}"
   CAST_VOXHELM_LANGUAGE: "{{ service_secrets.cast_voxhelm_language | default('en') }}"
+  CAST_VOXHELM_KNOWN_SPEAKER_ENABLED: "{{ django_chat_cast_voxhelm_known_speaker_enabled | bool | ternary('true', 'false') }}"
+  DJANGO_CHAT_DISABLE_TRANSCRIPT_CACHE: "{{ django_chat_disable_transcript_cache | bool | ternary('true', 'false') }}"

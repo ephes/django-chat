@@ -89,6 +89,20 @@ def test_deploy_playbook_role_sequence_is_explicit() -> None:
     assert 'wagtail_traefik_cert_resolver: "letsencrypt"' in group_vars
     assert "django_chat_cast_comments_enabled: false" in group_vars
     assert "CAST_COMMENTS_ENABLED:" in group_vars
+    assert "django_chat_cast_voxhelm_known_speaker_enabled: false" in group_vars
+    known_speaker_mapping = (
+        "CAST_VOXHELM_KNOWN_SPEAKER_ENABLED: "
+        '"{{ django_chat_cast_voxhelm_known_speaker_enabled '
+        "| bool | ternary('true', 'false') }}\""
+    )
+    assert known_speaker_mapping in group_vars
+    assert "django_chat_disable_transcript_cache: false" in group_vars
+    transcript_cache_mapping = (
+        "DJANGO_CHAT_DISABLE_TRANSCRIPT_CACHE: "
+        '"{{ django_chat_disable_transcript_cache '
+        "| bool | ternary('true', 'false') }}\""
+    )
+    assert transcript_cache_mapping in group_vars
     assert "Deploy | Restart Django Chat transcript worker service" in playbook
     assert "wagtail_db_worker_unit_name" in playbook
 
@@ -129,6 +143,8 @@ def test_host_review_docs_preserve_staging_boundary() -> None:
     assert "transcript demo" in operations_boundary
     assert "djangochat.staging.django-cast.com" in staging_group_vars
     assert "django_chat_cast_comments_enabled: true" in staging_group_vars
+    assert "django_chat_cast_voxhelm_known_speaker_enabled: true" in staging_group_vars
+    assert "django_chat_disable_transcript_cache: true" in staging_group_vars
 
 
 def test_staging_docs_do_not_carry_obsolete_media_blocker_phrases() -> None:
@@ -389,6 +405,63 @@ def test_production_settings_import_with_explicit_environment() -> None:
         "django-chat.example.invalid",
         "https://django-chat.example.invalid/cms/",
     ]
+
+
+@pytest.mark.parametrize(
+    ("disable_cache", "middleware_enabled"),
+    [(None, "False"), ("false", "False"), ("true", "True")],
+)
+def test_production_transcript_cache_middleware_is_opt_in(
+    disable_cache: str | None,
+    middleware_enabled: str,
+) -> None:
+    env = {
+        "PATH": os.environ["PATH"],
+        "DJANGO_READ_DOT_ENV_FILE": "False",
+        "DJANGO_" + "SECRET_KEY": "test-value",
+        "DJANGO_ALLOWED_HOSTS": "django-chat.example.invalid,localhost",
+        "DJANGO_SETTINGS_MODULE": "config.settings.production",
+        "DJANGO_CHAT_MEDIA_STORAGE_BACKEND": "filesystem",
+        "DATABASE_URL": "sqlite:///:memory:",
+    }
+    if disable_cache is not None:
+        env["DJANGO_CHAT_DISABLE_TRANSCRIPT_CACHE"] = disable_cache
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from django.conf import settings; "
+            "print('django_chat.core.middleware.DisableTranscriptCacheMiddleware' "
+            "in settings.MIDDLEWARE)",
+        ],
+        check=True,
+        cwd=ROOT_DIR,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.stdout.strip() == middleware_enabled
+
+
+@pytest.mark.parametrize(
+    ("known_speaker_enabled", "expected"),
+    [(None, False), ("false", False), ("true", True)],
+)
+def test_known_speaker_environment_flag_reaches_django_cast(
+    monkeypatch: pytest.MonkeyPatch,
+    known_speaker_enabled: str | None,
+    expected: bool,
+) -> None:
+    from cast.voxhelm.client import VoxhelmClient
+
+    monkeypatch.setenv("CAST_VOXHELM_API_BASE", "https://voxhelm.example.invalid/api")
+    monkeypatch.setenv("CAST_VOXHELM_API_" + "KEY", "test-value")
+    monkeypatch.delenv("CAST_VOXHELM_KNOWN_SPEAKER_ENABLED", raising=False)
+    if known_speaker_enabled is not None:
+        monkeypatch.setenv("CAST_VOXHELM_KNOWN_SPEAKER_ENABLED", known_speaker_enabled)
+    assert VoxhelmClient.from_settings().known_speaker_enabled is expected
 
 
 def test_production_settings_import_with_empty_allowed_hosts_and_explicit_admin_url() -> None:

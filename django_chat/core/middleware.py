@@ -1,4 +1,4 @@
-"""Development-only middleware helpers."""
+"""Environment-specific middleware helpers."""
 
 from __future__ import annotations
 
@@ -6,26 +6,23 @@ from collections.abc import Callable
 
 from django.http import HttpRequest, HttpResponse
 
-# Path fragment of the custom player's lazy transcript endpoint
+# Resolved name of the custom player's lazy transcript endpoint
 # (``/api/audios/<pk>/player-transcript/``).
-_TRANSCRIPT_PATH_MARKER = "player-transcript"
+_TRANSCRIPT_VIEW_NAME = "cast:api:audio_player_transcript"
 
 
 class DisableTranscriptCacheMiddleware:
-    """Strip the player-transcript endpoint's long-lived browser cache in dev.
+    """Strip the player-transcript endpoint's long-lived browser cache.
 
     The custom-player transcript endpoint sends
-    ``Cache-Control: public, max-age=3600`` (correct for production: the cues are
-    public and stable). In local development that hides freshly seeded or edited
-    transcript data behind a one-hour browser cache, so re-running
-    ``seed_django_chat_diarized_demo`` (or re-importing) does not visibly change
-    the panel until the cache expires.
+    ``Cache-Control: public, max-age=3600``. That can hide freshly generated or
+    edited speaker labels behind a one-hour browser cache.
 
-    Enabled only from ``config.settings.local``, this middleware rewrites the
-    response to ``no-store`` for that endpoint so seeded changes appear on the
-    next page load. Do not enable it in production — the production cache is
-    intentional. (A browser that already cached the long-lived response still
-    needs one hard refresh to drop that entry; afterwards it stays fresh.)
+    Local development always enables this middleware. Deployed environments
+    can opt in with ``DJANGO_CHAT_DISABLE_TRANSCRIPT_CACHE``; staging does so
+    because it is where transcript generation and speaker review happen. A
+    browser that already cached the old long-lived response still needs one
+    hard refresh; subsequent page loads stay fresh.
     """
 
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
@@ -33,9 +30,11 @@ class DisableTranscriptCacheMiddleware:
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         response = self.get_response(request)
-        if _TRANSCRIPT_PATH_MARKER in request.path:
+        resolver_match = getattr(request, "resolver_match", None)
+        if getattr(resolver_match, "view_name", None) == _TRANSCRIPT_VIEW_NAME:
             response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-            # Drop the validator so the browser cannot serve a 304 from a stale entry.
-            if response.has_header("ETag"):
-                del response["ETag"]
+            # Drop validators so the browser cannot serve a 304 from a stale entry.
+            for header in ("ETag", "Last-Modified", "Expires"):
+                if response.has_header(header):
+                    del response[header]
         return response

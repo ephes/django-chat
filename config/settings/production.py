@@ -44,3 +44,11 @@ CACHES = {
         "LOCATION": env("DJANGO_CACHE_LOCATION", default=str(ROOT_DIR / "cache")),
     },
 }
+
+# Transcript speaker labels are editorial content.  The django-cast player
+# endpoint is cacheable by default, which is useful for stable public sites but
+# can leave staging reviewers looking at an hour-old speaker correction.  Keep
+# this opt-in so production can retain the upstream policy while staging always
+# reflects the latest reviewed transcript.
+if env.bool("DJANGO_CHAT_DISABLE_TRANSCRIPT_CACHE", default=False):
+    MIDDLEWARE = [*MIDDLEWARE, "django_chat.core.middleware.DisableTranscriptCacheMiddleware"]  # noqa: F405

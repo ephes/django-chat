@@ -65,6 +65,17 @@ imported catalog. Individual episode/post `comments_enabled` toggles remain
 available as opt-outs, so reviewers can control comments from the admin without
 another deploy or environment change.
 
+Staging also enables `django_chat_cast_voxhelm_known_speaker_enabled`, so
+diarized episode jobs send approved host/guest voice references to Voxhelm and
+store its per-segment name suggestions for editorial review. Production keeps
+that integration opt-in. `django_chat_disable_transcript_cache` is enabled on
+staging as well, so corrections in the player transcript panel appear after the
+next page load instead of remaining in the browser cache for up to an hour. A
+browser that cached the player response before this staging policy was deployed
+needs one hard refresh; responses fetched afterward are not stored. Podlove,
+DOTe, and WebVTT files served through media storage or a CDN retain their own
+cache policies and are unaffected by this middleware.
+
 ## Ansible Dependencies
 
 `deploy/requirements.yml` installs:
@@ -92,7 +103,7 @@ hostnames, buckets, credentials, routes, or other service details.
 
 `deploy/group_vars/staging.yml` carries the live shared staging FQDN
 `djangochat.staging.django-cast.com` and opts staging into the global comments
-gate with `django_chat_cast_comments_enabled: true`.
+gate, known-speaker transcript suggestions, and uncached transcript review.
 
 `ansible_python_interpreter` is pinned to `/usr/bin/python3` for deployed
 hosts so Ansible's PostgreSQL modules use the system Python with distro
