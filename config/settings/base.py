@@ -283,6 +283,10 @@ CAST_COMMENTS_ALLOW_AUTHOR_EDITS = env.bool("CAST_COMMENTS_ALLOW_AUTHOR_EDITS", 
 # The Podlove Web Player path was removed after the staging cutover; restoring
 # it would mean reverting the removal commit, not flipping this setting.
 CAST_AUDIO_PLAYER = "custom"
+
+# <itunes:summary> repeats <description>; dropping it removes about a third of
+# the raw podcast feed. Apple Podcasts reads <description>.
+CAST_FEED_ITUNES_SUMMARY = False
 # Registered themes in the Wagtail TemplateBaseDirectory choice list.
 # `django_chat` is the project theme (see ensure_default_site for how this
 # gets pinned per-site at deploy time).

@@ -71,6 +71,37 @@ def test_episodes_feed_rss_stays_latest_entries_not_podcast_feed(client: Client)
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("feed_path", ["latest_entries", "podcast"])
+def test_feeds_answer_matching_etag_with_not_modified(client: Client, feed_path: str) -> None:
+    # Both the project's site feed route and the django-cast podcast feed
+    # revalidate through ETag, so polling clients get a bodyless 304.
+    import_django_chat_sample()
+    path = latest_entries_feed_path() if feed_path == "latest_entries" else podcast_feed_path()
+    if feed_path == "latest_entries":
+        assert resolve(path).url_name == "django_chat_latest_entries_feed"
+
+    response = client.get(path)
+    etag = response["ETag"]
+    not_modified = client.get(path, HTTP_IF_NONE_MATCH=etag)
+
+    assert response.status_code == 200
+    assert etag.startswith('W/"')
+    assert not_modified.status_code == 304
+    assert not_modified.content == b""
+
+
+@pytest.mark.django_db
+def test_podcast_feed_omits_duplicated_itunes_summary(client: Client) -> None:
+    import_django_chat_sample()
+
+    content = client.get(podcast_feed_path()).content
+
+    assert settings.CAST_FEED_ITUNES_SUMMARY is False
+    assert b"itunes:summary" not in content
+    assert b"<description>" in content
+
+
+@pytest.mark.django_db
 def test_imported_sample_index_renders_django_chat_theme_and_source_links(
     client: Client,
 ) -> None:

@@ -1,5 +1,6 @@
 """URL configuration for Django Chat."""
 
+from cast.feeds import etag_conditional_feed
 from cast.views import defaults as cast_default_views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -39,7 +40,7 @@ urlpatterns = [
     ),
     path(
         f"{settings.DJANGO_CHAT_PODCAST_SLUG}/feed/rss.xml",
-        cache_page(5 * 60)(DjangoChatLatestEntriesFeed()),
+        etag_conditional_feed(cache_page(5 * 60)(DjangoChatLatestEntriesFeed())),
         {"slug": settings.DJANGO_CHAT_PODCAST_SLUG},
         name="django_chat_latest_entries_feed",
     ),

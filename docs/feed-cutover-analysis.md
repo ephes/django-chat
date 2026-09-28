@@ -490,6 +490,27 @@ Required behavior:
 - keep a last-known-good capture of both the old and new feed XML before cutover
   for rollback comparison (a saved response body, not a published object)
 
+Feed size and polling (measured 2026-09-28 on the 206-episode staging feed):
+
+- the podcast feed was 1.14 MB raw, 108 KB with gzip and 86 KB with brotli
+  (Traefik compresses it); a cold render took about 0.7 s once per five-minute
+  cache period, and cache hits needed no database queries
+- django-cast 0.2.66 sends a weak `ETag` and answers a matching `If-None-Match`
+  with a bodyless `304`, on both the podcast feed and this project's
+  `/episodes/feed/rss.xml` site feed route; `If-Modified-Since` alone still
+  returns the full feed, because `Last-Modified` only tracks the newest episode
+- `CAST_FEED_ITUNES_SUMMARY = False` drops `<itunes:summary>`, which repeated
+  `<description>` and made up about a third of the raw feed. This is an approved
+  deviation from the Simplecast feed, which still emits it; Apple Podcasts reads
+  `<description>`, and the parity tooling does not compare `itunes:summary`
+- paged feeds (RFC 5005) were evaluated and rejected: Apple, Spotify, Overcast
+  and most other clients ignore `next` links and would see only the first page
+- verified on staging after deploying django-cast 0.2.66 (2026-09-28): the
+  podcast feed is 724 KB raw, 109 KB gzip and 82 KB brotli; a matching
+  `If-None-Match` returns a bodyless `304` for identity, gzip and brotli
+  requests behind Traefik, and live parity still matches 206 = 206 items with
+  identical GUIDs and order
+
 ### Communication Window
 
 Even with the Simplecast 301 redirect as the primary migration lever,
