@@ -328,7 +328,7 @@ a small VPS:
 
 - `wagtail_gunicorn_workers: 3`
 - `wagtail_gunicorn_timeout: 120`
-- `uv_version: "0.11.7"`
+- `uv_version: "0.12.19"`
 
 Staging overrides `uv_version` to `"latest"`: the staging host is shared and
 ops-control keeps its `/usr/local/bin/uv` on the latest release, so a pinned

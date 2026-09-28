@@ -84,7 +84,7 @@ def test_deploy_playbook_role_sequence_is_explicit() -> None:
     group_vars = (ROOT_DIR / "deploy/group_vars/django_chat.yml").read_text()
     assert "wagtail_db_worker_enabled: true" in group_vars
     assert 'wagtail_db_worker_backend: "cast_transcripts"' in group_vars
-    assert 'uv_version: "0.11.7"' in group_vars
+    assert 'uv_version: "0.12.19"' in group_vars
     # The shared staging host tracks the latest uv; never downgrade it there.
     staging_vars = (ROOT_DIR / "deploy/group_vars/staging.yml").read_text()
     assert 'uv_version: "latest"' in staging_vars

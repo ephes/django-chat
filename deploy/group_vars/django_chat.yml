@@ -21,7 +21,7 @@ django_chat_cast_comments_enabled: false
 django_chat_cast_voxhelm_known_speaker_enabled: false
 django_chat_disable_transcript_cache: false
 
-uv_version: "0.11.7"
+uv_version: "0.12.19"
 
 traefik_letsencrypt_email: "{{ (service_secrets | default({})).traefik_letsencrypt_email | default('') }}"
 traefik_dashboard_enabled: false
