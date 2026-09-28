@@ -10,3 +10,8 @@ django_chat_disable_transcript_cache: true
 wagtail_fqdn: "{{ django_chat_wagtail_fqdn }}"
 wagtail_traefik_host_rule: "{{ django_chat_traefik_host_rule }}"
 wagtail_app_port: 10015
+
+# The staging host is shared and managed by ops-control, which tracks the
+# latest uv in /usr/local/bin. Pinning an older version here would downgrade
+# that shared binary on every deploy (and re-download the installer).
+uv_version: "latest"

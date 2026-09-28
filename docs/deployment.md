@@ -330,6 +330,10 @@ a small VPS:
 - `wagtail_gunicorn_timeout: 120`
 - `uv_version: "0.11.7"`
 
+Staging overrides `uv_version` to `"latest"`: the staging host is shared and
+ops-control keeps its `/usr/local/bin/uv` on the latest release, so a pinned
+older version would downgrade that shared binary on every deploy.
+
 The `cast_transcripts` database worker is enabled for all environments so
 Wagtail's Generate transcript action can queue Voxhelm completion work outside
 the web request. Web sizing remains intentionally small.
