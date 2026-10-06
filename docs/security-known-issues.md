@@ -88,6 +88,43 @@ Wagtail admin access.
   `X-Forwarded-Proto: https` and defeat `SECURE_SSL_REDIRECT` / secure-cookie
   logic. Remove this setting or ensure the proxy always overwrites the header.
 
+## Episode privacy (fixed)
+
+Recorded here because it is the rule that keeps §5 from recurring elsewhere.
+
+- **Was:** the custom episode index (`django_chat/core/views.py`), the embed
+  player view, and the latest-entries feed (`django_chat/core/feeds.py`)
+  queried `Episode.objects.live()` / `Podcast.objects.live()` without
+  `.public()`. These views never call `Page.serve()`, so Wagtail's
+  `PageViewRestriction` checks did not run, and login-, password- and
+  group-restricted episodes were listed, embeddable and published in
+  `/episodes/feed/rss.xml` with their show notes and enclosure. The feed was
+  also mounted as one shared instance without django-cast's restricted-root
+  guard, so a cached feed kept being served after its podcast was restricted.
+- **Fixed:** every page lookup in those views uses `.live().public()`; the feed
+  route is wrapped in `unrestricted_page_required(Blog)` (checked before the
+  response cache) and `request_local_feed` (one feed instance per cache miss),
+  matching django-cast's own feed routes. Once a `PageViewRestriction` save or
+  delete commits, the response cache is cleared (`django_chat/core/receivers.py`,
+  run via `transaction.on_commit` because production uses `ATOMIC_REQUESTS`).
+  The site feed's cache key carries a generation that the clear resets
+  (`restriction_aware_cache_page` in `django_chat/core/feeds.py`), so a render
+  already in flight during the change stores its stale response where no later
+  request reads it.
+  Covered by
+  `django_chat/core/tests/test_episode_privacy.py`.
+- **Rule:** any project view or feed that renders pages without going through
+  Wagtail's `serve()` must filter with `.live().public()`, refuse restricted
+  roots before any shared cache, and rely on the restriction-change cache
+  invalidation for anything it caches.
+- **Still accepted:** unpublishing an episode does not invalidate the cache, so
+  a cached feed can list it for up to five minutes; that is django-cast's
+  upstream behaviour and not a privacy control. django-cast's own cached feeds
+  (`/episodes/feed/podcast/<format>/rss.xml`, `/episodes/feed/atom.xml`) are
+  also cleared on a restriction change, but use plain `cache_page`: a render in
+  flight at that moment can refill them with the old entry for up to five
+  minutes. Closing that needs a generation-aware cache in django-cast itself.
+
 ## Out of scope (not security defects in this codebase)
 
 - **Vendored `django-cast` migration drift** surfaced by

@@ -1,19 +1,24 @@
 """URL configuration for Django Chat."""
 
-from cast.feeds import etag_conditional_feed
+from cast.feeds import etag_conditional_feed, request_local_feed
+from cast.models import Blog
+from cast.site_lookup import unrestricted_page_required
 from cast.views import defaults as cast_default_views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path, reverse_lazy
-from django.views.decorators.cache import cache_page
 from django.views.generic import RedirectView
-from django_chat.core.feeds import DjangoChatLatestEntriesFeed
+from django_chat.core.feeds import DjangoChatLatestEntriesFeed, restriction_aware_cache_page
 from django_chat.core.views import episode_embed, podcast_episode_index
 from django_chat.sponsor.views import sponsor_page
 from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
+
+# Refuse view-restricted podcasts before the shared response cache, like
+# django-cast's own feed routes.
+public_feed = unrestricted_page_required(Blog)
 
 handler400 = cast_default_views.bad_request
 handler403 = cast_default_views.permission_denied
@@ -40,7 +45,13 @@ urlpatterns = [
     ),
     path(
         f"{settings.DJANGO_CHAT_PODCAST_SLUG}/feed/rss.xml",
-        etag_conditional_feed(cache_page(5 * 60)(DjangoChatLatestEntriesFeed())),
+        public_feed(
+            etag_conditional_feed(
+                restriction_aware_cache_page(5 * 60)(
+                    request_local_feed(DjangoChatLatestEntriesFeed)
+                )
+            )
+        ),
         {"slug": settings.DJANGO_CHAT_PODCAST_SLUG},
         name="django_chat_latest_entries_feed",
     ),

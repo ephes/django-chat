@@ -32,7 +32,10 @@ def test_catalog_performance_measurement_reports_feed_and_list_metrics(
     assert result.latest_entries_feed.path == f"/{podcast_slug}/feed/rss.xml"
     assert result.latest_entries_feed.status_code == 200
     assert result.latest_entries_item_count == 8
-    assert result.latest_entries_feed.query_count <= 15
+    # 15 before the episode-privacy fix, plus a constant 4: the
+    # restricted-root guard in front of the response cache (page, ancestors,
+    # restriction check) and the `.public()` restriction lookup.
+    assert result.latest_entries_feed.query_count <= 19
     assert result.episode_list.path == f"/{podcast_slug}/"
     assert result.episode_list.status_code == 200
     assert result.episode_list.query_count > 0
