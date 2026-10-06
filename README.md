@@ -12,8 +12,9 @@ scaffolding under `deploy/`, and host review docs for staging. Staging is live
 at `https://djangochat.staging.django-cast.com` with full-catalog metadata,
 copied audio for all live imported episodes, generated RSS routes, Wagtail
 admin at `https://djangochat.staging.django-cast.com/cms/`, and a
-Voxhelm-generated transcript demo at `/episodes/preview/transcript/`. No
-production deployment has been performed. The planning source of truth is
+Voxhelm-generated transcript demo at `/episodes/preview/transcript/`. GitHub Actions CI
+(`.github/workflows/ci.yml`) runs `just check` and a `pip-audit` of the lock on
+every push. No production deployment has been performed. The planning source of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development

@@ -81,6 +81,24 @@ is intentionally scoped to `config`, `django_chat`, and `manage.py` for now so
 the command checks local code without taking on Django, Wagtail, or django-cast
 internals as a strict typing target.
 
+### Continuous Integration
+
+`.github/workflows/ci.yml` runs on every push and pull request. The `check` job
+runs the same steps as `just check` (`uv sync --locked`, ruff lint, ruff format
+check, `ty`, pytest). Test settings use in-memory SQLite and local file storage,
+so CI needs no database service and no secrets; browser tests stay skipped. The
+`audit` job runs `pip-audit` against `uv export --locked`; the git-sourced
+`django-cast` dependency is reported as skipped because it has no version to
+look up. Actions are pinned by commit SHA and the workflow has read-only
+`contents` permission.
+
+To reproduce the audit locally:
+
+```sh
+uv export --locked --no-hashes --no-emit-project -o /tmp/django-chat-requirements.txt
+uvx pip-audit -r /tmp/django-chat-requirements.txt --disable-pip --no-deps
+```
+
 ## Line Counts
 
 Print repository line-count summaries by language, source/test split, area, and
