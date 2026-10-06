@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+from decimal import ROUND_HALF_UP, Decimal
 from types import SimpleNamespace
 
 from django import template
@@ -39,34 +41,36 @@ def duration_minutes(seconds: int | None) -> str:
     return f"{minutes} MIN"
 
 
+# Plain non-negative digits only (no signs, exponents, nan/inf), bounded so the
+# Decimal arithmetic below can never overflow its context precision.
+_TRANSCRIPT_TIMESTAMP_RE = re.compile(
+    r"(?:(?P<hours>\d{1,4}):)?(?P<minutes>\d{1,4}):(?P<seconds>\d{1,4}(?:\.\d{1,9})?)",
+    re.ASCII,
+)
+
+
 @register.filter
 def transcript_timestamp(value) -> str:
     """Trim a podlove transcript `HH:MM:SS.mmm` (or `MM:SS.mmm`) timestamp
     string to `MM:SS.D` — minute precision plus a tenth of a second.
     Hours fold into the minute count, so an episode running past one hour
-    reads as `78:00.0`, not `1:18:00.0`. Returns the input untouched if
-    the value isn't a recognisable timestamp."""
+    reads as `78:00.0`, not `1:18:00.0`. The whole timestamp is rounded to
+    the nearest tenth (halves round up) before it is split, so `12:59.97`
+    reads as `13:00.0`, never `12:60.0`. Returns the input untouched if
+    the value isn't a recognisable, non-negative timestamp."""
     if not value:
         return ""
-    parts = str(value).strip().split(":")
-    if len(parts) == 3:
-        try:
-            hours = int(parts[0])
-            minutes = int(parts[1])
-            secs = float(parts[2])
-        except ValueError:
-            return str(value)
-    elif len(parts) == 2:
-        hours = 0
-        try:
-            minutes = int(parts[0])
-            secs = float(parts[1])
-        except ValueError:
-            return str(value)
-    else:
+    match = _TRANSCRIPT_TIMESTAMP_RE.fullmatch(str(value).strip())
+    if match is None:
         return str(value)
-    total_minutes = hours * 60 + minutes
-    return f"{total_minutes:02d}:{secs:04.1f}"
+    hours = int(match["hours"] or 0)
+    minutes = int(match["minutes"])
+    secs = Decimal(match["seconds"])
+    total = Decimal(hours * 3600 + minutes * 60) + secs
+    tenths = int((total * 10).quantize(Decimal(1), rounding=ROUND_HALF_UP))
+    total_minutes, tenths = divmod(tenths, 600)
+    whole_secs, tenth = divmod(tenths, 10)
+    return f"{total_minutes:02d}:{whole_secs:02d}.{tenth}"
 
 
 @register.filter
