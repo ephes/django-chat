@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 import pytest
-from django.test import Client
+from django.contrib.auth.models import Group
+from django.test import Client, TestCase
 from django.urls import reverse
+from wagtail.models import Page, PageViewRestriction
 
 from django_chat.sponsor.models import SponsorPage
 
@@ -106,3 +109,58 @@ def test_menu_link_overrides_google_docs_with_internal_url(client: Client) -> No
     # The original Google Docs URL must not appear in the menu nav anymore.
     nav_section = content.split('class="site-nav"', 1)[1].split("</nav>", 1)[0]
     assert "docs.google.com" not in nav_section
+
+
+def _restrict(page: Page, kind: str) -> None:
+    restrictions: Any = PageViewRestriction._default_manager
+    # Restriction saves clear the response cache on commit; run those
+    # callbacks as a real commit would.
+    with TestCase.captureOnCommitCallbacks(execute=True):
+        if kind == "login":
+            restrictions.create(page=page, restriction_type=PageViewRestriction.LOGIN)
+        elif kind == "password":
+            restrictions.create(
+                page=page, restriction_type=PageViewRestriction.PASSWORD, password="sesame"
+            )
+        else:
+            restriction = restrictions.create(
+                page=page, restriction_type=PageViewRestriction.GROUPS
+            )
+            restriction.groups.add(Group.objects.create(name="Insiders"))
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("kind", ["login", "password", "groups"])
+def test_restricted_sponsor_page_is_not_served_on_custom_route(client: Client, kind: str) -> None:
+    page = SponsorPage.objects.get()
+    _restrict(page, kind)
+
+    response = client.get(reverse("django_chat_sponsor"))
+
+    assert response.status_code == 404
+    assert "Sponsor Django Chat" not in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_sponsor_page_under_restricted_ancestor_is_not_served(client: Client) -> None:
+    page = SponsorPage.objects.get()
+    parent = page.get_parent()
+    assert parent is not None
+    _restrict(parent, "password")
+
+    response = client.get(reverse("django_chat_sponsor"))
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_wagtail_route_still_enforces_sponsor_restriction(client: Client) -> None:
+    page = SponsorPage.objects.get()
+    _restrict(page, "password")
+
+    response = client.get(page.url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Sponsor Django Chat" not in content
+    assert 'name="password"' in content

@@ -61,18 +61,18 @@ Wagtail admin access.
 - **If revisited:** Explicitly `escape(href, quote=True)` for non-canonicalized
   schemes to make the safety explicit rather than serializer-dependent.
 
-## 5. Sponsor page proxy bypasses Wagtail per-page view restrictions
+## 5. Sponsor page proxy bypassed Wagtail per-page view restrictions (fixed)
 
-- **Where:** `django_chat/sponsor/views.py:28` — `return page.serve(request)`
-  serves the `SponsorPage` directly instead of going through Wagtail's routing.
-- **Severity:** Low / not currently exploitable.
-- **Why not fixed:** Calling `page.serve()` skips Wagtail's
-  `PageViewRestriction` checks (password/private/group). The `SponsorPage` is a
-  public marketing page with no such restriction configured, so there is nothing
-  to bypass today.
-- **If revisited:** If a view restriction is ever added to that page, route
-  through Wagtail's `serve` view (or check `get_view_restrictions()`) so the
-  restriction is enforced.
+- **Was:** `django_chat/sponsor/views.py` looked the `SponsorPage` up with
+  `.live()` and returned `page.serve(request)`. `Page.serve()` does not run
+  Wagtail's `before_serve_page` hooks, which is where `PageViewRestriction`
+  (login, password, group) is enforced, so `/episodes/sponsor/` would have
+  served the full page past any such restriction while Wagtail's own `/sponsor/`
+  route showed the login or password form. Latent: no restriction is configured.
+- **Fixed:** the lookup uses `SponsorPage.objects.live().public()`, so a
+  restricted page, or one under a restricted ancestor, is a 404 on
+  `/episodes/sponsor/`. Viewers allowed through the restriction use Wagtail's own
+  route. Covered by `django_chat/sponsor/tests/test_sponsor_page.py`.
 
 ## 6. `SECURE_PROXY_SSL_HEADER` trusts a client-settable header
 
@@ -91,6 +91,7 @@ Wagtail admin access.
 ## Episode privacy (fixed)
 
 Recorded here because it is the rule that keeps §5 from recurring elsewhere.
+The sponsor page proxy (§5) follows the same rule.
 
 - **Was:** the custom episode index (`django_chat/core/views.py`), the embed
   player view, and the latest-entries feed (`django_chat/core/feeds.py`)

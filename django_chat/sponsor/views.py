@@ -4,6 +4,12 @@ The page lives under the Wagtail home page (root_page) for editor convenience,
 but the public URL must sit under the podcast namespace (``/episodes/sponsor/``)
 so it parallels the existing ``/episodes/feed/`` subscribe page. Wagtail's
 default routing would have served it at ``/sponsor/``, so we proxy here.
+
+``page.serve()`` does not run Wagtail's ``before_serve_page`` hooks, which is
+where ``PageViewRestriction`` (login, password, group) is enforced. The lookup
+therefore uses ``.live().public()``: a restricted page, or one under a
+restricted ancestor, is a 404 here. Viewers it is meant for can still reach it
+through Wagtail's own route, which enforces the restriction.
 """
 
 from __future__ import annotations
@@ -20,7 +26,7 @@ from django_chat.sponsor.models import SponsorPage
 
 
 def sponsor_page(request: HttpRequest) -> HttpResponse:
-    page = get_object_or_404(SponsorPage.objects.live().specific())
+    page = get_object_or_404(SponsorPage.objects.live().public().specific())
     podcast = Podcast.objects.live().filter(slug=settings.DJANGO_CHAT_PODCAST_SLUG).first()
     if podcast is not None:
         template_base_dir = podcast.get_template_base_dir(type_cast(Any, request))
