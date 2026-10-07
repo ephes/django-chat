@@ -9,6 +9,7 @@ from django_chat.core.templatetags.dc_filters import (
     has_speaker_labels,
     platform_icon,
     split_amazon_audible,
+    transcript_timestamp,
     with_speaker_changes,
     youtube_first,
 )
@@ -30,6 +31,52 @@ def _seg(text: str, speaker: str = "", start: str = "00:00:00.000") -> dict:
 )
 def test_duration_minutes_formats_or_returns_empty(seconds, expected):
     assert duration_minutes(seconds) == expected
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("00:05:07.24", "05:07.2"),
+        ("00:05:07.25", "05:07.3"),  # halves round up
+        ("00:12:59.97", "13:00.0"),  # rounding carries into the minute
+        ("00:59:59.96", "60:00.0"),
+        ("01:00:59.96", "61:00.0"),
+        ("01:18:00.000", "78:00.0"),  # hours fold into minutes
+        ("12:59.99", "13:00.0"),  # MM:SS.mmm input
+        ("03:04.5", "03:04.5"),
+        ("00:00:00.000", "00:00.0"),
+        ("00:00:00.04", "00:00.0"),
+    ],
+)
+def test_transcript_timestamp_rounds_whole_timestamp(value, expected):
+    assert transcript_timestamp(value) == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "garbage",
+        "1:2:3:4",
+        "aa:bb",
+        "00:xx:01.0",
+        "00:00:-1.0",
+        "-1:00:00.0",
+        "00:00:nan",
+        "00:00:inf",
+        "00:00:1e28",
+        "00:00:1e999999999",
+        "00:00:1_0.0",
+        "00:00:+1.0",
+        "12",
+    ],
+)
+def test_transcript_timestamp_passes_unrecognised_input_through(value):
+    assert transcript_timestamp(value) == value
+
+
+@pytest.mark.parametrize("value", [None, ""])
+def test_transcript_timestamp_empty(value):
+    assert transcript_timestamp(value) == ""
 
 
 @pytest.mark.parametrize(
