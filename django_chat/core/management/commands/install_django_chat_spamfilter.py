@@ -6,6 +6,7 @@ from typing import Any
 
 from cast.models.moderation import SpamFilter
 from django.core.management.base import BaseCommand, CommandError, CommandParser
+from django.db import transaction
 
 SPOT_CHECKS: tuple[tuple[str, str], ...] = (
     (
@@ -121,35 +122,40 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("--dry-run: nothing written."))
             return
 
-        spam_filter = existing[0] if existing else SpamFilter()
-        spam_filter.name = name  # ty: ignore[invalid-assignment]
-        spam_filter.model = payload["model"]
-        spam_filter.performance = payload["performance"]
-        spam_filter.save()
+        # Management commands get no ATOMIC_REQUESTS, so make the save and the
+        # spot checks one transaction: a model that fails a check is rolled
+        # back and the previous row (or no row) stays live.
+        with transaction.atomic():
+            spam_filter = existing[0] if existing else SpamFilter()
+            spam_filter.name = name  # ty: ignore[invalid-assignment]
+            spam_filter.model = payload["model"]
+            spam_filter.performance = payload["performance"]
+            spam_filter.save()
 
-        # Re-read so the check exercises ModelDecoder rather than the dict we
-        # just assigned.
-        spam_filter = SpamFilter.objects.get(pk=spam_filter.pk)  # ty: ignore[unresolved-attribute]
-        self.stdout.write(
-            f"installed: id={spam_filter.id} name={spam_filter.name!r} "
-            f"tokens={len(spam_filter.model.word_label_counts)}"
-        )
-
-        failures = []
-        for expected, message in SPOT_CHECKS:
-            predicted = spam_filter.model.predict_label(message)
-            probability = spam_filter.model.predict(message).get("spam", 0.0)
-            status = "ok" if predicted == expected else "MISMATCH"
-            if predicted != expected:
-                failures.append((expected, predicted, message))
+            # Re-read so the check exercises ModelDecoder rather than the dict we
+            # just assigned.
+            spam_filter = SpamFilter.objects.get(pk=spam_filter.pk)  # ty: ignore[unresolved-attribute]
             self.stdout.write(
-                f"  {status:<8} expected={expected:<4} got={predicted!s:<4} "
-                f"p(spam)={probability:.4f}"
+                f"staged: id={spam_filter.id} name={spam_filter.name!r} "
+                f"tokens={len(spam_filter.model.word_label_counts)}"
             )
 
-        if failures:
-            raise CommandError(
-                f"{len(failures)} spot check(s) failed against the installed model. "
-                "Restore the backup before enabling comments."
-            )
+            failures = []
+            for expected, message in SPOT_CHECKS:
+                predicted = spam_filter.model.predict_label(message)
+                probability = spam_filter.model.predict(message).get("spam", 0.0)
+                status = "ok" if predicted == expected else "MISMATCH"
+                if predicted != expected:
+                    failures.append((expected, predicted, message))
+                self.stdout.write(
+                    f"  {status:<8} expected={expected:<4} got={predicted!s:<4} "
+                    f"p(spam)={probability:.4f}"
+                )
+
+            if failures:
+                raise CommandError(
+                    f"{len(failures)} spot check(s) failed against the new model. "
+                    "The transaction was rolled back; nothing was installed and the "
+                    "previous model (if any) is unchanged."
+                )
         self.stdout.write(self.style.SUCCESS("Spot checks passed."))

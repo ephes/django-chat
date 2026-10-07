@@ -242,6 +242,63 @@ def test_install_writes_backup_before_overwriting(trained_payload: Path, tmp_pat
     assert spam_filters.get().name == "second"
 
 
+@pytest.fixture
+def spam_only_payload(tmp_path: Path) -> Path:
+    # Trained on spam only, so every spot check predicts "spam" and the ham
+    # checks fail.
+    model = train_model([("spam", f"cheap replica watches buy now {i}") for i in range(10)], [])
+    path = tmp_path / "spam-only.json"
+    with path.open("w", encoding="utf-8") as handle:
+        json.dump({"model": model_to_json(model), "performance": {}}, handle)
+    return path
+
+
+@pytest.mark.django_db
+def test_install_failed_spot_checks_keep_previous_row(
+    trained_payload: Path, spam_only_payload: Path, tmp_path: Path
+) -> None:
+    call_command(
+        "install_django_chat_spamfilter",
+        str(trained_payload),
+        name="good-model",
+        stdout=StringIO(),
+    )
+    before = spam_filters.get()
+    before_tokens = dict(before.model.word_label_counts)
+
+    backup = tmp_path / "backup.json"
+    with pytest.raises(CommandError, match="nothing was installed"):
+        call_command(
+            "install_django_chat_spamfilter",
+            str(spam_only_payload),
+            name="bad-model",
+            backup=str(backup),
+            stdout=StringIO(),
+        )
+
+    after = spam_filters.get()
+    assert after.pk == before.pk
+    assert after.name == "good-model"
+    assert dict(after.model.word_label_counts) == before_tokens
+    # The backup is still written before the install is attempted.
+    assert json.loads(backup.read_text(encoding="utf-8"))["name"] == "good-model"
+
+
+@pytest.mark.django_db
+def test_install_failed_spot_checks_without_existing_row_installs_nothing(
+    spam_only_payload: Path,
+) -> None:
+    with pytest.raises(CommandError, match="nothing was installed"):
+        call_command(
+            "install_django_chat_spamfilter",
+            str(spam_only_payload),
+            name="bad-model",
+            stdout=StringIO(),
+        )
+
+    assert not spam_filters.exists()
+
+
 @pytest.mark.django_db
 def test_install_dry_run_leaves_database_untouched(trained_payload: Path) -> None:
     out = StringIO()

@@ -233,6 +233,20 @@ the single row in place, then re-reads it from the database — exercising
 `ModelDecoder` — and runs English/German ham plus spam spot checks, failing if
 any mismatch. `--dry-run` previews without writing.
 
+The backup is written first, outside any transaction. The save, the re-read and
+the spot checks then run in one database transaction: if any spot check fails,
+the command raises an error saying nothing was installed, the transaction rolls
+back, and the previous model (or, on a fresh install, no row at all) stays live.
+A failed install therefore needs no restore from the backup.
+
+After a successful install, restart the web workers (for example
+`systemctl restart django-chat`). django-cast's comment moderator reads
+`SpamFilter.get_default()` once per process and keeps that model until the
+process restarts, so running workers keep using the old model — or, if no row
+existed when they first moderated a comment, keep publishing every comment —
+until they are restarted. This step can be dropped once django-cast's moderator
+reads the current model for each comment.
+
 Finally confirm through the moderation path rather than the model alone, since
 `Moderator` is what actually decides visibility:
 
