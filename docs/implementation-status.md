@@ -265,6 +265,21 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       temporary source-metadata fallback, and feed smoke checks assert positive
       `itunes:episode` / `podcast:episode` parity plus the approved preview
       omission.
+- [x] **9n. Public episodes only in custom views and the site feed** — the
+      episode index (`/episodes/`), the embed player
+      (`/episodes/<slug>/embed/`) and the latest-entries feed
+      (`/episodes/feed/rss.xml`) render episodes without Wagtail's
+      `Page.serve()`, so they did not enforce page view restrictions: a login-,
+      password- or group-restricted episode was listed, embeddable and carried
+      with full show notes and enclosure in the feed. All podcast and episode
+      lookups there now use `.live().public()`, and the feed route is mounted
+      like django-cast's own feeds: `unrestricted_page_required(Blog)` before
+      the response cache, and `request_local_feed` so each cache miss renders
+      with a fresh feed instance. A committed page view restriction change
+      clears the response cache, and the site feed's cache key carries a
+      generation so a render in flight during the change is never served. Public output is unchanged (byte-equality
+      test); the feed's query budget rises by a constant 4 (15 to 19). See
+      [`security-known-issues.md`](security-known-issues.md#episode-privacy-fixed).
 - [ ] **10. Decide whether production migration needs a separate follow-up
       PRD after host review.** Decision item, not implementation; revisit after
       hosts have reviewed staging.

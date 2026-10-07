@@ -36,9 +36,11 @@ class CoreConfig(AppConfig):
 
     def ready(self) -> None:
         from cast.models import Podcast
+        from django.db.models.signals import post_delete, post_save
         from django_comments.signals import comment_will_be_posted
+        from wagtail.models import PageViewRestriction
 
-        from .receivers import reject_comment_when_disabled
+        from .receivers import clear_cache_on_view_restriction_change, reject_comment_when_disabled
 
         # Wagtail's Page explorer defaults to "most recently updated", which is
         # awkward for imported podcast catalogs. Match the public episode index
@@ -53,3 +55,11 @@ class CoreConfig(AppConfig):
             reject_comment_when_disabled,
             dispatch_uid="django_chat_reject_comment_when_disabled",
         )
+
+        # Cached feeds must not keep serving an episode after it is restricted.
+        for signal, name in ((post_save, "saved"), (post_delete, "deleted")):
+            signal.connect(
+                clear_cache_on_view_restriction_change,
+                sender=PageViewRestriction,
+                dispatch_uid=f"django_chat_clear_cache_on_view_restriction_{name}",
+            )
