@@ -61,7 +61,7 @@ deploy-bootstrap:
     set -euo pipefail
     cd deploy
     mkdir -p .ansible/collections
-    {{ANSIBLE_GALAXY_CMD}} collection install -r requirements.yml -p .ansible/collections
+    {{ANSIBLE_GALAXY_CMD}} collection install --force -r requirements.yml -p .ansible/collections
 
 deploy-static-check *ARGS:
     uv run python manage.py check_django_chat_static_assets {{ARGS}}

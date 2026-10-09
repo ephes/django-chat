@@ -11,6 +11,10 @@
     GIT_CONFIG_KEY_0: http.version
     GIT_CONFIG_VALUE_0: HTTP/1.1
   pre_tasks:
+    - name: Deploy | Validate proxy ownership before application changes
+      ansible.builtin.import_tasks: tasks/proxy-preflight.yml
+      tags: proxy-preflight
+
     - name: Deploy | Check Django Chat source path on controller
       ansible.builtin.stat:
         path: "{{ django_chat_source_path }}"
@@ -51,6 +55,7 @@
 
     - name: Deploy | Run clean-VPS baseline tasks
       ansible.builtin.import_tasks: tasks/bootstrap-host.yml
+      when: django_chat_host_mode == 'standalone'
 
     # In pre_tasks, so it runs before the roles (uv_install / traefik_deploy /
     # wagtail_deploy) that rsync the source and run migrate — the snapshot is
@@ -83,6 +88,7 @@
   roles:
     - role: local.ops_library.uv_install
     - role: local.ops_library.traefik_deploy
+      when: django_chat_host_mode == 'standalone'
     - role: local.ops_library.wagtail_deploy
 
   post_tasks:

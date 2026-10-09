@@ -4,5 +4,15 @@
   become: true
   gather_facts: true
   tasks:
+    - name: Bootstrap | Require explicit standalone ownership
+      ansible.builtin.assert:
+        that:
+          - django_chat_host_mode == 'standalone'
+          - "'staging' not in group_names"
+        fail_msg: >-
+          Host bootstrap is only for explicitly selected standalone hosts.
+          Shared staging is managed by its infrastructure owner.
+    - name: Bootstrap | Validate proxy ownership before host changes
+      ansible.builtin.import_tasks: tasks/proxy-preflight.yml
     - name: Run clean-VPS baseline tasks
       ansible.builtin.import_tasks: tasks/bootstrap-host.yml

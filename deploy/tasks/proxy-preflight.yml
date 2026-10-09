@@ -1,0 +1,55 @@
+---
+- name: Proxy preflight | Validate host ownership mode
+  ansible.builtin.assert:
+    that:
+      - django_chat_host_mode in ['shared', 'standalone']
+      - "'staging' not in group_names or django_chat_host_mode == 'shared'"
+    fail_msg: >-
+      Select shared or standalone host mode. Shared staging cannot install
+      or replace the base proxy; its infrastructure owner manages Traefik.
+
+- name: Proxy preflight | Observe transaction enrollment
+  ansible.builtin.stat:
+    path: /var/lib/traefik-transactions
+  register: django_chat_proxy_transaction_state
+
+- name: Proxy preflight | Refuse standalone setup on enrolled hosts
+  ansible.builtin.assert:
+    that:
+      - not django_chat_proxy_transaction_state.stat.exists
+    fail_msg: >-
+      This proxy is transaction-managed. Use shared mode; full proxy setup
+      must not overwrite its binary, static configuration or recovery records.
+  when: django_chat_host_mode == 'standalone'
+
+- name: Proxy preflight | Check existing shared proxy binary
+  ansible.builtin.stat:
+    path: "{{ traefik_binary_path | default('/usr/local/bin/traefik') }}"
+  register: django_chat_proxy_binary
+  when: django_chat_host_mode == 'shared'
+
+- name: Proxy preflight | Check existing shared route directory
+  ansible.builtin.stat:
+    path: "{{ traefik_dynamic_dir | default('/etc/traefik/dynamic') }}"
+  register: django_chat_proxy_routes
+  when: django_chat_host_mode == 'shared'
+
+- name: Proxy preflight | Require provisioned shared proxy
+  ansible.builtin.assert:
+    that:
+      - django_chat_proxy_binary.stat.exists
+      - django_chat_proxy_binary.stat.isreg
+      - django_chat_proxy_binary.stat.executable
+      - django_chat_proxy_routes.stat.exists
+      - django_chat_proxy_routes.stat.isdir
+    fail_msg: >-
+      Shared mode requires an existing Traefik binary and dynamic route
+      directory. Ask the infrastructure owner to provision the proxy.
+  when: django_chat_host_mode == 'shared'
+
+- name: Proxy preflight | Require running shared proxy
+  ansible.builtin.command:
+    argv: [systemctl, is-active, traefik]
+  changed_when: false
+  check_mode: false
+  when: django_chat_host_mode == 'shared'

@@ -143,7 +143,8 @@ file before gathering remote facts or changing the target host.
 
 ## Clean-VPS Bootstrap
 
-`deploy/deploy.yml` runs baseline host tasks before deploying the app:
+`deploy/deploy.yml` runs baseline host tasks only when the target explicitly
+selects `django_chat_host_mode: standalone`:
 
 - assert a Debian-family target
 - refresh apt metadata
@@ -154,7 +155,7 @@ file before gathering remote facts or changing the target host.
 After the baseline tasks, roles run in this order:
 
 1. `local.ops_library.uv_install`
-2. `local.ops_library.traefik_deploy`
+2. `local.ops_library.traefik_deploy` (standalone hosts only)
 3. `local.ops_library.wagtail_deploy`
 
 `wagtail_deploy` provisions PostgreSQL, syncs the app, installs Python through
@@ -168,17 +169,23 @@ Traefik dynamic config.
 `deploy/.ansible/`. It does not contact deployment hosts and does not load
 secrets.
 
-`just deploy-bootstrap-target <group>` runs `deploy/bootstrap.yml` for one
-inventory group, such as `staging` or `production`. It runs only the clean-VPS
+`just deploy-bootstrap-target <group>` runs `deploy/bootstrap.yml` for an
+explicitly configured standalone inventory group. Shared staging is rejected. It runs only the clean-VPS
 baseline tasks and does not sync app code, load SOPS secrets, run migrations,
-collect static files, or touch Traefik/Wagtail roles. Valid target groups are
-`staging`, `production`, and `django_chat`.
+collect static files, or touch Traefik/Wagtail roles. Select only independently
+owned standalone hosts, such as `production` after configuring its inventory.
+The parent `django_chat` group includes shared staging and therefore is not a
+valid bootstrap target.
 
 `just deploy-check` runs the local static asset check, bootstraps Ansible
 dependencies, and performs Ansible syntax checks only. It does not deploy.
 
-The full deploy playbook reuses the same clean-VPS baseline task file that
-`deploy/bootstrap.yml` exposes for standalone baseline runs.
+The full deploy playbook reuses the same clean-VPS baseline task file only in
+standalone mode. Shared mode is the default: read-only proxy preflight runs
+first, then app deployment uses the existing proxy and writes only its dynamic
+application route. A transaction-enrolled proxy cannot be taken over through
+standalone mode. See `docs/deployment.md` for the ownership mode and preflight
+command. Staging cannot opt into standalone setup.
 
 `just deploy-staging` and `just deploy-production` run the full deployment
 playbook for their inventory group. They require real host inventory values,

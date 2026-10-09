@@ -22,10 +22,12 @@ just deploy-check
 Run clean-VPS baseline tasks for one inventory group without deploying the app:
 
 ```sh
-just deploy-bootstrap-target staging
+just deploy-bootstrap-target production # after setting standalone mode
 ```
 
-Use `staging`, `production`, or the parent `django_chat` group as the target.
+Standalone bootstrap requires `django_chat_host_mode: standalone` in the target's
+host/group vars. Shared staging rejects bootstrap and standalone mode.
+Production remains a placeholder and defaults to shared mode until configured.
 
 Deploy staging:
 
@@ -76,18 +78,72 @@ needs one hard refresh; responses fetched afterward are not stored. Podlove,
 DOTe, and WebVTT files served through media storage or a CDN retain their own
 cache policies and are unaffected by this middleware.
 
+## Proxy ownership and regression protection
+
+`django_chat_host_mode` defaults to `shared`. In shared mode, deployment requires
+an existing executable Traefik binary, dynamic route directory and active
+`traefik` service. These read-only checks run before application changes. The
+app deploy skips host bootstrap and the full `traefik_deploy` role;
+`wagtail_deploy` still writes Django Chat's application route. It does not
+replace Traefik's binary, static configuration, service unit or certificate
+store. Shared staging is always required to use this mode, even if a caller
+tries to override it with extra vars.
+
+For a new, independently owned VPS, explicitly set
+`django_chat_host_mode: standalone` in that host's inventory variables. This
+opts into baseline host tasks and full proxy installation. Standalone setup
+refuses hosts already enrolled in `/var/lib/traefik-transactions`. The pinned
+collection independently guards full proxy writes on enrolled hosts.
+
+Before the next staging deploy, rerun `just deploy-bootstrap` to replace the
+old installed collection. The previous pin lacked the write guard and could
+revert a shared proxy's executable and static settings. Merely setting a newer
+Traefik version does not protect static configuration.
+
+Run only the shared-proxy preflight, without app deployment or secrets:
+
+```sh
+cd deploy
+uvx --from ansible-core ansible-playbook -i inventory/hosts.yml deploy.yml \
+  -l staging --tags proxy-preflight
+```
+
+Regression tests exercise the real Ansible role conditions with harmless local
+fixture roles: shared mode skips full proxy/bootstrap writes even with
+`traefik_force_update=true`, explicit standalone setup selects them, and invalid
+modes, missing/inactive proxies, or a standalone override on staging fail before
+application mutation. `uv sync` installs the declared Ansible dev dependency,
+so `just test` runs these regressions without a global Ansible installation;
+missing Ansible fails the tests instead of silently skipping them.
+
+October 9, 2026 validation: corrected deployment files and the pinned collection
+were installed in staging's existing checkout after backing up the old files.
+Shared preflight passed locally and natively on staging with zero changes;
+standalone mode on staging and the collection's enrolled-host full-write guard
+both refused before mutation. Traefik's binary/static configuration hashes and
+process ID remained unchanged; Django Chat's TLS homepage redirected normally
+to `/episodes/`, which returned 200.
+The application and database were not redeployed during this workflow repair.
+`just test` passed (410 tests; 18 optional browser tests skipped), `just
+deploy-check`, lint, typecheck and `prek run --all-files` passed. No separate
+changelog convention exists; this deployment note records the workflow change.
+
 ## Ansible Dependencies
 
 `deploy/requirements.yml` installs:
 
 - `local.ops_library` from `https://github.com/ephes/ops-library.git` pinned to
-  commit `5faa07767dc83aa06501a09d2ed59a199b6d8ed5`
+  commit `e92fb68ceec622d1f0fcdf07c040fba0ad6fb113`
 - `community.postgresql` pinned to `4.2.0`
 - `community.general` pinned to `12.6.0`
 - `community.sops` pinned to `2.3.0`
 - `ansible.posix` pinned to `2.1.0`
 
 Dependencies are installed under `deploy/.ansible/`, which is ignored by Git.
+Bootstrap uses `--force` so an existing collection with the same advertised
+version cannot retain code from an older commit. Standalone Linux amd64 setup
+pins Traefik 3.7.14 and the audited archive checksum; other architectures must
+explicitly configure their matching release checksum before setup.
 
 ## Inventory And Vars
 

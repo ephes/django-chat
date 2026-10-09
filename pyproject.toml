@@ -20,10 +20,12 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "ansible-core>=2.20,<2.22",
     "playwright>=1.59.0",
     "prek>=0.3,<0.4",
     "pytest>=9.0,<10.0",
     "pytest-django>=4.11,<5.0",
+    "pyyaml>=6,<7",
     "ruff>=0.15,<0.16",
     "ty>=0.0.31,<0.1",
     "zensical>=0.0.41,<0.1",

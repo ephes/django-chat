@@ -173,11 +173,11 @@ Run offline deployment checks:
 just deploy-check
 ```
 
-Run the clean-VPS baseline tasks for one inventory group without deploying the
-app:
+Run clean-VPS baseline tasks only for an independently owned host configured
+with `django_chat_host_mode: standalone`. Shared staging rejects bootstrap:
 
 ```sh
-just deploy-bootstrap-target staging
+just deploy-bootstrap-target production # after setting standalone mode
 ```
 
 Run the staging or production deployment playbooks when the target inventory,
@@ -187,6 +187,10 @@ SOPS/age secrets, and operator access are in place:
 just deploy-staging
 just deploy-production
 ```
+
+Shared-host deployment is the default. Staging reuses its existing Traefik and
+updates only the app route; full proxy installation requires explicit standalone
+mode. See the ownership checks in [`docs/deployment.md`](docs/deployment.md).
 
 The deploy commands do not require `ops-control`. They install a pinned
 `ops-library` collection through Ansible Galaxy and load environment secrets

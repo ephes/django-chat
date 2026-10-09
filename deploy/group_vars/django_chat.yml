@@ -1,5 +1,7 @@
 ---
 django_chat_service_name: django-chat
+# Full proxy/host setup requires an explicit standalone-host opt-in.
+django_chat_host_mode: shared
 django_chat_repo_root: "{{ (inventory_dir ~ '/../..') | realpath }}"
 django_chat_source_path: "{{ lookup('env', 'DJANGO_CHAT_SOURCE_PATH') | default(django_chat_repo_root, true) }}"
 django_chat_secret_file: "{{ playbook_dir }}/secrets/{{ django_chat_environment }}.sops.yml"
@@ -26,6 +28,10 @@ uv_version: "0.12.19"
 traefik_letsencrypt_email: "{{ (service_secrets | default({})).traefik_letsencrypt_email | default('') }}"
 traefik_dashboard_enabled: false
 traefik_dashboard_firewall_open: false
+# Standalone Linux amd64 setup uses the audited security release. Shared mode
+# never invokes the full role, regardless of these installation defaults.
+traefik_version: "3.7.14"
+traefik_checksum: "d08641f5de2dd3788097bddab1ce4b29c10a0b788566970db707fa5c94c71f15"
 
 wagtail_service_name: "{{ django_chat_service_name }}"
 wagtail_project_slug: "{{ django_chat_service_name }}"
