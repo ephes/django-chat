@@ -114,8 +114,16 @@ per-audio (scoped, no global setting change):
 ```bash
 # On the server, as the app user, with the env sourced:
 python manage.py shell -c "from cast.models import Audio; a=Audio.objects.get(pk=<AUDIO_ID>); a.transcript_diarization_mode='enabled'; a.save(update_fields=['transcript_diarization_mode'])"
-CAST_VOXHELM_POLL_TIMEOUT=7200 python manage.py generate_transcripts --audio-id <AUDIO_ID> --force
+CAST_VOXHELM_POLL_TIMEOUT=7200 python manage.py generate_transcripts --episode-id <EPISODE_ID> --force
 ```
+
+> **Start the run by episode, not by audio.** Up to django-cast 0.2.67,
+> `--audio-id` submits the job without the episode, so the contributors' voice
+> references are not sent and Voxhelm returns only anonymous `Speaker N`
+> clusters with no suggestion sidecar. That happened for episode 206 on
+> 2026-10-12. Newer django-cast resolves the episode from the audio and prints
+> a warning when no references go out, but `--episode-id` stays the documented
+> form. After a run, check that `Transcript.speakers` is set before labeling.
 
 With known-speaker enabled, Voxhelm returns generic public labels plus a private
 per-segment suggestion sidecar. Generation does not publish the suggested
@@ -133,8 +141,11 @@ The explicit `smooth=False` matters: an uncertain rapid exchange must remain
 blank for review instead of inheriting the preceding speaker. The Wagtail
 admin's **Apply confident suggestions** action uses the same semantics.
 
-If no usable known-speaker sidecar is returned, map generic labels to the real
-contributors only after reviewing several turns from across the episode:
+If no usable known-speaker sidecar is returned, first find out why (see the
+note above) and regenerate. Mapping generic labels to contributors is a last
+resort: it names every segment of a cluster, including blocks that contain
+both voices, so wrong names look certain. Do it only after reviewing several
+turns from across the episode:
 
 1. Create/assign the matching visible Contributors to the episode.
 2. Rewrite the raw labels to the contributor `display_name`s:
@@ -305,7 +316,7 @@ Run in the background with a raised poll timeout (long episodes take minutes):
 ```bash
 export CAST_VOXHELM_POLL_TIMEOUT=7200 CAST_VOXHELM_POLL_INTERVAL=5
 nohup .venv/bin/python manage.py generate_transcripts \
-  --audio-id A --audio-id B ... --force > /home/django-chat/diarize.log 2>&1 &
+  --episode-id A --episode-id B ... --force > /home/django-chat/diarize.log 2>&1 &
 ```
 
 > **Gotcha — buffered log.** Under `nohup`, Python block-buffers stdout, so
