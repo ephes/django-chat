@@ -1,7 +1,7 @@
 # Local commands for the Django Chat scaffold.
 
-ANSIBLE_GALAXY_CMD := env_var_or_default("ANSIBLE_GALAXY_CMD", "uvx --from ansible-core ansible-galaxy")
-ANSIBLE_PLAYBOOK_CMD := env_var_or_default("ANSIBLE_PLAYBOOK_CMD", "uvx --from ansible-core ansible-playbook")
+ANSIBLE_GALAXY_CMD := env_var_or_default("ANSIBLE_GALAXY_CMD", "uvx --python 3.14 --from ansible-core ansible-galaxy")
+ANSIBLE_PLAYBOOK_CMD := env_var_or_default("ANSIBLE_PLAYBOOK_CMD", "uvx --python 3.14 --from ansible-core ansible-playbook")
 SOPS_AGE_KEY_FILE := env_var_or_default("SOPS_AGE_KEY_FILE", "~/.config/sops/age/keys.txt")
 DJANGO_CHAT_STAGING_SECRET_FILE := env_var_or_default("DJANGO_CHAT_STAGING_SECRET_FILE", "deploy/secrets/staging.sops.yml")
 SLOPSCOPE_SPEC := env_var_or_default("SLOPSCOPE_SPEC", "slopscope")

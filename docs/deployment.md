@@ -104,7 +104,7 @@ Run only the shared-proxy preflight, without app deployment or secrets:
 
 ```sh
 cd deploy
-uvx --from ansible-core ansible-playbook -i inventory/hosts.yml deploy.yml \
+uvx --python 3.14 --from ansible-core ansible-playbook -i inventory/hosts.yml deploy.yml \
   -l staging --tags proxy-preflight
 ```
 

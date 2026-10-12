@@ -61,9 +61,14 @@ Required local tools:
 Ansible is executed through `uvx` by default:
 
 ```sh
-uvx --from ansible-core ansible-galaxy
-uvx --from ansible-core ansible-playbook
+uvx --python 3.14 --from ansible-core ansible-galaxy
+uvx --python 3.14 --from ansible-core ansible-playbook
 ```
+
+The interpreter is pinned because `uvx` otherwise picks the newest installed
+Python, and `ansible-core` fails to start on Python 3.15. Keep the pin in line
+with the project's `requires-python` until `ansible-core` supports a newer
+interpreter.
 
 Override `ANSIBLE_GALAXY_CMD` or `ANSIBLE_PLAYBOOK_CMD` only when the operator
 has a deliberate alternate Ansible launcher.
