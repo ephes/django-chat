@@ -26,8 +26,7 @@ CAST_APPS_COMPAT = [
 ]
 if "django_tasks_db" not in CAST_APPS_COMPAT:
     CAST_APPS_COMPAT.append("django_tasks_db")
-_seen: set[str] = set()
-CAST_APPS_COMPAT = [app for app in CAST_APPS_COMPAT if not (app in _seen or _seen.add(app))]
+CAST_APPS_COMPAT = list(dict.fromkeys(CAST_APPS_COMPAT))
 
 env = environ.Env()
 

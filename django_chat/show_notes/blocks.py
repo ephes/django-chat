@@ -9,6 +9,10 @@ from django_chat.show_notes.widgets import IconChoiceWidget
 
 RICH_TEXT_FEATURES = ["bold", "italic", "link"]
 
+# Wagtail merges a block's plain ``class Meta`` into the parent's options through
+# its metaclass, so the nested classes below deliberately do not subclass
+# ``StructBlock.Meta``. ty reports that as an incompatible override.
+
 
 def _kind_block() -> blocks.ChoiceBlock:
     """Editor intent: "auto" (default) or an explicit icon override."""
@@ -40,7 +44,7 @@ class ShowNoteExtraLinkBlock(blocks.StructBlock):
     title = blocks.CharBlock()
     url = blocks.URLBlock()
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         icon = "link"
         label = "Extra link"
         label_format = "{title}"
@@ -52,7 +56,7 @@ class ShowNoteLinkItemBlock(blocks.StructBlock):
     description = blocks.RichTextBlock(features=RICH_TEXT_FEATURES, required=False)
     extra_links = blocks.ListBlock(ShowNoteExtraLinkBlock(), required=False)
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         icon = "link"
         label = "Link item"
         label_format = "{title}"
@@ -63,7 +67,7 @@ class ShowNoteHeadingBlock(IconBlockMixin, blocks.StructBlock):
     kind = _kind_block()
     icon = _icon_block()
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         icon = "title"
         label = "Show-note heading"
         template = "cast/django_chat/show_notes/heading.html"
@@ -78,7 +82,7 @@ class ShowNoteSponsorBlock(IconBlockMixin, blocks.StructBlock):
     copy = blocks.RichTextBlock(features=RICH_TEXT_FEATURES, required=False)
     coupon_code = blocks.CharBlock(required=False)
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         icon = "tag"
         label = "Show-note sponsor"
         template = "cast/django_chat/show_notes/sponsor.html"
@@ -93,7 +97,7 @@ class ShowNoteLinkListBlock(IconBlockMixin, blocks.StructBlock):
     intro = blocks.RichTextBlock(features=RICH_TEXT_FEATURES, required=False)
     items = blocks.ListBlock(ShowNoteLinkItemBlock(), min_num=1)
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         icon = "link"
         label = "Show-note link list"
         template = "cast/django_chat/show_notes/link_list.html"
