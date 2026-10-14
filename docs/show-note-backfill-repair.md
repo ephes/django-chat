@@ -305,8 +305,39 @@ restored:
      `paragraph` block with no heading or icon. Idempotent: a list that already
      follows its own stored heading does not gain a spurious "Links" heading; a
      link-less bullet list is not treated as a "Links" section.
+   - `imports.0021_sync_latest_episode_revisions` re-applies the earlier
+     repairs to Wagtail revisions. `0004`–`0020` wrote only the live
+     `cast.Episode` row, but the Wagtail editor loads the latest revision, so
+     the next *Publish* of an edited episode would have restored the
+     pre-repair body (including unsanitized HTML from before `0013`) and the
+     pre-`0020` comments flag. For published episodes without a pending draft,
+     `0021` copies `body`, `search_description` and `comments_enabled` from the
+     live row into the latest revision, so republishing changes nothing.
+     Pending drafts (unpublished changes, latest revision not the live one, or
+     page not live) are never published or overwritten with live values: they
+     get editor-safe, idempotent body repairs in place (unsafe markup, scripts,
+     handlers and URL schemes removed while Wagtail links and embeds are kept;
+     icons materialized only on blocks without one; the `0018` un-hide) and are
+     printed as divergent drafts for an editor to review. The `0017`/`0019`
+     re-structuring is not replayed on drafts because it re-parses paragraph
+     HTML and would drop editor RichText markup. The live row and
+     publish state are never touched. Episodes without revisions (untouched
+     imports) need nothing. Idempotent; forward-only.
    - Reverse migrations should be no-ops because reconstructing the exact old
      StreamField serialization is not required and would be risky.
+
+   Repairs that write the live row (the helpers in
+   `django_chat/imports/show_note_backfill.py`, and any future data migration)
+   must keep the latest revision in step via
+   `django_chat.imports.revision_sync.sync_latest_revision`. The repair command
+   (`repair_django_chat_show_notes --write`) does this and lists episodes whose
+   pending draft it did not repair. To audit or re-run the revision alignment on
+   its own:
+
+   ```sh
+   just manage sync_django_chat_episode_revisions          # dry-run report
+   just manage sync_django_chat_episode_revisions --write  # apply
+   ```
 
 7. Update fresh imports.
    - `_episode_body()` should continue using the parser so new imports do not

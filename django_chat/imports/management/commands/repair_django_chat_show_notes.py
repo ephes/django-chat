@@ -6,6 +6,7 @@ from cast.models import Episode
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
 from django_chat.imports.models import EpisodeSourceMetadata
+from django_chat.imports.revision_sync import format_divergent_draft
 from django_chat.imports.show_note_backfill import (
     EpisodeShowNoteRepair,
     ShowNoteRepairResult,
@@ -48,6 +49,14 @@ class Command(BaseCommand):
         if options["verbosity"] >= 2:
             for item in result.items:
                 self.stdout.write(_format_item(item))
+
+        if result.divergent_drafts:
+            self.stdout.write(
+                f"{len(result.divergent_drafts)} episode(s) have an unpublished draft that was "
+                "not repaired; review them in Wagtail:"
+            )
+            for draft in result.divergent_drafts:
+                self.stdout.write(f"  {format_divergent_draft(draft)}")
 
 
 def _format_summary(result: ShowNoteRepairResult, *, write: bool) -> str:

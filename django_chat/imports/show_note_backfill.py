@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
 from django.db import transaction
 from django.utils.html import strip_tags
 
+from django_chat.imports.revision_sync import DivergentDraft, sync_latest_revision
 from django_chat.imports.show_notes import (
+    neutralize_unsafe_html,
     sanitize_show_note_html,
     structure_episode_body_show_notes_with_report,
 )
@@ -55,6 +58,7 @@ class ShowNoteRepairResult:
     support_copy_sections_restored: int = 0
     raw_markdown_like_episodes: int = 0
     items: tuple[EpisodeShowNoteRepair, ...] = field(default_factory=tuple)
+    divergent_drafts: tuple[DivergentDraft, ...] = field(default_factory=tuple)
 
 
 def repair_imported_episode_show_notes(
@@ -99,6 +103,7 @@ def _repair_queryset(
     support_copy_sections_restored = 0
     raw_markdown_like_episodes = 0
     items: list[EpisodeShowNoteRepair] = []
+    divergent_drafts: list[DivergentDraft] = []
 
     for metadata in queryset.iterator(chunk_size=100):
         episodes_scanned += 1
@@ -153,6 +158,14 @@ def _repair_queryset(
                 update_fields["search_description"] = desired_search_description
             if update_fields:
                 Episode.objects.filter(pk=episode.pk).update(**update_fields)
+                for field_name, value in update_fields.items():
+                    setattr(episode, field_name, value)
+            # Keep the latest revision in step so the next Publish does not
+            # revert the repair. Source-based repairs are not replayed onto
+            # editor drafts; those are only reported.
+            _outcome, draft = sync_latest_revision(episode, fields=("body", "search_description"))
+            if draft is not None:
+                divergent_drafts.append(draft)
 
     return ShowNoteRepairResult(
         episodes_scanned=episodes_scanned,
@@ -166,6 +179,7 @@ def _repair_queryset(
         support_copy_sections_restored=support_copy_sections_restored,
         raw_markdown_like_episodes=raw_markdown_like_episodes,
         items=tuple(items),
+        divergent_drafts=tuple(divergent_drafts),
     )
 
 
@@ -205,15 +219,22 @@ def _sanitize_bodies_queryset(Episode: Any, queryset: Any, *, write: bool) -> tu
             continue
         scanned += 1
         new_body, changed = _sanitize_episode_body(episode.body)
-        if not changed:
+        if changed:
+            changed_count += 1
+        if not write:
             continue
-        changed_count += 1
-        if write:
+        if changed:
             Episode.objects.filter(pk=episode.pk).update(body=new_body)
+            episode.body = new_body
+        # Align the latest revision (or sanitize a pending draft in place) so
+        # the next Publish cannot restore unsanitized markup.
+        sync_latest_revision(episode, fields=("body",), draft_body_transform=neutralize_draft_body)
     return scanned, changed_count
 
 
-def _sanitize_episode_body(body: Any) -> tuple[Any, bool]:
+def _sanitize_episode_body(
+    body: Any, sanitize: Callable[[str], str] = sanitize_show_note_html
+) -> tuple[Any, bool]:
     body_value = body.get_prep_value() if hasattr(body, "get_prep_value") else body
     if not isinstance(body_value, list):
         return body_value, False
@@ -230,7 +251,7 @@ def _sanitize_episode_body(body: Any) -> tuple[Any, bool]:
         ):
             new_children = []
             for child in block["value"]:
-                new_child, child_changed = _sanitize_show_note_child(child)
+                new_child, child_changed = _sanitize_show_note_child(child, sanitize)
                 changed = changed or child_changed
                 new_children.append(new_child)
             new_body.append({**block, "value": new_children})
@@ -239,46 +260,63 @@ def _sanitize_episode_body(body: Any) -> tuple[Any, bool]:
     return new_body, changed
 
 
-def _sanitize_show_note_child(child: Any) -> tuple[Any, bool]:
+def neutralize_draft_body(body: Any) -> tuple[Any, bool]:
+    """Remove only unsafe markup from an editor draft body.
+
+    Unlike the import sanitizer this keeps editor RichText intact (Wagtail
+    internal links, image embeds, other tags and attributes); it drops
+    scripts, event handlers and unsafe URL schemes.
+    """
+    return _sanitize_episode_body(body, neutralize_unsafe_html)
+
+
+def _sanitize_show_note_child(child: Any, sanitize: Callable[[str], str]) -> tuple[Any, bool]:
     if not isinstance(child, dict):
         return child, False
     child_type = child.get("type")
     value = child.get("value")
     if child_type == "paragraph" and isinstance(value, str):
-        return _sanitized_str_child(child, value)
+        return _sanitized_str_child(child, value, sanitize)
     if child_type == "show_note_link_list" and isinstance(value, dict):
-        return _sanitized_link_list_child(child, value)
+        return _sanitized_link_list_child(child, value, sanitize)
     if child_type == "show_note_sponsor" and isinstance(value, dict):
-        return _sanitized_struct_field(child, value, "copy")
+        return _sanitized_struct_field(child, value, "copy", sanitize)
     return child, False
 
 
-def _sanitized_str_child(child: dict[str, Any], value: str) -> tuple[Any, bool]:
-    sanitized = sanitize_show_note_html(value)
+def _sanitized_str_child(
+    child: dict[str, Any], value: str, sanitize: Callable[[str], str]
+) -> tuple[Any, bool]:
+    sanitized = sanitize(value)
     if sanitized == value:
         return child, False
     return {**child, "value": sanitized}, True
 
 
 def _sanitized_struct_field(
-    child: dict[str, Any], value: dict[str, Any], field_name: str
+    child: dict[str, Any],
+    value: dict[str, Any],
+    field_name: str,
+    sanitize: Callable[[str], str],
 ) -> tuple[Any, bool]:
     original = value.get(field_name)
     if not isinstance(original, str):
         return child, False
-    sanitized = sanitize_show_note_html(original)
+    sanitized = sanitize(original)
     if sanitized == original:
         return child, False
     return {**child, "value": {**value, field_name: sanitized}}, True
 
 
-def _sanitized_link_list_child(child: dict[str, Any], value: dict[str, Any]) -> tuple[Any, bool]:
+def _sanitized_link_list_child(
+    child: dict[str, Any], value: dict[str, Any], sanitize: Callable[[str], str]
+) -> tuple[Any, bool]:
     new_value = dict(value)
     changed = False
 
     intro = value.get("intro")
     if isinstance(intro, str):
-        sanitized_intro = sanitize_show_note_html(intro)
+        sanitized_intro = sanitize(intro)
         if sanitized_intro != intro:
             new_value["intro"] = sanitized_intro
             changed = True
@@ -287,10 +325,20 @@ def _sanitized_link_list_child(child: dict[str, Any], value: dict[str, Any]) -> 
     if isinstance(items, list):
         new_items = []
         for item in items:
-            if isinstance(item, dict) and isinstance(item.get("description"), str):
-                sanitized_desc = sanitize_show_note_html(item["description"])
-                if sanitized_desc != item["description"]:
-                    new_items.append({**item, "description": sanitized_desc})
+            # Wagtail stores saved ListBlock children wrapped as
+            # {"type": "item", "value": {...}, "id": ...}; the importer writes
+            # the bare struct value.
+            wrapped = (
+                isinstance(item, dict)
+                and item.get("type") == "item"
+                and isinstance(item.get("value"), dict)
+            )
+            fields = item["value"] if wrapped else item
+            if isinstance(fields, dict) and isinstance(fields.get("description"), str):
+                sanitized_desc = sanitize(fields["description"])
+                if sanitized_desc != fields["description"]:
+                    new_fields = {**fields, "description": sanitized_desc}
+                    new_items.append({**item, "value": new_fields} if wrapped else new_fields)
                     changed = True
                     continue
             new_items.append(item)

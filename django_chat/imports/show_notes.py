@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
+from bs4.dammit import EntitySubstitution
 from bs4.element import (
     CData,
     Comment,
@@ -18,6 +19,7 @@ from bs4.element import (
     ProcessingInstruction,
     Tag,
 )
+from bs4.formatter import HTMLFormatter
 
 LIST_SECTION_HEADING_LABELS = frozenset(
     {
@@ -159,6 +161,81 @@ _SANITIZE_DROP_WITH_CONTENT = frozenset(
 _SANITIZE_ALLOWED_ATTRS: dict[str, frozenset[str]] = {
     "a": frozenset({"href", "rel", "target", "title"}),
 }
+
+
+# Attributes that can carry a URL a browser will follow or load.
+_URL_ATTRS = frozenset({"href", "src", "action", "formaction", "xlink:href", "data"})
+_SAFE_URL_SCHEMES = frozenset({"http", "https", "mailto", "tel"})
+_URL_SCHEME_RE = re.compile(r"^([a-z][a-z0-9+.\-]*):")
+
+
+def neutralize_unsafe_html(html: str) -> str:
+    """Remove only unsafe markup, keeping editor RichText otherwise intact.
+
+    For editor-owned content (e.g. a pending Wagtail draft) the allowlist-based
+    :func:`sanitize_show_note_html` is too destructive: it would strip Wagtail's
+    internal-link and image-embed markup (``<a linktype="page" id="…">``,
+    ``<embed embedtype="image" …/>``). This denylist pass drops script-like
+    elements and comment-like nodes, ``on*`` handlers, ``style`` and unsafe URL
+    schemes, and leaves every other tag and attribute alone. Returns the input
+    unchanged when nothing unsafe is present.
+    """
+    if not html:
+        return html
+    soup = BeautifulSoup(html, "html.parser")
+    changed = False
+    _comment_like = (CData, Comment, Declaration, Doctype, ProcessingInstruction)
+    for node in soup.find_all(string=lambda text: isinstance(text, _comment_like)):
+        node.extract()
+        changed = True
+    for tag in soup.find_all(
+        lambda candidate: (
+            bool(candidate.name)
+            and candidate.name.lower() in _SANITIZE_DROP_WITH_CONTENT
+            # Wagtail's own rich-text embeds (images, media) are stored as
+            # <embed embedtype="…"> and rewritten on render.
+            and not (candidate.name.lower() == "embed" and candidate.get("embedtype"))
+        )
+    ):
+        tag.decompose()
+        changed = True
+    for tag in soup.find_all(True):
+        for attr in list(tag.attrs):
+            lowered = attr.lower()
+            if (
+                lowered.startswith("on")
+                or lowered in {"style", "srcdoc"}
+                or (lowered in _URL_ATTRS and not _is_safe_url(tag.get(attr)))
+            ):
+                del tag[attr]
+                changed = True
+    return soup.decode(formatter=_DOUBLE_QUOTED_ATTRS) if changed else html
+
+
+class _DoubleQuotedAttributeFormatter(HTMLFormatter):
+    """Minimal entity substitution that always emits double-quoted attributes.
+
+    BeautifulSoup switches to single quotes for values containing ``"``;
+    Wagtail's rich-text attribute parser (``<embed>``/``<a linktype>``) only
+    understands double-quoted values, so escape ``"`` as ``&quot;`` instead.
+    """
+
+    def attribute_value(self, value: str) -> str:
+        return super().attribute_value(value).replace('"', "&quot;")
+
+
+_DOUBLE_QUOTED_ATTRS = _DoubleQuotedAttributeFormatter(
+    entity_substitution=EntitySubstitution.substitute_xml
+)
+
+
+def _is_safe_url(value: Any) -> bool:
+    if not isinstance(value, str):
+        return False
+    # Browsers ignore ASCII whitespace/control characters inside the scheme.
+    compact = re.sub(r"[\x00-\x20]", "", value).lower()
+    match = _URL_SCHEME_RE.match(compact)
+    return match is None or match.group(1) in _SAFE_URL_SCHEMES
 
 
 def _sanitized_href(href: Any) -> str | None:
