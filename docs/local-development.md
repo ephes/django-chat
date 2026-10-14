@@ -1,7 +1,18 @@
 # Local Development
 
-Django Chat targets Python 3.14.4 and uses `uv` for dependency management.
-The `.python-version` file pins the interpreter expected by local commands.
+Django Chat supports Python 3.14.4 through 3.15 and uses `uv` for dependency
+management. The `.python-version` file pins 3.15.0, the interpreter deployed
+hosts run; uv 0.13.0 or newer is needed to install it. CI runs the checks on
+both 3.14 and 3.15. `ruff` and `ty` keep targeting 3.14, the oldest supported
+version.
+
+On Python 3.15 the Ansible proxy-ownership regressions in
+`django_chat/core/tests/test_proxy_ownership.py` are skipped: ansible-core 2.21
+does not import on 3.15, and 2.22 (which fixes it) has no final release yet.
+They still run on 3.14, in CI and locally with `uv run --python 3.14 pytest`.
+Once ansible-core 2.22.0 is final, widen the dev dependency and the skip
+deactivates itself. Deploy commands are unaffected: they run Ansible through
+`uvx --python 3.14`.
 
 ## Setup
 

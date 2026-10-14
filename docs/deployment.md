@@ -377,6 +377,21 @@ Security defaults are conservative for an early staging-capable deploy path:
 cutover, raise HSTS to a production value only after DNS, HTTPS, canonical host,
 and rollback decisions are settled.
 
+## Application Python
+
+`wagtail_python_version: "3.15.0"` in `deploy/group_vars/django_chat.yml`
+selects the uv-managed interpreter for the application venv (3.14.4 before
+October 2026). The `wagtail_deploy` role installs that exact version with
+`/usr/local/bin/uv` (0.13.0 or newer knows 3.15.0, hence the `uv_version`
+bump) and, when the existing `site/.venv` reports a different version, deletes
+and rebuilds the venv before `uv sync --frozen`. Expect a short outage while
+the venv is rebuilt. The rsynced `.python-version` must name the same version:
+`uv sync --frozen` honours it and would otherwise replace the venv with that
+interpreter. To roll back, set both the pin and `.python-version` to `3.14.4`
+and redeploy, which rebuilds the venv again. A test keeps the two in sync.
+Ansible itself still runs on the controller via `uvx --python 3.14` and on
+hosts via `/usr/bin/python3`.
+
 ## Runtime Sizing
 
 The shared deploy vars override the generic `wagtail_deploy` role defaults for
@@ -384,7 +399,7 @@ a small VPS:
 
 - `wagtail_gunicorn_workers: 3`
 - `wagtail_gunicorn_timeout: 120`
-- `uv_version: "0.12.19"`
+- `uv_version: "0.13.1"`
 
 Staging overrides `uv_version` to `"latest"`: the staging host is shared and
 ops-control keeps its `/usr/local/bin/uv` on the latest release, so a pinned

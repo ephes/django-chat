@@ -23,7 +23,7 @@ django_chat_cast_comments_enabled: false
 django_chat_cast_voxhelm_known_speaker_enabled: false
 django_chat_disable_transcript_cache: false
 
-uv_version: "0.12.19"
+uv_version: "0.13.1"
 
 traefik_letsencrypt_email: "{{ (service_secrets | default({})).traefik_letsencrypt_email | default('') }}"
 traefik_dashboard_enabled: false
@@ -37,7 +37,7 @@ wagtail_service_name: "{{ django_chat_service_name }}"
 wagtail_project_slug: "{{ django_chat_service_name }}"
 wagtail_deploy_method: rsync
 wagtail_source_path: "{{ django_chat_source_path }}"
-wagtail_python_version: "3.14.4"
+wagtail_python_version: "3.15.0"
 wagtail_django_settings_module: "config.settings.production"
 wagtail_django_allowed_hosts: "{{ django_chat_django_allowed_hosts }}"
 wagtail_admin_url: "django-admin/"

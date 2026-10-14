@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,20 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
 
+# ansible-core 2.21 crashes at import on Python 3.15 (it patches the removed
+# dataclasses._is_type); 2.22 fixes that but has no final release yet. Skip the
+# whole parametrization, because the expected-failure cases would otherwise pass
+# for the wrong reason. TODO: allow ansible-core 2.22 in pyproject.toml once
+# 2.22.0 is final, relock, and this skip goes inactive on its own.
+ANSIBLE_CORE_LACKS_PY315 = sys.version_info >= (3, 15) and tuple(
+    int(part) for part in version("ansible-core").split(".")[:2]
+) < (2, 22)
 
+
+@pytest.mark.skipif(
+    ANSIBLE_CORE_LACKS_PY315,
+    reason="ansible-core < 2.22 does not import on Python 3.15 (TODO: bump to 2.22 final)",
+)
 @pytest.mark.parametrize(
     ("group", "mode", "provisioned", "active", "success", "expected"),
     [

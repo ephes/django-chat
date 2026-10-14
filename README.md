@@ -19,8 +19,10 @@ every push. No production deployment has been performed. The planning source of 
 
 ## Local Development
 
-This project targets Python 3.14.4. `uv` reads the `.python-version` file and
-can download the matching interpreter when needed. See
+This project supports Python 3.14.4 through 3.15 and deploys on Python 3.15.0.
+`uv` (0.13.0 or newer, which knows the 3.15.0 final release) reads the
+`.python-version` file and can download the matching interpreter when needed.
+CI tests both 3.14 and 3.15. See
 [`docs/local-development.md`](docs/local-development.md) for the full local
 workflow, environment file expectations, tooling commands, and hook setup.
 

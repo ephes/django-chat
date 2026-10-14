@@ -20,14 +20,21 @@ concurrency:
 env:
   PYTHONUNBUFFERED: "1"
   UV_NO_PROGRESS: "1"
-  # requires-python is >=3.14.4,<3.15; production runs 3.14.
+  # requires-python is >=3.14.4,<3.16; deployments run 3.15. The check job
+  # sets UV_PYTHON per matrix entry; the audit job resolves the default 3.14.
   UV_PYTHON: "3.14"
 
 jobs:
   check:
-    name: Lint, typecheck and tests
+    name: Lint, typecheck and tests (Python ${{ matrix.python }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.14", "3.15"]
+    env:
+      UV_PYTHON: ${{ matrix.python }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -36,9 +43,10 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23"
+          version: "0.13.1"
           enable-cache: true
           cache-dependency-glob: uv.lock
+          cache-suffix: py${{ matrix.python }}
       - name: Sync locked dependencies
         run: uv sync --locked
       - name: Lint (just lint)
@@ -62,7 +70,7 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23"
+          version: "0.13.1"
           enable-cache: true
           cache-dependency-glob: uv.lock
       # django-cast is a git dependency and cannot be audited by version; pip-audit

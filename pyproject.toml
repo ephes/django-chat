@@ -3,7 +3,7 @@ name = "django-chat"
 version = "0.1.0"
 description = "Self-hosted Django Chat site built with Django, Wagtail, and django-cast."
 readme = "README.md"
-requires-python = ">=3.14.4,<3.15"
+requires-python = ">=3.14.4,<3.16"
 dependencies = [
     "beautifulsoup4>=4.14,<5.0",
     "Django>=6.1,<7.0",
