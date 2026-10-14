@@ -15,6 +15,9 @@ rendering, not to claim real diarization. Run it against a local dev database:
 
     just manage seed_django_chat_diarized_demo
 
+It refuses to run unless ``DEBUG`` is on (pass ``--allow-non-debug`` to override
+on a demo database), because it rewrites the episode's transcript file.
+
 then open ``/episodes/django-tasks-jake-howard/`` and the transcript panel shows
 ``Will Vincent`` / ``Carlton Gibson`` / ``Jake Howard`` headings with sparse
 timestamps. Public speaker labels stay gated on the visible contributors via
@@ -28,6 +31,7 @@ import json
 import random
 from typing import Any
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 
@@ -53,6 +57,14 @@ class Command(BaseCommand):
             default=DEFAULT_SLUG,
             help=f"Episode slug to seed (default: {DEFAULT_SLUG}).",
         )
+        parser.add_argument(
+            "--allow-non-debug",
+            action="store_true",
+            help=(
+                "Run even though DEBUG is off. The command rewrites the episode's "
+                "transcript with synthetic speaker labels; only use it on demo data."
+            ),
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         # Imported lazily so the command module loads without the DB configured.
@@ -61,6 +73,12 @@ class Command(BaseCommand):
             Episode,  # noqa: F401  (ensures cast app is ready)
             EpisodeContributor,
         )
+
+        if not settings.DEBUG and not options["allow_non_debug"]:
+            raise CommandError(
+                "Refusing to seed synthetic speaker labels with DEBUG off: this overwrites "
+                "the episode's transcript. Pass --allow-non-debug to run it anyway."
+            )
 
         slug = options["slug"]
         episode = self._get_episode(slug)
@@ -145,12 +163,18 @@ class Command(BaseCommand):
             index += run_length
             speaker_cursor += 1
 
-        # Overwrite the file in place at its existing path (delete-then-save keeps
-        # FieldFile.save from appending a uniqueness suffix), so re-running the
-        # command stays idempotent and does not orphan the prior file.
-        name = transcript.podlove.name
+        # Write-then-swap: save the labelled copy as a new file, point the
+        # transcript at it, and only then delete the previous file. A failure at
+        # any step leaves the transcript row pointing at a complete file.
+        old_name = transcript.podlove.name
         storage = transcript.podlove.storage
-        if storage.exists(name):
-            storage.delete(name)
-        storage.save(name, ContentFile(json.dumps(data, ensure_ascii=False).encode("utf-8")))
+        content = ContentFile(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+        # Bound the name: repeated runs on a non-overwriting storage would
+        # otherwise keep growing the uniqueness suffix past the column length.
+        max_length = transcript._meta.get_field("podlove").max_length
+        new_name = storage.save(old_name, content, max_length=max_length)
+        transcript.podlove.name = new_name
+        transcript.save(update_fields=["podlove"])
+        if new_name != old_name and storage.exists(old_name):
+            storage.delete(old_name)
         return labelled

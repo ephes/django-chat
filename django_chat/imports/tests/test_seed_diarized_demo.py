@@ -56,7 +56,7 @@ def test_seed_labels_cues_and_assigns_visible_contributors(tmp_path: Path) -> No
         assert episode.podcast_audio is not None
         _attach_plain_transcript(episode.podcast_audio)
 
-        call_command("seed_django_chat_diarized_demo")
+        call_command("seed_django_chat_diarized_demo", allow_non_debug=True)
 
         episode_contributor_model = apps.get_model("cast", "EpisodeContributor")
         assignments = episode_contributor_model.objects.filter(episode=episode)
@@ -91,13 +91,94 @@ def test_seed_is_idempotent(tmp_path: Path) -> None:
         episode = Episode.objects.get(slug="django-tasks-jake-howard")
         _attach_plain_transcript(episode.podcast_audio)
 
-        call_command("seed_django_chat_diarized_demo")
-        name_after_first = Audio.objects.get(pk=episode.podcast_audio.pk).transcript.podlove.name
+        call_command("seed_django_chat_diarized_demo", allow_non_debug=True)
+        first = Audio.objects.get(pk=episode.podcast_audio.pk).transcript.podlove
+        with first.open("r") as handle:
+            data_after_first = json.load(handle)
 
-        call_command("seed_django_chat_diarized_demo")
-        name_after_second = Audio.objects.get(pk=episode.podcast_audio.pk).transcript.podlove.name
+        call_command("seed_django_chat_diarized_demo", allow_non_debug=True)
+        second = Audio.objects.get(pk=episode.podcast_audio.pk).transcript.podlove
+        with second.open("r") as handle:
+            data_after_second = json.load(handle)
 
-        # Same file path (no uniqueness-suffix orphan) and no duplicate contributors.
-        assert name_after_first == name_after_second
+        # Same labels, the transcript points at an existing file, the previous
+        # file was removed after the swap (no orphan), and no duplicate contributors.
+        assert data_after_first == data_after_second
+        assert second.storage.exists(second.name)
+        if first.name != second.name:
+            assert not first.storage.exists(first.name)
+        podlove_files = [path for path in tmp_path.rglob("*.json") if path.is_file()]
+        assert len(podlove_files) == 1
         episode_contributor_model = apps.get_model("cast", "EpisodeContributor")
         assert episode_contributor_model.objects.filter(episode=episode).count() == 3
+
+
+@pytest.mark.django_db
+def test_seed_refuses_without_debug_or_flag(tmp_path: Path) -> None:
+    from django.core.management.base import CommandError
+
+    with override_settings(MEDIA_ROOT=tmp_path, DEBUG=False):
+        import_django_chat_sample(copy_audio=True, audio_downloader=_FakeAudioDownloader())
+        episode = Episode.objects.get(slug="django-tasks-jake-howard")
+        transcript = _attach_plain_transcript(episode.podcast_audio)
+        with transcript.podlove.open("r") as handle:
+            before = handle.read()
+
+        with pytest.raises(CommandError, match="DEBUG"):
+            call_command("seed_django_chat_diarized_demo")
+
+        transcript.refresh_from_db()
+        with transcript.podlove.open("r") as handle:
+            assert handle.read() == before
+
+
+@pytest.mark.django_db
+def test_seed_runs_when_debug_is_on(tmp_path: Path) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path, DEBUG=True):
+        import_django_chat_sample(copy_audio=True, audio_downloader=_FakeAudioDownloader())
+        episode = Episode.objects.get(slug="django-tasks-jake-howard")
+        _attach_plain_transcript(episode.podcast_audio)
+
+        call_command("seed_django_chat_diarized_demo")
+
+        transcript = Audio.objects.get(pk=episode.podcast_audio.pk).transcript
+        with transcript.podlove.open("r") as handle:
+            assert all(segment.get("speaker") for segment in json.load(handle)["transcripts"])
+
+
+@pytest.mark.django_db
+def test_seed_keeps_original_transcript_when_write_fails(tmp_path: Path, monkeypatch) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(copy_audio=True, audio_downloader=_FakeAudioDownloader())
+        episode = Episode.objects.get(slug="django-tasks-jake-howard")
+        transcript = _attach_plain_transcript(episode.podcast_audio)
+        original_name = transcript.podlove.name
+        storage = transcript.podlove.storage
+
+        def failing_save(*args: Any, **kwargs: Any) -> str:
+            raise OSError("disk full")
+
+        monkeypatch.setattr(storage, "save", failing_save)
+        with pytest.raises(OSError, match="disk full"):
+            call_command("seed_django_chat_diarized_demo", allow_non_debug=True)
+        monkeypatch.undo()
+
+        transcript.refresh_from_db()
+        assert transcript.podlove.name == original_name
+        assert storage.exists(original_name)
+
+
+@pytest.mark.django_db
+def test_seed_reruns_keep_transcript_name_within_field_length(tmp_path: Path) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(copy_audio=True, audio_downloader=_FakeAudioDownloader())
+        episode = Episode.objects.get(slug="django-tasks-jake-howard")
+        transcript = _attach_plain_transcript(episode.podcast_audio)
+        max_length = transcript._meta.get_field("podlove").max_length
+
+        for _ in range(12):
+            call_command("seed_django_chat_diarized_demo", allow_non_debug=True)
+
+        transcript.refresh_from_db()
+        assert len(transcript.podlove.name) <= max_length
+        assert transcript.podlove.storage.exists(transcript.podlove.name)

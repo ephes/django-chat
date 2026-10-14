@@ -446,7 +446,9 @@ growth.
    `just manage seed_django_chat_diarized_demo` (assigns the three visible
    contributors and writes deterministic block speaker labels onto the
    `django-tasks-jake-howard` cues; run it with staging media to seed the S3
-   transcript that `just dev` reads); an environment-selectable
+   transcript that `just dev` reads; it refuses to run unless `DEBUG` is on or
+   `--allow-non-debug` is passed, and swaps in the rewritten transcript file
+   only after it is fully written); an environment-selectable
    `DisableTranscriptCacheMiddleware` (always on locally and on staging) that
    drops the endpoint's 1-hour browser cache so seeded/generated speaker changes
    show on the next load; the transcript toggle restyled as a compact
