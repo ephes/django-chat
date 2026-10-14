@@ -368,6 +368,30 @@ comment. See [Comment spam filter](spam-filter.md) for the measurements, the
 operating-point trade-off, the four `manage.py` commands that retrain and install
 a model, and why the admin "Retrain" action is destructive here.
 
+### Post rate limit
+
+django-cast (from 0.2.68) limits comment posting to
+`CAST_COMMENTS_POST_RATE_LIMIT` posts (default `20`) per
+`CAST_COMMENTS_POST_RATE_WINDOW` seconds (default `600`), counted over both
+comment post views. Logged-in users are counted per user, anonymous visitors
+per client address; previews are not counted. A further post gets
+`429 Too Many Requests` with `Retry-After`, and the AJAX form shows the message
+at the comment field. `0` disables the limit. Django Chat keeps the defaults and
+sets neither variable.
+
+The client address comes from Django REST framework's `get_ident`, which reads
+`X-Forwarded-For` and falls back to `REMOTE_ADDR`. Staging and production sit
+behind one local Traefik, which replaces any `X-Forwarded-For` the client sends
+with the real client address, so `REST_FRAMEWORK["NUM_PROXIES"]` stays unset.
+If another proxy or CDN is put in front of Traefik, Traefik's default drops
+that proxy's `X-Forwarded-For`, so every visitor would arrive as the proxy's
+address and share one budget. Then configure Traefik's
+`forwardedHeaders.trustedIPs` for the upstream proxy (which must send a clean
+client address) and set `NUM_PROXIES` to the number of proxies in the chain.
+Setting `NUM_PROXIES` alone does not help. The counter lives in the default cache, which is shared by all
+Gunicorn workers (file-based cache in production settings). Locally the
+`LocMemCache` is per process, which is enough for the dev server.
+
 ### Author self-edit and delete
 
 When `CAST_COMMENTS_ALLOW_AUTHOR_EDITS` is on, a commenter can edit and delete

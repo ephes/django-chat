@@ -141,6 +141,21 @@ The explicit `smooth=False` matters: an uncertain rapid exchange must remain
 blank for review instead of inheriting the preceding speaker. The Wagtail
 admin's **Apply confident suggestions** action uses the same semantics.
 
+A guest without a voice reference is named automatically when the suggestions
+are applied (django-cast 0.2.68, develop `1f03c4c3` or newer). Voxhelm leaves
+such a guest's segments uncertain, but they all sit on one diarization label
+that matches no reference. When exactly one assigned visible contributor got no
+reference, exactly one label is tied to no known speaker, and every contributor
+with a reference has its own label, the uncertain segments on that label get the
+guest's name. Segments Voxhelm marks as mixed stay blank, as do all ambiguous
+cases: two or more guests without a reference, an audio used by more than one
+episode, or a label vote that is not clear. Editor corrections saved in the
+panel win over the rule. The label map comes from Voxhelm's
+`raw_diarization_labels` summary (Voxhelm 0.1.7+), or for older sidecars from
+the same vote over confident segments, so re-applying an existing sidecar is
+enough; no new run is needed. After applying, count the lines per contributor:
+a guest who is still blank means the rule did not apply and needs review.
+
 If no usable known-speaker sidecar is returned, first find out why (see the
 note above) and regenerate. Mapping generic labels to contributors is a last
 resort: it names every segment of a cluster, including blocks that contain
