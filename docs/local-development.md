@@ -436,6 +436,13 @@ Safe rerun behavior:
 
 - Podcast, episode, source metadata, source link, and audio metadata rows are
   updated in place using RSS GUIDs, Simplecast IDs/slugs, and source-link keys.
+- Episode pages that an editor has saved in Wagtail (any page revision exists)
+  are editor-owned: re-imports refresh their source metadata rows but leave the
+  page itself (title, slug, body, summary, keywords, explicit, publishing
+  numbers, attached audio) untouched; `--copy-audio` still copies the file into
+  the media library but does not re-attach it. Pages never edited in Wagtail keep following the source.
+  The importer never sets the iTunes `block` flag; it keeps the model default on
+  new pages and an editor's choice on existing ones.
 - Audio copy uses streaming file transfer into Django storage, not whole-MP3
   in-memory reads.
 - Existing copied audio is skipped when the stored file still exists and the

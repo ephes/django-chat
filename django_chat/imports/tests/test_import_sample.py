@@ -327,6 +327,81 @@ def test_sample_reimport_preserves_comment_admin_toggles() -> None:
 
 
 @pytest.mark.django_db
+def test_sample_reimport_preserves_editorial_fields(tmp_path: Path) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
+        metadata = EpisodeSourceMetadata.objects.get(episode_number=200)
+        episode = cast(Any, metadata.episode)
+        source_title = episode.title
+
+        # An editor changes the page in Wagtail and publishes it.
+        episode.title = "Edited title"
+        episode.draft_title = "Edited title"
+        episode.slug = "edited-slug"
+        episode.search_description = "Edited summary."
+        episode.keywords = "edited"
+        episode.explicit = 1 if episode.explicit != 1 else 2
+        episode.block = True
+        episode.body = [("overview", [("paragraph", "<p>Edited body.</p>")])]
+        episode.save_revision().publish()
+        episode.refresh_from_db()
+        edited = {
+            name: getattr(episode, name)
+            for name in ("title", "slug", "search_description", "keywords", "explicit", "block")
+        }
+        edited_body = cast(Any, episode.body).get_prep_value()
+        revision_id = episode.latest_revision_id
+        metadata.source_title = "stale"
+        metadata.save(update_fields=["source_title"])
+
+        result = import_django_chat_sample()
+
+    assert result.episodes_created == 0
+    episode.refresh_from_db()
+    for name, value in edited.items():
+        assert getattr(episode, name) == value, name
+    assert cast(Any, episode.body).get_prep_value() == edited_body
+    assert episode.latest_revision_id == revision_id
+    assert not episode.has_unpublished_changes
+    # Source metadata still follows the source.
+    metadata.refresh_from_db()
+    assert metadata.source_title == source_title
+
+
+@pytest.mark.django_db
+def test_sample_reimport_with_audio_keeps_editor_audio_choice(tmp_path: Path) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
+        episode = cast(Any, EpisodeSourceMetadata.objects.get(episode_number=200).episode)
+        other = cast(Any, EpisodeSourceMetadata.objects.get(episode_number=1).episode)
+        imported_audio_id = episode.podcast_audio_id
+        episode.podcast_audio = other.podcast_audio
+        episode.save_revision().publish()
+        episode.refresh_from_db()
+        assert episode.podcast_audio_id != imported_audio_id
+
+        import_django_chat_sample(copy_audio=True, audio_downloader=FakeAudioDownloader())
+
+    episode.refresh_from_db()
+    assert episode.podcast_audio_id == other.podcast_audio_id
+
+
+@pytest.mark.django_db
+def test_sample_reimport_never_resets_block_flag() -> None:
+    import_django_chat_sample()
+    episode = cast(Any, EpisodeSourceMetadata.objects.get(episode_number=200).episode)
+    assert episode.latest_revision_id is None
+    Episode.objects.filter(pk=episode.pk).update(block=True, title="Changed upstream?")
+
+    import_django_chat_sample()
+
+    episode.refresh_from_db()
+    assert episode.block is True
+    # Pages never edited in Wagtail keep following the source.
+    assert episode.title != "Changed upstream?"
+
+
+@pytest.mark.django_db
 def test_sample_reimport_preserves_preview_without_canonical_episode_number() -> None:
     import_django_chat_sample()
     podcast = cast(Any, Podcast.objects.get())

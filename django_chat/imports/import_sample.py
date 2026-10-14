@@ -584,6 +584,13 @@ def _update_episode_page(
     *,
     podcast: Podcast,
 ) -> None:
+    # A page with a Wagtail revision has been saved by an editor: it is
+    # editor-owned from then on. Re-imports refresh only the source metadata
+    # rows and leave the page (title, slug, body, explicit, block, ...) alone;
+    # writing the live row here would also diverge from the editor's latest
+    # revision. Pages never edited in Wagtail keep following the source.
+    if cast(Any, episode).latest_revision_id is not None:
+        return
     _update_episode_page_fields(episode, episode_source, podcast=podcast)
     episode.save()
 
@@ -614,7 +621,6 @@ def _update_episode_page_fields(
     page.episode_type = _episode_publishing_type(episode_source)
     page.season = _episode_publishing_season(podcast, episode_source)
     page.explicit = _episode_explicit_choice(episode_source)
-    page.block = False
 
 
 def _update_episode_metadata(
@@ -877,6 +883,10 @@ def _attach_episode_audio(metadata: EpisodeSourceMetadata, audio: Audio) -> None
     episode = cast(Episode, metadata.episode)
     episode_fields = cast(Any, episode)
     if episode_fields.podcast_audio_id == audio.pk:
+        return
+    if episode_fields.latest_revision_id is not None:
+        # Editor-owned page (see _update_episode_page): keep the editor's audio
+        # choice; the copied file stays available in the media library.
         return
     Episode.objects.filter(pk=episode.pk).update(podcast_audio=audio)
     episode_fields.podcast_audio = audio
