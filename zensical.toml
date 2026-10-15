@@ -17,6 +17,7 @@ nav = [
     { "Custom player, transcript & sharing" = "custom-player-transcript-share-spec.md" },
     { "Structured show-note blocks" = "structured-show-note-blocks-research.md" },
     { "Contributors & diarization" = "contributors-and-diarization.md" },
+    { "Transcript glossary pilot" = "transcript-glossary.md" },
     { "Episode numbering" = "episode-numbering-research.md" },
   ] },
   { "Data & migration" = [

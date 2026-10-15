@@ -1,0 +1,2909 @@
+{
+ "created": "2026-10-15",
+ "asr": {
+  "backend": "parakeet",
+  "model": "parakeet-tdt-0.6b-v3",
+  "cli": "parakeet-mlx 0.5.3",
+  "settings": "chunk 600 s, overlap 30 s, local attention, max sentence 30 s"
+ },
+ "episodes": {
+  "ep205": {
+   "title": "Django Developers Survey 2026",
+   "guid": "a655b9a3-9485-4efd-a22f-e5aa193b5412",
+   "raw_transcript_sha256": "332156d183615deab721412f8fd28dd6deac1641314a21ca8809bba07bb8b96f"
+  },
+  "ep206": {
+   "title": "Django on the Med",
+   "guid": "ed8d6dd4-da25-462d-9265-5e521c02e16f",
+   "raw_transcript_sha256": "118d814445f36d1386f7721a5b919138c9f01c3877a3bd264a3b42cd29243597"
+  },
+  "ep219": {
+   "title": "Hiring in 2026 - Jon Gould",
+   "guid": "8b4bac25-dc2b-4362-95a5-89be76ba6a6c",
+   "raw_transcript_sha256": "3599f80b0dfcc826f1d1370484e511fa19925a93017f358f3df641768165cfce"
+  },
+  "eric": {
+   "title": "Django Deployments in 2025 - Eric Matthes",
+   "guid": "5e21d0fc-1115-4fda-98f3-f5c34dd805c7",
+   "raw_transcript_sha256": "dc764d7ba29a6e80185bd2313fad660bbab975a5640a2ab327293ae5b4aac0fd"
+  },
+  "guest1": {
+   "title": "EuroPython 2026 - Mia Bajić",
+   "guid": "c0b572e6-2c26-42fd-ba29-6c91ed456299",
+   "raw_transcript_sha256": "1d1e0f3ce5bd2ec6b900c4f73063334581dc97be3349e9eecd4fda26eba3526d"
+  },
+  "guest2": {
+   "title": "Deploy on Day One - Calvin Hendryx-Parker",
+   "guid": "be362068-8474-4d52-af59-2406339c620a",
+   "raw_transcript_sha256": "9eb13f6f6a52af0287b8e2590c9870b12cd3ac17199a4e7b42312321a0b07fa2"
+  }
+ },
+ "note": "Occurrence-level gold for the transcript glossary spec (django-cast backlog/2026-10-15-transcript-glossary.md). Classes: G contributors/show notes, K recurring ecosystem term, O other people/places. Recall-limited: only errors found by the glossary fuzzy match or the LLM sweep and confirmed by context or listening.",
+ "occurrences": [
+  {
+   "id": "fd6c0f2222",
+   "episode": "ep219",
+   "segment": 4,
+   "start_ms": 12960,
+   "end_ms": 17760,
+   "span": [
+    31,
+    35
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "And we're very pleased to have John Gould from Foxy Talent back on after three years.",
+   "evidence": "context"
+  },
+  {
+   "id": "fdd7bd6bf6",
+   "episode": "ep219",
+   "segment": 5,
+   "start_ms": 17760,
+   "end_ms": 19120,
+   "span": [
+    9,
+    13
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "Welcome, John.",
+   "evidence": "context"
+  },
+  {
+   "id": "4e94277737",
+   "episode": "ep219",
+   "segment": 54,
+   "start_ms": 241440,
+   "end_ms": 247040,
+   "span": [
+    123,
+    127
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "I was just gonna say, um, I remember having this conversation with multiple people at DjangoCon US saying, Oh, do you know John?",
+   "evidence": "context"
+  },
+  {
+   "id": "eee2e649d4",
+   "episode": "ep219",
+   "segment": 61,
+   "start_ms": 276240,
+   "end_ms": 281760,
+   "span": [
+    114,
+    118
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "Um, which most people aren't, but a couple of times they need the nudge of like, no, it's like you should talk to John.",
+   "evidence": "context"
+  },
+  {
+   "id": "96cae48a92",
+   "episode": "ep219",
+   "segment": 132,
+   "start_ms": 802800,
+   "end_ms": 815200,
+   "span": [
+    270,
+    274
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "And I kind of took that very much to hand to heart, but like at my scale, it's like you must have enough reserve so that you know, if push comes to shove, there's a window where you can find a job without being in the panic situation that you were talking about before, John.",
+   "evidence": "context"
+  },
+  {
+   "id": "cc92714107",
+   "episode": "ep219",
+   "segment": 138,
+   "start_ms": 842160,
+   "end_ms": 850560,
+   "span": [
+    70,
+    74
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "I mean, that's right, and not to turn this into one of your episodes, John, but like they're they're different skills is sort of the core thing, and yet they're thrust upon you.",
+   "evidence": "context"
+  },
+  {
+   "id": "6286ef0b79",
+   "episode": "ep219",
+   "segment": 151,
+   "start_ms": 940720,
+   "end_ms": 943600,
+   "span": [
+    22,
+    26
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "I think this came up, John John, in um in the US.",
+   "evidence": "context"
+  },
+  {
+   "id": "8fb75ef0b2",
+   "episode": "ep219",
+   "segment": 151,
+   "start_ms": 940720,
+   "end_ms": 943600,
+   "span": [
+    27,
+    31
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "I think this came up, John John, in um in the US.",
+   "evidence": "context"
+  },
+  {
+   "id": "3e5fd9990c",
+   "episode": "ep219",
+   "segment": 183,
+   "start_ms": 1288240,
+   "end_ms": 1311440,
+   "span": [
+    250,
+    254
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "So you still they still want smart young people the problem is as you said like maybe a bootcamp person or someone who hasn't gotten that on the ground training it is much harder like I mean consultancies I've spoken to and you've probably spoken to John it's harder for them to hire a you know a grad from a from a bootcamp right whereas before they could have now they can kind of swap that out for an agent.",
+   "evidence": "context"
+  },
+  {
+   "id": "1b95a17f16",
+   "episode": "ep219",
+   "segment": 193,
+   "start_ms": 1437120,
+   "end_ms": 1466400,
+   "span": [
+    487,
+    491
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "I think it's just a way to get rid of old people without violating uh firing laws called Well if you make uh make old people come to the office they quit well no because no because yeah if someone who's like in their 30s 40s with kids who you know you say oh I'm not firing you because of the age or this that and the other thing it's like you know you gotta be in the office five days a week I mean I don't want to get too conspiratorial but I'm very confident that a lot of it is that John what do you think?",
+   "evidence": "context"
+  },
+  {
+   "id": "6e9eed3783",
+   "episode": "ep219",
+   "segment": 196,
+   "start_ms": 1504800,
+   "end_ms": 1508960,
+   "span": [
+    63,
+    67
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "So I wonder what you're if you're what are you hearing on that John?",
+   "evidence": "context"
+  },
+  {
+   "id": "36efc1c750",
+   "episode": "ep219",
+   "segment": 211,
+   "start_ms": 1727280,
+   "end_ms": 1757360,
+   "span": [
+    430,
+    434
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "It it it you'd get far too many applicants and it was far too difficult to to get through them and be you know and then far too difficult to do the the the the interview process fairly and and and and but at reasonable personal expense like you know reasonable time investment and whatnot it's a hiring is a is just a a massive challenge and I can't believe that AI's made it easier but that's why the personal like to your point John like I mean when I've hi",
+   "evidence": "context"
+  },
+  {
+   "id": "c727c28f0c",
+   "episode": "ep219",
+   "segment": 213,
+   "start_ms": 1787840,
+   "end_ms": 1817920,
+   "span": [
+    396,
+    400
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "ah and right now right now with the BAI thing there is there's loads of I gave a lightning talk at uh JengaCon and PyCon this year um about the the the problem of like job and hiring fraud in job job processes it's it's global now it's not just limited to one place but it's it it's almost the joke about going to conferences to meet real people somebody a client of mine came to me and said hey John we",
+   "evidence": "context"
+  },
+  {
+   "id": "ccbf7b26b2",
+   "episode": "ep219",
+   "segment": 227,
+   "start_ms": 2019840,
+   "end_ms": 2022000,
+   "span": [
+    38,
+    42
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "Like what are you what are you seeing John?",
+   "evidence": "context"
+  },
+  {
+   "id": "70fe4d8e1a",
+   "episode": "ep219",
+   "segment": 253,
+   "start_ms": 2287120,
+   "end_ms": 2294960,
+   "span": [
+    29,
+    33
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "So yeah, it's to your point, John, it's you still need humans and it's harder than ever to know who's actually human out there.",
+   "evidence": "context"
+  },
+  {
+   "id": "43500d2414",
+   "episode": "ep219",
+   "segment": 269,
+   "start_ms": 2354080,
+   "end_ms": 2368640,
+   "span": [
+    43,
+    47
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "I mean I I think I met you at a conference John I certainly met Carlton at a conference like this podcast came about you know so and there's opportunity grants so you know it bears repeating like challenging as it is to go it is so valuable to go.",
+   "evidence": "context"
+  },
+  {
+   "id": "72199cbb47",
+   "episode": "ep219",
+   "segment": 271,
+   "start_ms": 2382880,
+   "end_ms": 2388080,
+   "span": [
+    35,
+    39
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "I was re you know referring you to John you know you most people are very friendly in the community.",
+   "evidence": "context"
+  },
+  {
+   "id": "e9d3843f9a",
+   "episode": "ep219",
+   "segment": 274,
+   "start_ms": 2424240,
+   "end_ms": 2454320,
+   "span": [
+    210,
+    214
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "Yeah we'll see um so we have a books and project section Carlton were there questions you wanted to no no no it's all good I mean I the one thing I might just mention was Django dot social which you kicked off John and uh that's a yet another good way that people can organize a local thing get together chat about Django meet people local Django developers and yeah yeah that that was a I suppose a born out of um",
+   "evidence": "context"
+  },
+  {
+   "id": "bea5cdce10",
+   "episode": "ep219",
+   "segment": 298,
+   "start_ms": 2782560,
+   "end_ms": 2802400,
+   "span": [
+    19,
+    23
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "Um books should we John we didn't mention this to you so you're off the hook but Carlton I like to subject people to I listen I listen and I listen enough and I um yeah I I I know that you was asked this so I was panicking because I pretty much only I pretty much only read Jack Reacher books.",
+   "evidence": "context"
+  },
+  {
+   "id": "b2774df065",
+   "episode": "ep219",
+   "segment": 376,
+   "start_ms": 3212800,
+   "end_ms": 3218480,
+   "span": [
+    0,
+    4
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "John, don't feel excluded, but also don't feel obligated to add a project to this.",
+   "evidence": "context"
+  },
+  {
+   "id": "28413c1ac1",
+   "episode": "ep219",
+   "segment": 386,
+   "start_ms": 3248160,
+   "end_ms": 3250160,
+   "span": [
+    31,
+    35
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "Um, what haven't we asked you, John?",
+   "evidence": "context"
+  },
+  {
+   "id": "3b3adbae77",
+   "episode": "ep219",
+   "segment": 406,
+   "start_ms": 3321360,
+   "end_ms": 3323040,
+   "span": [
+    6,
+    10
+   ],
+   "original": "John",
+   "target": "Jon",
+   "class": "G",
+   "segment_text": "Well, John, thank you for taking the time.",
+   "evidence": "context"
+  },
+  {
+   "id": "b7e6c6d7b3",
+   "episode": "ep219",
+   "segment": 4,
+   "start_ms": 12960,
+   "end_ms": 17760,
+   "span": [
+    47,
+    58
+   ],
+   "original": "Foxy Talent",
+   "target": "Foxley Talent",
+   "class": "G",
+   "segment_text": "And we're very pleased to have John Gould from Foxy Talent back on after three years.",
+   "evidence": "context"
+  },
+  {
+   "id": "ad42d9ac0c",
+   "episode": "ep219",
+   "segment": 19,
+   "start_ms": 61760,
+   "end_ms": 70480,
+   "span": [
+    84,
+    95
+   ],
+   "original": "Foxy Talent",
+   "target": "Foxley Talent",
+   "class": "G",
+   "segment_text": "Um well, so maybe, and sorry, for introduction, for those who don't know, you're at Foxy Talent, like the preeminent Django recruiting agency.",
+   "evidence": "context"
+  },
+  {
+   "id": "e40cdb537f",
+   "episode": "ep219",
+   "segment": 22,
+   "start_ms": 74320,
+   "end_ms": 79120,
+   "span": [
+    37,
+    48
+   ],
+   "original": "Foxy Talent",
+   "target": "Foxley Talent",
+   "class": "G",
+   "segment_text": "Yeah, I suppose like yeah, I've I've Foxy Talent's just just turned five years old.",
+   "evidence": "context"
+  },
+  {
+   "id": "2dd0cf3f55",
+   "episode": "ep219",
+   "segment": 25,
+   "start_ms": 88080,
+   "end_ms": 99120,
+   "span": [
+    119,
+    130
+   ],
+   "original": "Foxy Talent",
+   "target": "Foxley Talent",
+   "class": "G",
+   "segment_text": "And um yeah, as a I suppose as a career recruiter, I'm also an individual member of the Django Software Foundation and Foxy Talent is one of the corporate sponsors.",
+   "evidence": "context"
+  },
+  {
+   "id": "55888b7ea2",
+   "episode": "ep219",
+   "segment": 395,
+   "start_ms": 3282400,
+   "end_ms": 3298320,
+   "span": [
+    38,
+    50
+   ],
+   "original": "Foxly Talent",
+   "target": "Foxley Talent",
+   "class": "G",
+   "segment_text": "Okay, but people should um definitely Foxly Talent, um, LinkedIn, they should listen to the podcasts, and if they're going to any of these events, you are a ubiquitous um you know member of the community as well as supporter, which everyone should do and people shouldn't be shy.",
+   "evidence": "context"
+  },
+  {
+   "id": "1bdf46df72",
+   "episode": "ep219",
+   "segment": 300,
+   "start_ms": 2805120,
+   "end_ms": 2835120,
+   "span": [
+    219,
+    227
+   ],
+   "original": "go giver",
+   "target": "Go-Giver",
+   "class": "G",
+   "segment_text": "Okay I wouldn't you've read one you can read them all but it's fine any any one of them you know exactly what goes on um but no there there is a there is a book that I I really um took a lot from and it's called um the go giver um and it's about the it's a business theory and it's um about the they they they do a load of theory in it and then they have like a story in the middle that helps you to",
+   "evidence": "context"
+  },
+  {
+   "id": "f2873a42ee",
+   "episode": "ep219",
+   "segment": 305,
+   "start_ms": 2868240,
+   "end_ms": 2871360,
+   "span": [
+    45,
+    54
+   ],
+   "original": "go givers",
+   "target": "Go-Giver",
+   "class": "G",
+   "segment_text": "So yeah, it's called go, I think it's called go givers Sell More.",
+   "evidence": "context"
+  },
+  {
+   "id": "2b2feabc71",
+   "episode": "ep219",
+   "segment": 309,
+   "start_ms": 2886800,
+   "end_ms": 2891040,
+   "span": [
+    38,
+    51
+   ],
+   "original": "Gilbert Riley",
+   "target": "Gilbert Ryle",
+   "class": "G",
+   "segment_text": "Um so I've been reading, rereading um Gilbert Riley's uh oh, can you see that?",
+   "evidence": "context"
+  },
+  {
+   "id": "60cae07406",
+   "episode": "ep219",
+   "segment": 311,
+   "start_ms": 2891520,
+   "end_ms": 2896000,
+   "span": [
+    41,
+    53
+   ],
+   "original": "Gilbert Rile",
+   "target": "Gilbert Ryle",
+   "class": "G",
+   "segment_text": "Oh, it's The Concept of Mind, anyway, by Gilbert Rile, which is uh this is a Penguin Classic edition.",
+   "evidence": "context"
+  },
+  {
+   "id": "addad6d18c",
+   "episode": "ep219",
+   "segment": 319,
+   "start_ms": 2940480,
+   "end_ms": 2945840,
+   "span": [
+    6,
+    20
+   ],
+   "original": "Gilbert Rather",
+   "target": "Gilbert Ryle",
+   "class": "G",
+   "segment_text": "So uh Gilbert Rather's concept of mind, which is a as I say, a classic from 20th century.",
+   "evidence": "context"
+  },
+  {
+   "id": "5a110db488",
+   "episode": "ep219",
+   "segment": 321,
+   "start_ms": 2947280,
+   "end_ms": 2959040,
+   "span": [
+    67,
+    73
+   ],
+   "original": "Malaby",
+   "target": "Mallaby",
+   "class": "G",
+   "segment_text": "Um I'm reading uh I'll hold it up, The Infinity Machine, Sebastian Malaby about the uh Demis Hasabas, um the DeepMind founder.",
+   "evidence": "context"
+  },
+  {
+   "id": "d492aa8b4d",
+   "episode": "ep219",
+   "segment": 363,
+   "start_ms": 3156000,
+   "end_ms": 3169360,
+   "span": [
+    50,
+    63
+   ],
+   "original": "Fahan Aliraza",
+   "target": "Farhan Ali Raza",
+   "class": "G",
+   "segment_text": "Um I want to just mention um an application by uh Fahan Aliraza, who's the you know the uh Google Summer co-candidate who added Django uh template partials into core, and who uh the author of the Django Bolt project.",
+   "evidence": "context"
+  },
+  {
+   "id": "d159d615f6",
+   "episode": "ep219",
+   "segment": 321,
+   "start_ms": 2947280,
+   "end_ms": 2959040,
+   "span": [
+    93,
+    100
+   ],
+   "original": "Hasabas",
+   "target": "Hassabis",
+   "class": "O",
+   "segment_text": "Um I'm reading uh I'll hold it up, The Infinity Machine, Sebastian Malaby about the uh Demis Hasabas, um the DeepMind founder.",
+   "evidence": "context"
+  },
+  {
+   "id": "5275bd1ef0",
+   "episode": "ep219",
+   "segment": 206,
+   "start_ms": 1613200,
+   "end_ms": 1643280,
+   "span": [
+    273,
+    282
+   ],
+   "original": "leak code",
+   "target": "LeetCode",
+   "class": "K",
+   "segment_text": "So again be more human lean into like the the reason why you're looking and your backstory how you your you know how you got into coding in the first place what's still passion what you're still passionate about and then like the interviews I I can't stand things like the leak code processes any interviews where you're being set up a task you know there's just fictional just review some code or like take a pull request and like nothing's too no one's too busy just to like go hey can have a look at",
+   "evidence": "context"
+  },
+  {
+   "id": "0aa0b791e0",
+   "episode": "ep219",
+   "segment": 208,
+   "start_ms": 1645040,
+   "end_ms": 1671200,
+   "span": [
+    248,
+    257
+   ],
+   "original": "claw code",
+   "target": "Claude Code",
+   "class": "K",
+   "segment_text": "And if you do allow if you work where you're using um you know prompts in in in your coding and generating code that way well then run your interview process like that and say we want you to use whatever tool you're most comfortable with or we use claw code or whatever um if you and then you review it together like you would in the workplace.",
+   "evidence": "context"
+  },
+  {
+   "id": "99cab2db95",
+   "episode": "ep219",
+   "segment": 213,
+   "start_ms": 1787840,
+   "end_ms": 1817920,
+   "span": [
+    102,
+    110
+   ],
+   "original": "JengaCon",
+   "target": "DjangoCon",
+   "class": "K",
+   "segment_text": "ah and right now right now with the BAI thing there is there's loads of I gave a lightning talk at uh JengaCon and PyCon this year um about the the the problem of like job and hiring fraud in job job processes it's it's global now it's not just limited to one place but it's it it's almost the joke about going to conferences to meet real people somebody a client of mine came to me and said hey John we",
+   "evidence": "context"
+  },
+  {
+   "id": "4cb54c5545",
+   "episode": "ep219",
+   "segment": 217,
+   "start_ms": 1908080,
+   "end_ms": 1934720,
+   "span": [
+    28,
+    44
+   ],
+   "original": "Jango on the med",
+   "target": "Django on the Med",
+   "class": "K",
+   "segment_text": "conferences going to the um Jango on the med or something like that and sharing the photo that you were there or uh yeah in Chicago the the silver bean thing you were there and yeah and because it it's just leaving a bit of a digital paper trail for people but also others will see it and it's trying to yeah so when you do need to put your hand up and say I'm looking there's people remember you a little bit.",
+   "evidence": "context"
+  },
+  {
+   "id": "7338b9abdb",
+   "episode": "ep219",
+   "segment": 291,
+   "start_ms": 2730960,
+   "end_ms": 2744240,
+   "span": [
+    115,
+    130
+   ],
+   "original": "Jang on the med",
+   "target": "Django on the Med",
+   "class": "K",
+   "segment_text": "And I think if we were to grow it beyond that we'd have to change the format somehow and it's like okay so I think Jang on the med needs to be you know or a small sprint event because I think the the the hope is that people will pick up and run with them elsewhere.",
+   "evidence": "context"
+  },
+  {
+   "id": "df632a7b29",
+   "episode": "ep219",
+   "segment": 296,
+   "start_ms": 2768320,
+   "end_ms": 2781360,
+   "span": [
+    204,
+    214
+   ],
+   "original": "on the Met",
+   "target": "on the Med",
+   "class": "K",
+   "segment_text": "Well and there's Django Yeah yeah well exactly DjangoCon US there was a lot of talk around different venues and places so I can't speak for other people but I think there'll be more it doesn't have to be on the Met always.",
+   "evidence": "context"
+  },
+  {
+   "id": "758a7fe906",
+   "episode": "ep219",
+   "segment": 236,
+   "start_ms": 2140400,
+   "end_ms": 2157440,
+   "span": [
+    191,
+    203
+   ],
+   "original": "from Jake to",
+   "target": "from Django to",
+   "class": "K",
+   "segment_text": "So may maybe maybe in the next sort of four or five years we'll see more fast API jobs specifically but yeah I I I don't you know from a careers perspective I don't see many people switching from Jake to Fast API because they think their work prospects are better.",
+   "evidence": "listened"
+  },
+  {
+   "id": "d45854bc4c",
+   "episode": "ep219",
+   "segment": 250,
+   "start_ms": 2256720,
+   "end_ms": 2260320,
+   "span": [
+    34,
+    48
+   ],
+   "original": "learnjango.com",
+   "target": "learndjango.com",
+   "class": "K",
+   "segment_text": "I mean so I I've I run this small learnjango.com site, right?",
+   "evidence": "context"
+  },
+  {
+   "id": "2a02a68143",
+   "episode": "ep219",
+   "segment": 348,
+   "start_ms": 3067040,
+   "end_ms": 3080400,
+   "span": [
+    53,
+    63
+   ],
+   "original": "GunnarCorn",
+   "target": "Gunicorn",
+   "class": "K",
+   "segment_text": "Well, you know, how did how does it go running under GunnarCorn with you know a prefault worker versus a threaded worker versus well what about if you run it as as a as an ASGI application, then how does that perform at this at the scales that you're interested in?",
+   "evidence": "context"
+  },
+  {
+   "id": "7120f84e7f",
+   "episode": "ep219",
+   "segment": 351,
+   "start_ms": 3092320,
+   "end_ms": 3096320,
+   "span": [
+    6,
+    14
+   ],
+   "original": "Garnicon",
+   "target": "Gunicorn",
+   "class": "K",
+   "segment_text": "My my Garnicon worker with its two threaded workers is perfectly fine.",
+   "evidence": "context"
+  },
+  {
+   "id": "1d726b124c",
+   "episode": "ep219",
+   "segment": 353,
+   "start_ms": 3111680,
+   "end_ms": 3116800,
+   "span": [
+    53,
+    61
+   ],
+   "original": "Wagtaile",
+   "target": "Wagtail",
+   "class": "K",
+   "segment_text": "It's like when that, you know, I'm going to deploy a Wagtaile app, I'm expecting this kind of traffic.",
+   "evidence": "context"
+  },
+  {
+   "id": "1e16affc3e",
+   "episode": "ep219",
+   "segment": 363,
+   "start_ms": 3156000,
+   "end_ms": 3169360,
+   "span": [
+    91,
+    117
+   ],
+   "original": "Google Summer co-candidate",
+   "target": "Google Summer of Code candidate",
+   "class": "K",
+   "segment_text": "Um I want to just mention um an application by uh Fahan Aliraza, who's the you know the uh Google Summer co-candidate who added Django uh template partials into core, and who uh the author of the Django Bolt project.",
+   "evidence": "context"
+  },
+  {
+   "id": "9d535aae99",
+   "episode": "ep219",
+   "segment": 164,
+   "start_ms": 1031040,
+   "end_ms": 1059680,
+   "span": [
+    350,
+    356
+   ],
+   "original": "Jambal",
+   "target": "Django",
+   "class": "K",
+   "segment_text": "Like the there's a whole ecosystem around it and ALE is I don't know, it's it's uh in in the job side job sector at hiring, uh people who use it is changing the way people are writing code and uh are evaluating engineers, it's having a knock on to junior roles, definitely, but I think there's still uh yeah, still a a good job market for for Python Jambal engineers.",
+   "evidence": "listened"
+  },
+  {
+   "id": "80689c9815",
+   "episode": "ep205",
+   "segment": 87,
+   "start_ms": 291120,
+   "end_ms": 308800,
+   "span": [
+    305,
+    309
+   ],
+   "original": "Jang",
+   "target": "Django",
+   "class": "K",
+   "segment_text": "I think, you know, the success of the um schedule release, the the, you know, the stable release schedule every eight months, um, you know, that's that's and this the stability guarantees and the deprecation policy, all of that has mean meant that over the last few years it's become very easy to upgrade Jang, and we've started to bring more of the community with us.",
+   "evidence": "listened"
+  },
+  {
+   "id": "ad479de7cc",
+   "episode": "ep205",
+   "segment": 522,
+   "start_ms": 2942720,
+   "end_ms": 2945200,
+   "span": [
+    11,
+    15
+   ],
+   "original": "Jang",
+   "target": "Django",
+   "class": "K",
+   "segment_text": "Well, it's Jang.",
+   "evidence": "listened"
+  },
+  {
+   "id": "22f86a43ee",
+   "episode": "ep205",
+   "segment": 212,
+   "start_ms": 866800,
+   "end_ms": 868880,
+   "span": [
+    0,
+    5
+   ],
+   "original": "Ginja",
+   "target": "Jinja",
+   "class": "K",
+   "segment_text": "Ginja is in the teens.",
+   "evidence": "context"
+  },
+  {
+   "id": "ed0c00ea6d",
+   "episode": "ep205",
+   "segment": 218,
+   "start_ms": 891440,
+   "end_ms": 900080,
+   "span": [
+    41,
+    47
+   ],
+   "original": "Ginger",
+   "target": "Jinja",
+   "class": "K",
+   "segment_text": "Well, also I think there was a like when Ginger first came along, it was a lot faster because a lot of the cost is in parsing the template.",
+   "evidence": "context"
+  },
+  {
+   "id": "9df9e7aa9d",
+   "episode": "ep205",
+   "segment": 226,
+   "start_ms": 933600,
+   "end_ms": 938000,
+   "span": [
+    30,
+    36
+   ],
+   "original": "Ginger",
+   "target": "Jinja",
+   "class": "K",
+   "segment_text": "And you know, if you do, then Ginger's more powerful.",
+   "evidence": "context"
+  },
+  {
+   "id": "1d80a83d37",
+   "episode": "ep205",
+   "segment": 296,
+   "start_ms": 1433840,
+   "end_ms": 1457120,
+   "span": [
+    200,
+    204
+   ],
+   "original": "Olam",
+   "target": "Ollama",
+   "class": "K",
+   "segment_text": "I mean I would love to see more content from the community you know there's people like Peter Grandstaff um is running he's got a very powerful local computer he's running local models um you can use Olam or LM Studio to use newer models like Kimi and the cloud I hope the community can be can talk more about what what we're using because yeah like are you using it yeah what does that mean?",
+   "evidence": "context"
+  },
+  {
+   "id": "15a5aa95a7",
+   "episode": "ep205",
+   "segment": 297,
+   "start_ms": 1457120,
+   "end_ms": 1474240,
+   "span": [
+    72,
+    84
+   ],
+   "original": "Paul Everett",
+   "target": "Paul Everitt",
+   "class": "O",
+   "segment_text": "We still haven't teased that out I mean I'm personally and my colleague Paul Everett is very excited about what Apple's doing with MLX which is um modified memory and the M5 chips and M7 chips basically because if you're doing agentic flows, the constraint is not compute it's memory.",
+   "evidence": "context"
+  },
+  {
+   "id": "769ee6ea0d",
+   "episode": "ep205",
+   "segment": 300,
+   "start_ms": 1494320,
+   "end_ms": 1508160,
+   "span": [
+    290,
+    297
+   ],
+   "original": "ChatGBT",
+   "target": "ChatGPT",
+   "class": "K",
+   "segment_text": "Because I guess the interesting thing is the models they're still in sorry let me finish this thought and then you go the models are still improving a little bit but what's really improved the reason they've gotten better is these agentic flows where they keep trying you know already with ChatGBT it's like how many times do you want me to try?",
+   "evidence": "context"
+  },
+  {
+   "id": "dba0b7340e",
+   "episode": "ep205",
+   "segment": 316,
+   "start_ms": 1661040,
+   "end_ms": 1669200,
+   "span": [
+    48,
+    55
+   ],
+   "original": "Jupiter",
+   "target": "Jupyter",
+   "class": "K",
+   "segment_text": "So like a lot of my colleagues are data science Jupiter you can still use it but just with the cells and everything it's not quite as smooth.",
+   "evidence": "context"
+  },
+  {
+   "id": "396160d068",
+   "episode": "ep205",
+   "segment": 320,
+   "start_ms": 1699360,
+   "end_ms": 1717520,
+   "span": [
+    229,
+    232
+   ],
+   "original": "NGX",
+   "target": "Nginx",
+   "class": "K",
+   "segment_text": "Anyway let's get back to the thing to the second moment okay go on that all right so just uh plusange you know well my take my take on this the interesting yeah was most people still using a monolith, still on a VPS, still using NGX, still, you know, still that as your front end for static files.",
+   "evidence": "context"
+  },
+  {
+   "id": "34fb6e56b5",
+   "episode": "ep205",
+   "segment": 327,
+   "start_ms": 1737680,
+   "end_ms": 1756160,
+   "span": [
+    119,
+    126
+   ],
+   "original": "Vercell",
+   "target": "Vercel",
+   "class": "K",
+   "segment_text": "And I've realized too, like the word managed carries a lot of water in the database section because I was talking with Vercell and Render and all these services, you know, not to not to name a specific company, but you can call something managed and you just spin up a Docker container and do backups every once in a while.",
+   "evidence": "context"
+  },
+  {
+   "id": "a2ebf6c0ea",
+   "episode": "ep205",
+   "segment": 366,
+   "start_ms": 1916640,
+   "end_ms": 1922160,
+   "span": [
+    115,
+    122
+   ],
+   "original": "Vercell",
+   "target": "Vercel",
+   "class": "K",
+   "segment_text": "A lot of the team, especially the team that was there at the conference, came from EdgeDB, which and moved over to Vercell.",
+   "evidence": "context"
+  },
+  {
+   "id": "52017a5e84",
+   "episode": "ep205",
+   "segment": 401,
+   "start_ms": 2033280,
+   "end_ms": 2039120,
+   "span": [
+    82,
+    87
+   ],
+   "original": "Rough",
+   "target": "Ruff",
+   "class": "K",
+   "segment_text": "Well, here we get to, you know, there's things like, you know, with tooling, like Rough is super popular at 43%.",
+   "evidence": "context"
+  },
+  {
+   "id": "342f77b666",
+   "episode": "ep205",
+   "segment": 409,
+   "start_ms": 2070880,
+   "end_ms": 2080160,
+   "span": [
+    25,
+    30
+   ],
+   "original": "rough",
+   "target": "Ruff",
+   "class": "K",
+   "segment_text": "Uh and when linting, use rough or use so what I thought was interesting with the rough there was rough was a 43% versus 17 for flake now.",
+   "evidence": "context"
+  },
+  {
+   "id": "f6ccf47eb0",
+   "episode": "ep205",
+   "segment": 409,
+   "start_ms": 2070880,
+   "end_ms": 2080160,
+   "span": [
+    81,
+    86
+   ],
+   "original": "rough",
+   "target": "Ruff",
+   "class": "K",
+   "segment_text": "Uh and when linting, use rough or use so what I thought was interesting with the rough there was rough was a 43% versus 17 for flake now.",
+   "evidence": "context"
+  },
+  {
+   "id": "4e14f4884b",
+   "episode": "ep205",
+   "segment": 409,
+   "start_ms": 2070880,
+   "end_ms": 2080160,
+   "span": [
+    97,
+    102
+   ],
+   "original": "rough",
+   "target": "Ruff",
+   "class": "K",
+   "segment_text": "Uh and when linting, use rough or use so what I thought was interesting with the rough there was rough was a 43% versus 17 for flake now.",
+   "evidence": "context"
+  },
+  {
+   "id": "59069c3073",
+   "episode": "ep205",
+   "segment": 411,
+   "start_ms": 2083840,
+   "end_ms": 2086640,
+   "span": [
+    26,
+    31
+   ],
+   "original": "rough",
+   "target": "Ruff",
+   "class": "K",
+   "segment_text": "Yeah, I mean, look, I use rough.",
+   "evidence": "context"
+  },
+  {
+   "id": "6f04abfa35",
+   "episode": "ep205",
+   "segment": 412,
+   "start_ms": 2086640,
+   "end_ms": 2087360,
+   "span": [
+    0,
+    5
+   ],
+   "original": "Rough",
+   "target": "Ruff",
+   "class": "K",
+   "segment_text": "Rough is great.",
+   "evidence": "context"
+  },
+  {
+   "id": "e88a37a767",
+   "episode": "ep205",
+   "segment": 414,
+   "start_ms": 2089920,
+   "end_ms": 2097440,
+   "span": [
+    30,
+    35
+   ],
+   "original": "rough",
+   "target": "Ruff",
+   "class": "K",
+   "segment_text": "You know, black is, you know, rough sort of black is still has usage, but like rough is kind of one tool to do it all.",
+   "evidence": "context"
+  },
+  {
+   "id": "0a1aa26c31",
+   "episode": "ep205",
+   "segment": 414,
+   "start_ms": 2089920,
+   "end_ms": 2097440,
+   "span": [
+    79,
+    84
+   ],
+   "original": "rough",
+   "target": "Ruff",
+   "class": "K",
+   "segment_text": "You know, black is, you know, rough sort of black is still has usage, but like rough is kind of one tool to do it all.",
+   "evidence": "context"
+  },
+  {
+   "id": "dcf8163283",
+   "episode": "ep205",
+   "segment": 409,
+   "start_ms": 2070880,
+   "end_ms": 2080160,
+   "span": [
+    127,
+    136
+   ],
+   "original": "flake now",
+   "target": "Flake8",
+   "class": "K",
+   "segment_text": "Uh and when linting, use rough or use so what I thought was interesting with the rough there was rough was a 43% versus 17 for flake now.",
+   "evidence": "context"
+  },
+  {
+   "id": "74c3805fe0",
+   "episode": "ep205",
+   "segment": 426,
+   "start_ms": 2149760,
+   "end_ms": 2156880,
+   "span": [
+    98,
+    114
+   ],
+   "original": "Charlie Marshall",
+   "target": "Charlie Marsh",
+   "class": "O",
+   "segment_text": "But the like the the point being that um as nice as the individuals in the project are, you know, Charlie Marshall, I've heard he's a very nice person, don't know him.",
+   "evidence": "context"
+  },
+  {
+   "id": "3905819699",
+   "episode": "ep205",
+   "segment": 432,
+   "start_ms": 2184720,
+   "end_ms": 2188880,
+   "span": [
+    8,
+    18
+   ],
+   "original": "VM and PIP",
+   "target": "venv and pip",
+   "class": "K",
+   "segment_text": "Like so VM and PIP, you know, perfect.",
+   "evidence": "listened"
+  },
+  {
+   "id": "abb3ff9a9a",
+   "episode": "ep205",
+   "segment": 456,
+   "start_ms": 2339360,
+   "end_ms": 2362000,
+   "span": [
+    89,
+    96
+   ],
+   "original": "PySharm",
+   "target": "PyCharm",
+   "class": "K",
+   "segment_text": "'re using them uh no clear tool there's so all these type checkers this is something the PySharm team is working a lot on you know what's our default we want to support all of them but to your point you said before we started recording it seems like it's basically whatever's built into the IDE you know yeah well that was one of the questions is like one of the answers was the top answer of what type checker you're using is the one the IDE or the tool provides.",
+   "evidence": "context"
+  },
+  {
+   "id": "9f98916c4a",
+   "episode": "ep205",
+   "segment": 457,
+   "start_ms": 2362000,
+   "end_ms": 2369520,
+   "span": [
+    57,
+    64
+   ],
+   "original": "PyChamp",
+   "target": "PyCharm",
+   "class": "K",
+   "segment_text": "So it's like you know if whatever it is that VS Code and PyChamp turn on, that's what people are using for their type check which is fine.",
+   "evidence": "context"
+  },
+  {
+   "id": "4ef7c96192",
+   "episode": "ep205",
+   "segment": 485,
+   "start_ms": 2647200,
+   "end_ms": 2677200,
+   "span": [
+    41,
+    54
+   ],
+   "original": "Michael Candy",
+   "target": "Michael Kennedy",
+   "class": "O",
+   "segment_text": "Yeah yeah and I you know when I spoke to Michael Candy uh you know a little while ago I meant we um the the COVID pandemic pandemic came up and you know it was something that struck me that um it really hit did hit the the community hard and for a few years after this it's taken us a long well it's taken us a long time to recover but I look around at the community now I think yeah it really is going strongly it's it's in a good place and and that's lovely to see um and I think technically we're in a a a wonderful position I",
+   "evidence": "context"
+  },
+  {
+   "id": "b7e8002c78",
+   "episode": "ep205",
+   "segment": 518,
+   "start_ms": 2922320,
+   "end_ms": 2927600,
+   "span": [
+    62,
+    70
+   ],
+   "original": "Couch TB",
+   "target": "CouchDB",
+   "class": "K",
+   "segment_text": "Well, back in the day it would have been using Mongo or using Couch TB instead of you know a relational database.",
+   "evidence": "context"
+  },
+  {
+   "id": "700093ed7d",
+   "episode": "ep206",
+   "segment": 60,
+   "start_ms": 189520,
+   "end_ms": 194400,
+   "span": [
+    44,
+    51
+   ],
+   "original": "debt 20",
+   "target": "DEP 20",
+   "class": "G",
+   "segment_text": "So one was it we'll go backwards because um debt 20 was approved before debt 19.",
+   "evidence": "context"
+  },
+  {
+   "id": "2d645b88ec",
+   "episode": "ep206",
+   "segment": 60,
+   "start_ms": 189520,
+   "end_ms": 194400,
+   "span": [
+    72,
+    79
+   ],
+   "original": "debt 19",
+   "target": "DEP 19",
+   "class": "G",
+   "segment_text": "So one was it we'll go backwards because um debt 20 was approved before debt 19.",
+   "evidence": "context"
+  },
+  {
+   "id": "3717ac8162",
+   "episode": "ep206",
+   "segment": 61,
+   "start_ms": 194400,
+   "end_ms": 195920,
+   "span": [
+    0,
+    6
+   ],
+   "original": "Deb 19",
+   "target": "DEP 19",
+   "class": "G",
+   "segment_text": "Deb 19 took longer.",
+   "evidence": "context"
+  },
+  {
+   "id": "0034be9b7d",
+   "episode": "ep206",
+   "segment": 62,
+   "start_ms": 195920,
+   "end_ms": 200560,
+   "span": [
+    3,
+    10
+   ],
+   "original": "debt 20",
+   "target": "DEP 20",
+   "class": "G",
+   "segment_text": "So debt 20 was the move to the annual release cycles, um, which is so good, so good.",
+   "evidence": "context"
+  },
+  {
+   "id": "5219a6b546",
+   "episode": "ep206",
+   "segment": 119,
+   "start_ms": 509680,
+   "end_ms": 526480,
+   "span": [
+    190,
+    196
+   ],
+   "original": "Deb 10",
+   "target": "DEP 10",
+   "class": "G",
+   "segment_text": "We're a very small and tight community, and sometimes trying to legislate for uh yeah situations which were uh uh far removed from the norm, didn't leave the the day-to-day you working with Deb 10 and then Deb 12 where we tried to clarify it.",
+   "evidence": "context"
+  },
+  {
+   "id": "0d14429048",
+   "episode": "ep206",
+   "segment": 119,
+   "start_ms": 509680,
+   "end_ms": 526480,
+   "span": [
+    206,
+    212
+   ],
+   "original": "Deb 12",
+   "target": "DEP 12",
+   "class": "G",
+   "segment_text": "We're a very small and tight community, and sometimes trying to legislate for uh yeah situations which were uh uh far removed from the norm, didn't leave the the day-to-day you working with Deb 10 and then Deb 12 where we tried to clarify it.",
+   "evidence": "context"
+  },
+  {
+   "id": "8b592627fa",
+   "episode": "ep206",
+   "segment": 59,
+   "start_ms": 183920,
+   "end_ms": 189520,
+   "span": [
+    33,
+    37
+   ],
+   "original": "dips",
+   "target": "DEPs",
+   "class": "G",
+   "segment_text": "Yes, so um, so we've got two big dips um approved um over the summer.",
+   "evidence": "context"
+  },
+  {
+   "id": "90ca7e8f2e",
+   "episode": "ep206",
+   "segment": 224,
+   "start_ms": 1405440,
+   "end_ms": 1409280,
+   "span": [
+    24,
+    30
+   ],
+   "original": "depths",
+   "target": "DEPs",
+   "class": "G",
+   "segment_text": "There's um two or three depths being written, there's you know, progress on long.",
+   "evidence": "context"
+  },
+  {
+   "id": "c2980e206e",
+   "episode": "ep206",
+   "segment": 346,
+   "start_ms": 1960080,
+   "end_ms": 1972720,
+   "span": [
+    40,
+    52
+   ],
+   "original": "Django depth",
+   "target": "Django DEPs",
+   "class": "G",
+   "segment_text": "And then um, you know, check out the uh Django depth repo if you're more into that, because there's a couple of new draft BRs that have been opened up there for to have a read of those and input and uh you know give your support or input or comments.",
+   "evidence": "context"
+  },
+  {
+   "id": "4885e536ca",
+   "episode": "ep206",
+   "segment": 346,
+   "start_ms": 1960080,
+   "end_ms": 1972720,
+   "span": [
+    122,
+    125
+   ],
+   "original": "BRs",
+   "target": "DEPs",
+   "class": "G",
+   "segment_text": "And then um, you know, check out the uh Django depth repo if you're more into that, because there's a couple of new draft BRs that have been opened up there for to have a read of those and input and uh you know give your support or input or comments.",
+   "evidence": "context"
+  },
+  {
+   "id": "21c66fe365",
+   "episode": "ep206",
+   "segment": 115,
+   "start_ms": 464960,
+   "end_ms": 474080,
+   "span": [
+    91,
+    112
+   ],
+   "original": "technical governments",
+   "target": "technical governance",
+   "class": "G",
+   "segment_text": "I think that so that anyway, that was the annual release cycle, which DEP 20, and then the technical governments, which was DEP 19, um, was about the um uh the governing rule.",
+   "evidence": "context"
+  },
+  {
+   "id": "9425548d91",
+   "episode": "ep206",
+   "segment": 143,
+   "start_ms": 697600,
+   "end_ms": 712320,
+   "span": [
+    144,
+    158
+   ],
+   "original": "Jan Con Europe",
+   "target": "DjangoCon Europe",
+   "class": "G",
+   "segment_text": "Yeah I think conference organizers would know about that but um yes yes um and then also I think every year they have the same problems with uh Jan Con Europe, the same difficulties it's it's it's really not well and then the US again don't wind me up on it but yeah.",
+   "evidence": "context"
+  },
+  {
+   "id": "f3d22b267c",
+   "episode": "ep206",
+   "segment": 226,
+   "start_ms": 1413360,
+   "end_ms": 1423520,
+   "span": [
+    55,
+    72
+   ],
+   "original": "Django on the Met",
+   "target": "Django on the Med",
+   "class": "G",
+   "segment_text": "Um, so anyway, that's like a 10-minute monologue about Django on the Met, but I cannot express enough how effective these sprint events are for pushing forward the project.",
+   "evidence": "context"
+  },
+  {
+   "id": "03f7e30e64",
+   "episode": "ep206",
+   "segment": 279,
+   "start_ms": 1630400,
+   "end_ms": 1632160,
+   "span": [
+    27,
+    45
+   ],
+   "original": "Django and the Med",
+   "target": "Django on the Med",
+   "class": "G",
+   "segment_text": "I think the main thing was Django and the Med.",
+   "evidence": "context"
+  },
+  {
+   "id": "c947e2d0af",
+   "episode": "ep206",
+   "segment": 351,
+   "start_ms": 1978240,
+   "end_ms": 1991440,
+   "span": [
+    68,
+    73
+   ],
+   "original": "Bashu",
+   "target": "Basho",
+   "class": "G",
+   "segment_text": "Yeah, well, I've been um reading um a bit of uh haiku, actually, um Bashu, with the The Narrow Road to the uh to the deep north, and uh it's a collection of um haiku that um an old translation, it's a penguin classics.",
+   "evidence": "context"
+  },
+  {
+   "id": "9dcdc73068",
+   "episode": "ep206",
+   "segment": 358,
+   "start_ms": 2016640,
+   "end_ms": 2024080,
+   "span": [
+    35,
+    51
+   ],
+   "original": "Marlene Hossefer",
+   "target": "Marlen Haushofer",
+   "class": "G",
+   "segment_text": "Um I have been reading The Wall by Marlene Hossefer, Austrian author.",
+   "evidence": "context"
+  },
+  {
+   "id": "cd6cf0af4b",
+   "episode": "ep206",
+   "segment": 105,
+   "start_ms": 427280,
+   "end_ms": 435520,
+   "span": [
+    41,
+    56
+   ],
+   "original": "Sarah Abdermain",
+   "target": "Sarah Abderemane",
+   "class": "O",
+   "segment_text": "Um and also I found out this summer, um, Sarah Abdermain is one of the two authors updating Django by example, which is the other ongoing book.",
+   "evidence": "context"
+  },
+  {
+   "id": "eeb57ba7ea",
+   "episode": "ep206",
+   "segment": 152,
+   "start_ms": 842560,
+   "end_ms": 872800,
+   "span": [
+    130,
+    144
+   ],
+   "original": "Simon Sherette",
+   "target": "Simon Charette",
+   "class": "O",
+   "segment_text": "ter that we spin off um you know other events elsewhere and then you know some people can travel sure so we had Lillian um we had Simon Sherette we had um uh Jacob Wolves they all came a long way but um it the the vast majority were much more local to Europe you know Austria Italy Spain you know these kind of striking distance type um type locations and that's I think a much more sustainable it's going to be a much more sustainable model but that requires that we have people take the bat on",
+   "evidence": "context"
+  },
+  {
+   "id": "dc663c980b",
+   "episode": "ep206",
+   "segment": 167,
+   "start_ms": 1039360,
+   "end_ms": 1069600,
+   "span": [
+    362,
+    374
+   ],
+   "original": "Simon Charet",
+   "target": "Simon Charette",
+   "class": "O",
+   "segment_text": "Yeah no it's yeah so anyway it's amazing um is all I can say for my own work I was working the the big thing I wanted to make progress on was um async transactions so being able to await a transaction atomic and then use the async methods of the o of the ORM within that and I was able on the first day I was able to sit down with Jacob Walls, a fellow, with uh Simon Charet who's the you know big ORM contributor, with uh Lily um uh steering council member who's a big ORM contributor and then uh Charlie Denton and Sam from uh the Kraken",
+   "evidence": "context"
+  },
+  {
+   "id": "55d79dc0d0",
+   "episode": "ep206",
+   "segment": 152,
+   "start_ms": 842560,
+   "end_ms": 872800,
+   "span": [
+    158,
+    170
+   ],
+   "original": "Jacob Wolves",
+   "target": "Jacob Walls",
+   "class": "O",
+   "segment_text": "ter that we spin off um you know other events elsewhere and then you know some people can travel sure so we had Lillian um we had Simon Sherette we had um uh Jacob Wolves they all came a long way but um it the the vast majority were much more local to Europe you know Austria Italy Spain you know these kind of striking distance type um type locations and that's I think a much more sustainable it's going to be a much more sustainable model but that requires that we have people take the bat on",
+   "evidence": "context"
+  },
+  {
+   "id": "cecd8bcba5",
+   "episode": "ep206",
+   "segment": 169,
+   "start_ms": 1100000,
+   "end_ms": 1126240,
+   "span": [
+    14,
+    19
+   ],
+   "original": "H Ink",
+   "target": "Hynek",
+   "class": "O",
+   "segment_text": "um uh another H Ink PR which has been on my backlist for six months he was able to make progress on the basis of the comment and then on the third day we were able to work together and I think you know within a few weeks we will have something so I'm at I'm very excited that we will get this into Jango 6.2 now but that first of all that big session with the the you know half dozen people working together where we we were able to to reach an understanding which otherwise wouldn't be there.",
+   "evidence": "context"
+  },
+  {
+   "id": "5f4c4f3307",
+   "episode": "ep206",
+   "segment": 173,
+   "start_ms": 1146000,
+   "end_ms": 1156560,
+   "span": [
+    63,
+    70
+   ],
+   "original": "Hinnick",
+   "target": "Hynek",
+   "class": "O",
+   "segment_text": "So Mark Smith and I did um bootstrapped a package based on, so Hinnick put together a package called um uh but BGT uh for background threads, I guess it stands for.",
+   "evidence": "context"
+  },
+  {
+   "id": "2735d8fb15",
+   "episode": "ep206",
+   "segment": 182,
+   "start_ms": 1197920,
+   "end_ms": 1210800,
+   "span": [
+    203,
+    208
+   ],
+   "original": "Henix",
+   "target": "Hynek",
+   "class": "O",
+   "segment_text": "Um, but that's a very exciting um additional tool in the toolbox, the exponential back-off, the leadership, that that kind of those those kind of features are very hard to write, and we're leveraging um Henix expertise there.",
+   "evidence": "context"
+  },
+  {
+   "id": "113dd7481b",
+   "episode": "ep206",
+   "segment": 169,
+   "start_ms": 1100000,
+   "end_ms": 1126240,
+   "span": [
+    298,
+    303
+   ],
+   "original": "Jango",
+   "target": "Django",
+   "class": "K",
+   "segment_text": "um uh another H Ink PR which has been on my backlist for six months he was able to make progress on the basis of the comment and then on the third day we were able to work together and I think you know within a few weeks we will have something so I'm at I'm very excited that we will get this into Jango 6.2 now but that first of all that big session with the the you know half dozen people working together where we we were able to to reach an understanding which otherwise wouldn't be there.",
+   "evidence": "context"
+  },
+  {
+   "id": "22833af3eb",
+   "episode": "ep206",
+   "segment": 208,
+   "start_ms": 1325360,
+   "end_ms": 1337360,
+   "span": [
+    17,
+    26
+   ],
+   "original": "Janganaut",
+   "target": "Djangonaut",
+   "class": "K",
+   "segment_text": "She went through Janganaut space and um she's interested in the ORM and I was sat across from the table while Simon and Annabelle were working together, and Simon was they were, it was just amazing to watch.",
+   "evidence": "context"
+  },
+  {
+   "id": "e135277713",
+   "episode": "ep206",
+   "segment": 210,
+   "start_ms": 1342640,
+   "end_ms": 1348640,
+   "span": [
+    61,
+    71
+   ],
+   "original": "Janganauts",
+   "target": "Djangonaut",
+   "class": "K",
+   "segment_text": "She's not a new contributor, she's you know been through the Janganauts Hospital, but she's still a an entry-level contributor.",
+   "evidence": "context"
+  },
+  {
+   "id": "c395b26d91",
+   "episode": "ep206",
+   "segment": 231,
+   "start_ms": 1430080,
+   "end_ms": 1435760,
+   "span": [
+    72,
+    85
+   ],
+   "original": "PyCharmBrains",
+   "target": "JetBrains",
+   "class": "K",
+   "segment_text": "Well, it helps that uh Mark Smith is the uh head of Python ecosystem at PyCharmBrains.",
+   "evidence": "context"
+  },
+  {
+   "id": "02048ff4d3",
+   "episode": "ep206",
+   "segment": 234,
+   "start_ms": 1445760,
+   "end_ms": 1456560,
+   "span": [
+    86,
+    93
+   ],
+   "original": "Profida",
+   "target": "Procida",
+   "class": "O",
+   "segment_text": "And so one other thing that we're doing that's based off um advice from uh Daniele uh Profida is to um uh keep a record of the event, of when what started, what's finished, when's it completed.",
+   "evidence": "context"
+  },
+  {
+   "id": "2afb8a9020",
+   "episode": "eric",
+   "segment": 5,
+   "start_ms": 20080,
+   "end_ms": 28880,
+   "span": [
+    44,
+    50
+   ],
+   "original": "Mathis",
+   "target": "Matthes",
+   "class": "G",
+   "segment_text": "And we're very pleased to welcome back Eric Mathis, author of Python Crash course, creator of Django Simple Deploy, and some other things we'll talk about.",
+   "evidence": "context"
+  },
+  {
+   "id": "69e337f5a3",
+   "episode": "eric",
+   "segment": 0,
+   "start_ms": 160,
+   "end_ms": 6080,
+   "span": [
+    34,
+    45
+   ],
+   "original": "Button Down",
+   "target": "Buttondown",
+   "class": "G",
+   "segment_text": "This episode is brought to you by Button Down, the easiest way to start, send, and grow your email newsletter.",
+   "evidence": "context"
+  },
+  {
+   "id": "c526d92f44",
+   "episode": "eric",
+   "segment": 325,
+   "start_ms": 1632800,
+   "end_ms": 1634880,
+   "span": [
+    34,
+    43
+   ],
+   "original": "Buttonown",
+   "target": "Buttondown",
+   "class": "G",
+   "segment_text": "This episode is brought to you by Buttonown.",
+   "evidence": "context"
+  },
+  {
+   "id": "3d408e0360",
+   "episode": "eric",
+   "segment": 330,
+   "start_ms": 1650560,
+   "end_ms": 1659520,
+   "span": [
+    0,
+    11
+   ],
+   "original": "Button down",
+   "target": "Buttondown",
+   "class": "G",
+   "segment_text": "Button down is designed to hook into the tools that you already care about, everything from static site generators like Jekyll or Hugo to payment platforms like Stripe and Memberful.",
+   "evidence": "context"
+  },
+  {
+   "id": "2fdddfaf8c",
+   "episode": "eric",
+   "segment": 333,
+   "start_ms": 1668160,
+   "end_ms": 1678960,
+   "span": [
+    53,
+    64
+   ],
+   "original": "Button Down",
+   "target": "Buttondown",
+   "class": "G",
+   "segment_text": "New customers can save 50% off their first year with Button Down using the coupon code Django, and if you email support, they'll white glove migrate your existing subscribers and archives for free.",
+   "evidence": "context"
+  },
+  {
+   "id": "f5acf2238e",
+   "episode": "eric",
+   "segment": 435,
+   "start_ms": 2307600,
+   "end_ms": 2313440,
+   "span": [
+    37,
+    41
+   ],
+   "original": "Ereb",
+   "target": "Eric",
+   "class": "G",
+   "segment_text": "Um, and so you know, hat tip to you, Ereb for getting it wrapped up.",
+   "evidence": "context"
+  },
+  {
+   "id": "a7a397b993",
+   "episode": "eric",
+   "segment": 654,
+   "start_ms": 3492480,
+   "end_ms": 3496080,
+   "span": [
+    31,
+    66
+   ],
+   "original": "Bonegartner's chamber of production",
+   "target": "Baumgartner's django-production",
+   "class": "G",
+   "segment_text": "Um, so you know, I go to Peter Bonegartner's chamber of production.",
+   "evidence": "context"
+  },
+  {
+   "id": "3804c01cc5",
+   "episode": "eric",
+   "segment": 650,
+   "start_ms": 3470880,
+   "end_ms": 3487280,
+   "span": [
+    93,
+    105
+   ],
+   "original": "Jeff Triplet",
+   "target": "Jeff Triplett",
+   "class": "O",
+   "segment_text": "And so when we're talking about a Docker-based uh deployment, uh I had this interaction with Jeff Triplet where I, you know, my Docker file for Fly was copied from Fly documentation and Jeff looked at it and said, Hey, here's a way to make it much lighter.",
+   "evidence": "context"
+  },
+  {
+   "id": "33bb1fbabd",
+   "episode": "eric",
+   "segment": 163,
+   "start_ms": 721600,
+   "end_ms": 736800,
+   "span": [
+    117,
+    125
+   ],
+   "original": "Cycle PG",
+   "target": "psycopg",
+   "class": "K",
+   "segment_text": "And as soon as you update it, get an email from someone saying, Oh, like when's the next update coming, or you know, Cycle PG changed, or I definitely uh greatly envy the release cadence of your Python book.",
+   "evidence": "context"
+  },
+  {
+   "id": "b43a5f8452",
+   "episode": "eric",
+   "segment": 197,
+   "start_ms": 946080,
+   "end_ms": 952480,
+   "span": [
+    63,
+    75
+   ],
+   "original": "Django knots",
+   "target": "Djangonauts",
+   "class": "K",
+   "segment_text": "So Django Simple Deploy is uh the tagline is uh deployment for Django knots with deadlines.",
+   "evidence": "context"
+  },
+  {
+   "id": "88336614b6",
+   "episode": "eric",
+   "segment": 222,
+   "start_ms": 1087600,
+   "end_ms": 1090800,
+   "span": [
+    25,
+    29
+   ],
+   "original": "Roku",
+   "target": "Heroku",
+   "class": "K",
+   "segment_text": "Um so it only worked for Roku and it ran on Heroku's end.",
+   "evidence": "context"
+  },
+  {
+   "id": "d26685171b",
+   "episode": "eric",
+   "segment": 246,
+   "start_ms": 1243360,
+   "end_ms": 1252640,
+   "span": [
+    89,
+    99
+   ],
+   "original": "manage.ply",
+   "target": "manage.py",
+   "class": "K",
+   "segment_text": "Um one of the really one of the really cool things about this is I mentioned that the um manage.ply deploy dash dash automate all.",
+   "evidence": "context"
+  },
+  {
+   "id": "23d18262ea",
+   "episode": "eric",
+   "segment": 367,
+   "start_ms": 1848560,
+   "end_ms": 1857840,
+   "span": [
+    20,
+    34
+   ],
+   "original": "Flyplatform.sh",
+   "target": "Fly, Platform.sh",
+   "class": "K",
+   "segment_text": "And so I talk about Flyplatform.sh and Heroku initially because um it's easier to start talking about um platform as a service provider.",
+   "evidence": "context"
+  },
+  {
+   "id": "9e5c47c162",
+   "episode": "eric",
+   "segment": 417,
+   "start_ms": 2209600,
+   "end_ms": 2215200,
+   "span": [
+    48,
+    61
+   ],
+   "original": "Flyplatform.h",
+   "target": "Fly, Platform.sh",
+   "class": "K",
+   "segment_text": "We can't just say Django Simple Deploy supports Flyplatform.h and Heroku.",
+   "evidence": "context"
+  },
+  {
+   "id": "448d26366a",
+   "episode": "eric",
+   "segment": 402,
+   "start_ms": 2112240,
+   "end_ms": 2117040,
+   "span": [
+    13,
+    21
+   ],
+   "original": "Gunacorn",
+   "target": "Gunicorn",
+   "class": "K",
+   "segment_text": "Uh I'm using Gunacorn, if I'm saying that right, and CADI.",
+   "evidence": "context"
+  },
+  {
+   "id": "bb7dec65ba",
+   "episode": "eric",
+   "segment": 526,
+   "start_ms": 2779120,
+   "end_ms": 2788880,
+   "span": [
+    38,
+    46
+   ],
+   "original": "Gunacorn",
+   "target": "Gunicorn",
+   "class": "K",
+   "segment_text": "Um, but I think for my my approach of Gunacorn Caddy as services, um, I did set up a git push.",
+   "evidence": "context"
+  },
+  {
+   "id": "7b2f37e0ba",
+   "episode": "eric",
+   "segment": 684,
+   "start_ms": 3708880,
+   "end_ms": 3725440,
+   "span": [
+    63,
+    72
+   ],
+   "original": "gunnacorn",
+   "target": "Gunicorn",
+   "class": "K",
+   "segment_text": "Um but we should be able to to basically formulate a good like gunnacorn caddy approach for VPS, a good Docker one, and that's separate from the Gunna Corn Caddy, but like the the VPS that I'm using, uh I use SQLite on the server.",
+   "evidence": "context"
+  },
+  {
+   "id": "ed2a42df7c",
+   "episode": "eric",
+   "segment": 684,
+   "start_ms": 3708880,
+   "end_ms": 3725440,
+   "span": [
+    145,
+    155
+   ],
+   "original": "Gunna Corn",
+   "target": "Gunicorn",
+   "class": "K",
+   "segment_text": "Um but we should be able to to basically formulate a good like gunnacorn caddy approach for VPS, a good Docker one, and that's separate from the Gunna Corn Caddy, but like the the VPS that I'm using, uh I use SQLite on the server.",
+   "evidence": "context"
+  },
+  {
+   "id": "5c2a5ebd2e",
+   "episode": "eric",
+   "segment": 688,
+   "start_ms": 3739520,
+   "end_ms": 3746960,
+   "span": [
+    93,
+    101
+   ],
+   "original": "Gunacorn",
+   "target": "Gunicorn",
+   "class": "K",
+   "segment_text": "I don't want to put like DSD-VPS and there's a flag for whether you want to use Docker or uh Gunacorn.",
+   "evidence": "context"
+  },
+  {
+   "id": "ab1b3dd96c",
+   "episode": "eric",
+   "segment": 402,
+   "start_ms": 2112240,
+   "end_ms": 2117040,
+   "span": [
+    53,
+    57
+   ],
+   "original": "CADI",
+   "target": "Caddy",
+   "class": "K",
+   "segment_text": "Uh I'm using Gunacorn, if I'm saying that right, and CADI.",
+   "evidence": "context"
+  },
+  {
+   "id": "b92051e262",
+   "episode": "eric",
+   "segment": 657,
+   "start_ms": 3512960,
+   "end_ms": 3521280,
+   "span": [
+    135,
+    159
+   ],
+   "original": "prof Jenga Professionals",
+   "target": "Django for Professionals",
+   "class": "K",
+   "segment_text": "And just to make this even more and to give Jeff a shout-out, not that he needs it, but I mean Jeff basically taught me Docker for the prof Jenga Professionals book.",
+   "evidence": "listened"
+  },
+  {
+   "id": "cbc45c9bb7",
+   "episode": "eric",
+   "segment": 733,
+   "start_ms": 3987680,
+   "end_ms": 3994880,
+   "span": [
+    30,
+    61
+   ],
+   "original": "modified prepared traverse tree",
+   "target": "modified preorder tree traversal",
+   "class": "K",
+   "segment_text": "I think it was like there's a modified prepared traverse tree, something like that, Django MPTT.",
+   "evidence": "context"
+  },
+  {
+   "id": "c946293f76",
+   "episode": "eric",
+   "segment": 739,
+   "start_ms": 4025120,
+   "end_ms": 4032720,
+   "span": [
+    70,
+    86
+   ],
+   "original": "Django Not Space",
+   "target": "Djangonaut Space",
+   "class": "K",
+   "segment_text": "So I think um the things I'm most excited about in Django is probably Django Not Space.",
+   "evidence": "context"
+  },
+  {
+   "id": "adb8828f7f",
+   "episode": "guest1",
+   "segment": 28,
+   "start_ms": 86880,
+   "end_ms": 91040,
+   "span": [
+    0,
+    10
+   ],
+   "original": "EuroParton",
+   "target": "EuroPython",
+   "class": "G",
+   "segment_text": "EuroParton has uh five to six tracks, depending on which year.",
+   "evidence": "context"
+  },
+  {
+   "id": "adb1ab632b",
+   "episode": "guest1",
+   "segment": 57,
+   "start_ms": 238720,
+   "end_ms": 243360,
+   "span": [
+    87,
+    93
+   ],
+   "original": "EuroPi",
+   "target": "EuroPython",
+   "class": "G",
+   "segment_text": "And if I'm a first-time attendee, what's your top what's your top tip for a first-time EuroPi?",
+   "evidence": "context"
+  },
+  {
+   "id": "c0680b2111",
+   "episode": "guest1",
+   "segment": 60,
+   "start_ms": 252320,
+   "end_ms": 259440,
+   "span": [
+    14,
+    26
+   ],
+   "original": "Europartment",
+   "target": "EuroPython",
+   "class": "G",
+   "segment_text": "Yeah, I think Europartment is a very friendly and it's a community conference, so I don't think it's that different from Django Con.",
+   "evidence": "context"
+  },
+  {
+   "id": "1c68f98140",
+   "episode": "guest1",
+   "segment": 145,
+   "start_ms": 743120,
+   "end_ms": 744880,
+   "span": [
+    13,
+    24
+   ],
+   "original": "Six Feed Up",
+   "target": "Six Feet Up",
+   "class": "G",
+   "segment_text": "That's where Six Feed Up comes in.",
+   "evidence": "context"
+  },
+  {
+   "id": "5e2de2d737",
+   "episode": "guest1",
+   "segment": 200,
+   "start_ms": 1018800,
+   "end_ms": 1021600,
+   "span": [
+    12,
+    29
+   ],
+   "original": "Behind the Comets",
+   "target": "Behind the Commit",
+   "class": "G",
+   "segment_text": "It's called Behind the Comets, so feel free to check it out.",
+   "evidence": "context"
+  },
+  {
+   "id": "28585496aa",
+   "episode": "guest1",
+   "segment": 214,
+   "start_ms": 1072320,
+   "end_ms": 1078000,
+   "span": [
+    33,
+    43
+   ],
+   "original": "Humble Pie",
+   "target": "Humble Pi",
+   "class": "G",
+   "segment_text": "Uh so one of the books is called Humble Pie When Math Goes Wrong in the Real World by Matt Parker.",
+   "evidence": "context"
+  },
+  {
+   "id": "4ff9d3df1a",
+   "episode": "guest1",
+   "segment": 229,
+   "start_ms": 1180960,
+   "end_ms": 1182880,
+   "span": [
+    24,
+    34
+   ],
+   "original": "humble pie",
+   "target": "Humble Pi",
+   "class": "G",
+   "segment_text": "I haven't looked at the humble pie, so I'll check that one out.",
+   "evidence": "context"
+  },
+  {
+   "id": "ee54df8026",
+   "episode": "guest1",
+   "segment": 247,
+   "start_ms": 1249600,
+   "end_ms": 1253120,
+   "span": [
+    87,
+    103
+   ],
+   "original": "Herbert Wolveson",
+   "target": "Herbert Wolverson",
+   "class": "G",
+   "segment_text": "I haven't got the actual physical book because I've just got an e-book, but it's by um Herbert Wolveson.",
+   "evidence": "context"
+  },
+  {
+   "id": "d6dd48c400",
+   "episode": "guest1",
+   "segment": 263,
+   "start_ms": 1305680,
+   "end_ms": 1307680,
+   "span": [
+    17,
+    35
+   ],
+   "original": "Herbert Woolworths",
+   "target": "Herbert Wolverson",
+   "class": "G",
+   "segment_text": "Hands on Rust by Herbert Woolworths.",
+   "evidence": "context"
+  },
+  {
+   "id": "b70195ce25",
+   "episode": "guest1",
+   "segment": 288,
+   "start_ms": 1390960,
+   "end_ms": 1392640,
+   "span": [
+    6,
+    9
+   ],
+   "original": "Mir",
+   "target": "Mia",
+   "class": "G",
+   "segment_text": "Well, Mir, thank you for joining us.",
+   "evidence": "context"
+  },
+  {
+   "id": "31c0c3d4e7",
+   "episode": "guest1",
+   "segment": 35,
+   "start_ms": 128080,
+   "end_ms": 130960,
+   "span": [
+    27,
+    32
+   ],
+   "original": "Crack",
+   "target": "Kraków",
+   "class": "O",
+   "segment_text": "How many people will be in Crack?",
+   "evidence": "listened"
+  },
+  {
+   "id": "b685ddb527",
+   "episode": "guest1",
+   "segment": 117,
+   "start_ms": 601120,
+   "end_ms": 613440,
+   "span": [
+    67,
+    78
+   ],
+   "original": "Bukas Langa",
+   "target": "Łukasz Langa",
+   "class": "O",
+   "segment_text": "Uh, we are having a special Core Pi episode with Guido and with uh Bukas Langa and uh Pablo Galindo Salgado, who will be uh hosts of the podcast.",
+   "evidence": "context"
+  },
+  {
+   "id": "c4d704e888",
+   "episode": "guest1",
+   "segment": 75,
+   "start_ms": 345200,
+   "end_ms": 350720,
+   "span": [
+    23,
+    48
+   ],
+   "original": "Jango Software Foundation",
+   "target": "Django Software Foundation",
+   "class": "K",
+   "segment_text": "Every year we have the Jango Software Foundation, uh, and we have also some other ones.",
+   "evidence": "context"
+  },
+  {
+   "id": "f07f634988",
+   "episode": "guest1",
+   "segment": 77,
+   "start_ms": 358000,
+   "end_ms": 368640,
+   "span": [
+    69,
+    76
+   ],
+   "original": "Py lady",
+   "target": "PyLady",
+   "class": "K",
+   "segment_text": "Uh so if you're a member of some community, for example, if you're a Py lady or if you're a GSF member, uh you can also go there, chat with people, um, find out what they are up to.",
+   "evidence": "context"
+  },
+  {
+   "id": "22cf4e4a41",
+   "episode": "guest1",
+   "segment": 77,
+   "start_ms": 358000,
+   "end_ms": 368640,
+   "span": [
+    92,
+    95
+   ],
+   "original": "GSF",
+   "target": "DSF",
+   "class": "K",
+   "segment_text": "Uh so if you're a member of some community, for example, if you're a Py lady or if you're a GSF member, uh you can also go there, chat with people, um, find out what they are up to.",
+   "evidence": "listened"
+  },
+  {
+   "id": "ff749577dd",
+   "episode": "guest1",
+   "segment": 117,
+   "start_ms": 601120,
+   "end_ms": 613440,
+   "span": [
+    28,
+    35
+   ],
+   "original": "Core Pi",
+   "target": "core.py",
+   "class": "K",
+   "segment_text": "Uh, we are having a special Core Pi episode with Guido and with uh Bukas Langa and uh Pablo Galindo Salgado, who will be uh hosts of the podcast.",
+   "evidence": "context"
+  },
+  {
+   "id": "4fa1f44ec4",
+   "episode": "guest1",
+   "segment": 121,
+   "start_ms": 618800,
+   "end_ms": 623680,
+   "span": [
+    67,
+    81
+   ],
+   "original": "Django Comment",
+   "target": "DjangoCon",
+   "class": "K",
+   "segment_text": "We've all we've always been too shy to do a Django chat live at uh Django Comment.",
+   "evidence": "context"
+  },
+  {
+   "id": "d4fe930e29",
+   "episode": "guest2",
+   "segment": 7,
+   "start_ms": 26880,
+   "end_ms": 30240,
+   "span": [
+    46,
+    62
+   ],
+   "original": "Hendricks Parker",
+   "target": "Hendryx-Parker",
+   "class": "G",
+   "segment_text": "And we're very pleased to welcome back Calvin Hendricks Parker from Six Feet Up.",
+   "evidence": "context"
+  },
+  {
+   "id": "b6f39992bf",
+   "episode": "guest2",
+   "segment": 13,
+   "start_ms": 37280,
+   "end_ms": 44400,
+   "span": [
+    38,
+    43
+   ],
+   "original": "Scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "You were making the pitch for this um Scaff Kubernetes approach that you have that Carlton is especially hesitant about.",
+   "evidence": "context"
+  },
+  {
+   "id": "0bc028657d",
+   "episode": "guest2",
+   "segment": 30,
+   "start_ms": 109120,
+   "end_ms": 113120,
+   "span": [
+    68,
+    73
+   ],
+   "original": "Scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "I I I I honestly believe that the the framework we put in place was Scaff.",
+   "evidence": "context"
+  },
+  {
+   "id": "73ece2028c",
+   "episode": "guest2",
+   "segment": 31,
+   "start_ms": 113200,
+   "end_ms": 117600,
+   "span": [
+    3,
+    8
+   ],
+   "original": "Scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "So Scaff is a scaffolding tool, it's been built on the shoulders of giants.",
+   "evidence": "context"
+  },
+  {
+   "id": "e05b90626f",
+   "episode": "guest2",
+   "segment": 34,
+   "start_ms": 131680,
+   "end_ms": 161680,
+   "span": [
+    261,
+    266
+   ],
+   "original": "scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "And so it was a little more monolithic uh since we have moved over to copier in the last year and a half, and that that's allowed us to actually modularize and start building some other pieces alongside it that now give us the ability to do a AWS serverless uh scaff implementation or a Wagtail Scaff or what we've been typically doing has been the Django full stack app, which is the one I talk about kind of the most because it's got the most complicated sets of opinions built into it and it's kind of built towards developers who are working on",
+   "evidence": "context"
+  },
+  {
+   "id": "0d8672d0d1",
+   "episode": "guest2",
+   "segment": 34,
+   "start_ms": 131680,
+   "end_ms": 161680,
+   "span": [
+    295,
+    300
+   ],
+   "original": "Scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "And so it was a little more monolithic uh since we have moved over to copier in the last year and a half, and that that's allowed us to actually modularize and start building some other pieces alongside it that now give us the ability to do a AWS serverless uh scaff implementation or a Wagtail Scaff or what we've been typically doing has been the Django full stack app, which is the one I talk about kind of the most because it's got the most complicated sets of opinions built into it and it's kind of built towards developers who are working on",
+   "evidence": "context"
+  },
+  {
+   "id": "ee4a4c5aca",
+   "episode": "guest2",
+   "segment": 37,
+   "start_ms": 196880,
+   "end_ms": 218560,
+   "span": [
+    128,
+    133
+   ],
+   "original": "scalf",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "That's been a key uh bit for us is how do we make you know day zero really a deployable event that I could you know build out a scalf project greenfield and literally type Scaff deploy and have it build out that infrastructure into a target environment, whether it be Amazon or GCP or DigitalOcean, I don't care.",
+   "evidence": "context"
+  },
+  {
+   "id": "57b0a0fd89",
+   "episode": "guest2",
+   "segment": 37,
+   "start_ms": 196880,
+   "end_ms": 218560,
+   "span": [
+    172,
+    177
+   ],
+   "original": "Scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "That's been a key uh bit for us is how do we make you know day zero really a deployable event that I could you know build out a scalf project greenfield and literally type Scaff deploy and have it build out that infrastructure into a target environment, whether it be Amazon or GCP or DigitalOcean, I don't care.",
+   "evidence": "context"
+  },
+  {
+   "id": "44485cfde3",
+   "episode": "guest2",
+   "segment": 88,
+   "start_ms": 469360,
+   "end_ms": 477200,
+   "span": [
+    51,
+    56
+   ],
+   "original": "Scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "So if you can run um originally we we've developed Scaff with the Kind Kubernetes distribution in mind.",
+   "evidence": "context"
+  },
+  {
+   "id": "a5be77810c",
+   "episode": "guest2",
+   "segment": 145,
+   "start_ms": 749760,
+   "end_ms": 754720,
+   "span": [
+    3,
+    8
+   ],
+   "original": "Scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "So Scaff builds out a skeleton onto your file system as a greenfield part of the development process.",
+   "evidence": "context"
+  },
+  {
+   "id": "cea44a4016",
+   "episode": "guest2",
+   "segment": 150,
+   "start_ms": 773040,
+   "end_ms": 781600,
+   "span": [
+    96,
+    101
+   ],
+   "original": "Scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "I should literally just be able to type tilt up as long as I've got a and actually tilt our our Scaff will check for dependencies.",
+   "evidence": "context"
+  },
+  {
+   "id": "de96bfaac3",
+   "episode": "guest2",
+   "segment": 234,
+   "start_ms": 1185120,
+   "end_ms": 1187600,
+   "span": [
+    27,
+    32
+   ],
+   "original": "Scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "I just want to cut back to Scaff because everything sounds wonderful.",
+   "evidence": "context"
+  },
+  {
+   "id": "87b9012559",
+   "episode": "guest2",
+   "segment": 235,
+   "start_ms": 1187600,
+   "end_ms": 1193920,
+   "span": [
+    81,
+    86
+   ],
+   "original": "Scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "And and I love the setup and I love that you've got endorsement from Carlton for Scaff now.",
+   "evidence": "context"
+  },
+  {
+   "id": "ba0964f458",
+   "episode": "guest2",
+   "segment": 274,
+   "start_ms": 1443120,
+   "end_ms": 1450960,
+   "span": [
+    83,
+    88
+   ],
+   "original": "scalf",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "So even when I'm starting a dummy little pet project, I will go use the full-blown scalf uh template.",
+   "evidence": "context"
+  },
+  {
+   "id": "40816aa0ee",
+   "episode": "guest2",
+   "segment": 276,
+   "start_ms": 1454160,
+   "end_ms": 1462640,
+   "span": [
+    14,
+    19
+   ],
+   "original": "scaff",
+   "target": "scaf",
+   "class": "G",
+   "segment_text": "To run a base scaff in Kubernetes and like Amazon may cost you over $100 a month uh for that level of infrastructure.",
+   "evidence": "context"
+  },
+  {
+   "id": "9937abfa1a",
+   "episode": "guest2",
+   "segment": 118,
+   "start_ms": 664000,
+   "end_ms": 669520,
+   "span": [
+    80,
+    92
+   ],
+   "original": "six speed up",
+   "target": "Six Feet Up",
+   "class": "G",
+   "segment_text": "So with all that said, if I'm a new employee or I'm working on a new project at six speed up.",
+   "evidence": "context"
+  },
+  {
+   "id": "847aa93a9c",
+   "episode": "guest2",
+   "segment": 124,
+   "start_ms": 693280,
+   "end_ms": 695600,
+   "span": [
+    9,
+    20
+   ],
+   "original": "sixchep.com",
+   "target": "sixfeetup.com",
+   "class": "G",
+   "segment_text": "So go to sixchep.com slash careers.",
+   "evidence": "context"
+  },
+  {
+   "id": "3daf413a86",
+   "episode": "guest2",
+   "segment": 290,
+   "start_ms": 1506560,
+   "end_ms": 1509440,
+   "span": [
+    49,
+    60
+   ],
+   "original": "Six Feed Up",
+   "target": "Six Feet Up",
+   "class": "G",
+   "segment_text": "This portion of Django chat is brought to you by Six Feed Up.",
+   "evidence": "context"
+  },
+  {
+   "id": "2430ece3ef",
+   "episode": "guest2",
+   "segment": 293,
+   "start_ms": 1514400,
+   "end_ms": 1516160,
+   "span": [
+    13,
+    24
+   ],
+   "original": "Six Feed Up",
+   "target": "Six Feet Up",
+   "class": "G",
+   "segment_text": "That's where Six Feed Up comes in.",
+   "evidence": "context"
+  },
+  {
+   "id": "ef5ef52731",
+   "episode": "guest2",
+   "segment": 515,
+   "start_ms": 2898000,
+   "end_ms": 2902080,
+   "span": [
+    60,
+    69
+   ],
+   "original": "Turnstyle",
+   "target": "Turnstile",
+   "class": "G",
+   "segment_text": "The second one is the project from Cloudflare itself called Turnstyle.",
+   "evidence": "context"
+  },
+  {
+   "id": "113875a893",
+   "episode": "guest2",
+   "segment": 520,
+   "start_ms": 2923920,
+   "end_ms": 2925360,
+   "span": [
+    13,
+    22
+   ],
+   "original": "Turnstyle",
+   "target": "Turnstile",
+   "class": "G",
+   "segment_text": "So check out Turnstyle.",
+   "evidence": "context"
+  },
+  {
+   "id": "6ad7fc07cd",
+   "episode": "guest2",
+   "segment": 491,
+   "start_ms": 2716560,
+   "end_ms": 2717840,
+   "span": [
+    8,
+    17
+   ],
+   "original": "Elliot J.",
+   "target": "Elliot Jay",
+   "class": "G",
+   "segment_text": "It's by Elliot J.",
+   "evidence": "context"
+  },
+  {
+   "id": "47d80f41f4",
+   "episode": "guest2",
+   "segment": 494,
+   "start_ms": 2754880,
+   "end_ms": 2758400,
+   "span": [
+    41,
+    50
+   ],
+   "original": "Elliot J.",
+   "target": "Elliot Jay",
+   "class": "G",
+   "segment_text": "So Universal Principles of typography by Elliot J.",
+   "evidence": "context"
+  },
+  {
+   "id": "67b4128402",
+   "episode": "guest2",
+   "segment": 502,
+   "start_ms": 2794240,
+   "end_ms": 2803520,
+   "span": [
+    69,
+    83
+   ],
+   "original": "Django Mailoth",
+   "target": "django-mail-auth",
+   "class": "G",
+   "segment_text": "All right um projects I'll just go quickly um I'm gonna shout out to Django Mailoth from Coding Joe, which is Django Auth via login URLs, no passwords.",
+   "evidence": "context"
+  },
+  {
+   "id": "4e1b899dd6",
+   "episode": "guest2",
+   "segment": 504,
+   "start_ms": 2819920,
+   "end_ms": 2826720,
+   "span": [
+    93,
+    108
+   ],
+   "original": "Django Mol auth",
+   "target": "django-mail-auth",
+   "class": "G",
+   "segment_text": "So it's a pretty interesting one I mean if you have poor typography that actually looks like Django Mol auth.",
+   "evidence": "context"
+  },
+  {
+   "id": "912929bb7d",
+   "episode": "guest2",
+   "segment": 347,
+   "start_ms": 1782560,
+   "end_ms": 1790160,
+   "span": [
+    20,
+    31
+   ],
+   "original": "David Lorde",
+   "target": "David Lord",
+   "class": "O",
+   "segment_text": "Yeah, well, and and David Lorde has been doing a heroic job for oh my god, I don't know, ten plus years uh on everything.",
+   "evidence": "context"
+  },
+  {
+   "id": "1f1907e62d",
+   "episode": "guest2",
+   "segment": 35,
+   "start_ms": 161920,
+   "end_ms": 184160,
+   "span": [
+    383,
+    388
+   ],
+   "original": "Valky",
+   "target": "Valkey",
+   "class": "K",
+   "segment_text": "maybe more sophisticated projects uh where you need, you know, you've got a mail service, like so we got mailhog on the back end for developers, but maybe when you're deploying, you're using simple mail or SES on Amazon, or you want to use Mailgun or some other third-party service where you've got an API and integrating uh mail into your app, or you've got you know, Redis Cash or Valky, and now you've got Postgres on the back end.",
+   "evidence": "context"
+  },
+  {
+   "id": "4a5e5a06d5",
+   "episode": "guest2",
+   "segment": 153,
+   "start_ms": 792960,
+   "end_ms": 808640,
+   "span": [
+    176,
+    182
+   ],
+   "original": "DirInf",
+   "target": "direnv",
+   "class": "K",
+   "segment_text": "So if you're not familiar with Nix, that's a whole nother level of stuff that um it's not a pinion I'm I'm fully sold on, but I see the promise of is that I can CD if I've got DirInf, if we've not played with DirInf, it's at the lifesaver when, especially when dealing with all these API keys and environment variables.",
+   "evidence": "context"
+  },
+  {
+   "id": "3a9f761023",
+   "episode": "guest2",
+   "segment": 153,
+   "start_ms": 792960,
+   "end_ms": 808640,
+   "span": [
+    209,
+    215
+   ],
+   "original": "DirInf",
+   "target": "direnv",
+   "class": "K",
+   "segment_text": "So if you're not familiar with Nix, that's a whole nother level of stuff that um it's not a pinion I'm I'm fully sold on, but I see the promise of is that I can CD if I've got DirInf, if we've not played with DirInf, it's at the lifesaver when, especially when dealing with all these API keys and environment variables.",
+   "evidence": "context"
+  },
+  {
+   "id": "a2def1ec11",
+   "episode": "guest2",
+   "segment": 155,
+   "start_ms": 818000,
+   "end_ms": 824320,
+   "span": [
+    49,
+    54
+   ],
+   "original": "rough",
+   "target": "Ruff",
+   "class": "K",
+   "segment_text": "The right version of black, the right version of rough, the right version of iSort, the right version of you name whatever tool, poof, magic happens.",
+   "evidence": "context"
+  },
+  {
+   "id": "50ac68ed05",
+   "episode": "guest2",
+   "segment": 65,
+   "start_ms": 343280,
+   "end_ms": 348240,
+   "span": [
+    68,
+    78
+   ],
+   "original": "Xenopython",
+   "target": "Zen of Python",
+   "class": "K",
+   "segment_text": "Um, you know, there were there were you uh it's I always go back to Xenopython.",
+   "evidence": "context"
+  },
+  {
+   "id": "c334b0b8d4",
+   "episode": "guest2",
+   "segment": 66,
+   "start_ms": 348240,
+   "end_ms": 354800,
+   "span": [
+    23,
+    33
+   ],
+   "original": "Xenopython",
+   "target": "Zen of Python",
+   "class": "K",
+   "segment_text": "And if you think about Xenopython, the simple is better than complex, but complex is always better than complicated.",
+   "evidence": "context"
+  },
+  {
+   "id": "4f7a631d49",
+   "episode": "guest2",
+   "segment": 248,
+   "start_ms": 1267600,
+   "end_ms": 1282080,
+   "span": [
+    168,
+    178
+   ],
+   "original": "Xenopython",
+   "target": "Zen of Python",
+   "class": "K",
+   "segment_text": "And I I still believe that having that same set of tooling in that local environment as into a larger environment, it it it plays into the uh well I'll I'll go back to Xenopython again.",
+   "evidence": "context"
+  },
+  {
+   "id": "2344ff90f5",
+   "episode": "guest2",
+   "segment": 307,
+   "start_ms": 1552640,
+   "end_ms": 1561360,
+   "span": [
+    42,
+    47
+   ],
+   "original": "Pi TV",
+   "target": "PyTV",
+   "class": "K",
+   "segment_text": "So I f so Carlton and I were just at this Pi TV event in Amsterdam, um, and Sarah Boyce, Django fellow, gave a talk on Django has a marketing problem.",
+   "evidence": "context"
+  },
+  {
+   "id": "663d0eb4df",
+   "episode": "guest2",
+   "segment": 524,
+   "start_ms": 2935040,
+   "end_ms": 2940240,
+   "span": [
+    65,
+    73
+   ],
+   "original": "cap shot",
+   "target": "CAPTCHA",
+   "class": "K",
+   "segment_text": "If you if your browser looks sus or you're a bot, you will get a cap shot in its place.",
+   "evidence": "context"
+  },
+  {
+   "id": "5750857862",
+   "episode": "guest2",
+   "segment": 540,
+   "start_ms": 2996000,
+   "end_ms": 3003120,
+   "span": [
+    46,
+    59
+   ],
+   "original": "Django Stubbs",
+   "target": "django-stubs",
+   "class": "K",
+   "segment_text": "It's as I say, it's by the people from the um Django Stubbs project, and they they put a lot of work in there and they're they're talented people, so you know, it's worth having a look.",
+   "evidence": "context"
+  }
+ ],
+ "raw_transcripts": "Private, not committed: Parakeet output per episode as <key>.asr.json (segments with start/end seconds, text and word timings); start_ms = round(segment start * 1000). On atlas under ~/data/transcript-glossary-pilot/."
+}
