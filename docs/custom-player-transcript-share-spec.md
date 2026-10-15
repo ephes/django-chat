@@ -17,7 +17,7 @@ staging with the Podlove player.
 > active in all environments: `CAST_AUDIO_PLAYER = "custom"` is set in
 > `config/settings/base.py` with a comment noting that the Podlove Web Player path
 > was removed after the staging cutover. There is no per-environment override in
-> `deploy/group_vars/`; the Podlove-oriented
+> the deployment settings (ops-control); the Podlove-oriented
 > host-review / staging-differences / css-architecture / README docs may still
 > carry Podlove references that were not updated during the cutover.
 

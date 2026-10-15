@@ -1,9 +1,9 @@
 # Local commands for the Django Chat scaffold.
 
-ANSIBLE_GALAXY_CMD := env_var_or_default("ANSIBLE_GALAXY_CMD", "uvx --python 3.14 --from ansible-core ansible-galaxy")
-ANSIBLE_PLAYBOOK_CMD := env_var_or_default("ANSIBLE_PLAYBOOK_CMD", "uvx --python 3.14 --from ansible-core ansible-playbook")
-SOPS_AGE_KEY_FILE := env_var_or_default("SOPS_AGE_KEY_FILE", "~/.config/sops/age/keys.txt")
-DJANGO_CHAT_STAGING_SECRET_FILE := env_var_or_default("DJANGO_CHAT_STAGING_SECRET_FILE", "deploy/secrets/staging.sops.yml")
+# Deployments run from the private ops-control repository; by default a
+# checkout next to this one.
+OPS_CONTROL_DIR := env_var_or_default("OPS_CONTROL_DIR", "../ops-control")
+DJANGO_CHAT_STAGING_SECRET_FILE := env_var_or_default("DJANGO_CHAT_STAGING_SECRET_FILE", OPS_CONTROL_DIR / "secrets/staging/django-chat.yml")
 SLOPSCOPE_SPEC := env_var_or_default("SLOPSCOPE_SPEC", "slopscope")
 
 default:
@@ -56,31 +56,28 @@ compare-live-feed *ARGS:
 import-staging-transcripts *ARGS:
     just manage-staging-media import_django_chat_staging_transcripts {{ARGS}}
 
-deploy-bootstrap:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cd deploy
-    mkdir -p .ansible/collections
-    {{ANSIBLE_GALAXY_CMD}} collection install --force -r requirements.yml -p .ansible/collections
-
 deploy-static-check *ARGS:
     uv run python manage.py check_django_chat_static_assets {{ARGS}}
 
-deploy-check: deploy-static-check deploy-bootstrap
+# ops-control rsyncs $PROJECTS_ROOT/django-chat, so this checkout must be named
+# django-chat; its parent becomes PROJECTS_ROOT. Run `just install-local-library`
+# in ops-control first. Production is not set up.
+# Deploy staging through ops-control (just deploy-one django-chat staging).
+deploy-staging: deploy-static-check
     #!/usr/bin/env bash
     set -euo pipefail
-    cd deploy
-    {{ANSIBLE_PLAYBOOK_CMD}} --syntax-check -i inventory/hosts.yml bootstrap.yml
-    {{ANSIBLE_PLAYBOOK_CMD}} --syntax-check -i inventory/hosts.yml deploy.yml
-
-deploy-bootstrap-target TARGET: deploy-bootstrap
-    cd deploy && {{ANSIBLE_PLAYBOOK_CMD}} -i inventory/hosts.yml bootstrap.yml -l {{TARGET}}
-
-deploy-staging: deploy-static-check deploy-bootstrap
-    cd deploy && SOPS_AGE_KEY_FILE={{SOPS_AGE_KEY_FILE}} {{ANSIBLE_PLAYBOOK_CMD}} -i inventory/hosts.yml deploy.yml -l staging -e '{"django_chat_secret_file": "{{absolute_path(DJANGO_CHAT_STAGING_SECRET_FILE)}}"}'
-
-deploy-production: deploy-static-check deploy-bootstrap
-    cd deploy && SOPS_AGE_KEY_FILE={{SOPS_AGE_KEY_FILE}} {{ANSIBLE_PLAYBOOK_CMD}} -i inventory/hosts.yml deploy.yml -l production
+    source_dir="{{justfile_directory()}}"
+    if [[ "$(basename "$source_dir")" != "django-chat" ]]; then
+        echo "ops-control deploys \$PROJECTS_ROOT/django-chat; this checkout is $source_dir" >&2
+        exit 1
+    fi
+    ops_control="{{absolute_path(OPS_CONTROL_DIR)}}"
+    if [[ ! -f "$ops_control/playbooks/deploy-django-chat.yml" ]]; then
+        echo "No ops-control checkout with deploy-django-chat.yml at $ops_control (set OPS_CONTROL_DIR)" >&2
+        exit 1
+    fi
+    cd "$ops_control"
+    PROJECTS_ROOT="$(dirname "$source_dir")" just deploy-one django-chat staging
 
 test *ARGS:
     uv run pytest {{ARGS}}

@@ -151,8 +151,8 @@ comments gate. Episode-level toggles remain available for opt-out exceptions.
 
 Simplecast transcript HTML is preserved in source metadata where available, but
 it is not used for public transcript rendering. The `cast_transcripts` database worker
-is enabled for all deployed environments and configured in
-`deploy/group_vars/django_chat.yml`. Wagtail can queue Voxhelm transcript generation
+is enabled for all deployed environments and configured in the ops-control
+playbook `deploy-django-chat.yml`. Wagtail can queue Voxhelm transcript generation
 for individual reviewed episodes. When S3 media is enabled, the
 `cast_public_transcripts` storage alias points at the same durable Django Chat
 S3 bucket/media host as public media storage, so transcript artifacts stay in

@@ -1,6 +1,5 @@
 import json
 import os
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -16,130 +15,59 @@ from django_chat.core.staticfiles import minify_css
 ROOT_DIR = Path(__file__).resolve().parents[3]
 
 
-def test_deploy_scaffold_files_exist() -> None:
-    required_paths = [
-        "deploy/ansible.cfg",
-        "deploy/requirements.yml",
-        "deploy/inventory/hosts.yml",
-        "deploy/group_vars/django_chat.yml",
-        "deploy/group_vars/staging.yml",
-        "deploy/group_vars/production.yml",
-        "deploy/secrets/staging.example.yml",
-        "deploy/secrets/production.example.yml",
-        "deploy/tasks/bootstrap-host.yml",
-        "deploy/bootstrap.yml",
-        "deploy/deploy.yml",
-        ".sops.yaml",
+def test_deployment_docs_exist_and_repo_local_ansible_is_gone() -> None:
+    for relative_path in [
         "docs/operations-boundary.md",
         "docs/deployment.md",
         "docs/host-review-guide.md",
         "docs/staging-differences.md",
-    ]
-
-    for relative_path in required_paths:
+    ]:
         assert (ROOT_DIR / relative_path).is_file(), relative_path
 
-
-def test_justfile_exposes_deploy_recipes() -> None:
-    justfile = (ROOT_DIR / "justfile").read_text()
-
-    for recipe in [
-        "deploy-bootstrap:",
-        "deploy-bootstrap-target TARGET:",
-        "deploy-static-check *ARGS:",
-        "deploy-check:",
-        "deploy-staging:",
-        "deploy-production:",
+    # ops-control is the only deploy path; a second, repo-local one would drift.
+    # Ignored leftovers of the retired workflow (deploy/.ansible, SOPS files) may
+    # remain in older checkouts; only the playbooks and their inputs must be gone.
+    for retired in [
+        "deploy/deploy.yml",
+        "deploy/bootstrap.yml",
+        "deploy/requirements.yml",
+        "deploy/inventory",
+        "deploy/group_vars",
     ]:
-        assert recipe in justfile
+        assert not (ROOT_DIR / retired).exists(), retired
+    assert not (ROOT_DIR / ".sops.yaml").exists()
 
 
-def test_deploy_staging_uses_staging_secret_file_override() -> None:
+def test_justfile_deploys_staging_through_ops_control() -> None:
     justfile = (ROOT_DIR / "justfile").read_text()
-    recipe = justfile.split("deploy-staging:", 1)[1].split("\n\n", 1)[0]
+
+    assert "deploy-static-check *ARGS:" in justfile
+    assert "deploy-production" not in justfile
+    assert "ansible-playbook" not in justfile
+    recipe = justfile.split("deploy-staging: deploy-static-check", 1)[1].split("\n\n", 1)[0]
+    assert 'PROJECTS_ROOT="$(dirname "$source_dir")" just deploy-one django-chat staging' in recipe
+    assert '"$(basename "$source_dir")" != "django-chat"' in recipe
+
+
+def test_staging_secret_defaults_to_ops_control() -> None:
+    justfile = (ROOT_DIR / "justfile").read_text()
 
     assert (
-        """-e '{"django_chat_secret_file": "{{absolute_path(DJANGO_CHAT_STAGING_SECRET_FILE)}}"}'"""
-        in recipe
-    )
+        'DJANGO_CHAT_STAGING_SECRET_FILE := env_var_or_default("DJANGO_CHAT_STAGING_SECRET_FILE", '
+        'OPS_CONTROL_DIR / "secrets/staging/django-chat.yml")'
+    ) in justfile
 
 
-def test_ops_library_dependency_is_pinned() -> None:
-    requirements = (ROOT_DIR / "deploy/requirements.yml").read_text()
-
-    assert "https://github.com/ephes/ops-library.git" in requirements
-    assert "e92fb68ceec622d1f0fcdf07c040fba0ad6fb113" in requirements
-    for collection, version in [
-        ("community.postgresql", "4.2.0"),
-        ("community.general", "12.6.0"),
-        ("community.sops", "2.3.0"),
-        ("ansible.posix", "2.1.0"),
-    ]:
-        assert collection in requirements
-        assert f"version: {version}" in requirements
-
-
-def test_deploy_playbook_role_sequence_is_explicit() -> None:
-    playbook = (ROOT_DIR / "deploy/deploy.yml").read_text()
-
-    uv_index = playbook.index("local.ops_library.uv_install")
-    traefik_index = playbook.index("local.ops_library.traefik_deploy")
-    wagtail_index = playbook.index("local.ops_library.wagtail_deploy")
-    post_tasks_index = playbook.index("post_tasks:")
-    restart_index = playbook.index("Deploy | Restart Django Chat application service")
-
-    assert uv_index < traefik_index < wagtail_index < post_tasks_index < restart_index
-    assert re.search(r"name:\s*['\"]?\{\{\s*wagtail_systemd_unit_name\s*\}\}['\"]?", playbook)
-    assert "state: restarted" in playbook
-    group_vars = (ROOT_DIR / "deploy/group_vars/django_chat.yml").read_text()
-    assert "wagtail_db_worker_enabled: true" in group_vars
-    assert 'wagtail_db_worker_backend: "cast_transcripts"' in group_vars
-    assert 'uv_version: "0.13.1"' in group_vars
-    # The shared staging host tracks the latest uv; never downgrade it there.
-    staging_vars = (ROOT_DIR / "deploy/group_vars/staging.yml").read_text()
-    assert 'uv_version: "latest"' in staging_vars
-    assert "wagtail_gunicorn_workers: 3" in group_vars
-    assert 'wagtail_traefik_cert_resolver: "letsencrypt"' in group_vars
-    assert "django_chat_cast_comments_enabled: false" in group_vars
-    assert "CAST_COMMENTS_ENABLED:" in group_vars
-    assert "django_chat_cast_voxhelm_known_speaker_enabled: false" in group_vars
-    known_speaker_mapping = (
-        "CAST_VOXHELM_KNOWN_SPEAKER_ENABLED: "
-        '"{{ django_chat_cast_voxhelm_known_speaker_enabled '
-        "| bool | ternary('true', 'false') }}\""
-    )
-    assert known_speaker_mapping in group_vars
-    assert "django_chat_disable_transcript_cache: false" in group_vars
-    transcript_cache_mapping = (
-        "DJANGO_CHAT_DISABLE_TRANSCRIPT_CACHE: "
-        '"{{ django_chat_disable_transcript_cache '
-        "| bool | ternary('true', 'false') }}\""
-    )
-    assert transcript_cache_mapping in group_vars
-    assert "Deploy | Restart Django Chat transcript worker service" in playbook
-    assert "wagtail_db_worker_unit_name" in playbook
-
-
-def test_deployment_secret_policy_is_gitignored() -> None:
-    gitignore = (ROOT_DIR / ".gitignore").read_text()
-
-    for pattern in [
-        "deploy/.ansible/",
-        "deploy/secrets/*.sops.yml",
-        "deploy/secrets/*.decrypted.yml",
-        "!deploy/secrets/*.example.yml",
-    ]:
-        assert pattern in gitignore
-
-    for secret_example in (ROOT_DIR / "deploy/secrets").glob("*.example.yml"):
-        assert "CHANGEME" in secret_example.read_text()
+def test_old_deploy_secret_paths_stay_gitignored() -> None:
+    # Older checkouts may still hold installed collections or SOPS files under
+    # the retired deploy/ directory.
+    assert "deploy/" in (ROOT_DIR / ".gitignore").read_text().splitlines()
 
 
 def test_host_review_docs_preserve_staging_boundary() -> None:
     host_review = (ROOT_DIR / "docs/host-review-guide.md").read_text()
     staging_differences = (ROOT_DIR / "docs/staging-differences.md").read_text()
     operations_boundary = (ROOT_DIR / "docs/operations-boundary.md").read_text()
-    staging_group_vars = (ROOT_DIR / "deploy/group_vars/staging.yml").read_text()
 
     assert "Staging is live" in host_review
     assert "https://djangochat.staging.django-cast.com/cms/" in host_review
@@ -154,10 +82,6 @@ def test_host_review_docs_preserve_staging_boundary() -> None:
     assert "full-catalog audio served through the public media host" in operations_boundary
     assert "Voxhelm-backed" in operations_boundary
     assert "transcript demo" in operations_boundary
-    assert "djangochat.staging.django-cast.com" in staging_group_vars
-    assert "django_chat_cast_comments_enabled: true" in staging_group_vars
-    assert "django_chat_cast_voxhelm_known_speaker_enabled: true" in staging_group_vars
-    assert "django_chat_disable_transcript_cache: true" in staging_group_vars
 
 
 def test_staging_docs_do_not_carry_obsolete_media_blocker_phrases() -> None:
@@ -603,10 +527,7 @@ def test_django_cast_public_transcript_artifacts_use_documented_storage_prefix()
     }
 
 
-def test_python_version_file_matches_deploy_python_pin() -> None:
-    # The deploy rsyncs .python-version, and `uv sync --frozen` honours it, so a
-    # mismatch would replace the venv the role built for wagtail_python_version.
-    group_vars = (ROOT_DIR / "deploy/group_vars/django_chat.yml").read_text()
-    pin = re.search(r'^wagtail_python_version: "([^"]+)"$', group_vars, re.MULTILINE)
-    assert pin is not None
-    assert (ROOT_DIR / ".python-version").read_text().strip() == pin.group(1)
+def test_python_version_file_names_the_deployed_python() -> None:
+    # ops-control's deploy-django-chat.yml pins the same version and refuses a
+    # source whose .python-version differs; change both together.
+    assert (ROOT_DIR / ".python-version").read_text().strip() == "3.15.0"

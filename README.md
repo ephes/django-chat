@@ -7,8 +7,8 @@ structural reference for local development ergonomics.
 Current status: runnable local scaffold with development tooling, source
 parsers, idempotent sample and full-catalog import commands, opt-in streaming
 audio copy, a Django Chat-branded browsing experience for imported episodes,
-feed comparison and catalog measurement tooling, self-contained deployment
-scaffolding under `deploy/`, and host review docs for staging. Staging is live
+feed comparison and catalog measurement tooling, a staging deployment through
+ops-control, and host review docs for staging. Staging is live
 at `https://djangochat.staging.django-cast.com` with full-catalog metadata,
 copied audio for all live imported episodes, generated RSS routes, Wagtail
 admin at `https://djangochat.staging.django-cast.com/cms/`, and a
@@ -156,49 +156,21 @@ The default Django settings module for `manage.py` is
 `config.settings.local`. Local and test settings use SQLite so the scaffold can
 run without PostgreSQL or other services.
 
-## Deployment Scaffolding
+## Deployment
 
-Deployment is documented in
+Django Chat deploys through the private ops-control repository, like the other
+Wagtail sites; this repository carries no Ansible. Deploy staging from this
+checkout (named `django-chat`, with ops-control next to it or at
+`OPS_CONTROL_DIR`):
+
+```sh
+just deploy-staging   # runs `just deploy-one django-chat staging` in ops-control
+```
+
+Production is not set up. Details are in
 [`docs/deployment.md`](docs/deployment.md), with the security and ownership
 boundary in
 [`docs/operations-boundary.md`](docs/operations-boundary.md).
-
-Bootstrap repo-local Ansible dependencies:
-
-```sh
-just deploy-bootstrap
-```
-
-Run offline deployment checks:
-
-```sh
-just deploy-check
-```
-
-Run clean-VPS baseline tasks only for an independently owned host configured
-with `django_chat_host_mode: standalone`. Shared staging rejects bootstrap:
-
-```sh
-just deploy-bootstrap-target production # after setting standalone mode
-```
-
-Run the staging or production deployment playbooks when the target inventory,
-SOPS/age secrets, and operator access are in place:
-
-```sh
-just deploy-staging
-just deploy-production
-```
-
-Shared-host deployment is the default. Staging reuses its existing Traefik and
-updates only the app route; full proxy installation requires explicit standalone
-mode. See the ownership checks in [`docs/deployment.md`](docs/deployment.md).
-
-The deploy commands do not require `ops-control`. They install a pinned
-`ops-library` collection through Ansible Galaxy and load environment secrets
-from `deploy/secrets/staging.sops.yml` or
-`deploy/secrets/production.sops.yml`. Those encrypted secret paths are ignored,
-and decrypted secret files must stay out of the repository.
 
 ## Host Review
 
@@ -237,8 +209,8 @@ rendering on the episode overview, local URL compatibility for `/`,
 `/episodes/`, and `/episodes/<slug>/`, a branded RSS-discovery page at
 `/episodes/feed/` with page-head RSS auto-discovery links, a local
 smoke-level feed comparison for the
-imported sample, catalog performance measurement tooling, and deployment
-scaffolding.
+imported sample, catalog performance measurement tooling, and the staging
+deployment shortcut.
 
 It does not include full-catalog transcript conversion, a verified production
 feed-parity run, real production deployment, production DNS changes, podcast

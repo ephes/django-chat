@@ -30,10 +30,9 @@ with the real `CastComment` model: English and German ham publish, obvious spam
 is hidden. The previous model is backed up on the staging host at
 `/root/spamfilter-backup-20260729.json`.
 
-This applies to staging only — there is no production environment yet (slice 8;
-the production host in `deploy/inventory/hosts.yml` is still a placeholder), and
-`deploy/group_vars/django_chat.yml` keeps `comments_enabled` false for everything
-that inherits the shared default. Local development has no `cast_spamfilter` row
+This applies to staging only — there is no production environment yet (it is
+still a placeholder in ops-control), and the ops-control playbook keeps
+`CAST_COMMENTS_ENABLED` false unless an environment turns it on. Local development has no `cast_spamfilter` row
 at all, so the moderator publishes every comment there.
 
 ## Why the previously imported model was not usable
@@ -139,7 +138,7 @@ episodes).
   `predicted_label = "unknown"` → every comment published. Dropping it is
   strictly safer than leaving a known-bad filter in place.
 - **Exposure is one checkbox.** `CAST_COMMENTS_ENABLED` is already `true` on
-  staging (`deploy/group_vars/staging.yml`), and all 205 episodes have
+  staging (ops-control `host_vars/staging.yml`), and all 205 episodes have
   `comments_enabled = true`. Only the podcast-level `comments_enabled` toggle on
   the Podcast page is holding comments closed. Ticking it activates the catalog
   *and* whatever filter is in `cast_spamfilter` at that moment.

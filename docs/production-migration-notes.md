@@ -89,19 +89,19 @@ name `django-chat`), which lives outside the rsync target, so deploys never touc
 the live data. Production may instead use SQLite. If it does, the deploy must not
 be allowed to overwrite the live database:
 
-- `just deploy-*` rsyncs the local working tree with `--delete`. A SQLite file
-  inside the synced tree (e.g. the Django-default `db.sqlite3` in the project
-  root) would be replaced by the deployer's local copy, or deleted. The deploy
-  now excludes `db.sqlite3*` (file plus WAL/SHM/journal sidecars, including any
-  `databases/db.sqlite3`) via `wagtail_rsync_excludes_extra`, so a DB with that
-  name is never shipped or deleted. For any other basename, place the DB under the
-  role-excluded `databases/` directory so the exclusion is name-agnostic —
-  otherwise `--delete` would clobber it despite the snapshot.
-- Set `django_chat_sqlite_backup_paths` (in `deploy/group_vars/<env>.yml`) to the
-  absolute path(s) of the live SQLite DB. Each deploy then takes a consistent
-  `sqlite3 .backup` snapshot into the excluded `backups/` directory before
-  syncing and migrating. Leave it empty for PostgreSQL (the snapshot is a no-op).
-  Set it only after the first deploy has created the database.
+- The ops-control deploy (`just deploy-staging`) rsyncs the local working tree
+  with `--delete`. A SQLite file inside the synced tree (e.g. the
+  Django-default `db.sqlite3` in the project root) would be replaced by the
+  deployer's local copy, or deleted. The playbook excludes `db.sqlite3*` (file
+  plus WAL/SHM/journal sidecars, including any `databases/db.sqlite3`) via
+  `wagtail_rsync_excludes_extra`, so a DB with that name is never shipped or
+  deleted. For any other basename, place the DB under the role-excluded
+  `databases/` directory so the exclusion is name-agnostic.
+- The retired repo-local deploy could snapshot a live SQLite DB
+  (`sqlite3 .backup`) before syncing and migrating. The ops-control playbook
+  has no such step, because staging runs PostgreSQL. A SQLite-backed
+  production would need it added there, and a backup target, before its first
+  deploy.
 - Because the DB is excluded from rsync, the first deploy does not create it; the
   app's `migrate` step (run remotely by the deploy) creates and migrates the
   SQLite file on the host on first run.

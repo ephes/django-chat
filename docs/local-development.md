@@ -6,14 +6,6 @@ hosts run; uv 0.13.0 or newer is needed to install it. CI runs the checks on
 both 3.14 and 3.15. `ruff` and `ty` keep targeting 3.14, the oldest supported
 version.
 
-On Python 3.15 the Ansible proxy-ownership regressions in
-`django_chat/core/tests/test_proxy_ownership.py` are skipped: ansible-core 2.21
-does not import on 3.15, and 2.22 (which fixes it) has no final release yet.
-They still run on 3.14, in CI and locally with `uv run --python 3.14 pytest`.
-Once ansible-core 2.22.0 is final, widen the dev dependency and the skip
-deactivates itself. Deploy commands are unaffected: they run Ansible through
-`uvx --python 3.14`.
-
 ## Setup
 
 Install or update dependencies:
@@ -680,8 +672,8 @@ not leak into `pytest` runs.
 `config.settings.local` includes a committed development-only fallback
 `DJANGO_SECRET_KEY` so the scaffold runs without private setup. Use
 `DJANGO_SECRET_KEY` in `.env` for local overrides. Deployment settings use
-`config.settings.production` and SOPS/age-encrypted environment files under
-`deploy/secrets/`; see `docs/deployment.md` and `docs/operations-boundary.md`.
+`config.settings.production` and the SOPS/age-encrypted staging secret in
+ops-control; see `docs/deployment.md` and `docs/operations-boundary.md`.
 
 `config.wsgi` and `config.asgi` currently default to `config.settings.local`
 only for local scaffold ergonomics. The deployment role sets
@@ -714,11 +706,11 @@ by staging, use the encrypted staging SOPS file through the default dev command:
 just dev
 ```
 
-This reads `deploy/secrets/staging.sops.yml`, maps the staging media secrets to
-the `DJANGO_CHAT_*` settings variables, and starts `manage.py runserver`.
+This reads ops-control's `secrets/staging/django-chat.yml` (from the checkout
+at `OPS_CONTROL_DIR`, default `../ops-control`), maps the staging media secrets
+to the `DJANGO_CHAT_*` settings variables, and starts `manage.py runserver`.
 Override the encrypted secret path with `DJANGO_CHAT_STAGING_SECRET_FILE` when
-needed, for example to use the canonical copy in ops-control
-(`secrets/staging/django-chat.yml`, see `docs/deployment.md`). The command requires `sops`, `yq`, and an age key that can decrypt the
+needed. The command requires `sops`, `yq`, and an age key that can decrypt the
 staging secret file.
 
 `just runserver` is an alias for `just dev`. To bypass staging media and use
@@ -763,33 +755,26 @@ operator-owned and must not be committed decrypted.
 
 ## Deployment Commands
 
-Deployment is separate from local development, but the command surface is
-available from this repo:
+Deployment is separate from local development and runs from ops-control; this
+repo only offers shortcuts:
 
 ```sh
-just deploy-bootstrap
-just deploy-bootstrap-target staging
 just deploy-static-check
-just deploy-check
 just deploy-staging
-just deploy-production
 ```
 
-`just deploy-bootstrap` installs Ansible dependencies under `deploy/.ansible/`.
-`just deploy-bootstrap-target <group>` runs only the baseline host tasks against
-one inventory group, such as `staging` or `production`, and does not deploy the
-app. Valid target groups are `staging`, `production`, and `django_chat`.
 `just deploy-static-check` verifies the package-bundled static manifests needed
-by deployment. `just deploy-check` runs those checks plus Ansible syntax checks
-without contacting deployment hosts. The staging and production deploy commands
-require real inventory values, encrypted SOPS secrets, an age private key, and
-SSH/DNS readiness.
+by deployment without contacting a host. `just deploy-staging` runs it and then
+`just deploy-one django-chat staging` in the ops-control checkout
+(`OPS_CONTROL_DIR`, default `../ops-control`). It needs ops-control's Ansible
+tooling with the ops-library collection installed, an age key for the
+ops-control secrets and root SSH access to the staging host. There is no
+production deployment.
 
 ## Boundaries
 
-This repo contains Django Chat deployment scaffolding, live staging inventory,
-production placeholder inventory, public deployment vars, and SOPS secret
-examples. Decrypted secrets, age private keys, real host credentials, staging
+This repo contains no deployment inventory, vars or secrets; those live in
+ops-control. Decrypted secrets, age private keys, real host credentials, staging
 bootstrap password handoff files, and private operator notes stay outside the
 repo.
 

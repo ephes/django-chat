@@ -1,203 +1,88 @@
 # Deployment
 
-Django Chat deployment scaffolding lives in `deploy/` and is intentionally
-self-contained. It installs Ansible dependencies from
-`deploy/requirements.yml`, including a pinned `ops-library` collection, rather
-than requiring `ops-control` or a manual local role checkout.
+Django Chat deploys through the private ops-control repository, like the other
+Wagtail sites (homepage, python-podcast): its playbook
+`playbooks/deploy-django-chat.yml` runs the current ops-library roles
+`uv_install` and `wagtail_deploy` against the shared staging host. Settings,
+hostnames and the encrypted secret live in ops-control (see its
+`docs/DJANGO_CHAT.md`). This repository no longer carries Ansible; the former
+self-contained `deploy/` directory (with an ops-library pinned to 2.31.15) was
+retired in October 2026 so that there is a single deploy path.
 
 ## Commands
 
-Install Ansible dependencies locally:
-
-```sh
-just deploy-bootstrap
-```
-
-Run local deployment checks without contacting a host:
-
-```sh
-just deploy-check
-```
-
-Run clean-VPS baseline tasks for one inventory group without deploying the app:
-
-```sh
-just deploy-bootstrap-target production # after setting standalone mode
-```
-
-Standalone bootstrap requires `django_chat_host_mode: standalone` in the target's
-host/group vars. Shared staging rejects bootstrap and standalone mode.
-Production remains a placeholder and defaults to shared mode until configured.
-
-Deploy staging:
+Deploy staging from this checkout:
 
 ```sh
 just deploy-staging
 ```
 
-Deploy production:
+The recipe runs `deploy-static-check`, then `just deploy-one django-chat
+staging` in the ops-control checkout named by `OPS_CONTROL_DIR` (default:
+`../ops-control`, next to this repository) with `PROJECTS_ROOT` set to this
+checkout's parent directory, because ops-control rsyncs
+`$PROJECTS_ROOT/django-chat`. The checkout therefore has to be named
+`django-chat`. Install the ops-library collection in ops-control first
+(`just install-local-library` there). Running the ops-control recipe directly
+is equivalent:
 
 ```sh
-just deploy-production
+cd ../ops-control
+PROJECTS_ROOT="$(cd .. && pwd)" just deploy-one django-chat staging
 ```
 
-`deploy-bootstrap-target` runs only `deploy/bootstrap.yml` for the requested
-inventory group. `deploy-staging` and `deploy-production` run
-`deploy-static-check` first, then `deploy-bootstrap`, then `ansible-playbook`.
-They do not require `ops-control`. The full deploy playbook explicitly restarts
-the Django Chat app service after every `wagtail_deploy` run. This makes
-deploy re-runs include a brief app restart, but it ensures updated
-dependencies, Gunicorn, and collected static assets are picked up by the live
-process.
+The deploy rsyncs the working tree as it is, including uncommitted changes.
 
-The deploy play sets Git's `http.version` to `HTTP/1.1` through task-scoped
-environment variables. This avoids the staging host's unreliable Git/libcurl
-HTTP/2 transport when `uv sync --frozen` fetches django-cast's public
-development branch, without changing host-wide Git configuration.
+There is no production deployment. Production is a placeholder in ops-control,
+and its playbook refuses every host but `staging`.
 
 Staging is live at `https://djangochat.staging.django-cast.com`. Re-run
-`just deploy-staging` after repo-side deployment changes that need to reach the
-host. Do not run production deployment from this slice.
+`just deploy-staging` after repo-side changes that need to reach the host.
 
-Staging sets `django_chat_cast_comments_enabled: true`, which renders
-`CAST_COMMENTS_ENABLED=true` into the deployed app environment. Production
-inherits the shared default `false`. With the staging global gate open, the
-podcast page's Wagtail `comments_enabled` toggle activates comments across the
-imported catalog. Individual episode/post `comments_enabled` toggles remain
-available as opt-outs, so reviewers can control comments from the admin without
-another deploy or environment change.
+The play holds Git to HTTP/1.1 through task-scoped environment variables. This
+avoids the staging host's unreliable Git/libcurl HTTP/2 transport when
+`uv sync --frozen` fetches django-cast's public development branch, without
+changing host-wide Git configuration. After the roles it makes the cache
+directory owned by the app user and runs `manage.py ensure_default_site`, so
+Wagtail's default Site carries the deployed hostname. The app and the
+transcript worker restart through the role's handlers whenever the source, the
+dependencies or the rendered environment change.
 
-Staging also enables `django_chat_cast_voxhelm_known_speaker_enabled`, so
-diarized episode jobs send approved host/guest voice references to Voxhelm and
-store its per-segment name suggestions for editorial review. Production keeps
-that integration opt-in. `django_chat_disable_transcript_cache` is enabled on
-staging as well, so corrections in the player transcript panel appear after the
-next page load instead of remaining in the browser cache for up to an hour. A
-browser that cached the player response before this staging policy was deployed
-needs one hard refresh; responses fetched afterward are not stored. Podlove,
-DOTe, and WebVTT files served through media storage or a CDN retain their own
-cache policies and are unaffected by this middleware.
+Staging enables Django Chat's global comments gate (`CAST_COMMENTS_ENABLED=true`
+in the deployed environment; the playbook default is off). With the staging
+global gate open, the podcast page's Wagtail `comments_enabled` toggle
+activates comments across the imported catalog. Individual episode/post
+`comments_enabled` toggles remain available as opt-outs, so reviewers can
+control comments from the admin without another deploy or environment change.
 
-## Proxy ownership and regression protection
+Staging also enables Voxhelm known-speaker suggestions
+(`CAST_VOXHELM_KNOWN_SPEAKER_ENABLED=true`), so diarized episode jobs send
+approved host/guest voice references to Voxhelm and store its per-segment name
+suggestions for editorial review, and disables the transcript response cache
+(`DJANGO_CHAT_DISABLE_TRANSCRIPT_CACHE=true`), so corrections in the player
+transcript panel appear after the next page load instead of remaining in the
+browser cache for up to an hour. A browser that cached the player response
+before this staging policy was deployed needs one hard refresh; responses
+fetched afterward are not stored. Podlove, DOTe, and WebVTT files served
+through media storage or a CDN retain their own cache policies and are
+unaffected by this middleware. The three flags are set in ops-control's
+`inventories/prod/host_vars/staging.yml`.
 
-`django_chat_host_mode` defaults to `shared`. In shared mode, deployment requires
-an existing executable Traefik binary, dynamic route directory and active
-`traefik` service. These read-only checks run before application changes. The
-app deploy skips host bootstrap and the full `traefik_deploy` role;
-`wagtail_deploy` still writes Django Chat's application route. It does not
-replace Traefik's binary, static configuration, service unit or certificate
-store. Shared staging is always required to use this mode, even if a caller
-tries to override it with extra vars.
+## Proxy
 
-For a new, independently owned VPS, explicitly set
-`django_chat_host_mode: standalone` in that host's inventory variables. This
-opts into baseline host tasks and full proxy installation. Standalone setup
-refuses hosts already enrolled in `/var/lib/traefik-transactions`. The pinned
-collection independently guards full proxy writes on enrolled hosts.
+The staging host's Traefik belongs to ops-control. `wagtail_deploy` writes only
+Django Chat's dynamic route (`/etc/traefik/dynamic/django-chat.traefik.yml`,
+`Host(\`djangochat.staging.django-cast.com\`)`, certificate resolver
+`letsencrypt`); it never installs or reconfigures Traefik itself. The former
+standalone/clean-VPS mode of the repo-local deploy is gone with it.
 
-Before the next staging deploy, rerun `just deploy-bootstrap` to replace the
-old installed collection. The previous pin lacked the write guard and could
-revert a shared proxy's executable and static settings. Merely setting a newer
-Traefik version does not protect static configuration.
+## Secrets
 
-Run only the shared-proxy preflight, without app deployment or secrets:
-
-```sh
-cd deploy
-uvx --python 3.14 --from ansible-core ansible-playbook -i inventory/hosts.yml deploy.yml \
-  -l staging --tags proxy-preflight
-```
-
-Regression tests exercise the real Ansible role conditions with harmless local
-fixture roles: shared mode skips full proxy/bootstrap writes even with
-`traefik_force_update=true`, explicit standalone setup selects them, and invalid
-modes, missing/inactive proxies, or a standalone override on staging fail before
-application mutation. `uv sync` installs the declared Ansible dev dependency,
-so `just test` runs these regressions without a global Ansible installation;
-missing Ansible fails the tests instead of silently skipping them.
-
-October 9, 2026 validation: corrected deployment files and the pinned collection
-were installed in staging's existing checkout after backing up the old files.
-Shared preflight passed locally and natively on staging with zero changes;
-standalone mode on staging and the collection's enrolled-host full-write guard
-both refused before mutation. Traefik's binary/static configuration hashes and
-process ID remained unchanged; Django Chat's TLS homepage redirected normally
-to `/episodes/`, which returned 200.
-The application and database were not redeployed during this workflow repair.
-`just test` passed (410 tests; 18 optional browser tests skipped), `just
-deploy-check`, lint, typecheck and `prek run --all-files` passed. No separate
-changelog convention exists; this deployment note records the workflow change.
-
-## Ansible Dependencies
-
-`deploy/requirements.yml` installs:
-
-- `local.ops_library` from `https://github.com/ephes/ops-library.git` pinned to
-  commit `e92fb68ceec622d1f0fcdf07c040fba0ad6fb113`
-- `community.postgresql` pinned to `4.2.0`
-- `community.general` pinned to `12.6.0`
-- `community.sops` pinned to `2.3.0`
-- `ansible.posix` pinned to `2.1.0`
-
-Dependencies are installed under `deploy/.ansible/`, which is ignored by Git.
-Bootstrap uses `--force` so an existing collection with the same advertised
-version cannot retain code from an older commit. Standalone Linux amd64 setup
-pins Traefik 3.7.14 and the audited archive checksum; other architectures must
-explicitly configure their matching release checksum before setup.
-
-## Inventory And Vars
-
-Committed inventory uses the live staging host and a production placeholder:
-
-- `django-chat-staging`: `djangochat.staging.django-cast.com`
-- `django-chat-production`: `production.djangochat.example.invalid`
-
-Before any production deploy, replace the production placeholder
-`ansible_host`, `django_chat_wagtail_fqdn`, host rule, and allowed-host values
-with Django Chat-specific production values. Do not copy Python Podcast
-hostnames, buckets, credentials, routes, or other service details.
-
-`deploy/group_vars/staging.yml` carries the live shared staging FQDN
-`djangochat.staging.django-cast.com` and opts staging into the global comments
-gate, known-speaker transcript suggestions, and uncached transcript review.
-
-`ansible_python_interpreter` is pinned to `/usr/bin/python3` for deployed
-hosts so Ansible's PostgreSQL modules use the system Python with distro
-PostgreSQL bindings. Confirm that path exists on any future production host
-before replacing the production placeholder.
-
-Public deployment defaults live in:
-
-- `deploy/group_vars/django_chat.yml`
-- `deploy/group_vars/staging.yml`
-- `deploy/group_vars/production.yml`
-
-Secrets are loaded from:
-
-- `deploy/secrets/staging.sops.yml`
-- `deploy/secrets/production.sops.yml`
-
-Only encrypted SOPS files belong at those paths, and those paths are ignored by
-Git. Example shapes are committed as `deploy/secrets/*.example.yml`.
-
-The canonical copy of the staging secret lives in the private ops-control
-repository at `secrets/staging/django-chat.yml`, encrypted to ops-control's age
-recipients (its `.sops.yaml`). A fresh checkout does not need a local copy:
-point `DJANGO_CHAT_STAGING_SECRET_FILE` at the ops-control file instead.
-`just deploy-staging` passes that path to Ansible as `django_chat_secret_file`,
-and `just dev` / `just manage-staging-media` read it as well. A relative path
-is resolved from the repository root; the default is
-`deploy/secrets/staging.sops.yml`.
-
-```sh
-DJANGO_CHAT_STAGING_SECRET_FILE=~/path/to/ops-control/secrets/staging/django-chat.yml \
-  just deploy-staging
-```
-
-When a staging secret changes, edit it in ops-control with `sops` and commit it
-there; do not keep a diverging copy under `deploy/secrets/`. Running
-`ansible-playbook` directly instead of the `just` recipe needs
-`-e django_chat_secret_file=<path>` for the same effect.
+The staging secret lives in ops-control at `secrets/staging/django-chat.yml`,
+encrypted to ops-control's age recipients. Edit it there with `sops` and commit
+it in ops-control. `just dev` and `just manage-staging-media` read the same
+file (`DJANGO_CHAT_STAGING_SECRET_FILE`, default
+`$OPS_CONTROL_DIR/secrets/staging/django-chat.yml`).
 
 For the shared staging environment, only operators managing that staging deploy
 should be SOPS recipients. Host reviewers do not need SOPS decrypt access just
@@ -265,7 +150,7 @@ deploy path, a Django Chat-specific S3-compatible bucket is required if staging
 should self-host copied audio and other media. Metadata-only browsing can work
 without copied audio, but that is not a complete playback proof. If you choose
 a non-AWS S3-compatible provider that needs an explicit endpoint or region
-setting, extend the deploy vars before the first live deploy.
+setting, extend the ops-control playbook before relying on it.
 
 Current staging media status: full-catalog audio copy has been verified.
 `import_django_chat_catalog --copy-cover-image --copy-audio` on the deployed
@@ -398,49 +283,35 @@ and rollback decisions are settled.
 
 ## Application Python
 
-`wagtail_python_version: "3.15.0"` in `deploy/group_vars/django_chat.yml`
-selects the uv-managed interpreter for the application venv (3.14.4 before
-October 2026). The `wagtail_deploy` role installs that exact version with
-`/usr/local/bin/uv` (0.13.0 or newer knows 3.15.0, hence the `uv_version`
-bump) and, when the existing `site/.venv` reports a different version, deletes
-and rebuilds the venv before `uv sync --frozen`. Expect a short outage while
-the venv is rebuilt. The rsynced `.python-version` must name the same version:
-`uv sync --frozen` honours it and would otherwise replace the venv with that
-interpreter. To roll back, set both the pin and `.python-version` to `3.14.4`
-and redeploy, which rebuilds the venv again. A test keeps the two in sync.
-Ansible itself still runs on the controller via `uvx --python 3.14` and on
-hosts via `/usr/bin/python3`.
+ops-control pins the uv-managed interpreter for the application venv to
+3.15.0 (`django_chat_python_version` in `playbooks/deploy-django-chat.yml`;
+3.14.4 before October 2026). The `wagtail_deploy` role installs that exact
+version with `/usr/local/bin/uv` and, when the existing `site/.venv` reports a
+different version, deletes and rebuilds the venv before `uv sync --frozen`.
+Expect a short outage while the venv is rebuilt. The rsynced `.python-version`
+must name the same version: `uv sync --frozen` honours it and would otherwise
+replace the venv with that interpreter. The playbook refuses a source whose
+`.python-version` differs, and a test here keeps `.python-version` at 3.15.0.
+To roll back, set both back together and redeploy, which rebuilds the venv
+again.
 
 ## Runtime Sizing
 
-The shared deploy vars override the generic `wagtail_deploy` role defaults for
-a small VPS:
+The playbook overrides the generic `wagtail_deploy` role defaults for a small
+VPS: 3 gunicorn workers with a 120 second timeout on 127.0.0.1:10015, and the
+Django admin under `django-admin/`. uv comes from the `uv_install` role's
+pinned, checksum-verified release, the same binary every ops-control deploy to
+that host uses.
 
-- `wagtail_gunicorn_workers: 3`
-- `wagtail_gunicorn_timeout: 120`
-- `uv_version: "0.13.1"`
-
-Staging overrides `uv_version` to `"latest"`: the staging host is shared and
-ops-control keeps its `/usr/local/bin/uv` on the latest release, so a pinned
-older version would downgrade that shared binary on every deploy.
-
-The `cast_transcripts` database worker is enabled for all environments so
-Wagtail's Generate transcript action can queue Voxhelm completion work outside
-the web request. Web sizing remains intentionally small.
-
-The shared deploy vars also set `wagtail_traefik_cert_resolver: "letsencrypt"`
-so the generated Traefik route requests a real ACME certificate instead of
-falling back to Traefik's default self-signed certificate.
+The `cast_transcripts` database worker is enabled so Wagtail's Generate
+transcript action can queue Voxhelm completion work outside the web request.
+Web sizing remains intentionally small.
 
 ## Transcript Worker
 
-The shared group vars enable the django-tasks database worker for all
-environments:
-
-```yaml
-wagtail_db_worker_enabled: true
-wagtail_db_worker_backend: cast_transcripts
-```
+The ops-control playbook enables the django-tasks database worker
+(`wagtail_db_worker_enabled: true`, `wagtail_db_worker_backend:
+cast_transcripts`).
 
 The deployed unit is `django-chat-db-worker.service` and runs
 `manage.py db_worker --backend cast_transcripts --interval 5`.
@@ -450,8 +321,8 @@ settings. For staging, keep the Voxhelm API base URL, producer token, model,
 and language in the staging secret (ops-control
 `secrets/staging/django-chat.yml`) as
 `cast_voxhelm_api_base`, `cast_voxhelm_api_key`, `cast_voxhelm_model`, and
-`cast_voxhelm_language`; `deploy/group_vars/django_chat.yml` renders them into
-the deployed `.env`. The matching producer token must also be present in the
+`cast_voxhelm_language`; the ops-control playbook renders them into the
+deployed `.env`. The matching producer token must also be present in the
 Voxhelm deployment secrets and rendered into `VOXHELM_BEARER_TOKENS`.
 Voxhelm transcription also requires the host running Django/Wagtail and
 `django-chat-db-worker.service` to reach the Tailscale network where the
@@ -533,4 +404,5 @@ This deployment path does not include:
 - podcast directory updates
 - production migration
 - transcript conversion
-- backup/restore hardening
+- backups: the staging database has no backup target yet (ops-control's
+  `docs/DJANGO_CHAT.md`)

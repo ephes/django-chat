@@ -44,7 +44,9 @@ PRD slice list: research doc "Suggested Implementation Slices" section.
       PRD.
 - [x] **8. Self-contained `deploy/`, clean-VPS bootstrap, SOPS/age secrets,
       role sequence `uv_install` → `traefik_deploy` → `wagtail_deploy`** —
-      `7686e13`.
+      `7686e13`. Retired October 2026: staging now deploys through ops-control
+      (`just deploy-staging` → `just deploy-one django-chat staging`), see
+      `docs/deployment.md`.
 - [x] **9. Staging deployment, host admin accounts, host review docs** —
       `e219283`, follow-ups `d0da9f3`, `8588dd0`, `3eda73f`, `413af91`. Staging
       live at `https://djangochat.staging.django-cast.com` with copied sample

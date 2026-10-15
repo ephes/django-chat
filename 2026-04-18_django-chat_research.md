@@ -205,6 +205,10 @@ Recommendation:
 
 ## Deployment Work
 
+> Superseded (October 2026, owner decision): Django Chat now deploys through
+> ops-control like the other Wagtail sites, and the self-contained `deploy/`
+> described below was retired. See `docs/deployment.md`.
+
 The app repo should expose the same style of operator commands as `python-podcast`, especially:
 
 - `just install`
