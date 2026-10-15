@@ -1,8 +1,9 @@
 name: CI
 
-# Same checks as `just check` (lint, format check, typecheck, tests) plus a
-# pip-audit of the locked dependencies. Test settings use in-memory SQLite and
-# local file storage, so no database service and no secrets are needed.
+# Same checks as `just check` (lint, format check, typecheck, tests), a
+# from-scratch `migrate` on PostgreSQL 17 and SQLite, plus a pip-audit of the
+# locked dependencies. Test settings use in-memory SQLite and local file
+# storage; only the migrate job starts a PostgreSQL service. No secrets needed.
 # Browser tests stay skipped (they need DJANGO_CHAT_BROWSER_TESTS=1).
 
 on:
@@ -57,6 +58,58 @@ jobs:
         run: uv run --locked ty check config django_chat manage.py
       - name: Tests (just test)
         run: uv run --locked pytest
+
+  migrate:
+    # The tests build their database from migrations on SQLite, which tolerates
+    # some ordering mistakes that abort a PostgreSQL migration transaction (a
+    # data migration indexing a page before wagtailsearch's tables exist). Run
+    # every migration from an empty database on PostgreSQL, as deployments do,
+    # and on a fresh SQLite file, then fail on missing migrations.
+    name: Migrate an empty database (PostgreSQL 17 and SQLite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      UV_PYTHON: "3.15"
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      DJANGO_READ_DOT_ENV_FILE: "false"
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: django_chat
+          POSTGRES_PASSWORD: django_chat
+          POSTGRES_DB: django_chat
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U django_chat"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.13.1"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          cache-suffix: py3.15
+      - name: Sync locked dependencies
+        run: uv sync --locked
+      - name: Migrate an empty PostgreSQL database
+        env:
+          DATABASE_URL: postgres://django_chat:django_chat@localhost:5432/django_chat
+        run: |
+          uv run --locked python manage.py migrate --noinput
+          uv run --locked python manage.py makemigrations --check --dry-run
+      - name: Migrate an empty SQLite database
+        env:
+          DATABASE_URL: sqlite:///${{ runner.temp }}/migrate-check.sqlite3
+        run: uv run --locked python manage.py migrate --noinput
 
   audit:
     name: Dependency audit (pip-audit)

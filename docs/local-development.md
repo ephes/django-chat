@@ -89,7 +89,14 @@ internals as a strict typing target.
 `.github/workflows/ci.yml` runs on every push and pull request. The `check` job
 runs the same steps as `just check` (`uv sync --locked`, ruff lint, ruff format
 check, `ty`, pytest). Test settings use in-memory SQLite and local file storage,
-so CI needs no database service and no secrets; browser tests stay skipped. The
+so the `check` job needs no database service and no secrets; browser tests
+stay skipped. The `migrate` job runs `manage.py migrate` against an empty
+PostgreSQL 17 service database and an empty SQLite file, then
+`makemigrations --check`. SQLite lets some migration-ordering mistakes slip
+through (a data migration that saves a Wagtail page indexes it immediately, and
+on PostgreSQL the failed insert into a not-yet-created `wagtailsearch` table
+aborts the whole migration), so data migrations that save concrete pages must
+depend on the `wagtailsearch` migrations they need. The
 `audit` job runs `pip-audit` against `uv export --locked`; the git-sourced
 `django-cast` dependency is reported as skipped because it has no version to
 look up. Actions are pinned by commit SHA and the workflow has read-only

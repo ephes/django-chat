@@ -212,6 +212,11 @@ class Migration(migrations.Migration):
         ("sponsor", "0001_initial"),
         ("wagtailcore", "0097_baselogentry_uuid_action_timestamp_indexes"),
         ("wagtaildocs", "0014_alter_document_file_size"),
+        # add_child() saves a concrete SponsorPage, which Wagtail's search
+        # signal handlers index straight away. On an empty database the search
+        # index tables must exist before that, or PostgreSQL aborts the
+        # migration transaction on the failed INSERT INTO wagtailsearch_indexentry.
+        ("wagtailsearch", "0010_add_text_fields"),
     ]
 
     operations = [
