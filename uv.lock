@@ -239,7 +239,7 @@ wheels = [
 [[package]]
 name = "django-cast"
 version = "0.2.68"
-source = { git = "https://github.com/ephes/django-cast?branch=develop#704a60aa10b568d5697a716cf30b3fb82860f16c" }
+source = { git = "https://github.com/ephes/django-cast?branch=develop#7205f730bea099a5b0d059c81b47caa082aee912" }
 dependencies = [
     { name = "crispy-bootstrap4" },
     { name = "django" },
