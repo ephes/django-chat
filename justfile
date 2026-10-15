@@ -77,7 +77,7 @@ deploy-bootstrap-target TARGET: deploy-bootstrap
     cd deploy && {{ANSIBLE_PLAYBOOK_CMD}} -i inventory/hosts.yml bootstrap.yml -l {{TARGET}}
 
 deploy-staging: deploy-static-check deploy-bootstrap
-    cd deploy && SOPS_AGE_KEY_FILE={{SOPS_AGE_KEY_FILE}} {{ANSIBLE_PLAYBOOK_CMD}} -i inventory/hosts.yml deploy.yml -l staging
+    cd deploy && SOPS_AGE_KEY_FILE={{SOPS_AGE_KEY_FILE}} {{ANSIBLE_PLAYBOOK_CMD}} -i inventory/hosts.yml deploy.yml -l staging -e '{"django_chat_secret_file": "{{absolute_path(DJANGO_CHAT_STAGING_SECRET_FILE)}}"}'
 
 deploy-production: deploy-static-check deploy-bootstrap
     cd deploy && SOPS_AGE_KEY_FILE={{SOPS_AGE_KEY_FILE}} {{ANSIBLE_PLAYBOOK_CMD}} -i inventory/hosts.yml deploy.yml -l production

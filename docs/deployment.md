@@ -180,6 +180,25 @@ Secrets are loaded from:
 Only encrypted SOPS files belong at those paths, and those paths are ignored by
 Git. Example shapes are committed as `deploy/secrets/*.example.yml`.
 
+The canonical copy of the staging secret lives in the private ops-control
+repository at `secrets/staging/django-chat.yml`, encrypted to ops-control's age
+recipients (its `.sops.yaml`). A fresh checkout does not need a local copy:
+point `DJANGO_CHAT_STAGING_SECRET_FILE` at the ops-control file instead.
+`just deploy-staging` passes that path to Ansible as `django_chat_secret_file`,
+and `just dev` / `just manage-staging-media` read it as well. A relative path
+is resolved from the repository root; the default is
+`deploy/secrets/staging.sops.yml`.
+
+```sh
+DJANGO_CHAT_STAGING_SECRET_FILE=~/path/to/ops-control/secrets/staging/django-chat.yml \
+  just deploy-staging
+```
+
+When a staging secret changes, edit it in ops-control with `sops` and commit it
+there; do not keep a diverging copy under `deploy/secrets/`. Running
+`ansible-playbook` directly instead of the `just` recipe needs
+`-e django_chat_secret_file=<path>` for the same effect.
+
 For the shared staging environment, only operators managing that staging deploy
 should be SOPS recipients. Host reviewers do not need SOPS decrypt access just
 to use the repo or Wagtail admin.
@@ -428,7 +447,8 @@ The deployed unit is `django-chat-db-worker.service` and runs
 
 Voxhelm-backed transcript generation uses django-cast's `CAST_VOXHELM_*`
 settings. For staging, keep the Voxhelm API base URL, producer token, model,
-and language in `deploy/secrets/staging.sops.yml` as
+and language in the staging secret (ops-control
+`secrets/staging/django-chat.yml`) as
 `cast_voxhelm_api_base`, `cast_voxhelm_api_key`, `cast_voxhelm_model`, and
 `cast_voxhelm_language`; `deploy/group_vars/django_chat.yml` renders them into
 the deployed `.env`. The matching producer token must also be present in the

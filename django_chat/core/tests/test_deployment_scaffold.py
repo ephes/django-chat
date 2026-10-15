@@ -54,6 +54,16 @@ def test_justfile_exposes_deploy_recipes() -> None:
         assert recipe in justfile
 
 
+def test_deploy_staging_uses_staging_secret_file_override() -> None:
+    justfile = (ROOT_DIR / "justfile").read_text()
+    recipe = justfile.split("deploy-staging:", 1)[1].split("\n\n", 1)[0]
+
+    assert (
+        """-e '{"django_chat_secret_file": "{{absolute_path(DJANGO_CHAT_STAGING_SECRET_FILE)}}"}'"""
+        in recipe
+    )
+
+
 def test_ops_library_dependency_is_pinned() -> None:
     requirements = (ROOT_DIR / "deploy/requirements.yml").read_text()
 

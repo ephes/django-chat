@@ -48,6 +48,11 @@ Those paths are ignored by Git. The repository only commits example files with
 repo so environment-specific secret blobs and old encrypted revisions do not
 accumulate for every collaborator.
 
+The staging secret is kept in the private ops-control repository at
+`secrets/staging/django-chat.yml` (encrypted to ops-control's age recipients).
+Point `DJANGO_CHAT_STAGING_SECRET_FILE` at that file instead of keeping a local
+copy under `deploy/secrets/`; see `docs/deployment.md`.
+
 ## Operator Workstation
 
 Required local tools:
@@ -93,19 +98,28 @@ the age recipients for operators who manage that staging deployment. Host
 reviewers do not need SOPS decrypt access just to review the site or log into
 Wagtail admin.
 
+The staging secret already exists in ops-control; edit it there:
+
+```sh
+sops ~/path/to/ops-control/secrets/staging/django-chat.yml
+```
+
+and commit the change in ops-control. The steps below apply only when creating
+a secret file for a new environment (for example production) from the examples.
+
 Create secrets from the examples:
 
 ```sh
-cp deploy/secrets/staging.example.yml /tmp/django-chat-staging.yml
+cp deploy/secrets/production.example.yml /tmp/django-chat-production.yml
 sops --encrypt --input-type yaml --output-type yaml \
-  /tmp/django-chat-staging.yml > deploy/secrets/staging.sops.yml
-rm /tmp/django-chat-staging.yml
+  /tmp/django-chat-production.yml > deploy/secrets/production.sops.yml
+rm /tmp/django-chat-production.yml
 ```
 
 Edit encrypted secrets with:
 
 ```sh
-sops deploy/secrets/staging.sops.yml
+sops deploy/secrets/production.sops.yml
 ```
 
 Never commit decrypted temporary files. Prefer a dedicated Django Chat staging

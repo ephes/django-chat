@@ -717,7 +717,8 @@ just dev
 This reads `deploy/secrets/staging.sops.yml`, maps the staging media secrets to
 the `DJANGO_CHAT_*` settings variables, and starts `manage.py runserver`.
 Override the encrypted secret path with `DJANGO_CHAT_STAGING_SECRET_FILE` when
-needed. The command requires `sops`, `yq`, and an age key that can decrypt the
+needed, for example to use the canonical copy in ops-control
+(`secrets/staging/django-chat.yml`, see `docs/deployment.md`). The command requires `sops`, `yq`, and an age key that can decrypt the
 staging secret file.
 
 `just runserver` is an alias for `just dev`. To bypass staging media and use
