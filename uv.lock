@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14.4, <3.16"
 
 [[package]]
@@ -239,7 +239,7 @@ wheels = [
 [[package]]
 name = "django-cast"
 version = "0.2.68"
-source = { git = "https://github.com/ephes/django-cast?branch=develop#7205f730bea099a5b0d059c81b47caa082aee912" }
+source = { git = "https://github.com/ephes/django-cast?branch=develop#92e1face79dfde45eeaf842f78527114f873c558" }
 dependencies = [
     { name = "crispy-bootstrap4" },
     { name = "django" },
