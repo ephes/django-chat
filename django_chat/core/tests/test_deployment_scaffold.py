@@ -530,4 +530,4 @@ def test_django_cast_public_transcript_artifacts_use_documented_storage_prefix()
 def test_python_version_file_names_the_deployed_python() -> None:
     # ops-control's deploy-django-chat.yml pins the same version and refuses a
     # source whose .python-version differs; change both together.
-    assert (ROOT_DIR / ".python-version").read_text().strip() == "3.15.0"
+    assert (ROOT_DIR / ".python-version").read_text().strip() == "3.15.1"

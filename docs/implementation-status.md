@@ -643,6 +643,20 @@ findings (low/accepted) are tracked in
 The 2026-09-04 dependency refresh is verified for staging with Django 6.1,
 Wagtail 8.0, and django-cast `0.2.65` from the `develop` head at `04fae89a`.
 
+The 2026-10-25 local dependency refresh keeps the already-current Django
+6.1.2, upgrades Wagtail to the security release 8.0.1, and leaves django-cast
+at the existing locked commit `d46f2a26`. All 487 Python tests pass on Python
+3.15.1, with 18 opt-in browser tests skipped.
+`just check` passes on 3.15.1; configured prek hooks, Django system
+and missing-migration checks, deployment static checks, and the documentation
+build also pass. No deployment was performed. The minimum Python version and local/CI/deployment pins are now 3.15.1,
+including both ops-control deployment engines. Ruff and ty target 3.15, and
+CI uses uv 0.13.5. Official Python 3.15 support
+is still pending in these stable framework versions. See
+[`local-development.md`](local-development.md#framework-and-python-compatibility).
+There is no separate changelog or release-notes convention in this repository;
+this status entry records the refresh.
+
 ## Next Action
 
 The custom-player transcript/share parity spec

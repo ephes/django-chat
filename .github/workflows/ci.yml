@@ -21,9 +21,8 @@ concurrency:
 env:
   PYTHONUNBUFFERED: "1"
   UV_NO_PROGRESS: "1"
-  # requires-python is >=3.14.4,<3.16; deployments run 3.15. The check job
-  # sets UV_PYTHON per matrix entry; the audit job resolves the default 3.14.
-  UV_PYTHON: "3.14"
+  # Use the same security-patched Python as local development and deployment.
+  UV_PYTHON: "3.15.1"
 
 jobs:
   check:
@@ -33,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.14", "3.15"]
+        python: ["3.15.1"]
     env:
       UV_PYTHON: ${{ matrix.python }}
     steps:
@@ -44,7 +43,7 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.13.1"
+          version: "0.13.5"
           enable-cache: true
           cache-dependency-glob: uv.lock
           cache-suffix: py${{ matrix.python }}
@@ -69,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      UV_PYTHON: "3.15"
+      UV_PYTHON: "3.15.1"
       DJANGO_SETTINGS_MODULE: config.settings.local
       DJANGO_READ_DOT_ENV_FILE: "false"
     services:
@@ -94,10 +93,10 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.13.1"
+          version: "0.13.5"
           enable-cache: true
           cache-dependency-glob: uv.lock
-          cache-suffix: py3.15
+          cache-suffix: py3.15.1
       - name: Sync locked dependencies
         run: uv sync --locked
       - name: Migrate an empty PostgreSQL database
@@ -123,7 +122,7 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.13.1"
+          version: "0.13.5"
           enable-cache: true
           cache-dependency-glob: uv.lock
       # django-cast is a git dependency and cannot be audited by version; pip-audit

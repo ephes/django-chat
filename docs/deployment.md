@@ -283,17 +283,19 @@ and rollback decisions are settled.
 
 ## Application Python
 
-ops-control pins the uv-managed interpreter for the application venv to
-3.15.0 (`django_chat_python_version` in `playbooks/deploy-django-chat.yml`;
+ops-control pins the uv-managed interpreter in both the pyinfra SiteSpec and
+Ansible rollback playbook for the application venv to
+3.15.1 (`django_chat_python_version` in `playbooks/deploy-django-chat.yml`;
 3.14.4 before October 2026). The `wagtail_deploy` role installs that exact
 version with `/usr/local/bin/uv` and, when the existing `site/.venv` reports a
 different version, deletes and rebuilds the venv before `uv sync --frozen`.
 Expect a short outage while the venv is rebuilt. The rsynced `.python-version`
 must name the same version: `uv sync --frozen` honours it and would otherwise
 replace the venv with that interpreter. The playbook refuses a source whose
-`.python-version` differs, and a test here keeps `.python-version` at 3.15.0.
-To roll back, set both back together and redeploy, which rebuilds the venv
-again.
+`.python-version` differs, and a test here keeps `.python-version` at 3.15.1.
+Use uv 0.13.5 or newer for the 3.15.1 interpreter download. This configuration
+update does not itself deploy the runtime to staging. To roll back, align the
+source requirement, source pin, and deployment configuration before redeploying.
 
 ## Runtime Sizing
 

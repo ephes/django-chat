@@ -19,12 +19,16 @@ PostgreSQL 17 and SQLite, and a `pip-audit` of the lock on every push. No produc
 
 ## Local Development
 
-This project supports Python 3.14.4 through 3.15 and deploys on Python 3.15.0.
-`uv` (0.13.0 or newer, which knows the 3.15.0 final release) reads the
-`.python-version` file and can download the matching interpreter when needed.
-CI tests both 3.14 and 3.15. See
+This project requires Python 3.15.1 or newer within the 3.15 series and pins
+3.15.1 for local development, CI, and deployment configuration. `uv` (0.13.5
+or newer) reads `.python-version` and can download the matching interpreter. See
 [`docs/local-development.md`](docs/local-development.md) for the full local
 workflow, environment file expectations, tooling commands, and hook setup.
+
+The dependency lock uses Django 6.1.2 and Wagtail 8.0.1. Python 3.15 is
+already exercised by this project, but upstream support is still pending in
+these stable framework releases; see the compatibility notes in the local
+development guide before changing the interpreter.
 
 Frontend conventions — cascade-layer order, token naming, class naming, JS
 hooks, and Safari 16 `color-mix()` fallbacks — are documented in

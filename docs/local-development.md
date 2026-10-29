@@ -1,10 +1,37 @@
 # Local Development
 
-Django Chat supports Python 3.14.4 through 3.15 and uses `uv` for dependency
-management. The `.python-version` file pins 3.15.0, the interpreter deployed
-hosts run; uv 0.13.0 or newer is needed to install it. CI runs the checks on
-both 3.14 and 3.15. `ruff` and `ty` keep targeting 3.14, the oldest supported
-version.
+Django Chat requires Python 3.15.1 or newer within the 3.15 series and uses
+`uv` for dependency management. `.python-version`, CI, and deployment
+configuration pin 3.15.1, the security update released on October 21, 2026.
+Use uv 0.13.5 or newer to install it. Ruff and ty target Python 3.15.
+
+### Framework And Python Compatibility
+
+The 2026-10-25 dependency refresh uses the latest stable releases,
+[Django 6.1.2](https://www.djangoproject.com/download/) and
+[Wagtail 8.0.1](https://docs.wagtail.org/en/stable/releases/8.0.1.html).
+The latter includes security fixes. The minimum dependency versions require
+these patch releases; django-cast stays at the existing locked development
+commit.
+
+[Python 3.15.1](https://www.python.org/downloads/release/python-3151/)
+was released on October 21, 2026. The project already runs and tests Python
+3.15, but this is ahead of official framework support:
+[Django's compatibility table](https://docs.djangoproject.com/en/6.1/faq/install/)
+lists 3.15 support starting with Django 6.1.3, and
+[Wagtail's stable compatibility table](https://docs.wagtail.org/en/stable/releases/upgrading.html)
+lists Python through 3.14 for Wagtail 8.0. Development documentation for future
+Wagtail releases does not establish support for the installed stable release.
+
+Keep `.python-version` and ops-control's `django_chat_python_version` aligned
+when upgrading the deployment interpreter. Both now pin 3.15.1, including the
+pyinfra SiteSpec and Ansible rollback playbook. Install with `just install`
+and run `just check`; Python 3.14 and 3.15.0 no longer satisfy the project
+requirement. uv 0.13.0 and 0.13.1 do not have a download entry for 3.15.1.
+
+Local validation on October 25 passed all 487 Python tests and `just check`
+on 3.15.1 (18 opt-in browser tests skipped). This is project-level evidence, not upstream
+support or a staging deployment verification.
 
 ## Setup
 
