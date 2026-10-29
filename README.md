@@ -19,8 +19,8 @@ PostgreSQL 17 and SQLite, and a `pip-audit` of the lock on every push. No produc
 
 ## Local Development
 
-This project requires Python 3.15.1 or newer within the 3.15 series and pins
-3.15.1 for local development, CI, and deployment configuration. `uv` (0.13.5
+This project requires Python 3.15.2 or newer within the 3.15 series and pins
+3.15.2 for local development, CI, and deployment configuration. `uv` (0.13.6
 or newer) reads `.python-version` and can download the matching interpreter. See
 [`docs/local-development.md`](docs/local-development.md) for the full local
 workflow, environment file expectations, tooling commands, and hook setup.

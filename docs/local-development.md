@@ -1,9 +1,9 @@
 # Local Development
 
-Django Chat requires Python 3.15.1 or newer within the 3.15 series and uses
+Django Chat requires Python 3.15.2 or newer within the 3.15 series and uses
 `uv` for dependency management. `.python-version`, CI, and deployment
-configuration pin 3.15.1, the security update released on October 21, 2026.
-Use uv 0.13.5 or newer to install it. Ruff and ty target Python 3.15.
+configuration pin 3.15.2, the 3.15 maintenance release of October 2026.
+Use uv 0.13.6 or newer to install it. Ruff and ty target Python 3.15.
 
 ### Framework And Python Compatibility
 
@@ -14,8 +14,8 @@ The latter includes security fixes. The minimum dependency versions require
 these patch releases; django-cast stays at the existing locked development
 commit.
 
-[Python 3.15.1](https://www.python.org/downloads/release/python-3151/)
-was released on October 21, 2026. The project already runs and tests Python
+[Python 3.15.2](https://www.python.org/downloads/release/python-3152/)
+replaced 3.15.1 (October 21, 2026) in the October 29, 2026 update. The project already runs and tests Python
 3.15, but this is ahead of official framework support:
 [Django's compatibility table](https://docs.djangoproject.com/en/6.1/faq/install/)
 lists 3.15 support starting with Django 6.1.3, and
@@ -24,10 +24,10 @@ lists Python through 3.14 for Wagtail 8.0. Development documentation for future
 Wagtail releases does not establish support for the installed stable release.
 
 Keep `.python-version` and ops-control's `django_chat_python_version` aligned
-when upgrading the deployment interpreter. Both now pin 3.15.1, including the
+when upgrading the deployment interpreter. Both now pin 3.15.2, including the
 pyinfra SiteSpec and Ansible rollback playbook. Install with `just install`
-and run `just check`; Python 3.14 and 3.15.0 no longer satisfy the project
-requirement. uv 0.13.0 and 0.13.1 do not have a download entry for 3.15.1.
+and run `just check`; Python 3.14, 3.15.0 and 3.15.1 no longer satisfy the project
+requirement. uv 0.13.5 and older do not have a download entry for 3.15.2.
 
 Local validation on October 25 passed all 487 Python tests and `just check`
 on 3.15.1 (18 opt-in browser tests skipped). This is project-level evidence, not upstream

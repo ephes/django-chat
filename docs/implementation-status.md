@@ -657,6 +657,14 @@ is still pending in these stable framework versions. See
 There is no separate changelog or release-notes convention in this repository;
 this status entry records the refresh.
 
+The 2026-10-29 interpreter update moves the minimum Python version and the
+local/CI/deployment pins from 3.15.1 to 3.15.2 and CI to uv 0.13.6, the first
+uv release with a 3.15.2 download entry. Dependencies are unchanged; the lock
+only records the new Python floor. All 487 Python tests pass on 3.15.2 (18
+opt-in browser tests skipped) and `just check` passes. The previous entry's
+refresh was deployed to staging on 2026-10-25 from an uncommitted checkout; its
+files are now committed as they ran there.
+
 ## Next Action
 
 The custom-player transcript/share parity spec
