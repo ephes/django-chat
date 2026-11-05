@@ -665,6 +665,14 @@ opt-in browser tests skipped) and `just check` passes. The previous entry's
 refresh was deployed to staging on 2026-10-25 from an uncommitted checkout; its
 files are now committed as they ran there.
 
+The 2026-11-05 security refresh upgrades the transitive Pillow dependency
+(through django-cast and Wagtail) from 12.3.0 to 13.0.0, which fixes the
+Pillow CVEs that turned the CI dependency audit red. No other package
+versions change and django-cast stays at the locked commit `d46f2a26`. The
+CI pip-audit step passes without ignores, all 487 Python tests pass on
+3.15.2 (18 opt-in browser tests skipped), and `just check` passes. No
+deployment was performed; staging gets the fix with its next deploy.
+
 ## Next Action
 
 The custom-player transcript/share parity spec
