@@ -880,3 +880,20 @@ key. If the audio/import-metadata/attachment transaction fails, only newly
 owned keys are removed and the original exception is preserved. Previous or
 shared files are retained. A later rollback of an enclosing caller transaction
 can still leave an unreferenced new audio key; storage is not transactional.
+
+Staging transcript input is validated before any files or transcript rows are
+created/replaced. The Podlove response must be an object with at most 100,000
+segment objects. Text must be a nonempty string of at most 16,384 characters;
+speaker/voice labels are strings of at most 255 characters. Times use
+HH:MM:SS.mmm (1–3 fractional digits), ordered starts and non-reversed intervals.
+Optional integer millisecond fields must agree exactly. Missing/null millisecond
+fields are derived using django-cast's public WebVTT parser. Empty/None-text
+diarization gaps are skipped; other non-string text is rejected. WebVTT cue
+text is escaped with django-cast's public helper, preventing extra cues from
+embedded newlines or timing separators while JSON formats retain the text. Invalid input
+skips that episode and preserves its transcript.
+
+Every saved artifact, including the first file in an empty transcript, has an
+ownership handle. If a later artifact or model save fails, rollback cleanup
+removes the new keys while retaining previous files; cleanup errors do not
+replace the original failure. Storage cleanup is best effort.
