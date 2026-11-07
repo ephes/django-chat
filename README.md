@@ -14,7 +14,8 @@ copied audio for all live imported episodes, generated RSS routes, Wagtail
 admin at `https://djangochat.staging.django-cast.com/cms/`, and a
 Voxhelm-generated transcript demo at `/episodes/preview/transcript/`. GitHub Actions CI
 (`.github/workflows/ci.yml`) runs `just check`, a from-scratch `migrate` on
-PostgreSQL 17 and SQLite, and a `pip-audit` of the lock on every push. No production deployment has been performed. The planning source of truth is
+PostgreSQL 17 and SQLite, a `pip-audit` of the lock, the full Chromium browser suite, and a strict rendered-docs
+build on every push. No production deployment has been performed. The planning source of truth is
 [`2026-04-18_django-chat_research.md`](2026-04-18_django-chat_research.md).
 
 ## Local Development
@@ -37,6 +38,7 @@ hooks, and Safari 16 `color-mix()` fallbacks — are documented in
 The `docs/` tree renders as a documentation site with [Zensical](https://zensical.org).
 Serve it locally with `just docs` (defaults to `localhost:8000`; pass a port,
 e.g. `just docs 8001`), or build a static copy into `site/` with `just docs-build`.
+Run the CI documentation gate in temporary storage with `just docs-check`.
 
 Install dependencies:
 

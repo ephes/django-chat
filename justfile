@@ -42,6 +42,9 @@ docs port="8000":
 docs-build:
     uv run zensical build
 
+docs-check:
+    uv run --locked python scripts/check_docs.py
+
 manage *ARGS:
     uv run python manage.py {{ARGS}}
 
