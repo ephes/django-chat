@@ -18,6 +18,9 @@ acceptance criterion flips, or the next-action target changes.
 - Audio publication fences source generations after download and compensates
   newly owned files when persistence fails, preserving existing audio.
 
+- Staging transcripts validate bounded segment schemas before writing, and
+  compensate first-import as well as replacement artifacts on failure.
+
 ## Slice Status
 
 PRD slice list: research doc "Suggested Implementation Slices" section.

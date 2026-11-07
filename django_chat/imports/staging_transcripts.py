@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
@@ -10,6 +11,7 @@ from urllib.parse import parse_qs, quote, urljoin, urlparse
 from uuid import uuid4
 
 from cast.models import Episode
+from cast.transcripts.webvtt import escape_cue_text, webvtt_timestamp_to_ms
 from django.apps import apps
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -130,6 +132,9 @@ def import_staging_transcript_for_episode(
         detail_html = fetch_text(episode_url, timeout)
         podlove_api_url = extract_podlove_api_url(detail_html, base_url=episode_url)
         podlove_payload = json.loads(fetch_text(podlove_api_url, timeout))
+        if not isinstance(podlove_payload, dict):
+            raise ValueError("staging Podlove response must be an object")
+        segments = _normalized_segments(podlove_payload.get("transcripts"))
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         return StagingTranscriptImportItem(
             slug=episode_slug,
@@ -138,7 +143,6 @@ def import_staging_transcript_for_episode(
             reason=str(exc),
         )
 
-    segments = _normalized_segments(podlove_payload.get("transcripts"))
     if not segments:
         return StagingTranscriptImportItem(
             slug=episode_slug,
@@ -174,7 +178,7 @@ def import_staging_transcript_for_episode(
             )
         )
         transcript.save(update_fields=["podlove", "vtt", "dote"])
-    except Exception:
+    except BaseException:
         _delete_replacement_files(replacements, use_new=True)
         raise
     _delete_replacement_files(replacements, use_new=False)
@@ -237,7 +241,7 @@ def podlove_segments_to_vtt(segments: list[JsonObject]) -> str:
         if not (text and start and end):
             continue
         lines.append(f"{start} --> {end}")
-        lines.append(text)
+        lines.append(escape_cue_text(text))
         lines.append("")
     return "\n".join(lines) + "\n"
 
@@ -270,50 +274,81 @@ def default_fetch_text(url: str, timeout: float) -> str:
 
 
 def _normalized_segments(value: Any) -> list[JsonObject]:
-    if not isinstance(value, list):
+    if value is None:
         return []
+    if not isinstance(value, list) or len(value) > 100_000:
+        raise ValueError("staging transcript segments must be a list of at most 100000 items")
     segments = []
+    previous_start = -1
     for segment in value:
         if not isinstance(segment, dict):
-            continue
-        text = str(segment.get("text", "")).strip()
-        start = str(segment.get("start", "")).strip()
-        end = str(segment.get("end", "")).strip()
-        if not (text and start and end):
-            continue
+            raise ValueError("staging transcript segment must be an object")
+        text = segment.get("text")
+        if text is None or (isinstance(text, str) and not text.strip()):
+            continue  # Upstream diarization may include empty gap segments.
+        if not isinstance(text, str) or len(text) > 16_384:
+            raise ValueError(
+                "staging transcript text must be a nonempty string of at most 16384 characters"
+            )
+        times: dict[str, int] = {}
+        for key in ("start", "end"):
+            timestamp = segment.get(key)
+            if not isinstance(timestamp, str) or not re.fullmatch(
+                r"[0-9]{2,6}:[0-5][0-9]:[0-5][0-9]\.[0-9]{1,3}", timestamp
+            ):
+                raise ValueError("staging transcript timestamps must use HH:MM:SS.mmm")
+            milliseconds = webvtt_timestamp_to_ms(timestamp)
+            if milliseconds is None:
+                raise ValueError("invalid staging transcript timestamp")
+            supplied = segment.get(f"{key}_ms")
+            if supplied is None:
+                supplied = milliseconds
+            if type(supplied) is not int or supplied != milliseconds:
+                raise ValueError("staging transcript milliseconds disagree with timestamps")
+            times[key] = milliseconds
+        if times["start"] < previous_start or times["end"] < times["start"]:
+            raise ValueError("staging transcript timestamps must be ordered")
+        previous_start = times["start"]
+        labels = {}
+        for key in ("speaker", "voice"):
+            label = segment.get(key, "")
+            if label is None:
+                label = ""
+            if not isinstance(label, str) or len(label) > 255:
+                raise ValueError(
+                    "staging transcript labels must be strings of at most 255 characters"
+                )
+            labels[key] = label
         segments.append(
             {
-                "start": start,
-                "start_ms": segment.get("start_ms"),
-                "end": end,
-                "end_ms": segment.get("end_ms"),
-                "speaker": str(segment.get("speaker") or ""),
-                "voice": str(segment.get("voice") or ""),
-                "text": text,
+                "start": segment["start"],
+                "start_ms": times["start"],
+                "end": segment["end"],
+                "end_ms": times["end"],
+                **labels,
+                "text": text.strip(),
             }
         )
     return segments
 
 
-def _replace_text_file(field: Any, name: str, data: JsonObject) -> ReplacedFile | None:
+def _replace_text_file(field: Any, name: str, data: JsonObject) -> ReplacedFile:
     return _replace_file(
         field, name, ContentFile(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
     )
 
 
-def _replace_file(field: Any, name: str, content: ContentFile) -> ReplacedFile | None:
+def _replace_file(field: Any, name: str, content: ContentFile) -> ReplacedFile:
     old_name = field.name if field and field.name else ""
     old_storage = field.storage if old_name else None
     replacement_name = _replacement_name(name)
     field.save(replacement_name, content, save=False)
-    if old_name and old_name != field.name:
-        return ReplacedFile(
-            old_storage=old_storage,
-            old_name=old_name,
-            new_storage=field.storage,
-            new_name=field.name,
-        )
-    return None
+    return ReplacedFile(
+        old_storage=old_storage,
+        old_name=old_name,
+        new_storage=field.storage,
+        new_name=field.name,
+    )
 
 
 def _replacement_name(name: str) -> str:
@@ -335,6 +370,8 @@ def _delete_replacement_files(
             continue
         storage = replacement.new_storage if use_new else replacement.old_storage
         name = replacement.new_name if use_new else replacement.old_name
+        if not name or storage is None:
+            continue
         with suppress(Exception):
             storage.delete(name)
 
