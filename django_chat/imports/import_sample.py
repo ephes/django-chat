@@ -53,6 +53,13 @@ from django_chat.imports.source_data import (
     parse_simplecast_podcast,
     parse_simplecast_site,
 )
+from django_chat.imports.transfer_limits import (
+    AUDIO_MAX_BYTES,
+    AUDIO_TRANSFER_SECONDS,
+    IMAGE_MAX_BYTES,
+    bounded_chunks,
+    transfer_deadline,
+)
 from django_chat.imports.url_safety import safe_urlopen
 
 DEFAULT_SOURCE_FIXTURE_DIR = Path(__file__).parent / "tests" / "fixtures" / "django_chat_source"
@@ -281,10 +288,13 @@ def copy_django_chat_catalog_audio(
 
 
 def default_download_audio(source_url: str) -> DownloadedAudio:
+    deadline = transfer_deadline(AUDIO_TRANSFER_SECONDS)
     with safe_urlopen(
         source_url, timeout=60, headers={"User-Agent": "django-chat-sample-import/1.0"}
     ) as response:
-        content = response.read()
+        content = b"".join(
+            bounded_chunks(response, max_bytes=AUDIO_MAX_BYTES, deadline=deadline, timeout=60)
+        )
         headers = response.headers
         content_type = headers.get_content_type() if hasattr(headers, "get_content_type") else None
         content_length = _optional_positive_int(headers.get("Content-Length"))
@@ -304,19 +314,34 @@ def default_stream_download_audio(
     timeout: float = 60.0,
     chunk_size: int = 1024 * 1024,
 ) -> DownloadedAudioFile:
+    deadline = transfer_deadline(AUDIO_TRANSFER_SECONDS)
     byte_size = 0
-    with (
-        safe_urlopen(
-            source_url, timeout=timeout, headers={"User-Agent": "django-chat-catalog-import/1.0"}
-        ) as response,
-        destination.open("wb") as output,
-    ):
-        while chunk := response.read(chunk_size):
-            output.write(chunk)
-            byte_size += len(chunk)
-        headers = response.headers
-        content_type = headers.get_content_type() if hasattr(headers, "get_content_type") else None
-        content_length = _optional_positive_int(headers.get("Content-Length"))
+    # Exclusive creation: cleanup may only unlink output owned by this call.
+    with destination.open("xb") as output:
+        try:
+            with safe_urlopen(
+                source_url,
+                timeout=timeout,
+                headers={"User-Agent": "django-chat-catalog-import/1.0"},
+            ) as response:
+                for chunk in bounded_chunks(
+                    response,
+                    max_bytes=AUDIO_MAX_BYTES,
+                    deadline=deadline,
+                    timeout=timeout,
+                    chunk_size=chunk_size,
+                ):
+                    output.write(chunk)
+                    byte_size += len(chunk)
+                headers = response.headers
+                content_type = (
+                    headers.get_content_type() if hasattr(headers, "get_content_type") else None
+                )
+                content_length = _optional_positive_int(headers.get("Content-Length"))
+        except BaseException:
+            output.close()
+            destination.unlink(missing_ok=True)
+            raise
 
     return DownloadedAudioFile(
         path=destination,
@@ -328,10 +353,13 @@ def default_stream_download_audio(
 
 
 def default_download_image(source_url: str) -> bytes:
+    deadline = transfer_deadline(60)
     with safe_urlopen(
         source_url, timeout=60, headers={"User-Agent": "django-chat-sample-import/1.0"}
     ) as response:
-        return response.read()
+        return b"".join(
+            bounded_chunks(response, max_bytes=IMAGE_MAX_BYTES, deadline=deadline, timeout=60)
+        )
 
 
 def _ensure_podcast_cover_image(
@@ -667,9 +695,7 @@ def _copy_episode_audio(
         )
 
     downloaded = audio_downloader(source.url)
-    if not downloaded.content:
-        msg = f"Audio source returned no content: {source.url}"
-        raise ValueError(msg)
+    _validate_audio_size(metadata, len(downloaded.content), downloaded.content_length)
 
     return _save_downloaded_episode_audio(
         metadata,
@@ -699,9 +725,9 @@ def _copy_episode_audio_streaming(
     with tempfile.TemporaryDirectory(prefix="django-chat-audio-") as temp_dir:
         temp_path = Path(temp_dir) / "source-audio"
         downloaded = audio_downloader(source.url, temp_path)
-        if downloaded.byte_size <= 0:
-            msg = f"Audio source returned no content: {source.url}"
-            raise ValueError(msg)
+        _validate_audio_size(metadata, downloaded.path.stat().st_size, downloaded.content_length)
+        if downloaded.byte_size != downloaded.path.stat().st_size:
+            raise ValueError("Downloaded audio size metadata does not match the file.")
 
         return _save_downloaded_episode_audio(
             metadata,
@@ -709,6 +735,16 @@ def _copy_episode_audio_streaming(
             downloaded_file=downloaded,
             storage_prefix=CATALOG_AUDIO_STORAGE_PREFIX,
         )
+
+
+def _validate_audio_size(
+    metadata: EpisodeSourceMetadata, actual: int, declared: int | None
+) -> None:
+    expected = declared if declared is not None else _metadata_audio_file_size(metadata)
+    if actual <= 0 or actual > AUDIO_MAX_BYTES:
+        raise ValueError("Audio source returned empty or oversized content.")
+    if expected is not None and actual != expected:
+        raise ValueError("Audio source length does not match the expected byte size.")
 
 
 def _save_downloaded_episode_audio(

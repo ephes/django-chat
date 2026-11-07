@@ -207,7 +207,7 @@ class FakeAudioDownloader:
         return DownloadedAudio(
             content=f"fake audio bytes for {source_url}".encode(),
             content_type="audio/mpeg",
-            content_length=123,
+            content_length=len(f"fake audio bytes for {source_url}".encode()),
             filename="sample.mp3",
         )
 

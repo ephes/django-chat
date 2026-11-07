@@ -9,6 +9,12 @@ are still open, and what the next agent should do.
 Do not duplicate the PRD here. Update this file when a slice lands, an
 acceptance criterion flips, or the next-action target changes.
 
+## Import hardening
+
+- Bounded live text/image transfers and complete bounded audio downloads are
+  covered by synthetic transport and publication regressions. See the
+  [transfer limits](local-development.md#live-import-transfer-limits).
+
 ## Slice Status
 
 PRD slice list: research doc "Suggested Implementation Slices" section.
