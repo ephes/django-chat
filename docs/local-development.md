@@ -208,7 +208,8 @@ just test-browser
 
 The browser tests are opt-in. The normal `just test` suite skips them unless
 `DJANGO_CHAT_BROWSER_TESTS=1` is set, so day-to-day Python tests do not require
-a local browser install. CI always enables the separate Chromium suite; on Linux,
+a local browser install. Geometry checks await the bundled web fonts; desktop
+directory links use compact padding to fit all seven full labels. CI always enables the separate Chromium suite; on Linux,
 install browser system dependencies with
 `uv run --locked python -m playwright install --with-deps chromium`.
 

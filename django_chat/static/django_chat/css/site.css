@@ -1531,6 +1531,8 @@ body:has([data-show-hero-shell]) .brand {
 
 @container (min-width: 70rem) {
   .platform-band-links a {
+    /* Compact desktop padding leaves room for full directory labels. */
+    padding-inline: 0.75rem;
     min-width: 8.75rem;
     max-inline-size: none;
   }

@@ -352,6 +352,7 @@ def test_platform_band_links_layout_invariants_across_viewports(
 ) -> None:
     page.goto(f"{live_server.url}{episode_index_path()}")
     page.locator(".platform-band-links a").first.wait_for()
+    page.evaluate("() => document.fonts.ready")
 
     def measure_rows() -> list[list[dict[str, float]]]:
         return page.evaluate(
@@ -377,6 +378,9 @@ def test_platform_band_links_layout_invariants_across_viewports(
         rows = measure_rows()
         assert len(rows) == 1, f"viewport {width}px expected 1 row, got {len(rows)}"
         assert len(rows[0]) == 7
+        assert page.locator(".platform-band-links a > span:last-child").evaluate_all(
+            "labels => labels.every(label => label.scrollWidth <= label.clientWidth)"
+        ), f"viewport {width}px truncated a directory label"
 
     # Tablet/laptop / pre-trigger desktop: the last row must never be a
     # single orphan button, including the viewports just below the 1120-px
