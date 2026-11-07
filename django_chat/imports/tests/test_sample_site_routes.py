@@ -356,7 +356,7 @@ def test_imported_sample_episode_detail_renders_copied_audio(
     assert "simplecast_transcript_html" not in content
     assert "Jake Howard" in content
     assert "<audio" not in content
-    assert "/media/cast_audio/django-chat-sample/django-tasks-jake-howard-" in content
+    assert "/media/cast_audio/django-chat-sample/django-tasks-jak-" in content
     # The django-vite asset tag must emit the prebuilt custom-player module on
     # episode pages with copied audio.
     assert "/static/cast/vite/customPlayer-" in content

@@ -6,12 +6,13 @@ import json
 import mimetypes
 import tempfile
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import unquote, urlparse
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from cast.models import Audio, Episode, Podcast, Season
 from django.conf import settings
@@ -126,6 +127,7 @@ class DownloadedAudioFile:
 class AudioSourceSelection:
     url: str
     kind: str
+    generation: tuple[Any, ...]
 
 
 @dataclass(frozen=True)
@@ -755,49 +757,62 @@ def _save_downloaded_episode_audio(
     downloaded_file: DownloadedAudioFile | None = None,
     storage_prefix: str,
 ) -> AudioCopyResult:
-    with transaction.atomic():
-        metadata = (
-            EpisodeSourceMetadata.objects.select_related("episode")
-            .select_for_update()
-            .get(pk=metadata.pk)
-        )
-        existing = _existing_audio_metadata(metadata)
-        audio = (
-            cast(Audio, existing.audio) if existing is not None else Audio(user=_get_import_user())
-        )
-        audio_created = audio.pk is None
-        _update_audio_record(
-            audio,
-            metadata,
-            source,
-            downloaded=downloaded,
-            downloaded_file=downloaded_file,
-            storage_prefix=storage_prefix,
-        )
-        audio_import_metadata, _ = EpisodeAudioImportMetadata.objects.update_or_create(
-            episode_metadata=metadata,
-            defaults={
-                "audio": audio,
-                "source_url": source.url,
-                "source_url_kind": source.kind,
-                "source_content_type": _downloaded_audio_content_type(
-                    downloaded=downloaded,
-                    downloaded_file=downloaded_file,
-                ),
-                "source_byte_size": _downloaded_source_byte_size(
-                    metadata,
-                    downloaded=downloaded,
-                    downloaded_file=downloaded_file,
-                ),
-                "copied_byte_size": _downloaded_copied_byte_size(
-                    downloaded=downloaded,
-                    downloaded_file=downloaded_file,
-                ),
-                "storage_name": cast(Any, audio).mp3.name,
-                "copied_at": timezone.now(),
-            },
-        )
-        _attach_episode_audio(metadata, audio)
+    owned_files: list[tuple[Any, str]] = []
+    try:
+        with transaction.atomic():
+            metadata = (
+                EpisodeSourceMetadata.objects.select_related("episode")
+                .select_for_update()
+                .get(pk=metadata.pk)
+            )
+            if _select_audio_source(metadata) != source:
+                raise ValueError("Audio source changed during download; rerun the import.")
+            existing = _existing_audio_metadata(metadata)
+            audio = (
+                cast(Audio, existing.audio)
+                if existing is not None
+                else Audio(user=_get_import_user())
+            )
+            audio_created = audio.pk is None
+            _update_audio_record(
+                audio,
+                metadata,
+                source,
+                downloaded=downloaded,
+                downloaded_file=downloaded_file,
+                storage_prefix=storage_prefix,
+                owned_files=owned_files,
+            )
+            audio_import_metadata, _ = EpisodeAudioImportMetadata.objects.update_or_create(
+                episode_metadata=metadata,
+                defaults={
+                    "audio": audio,
+                    "source_url": source.url,
+                    "source_url_kind": source.kind,
+                    "source_content_type": _downloaded_audio_content_type(
+                        downloaded=downloaded,
+                        downloaded_file=downloaded_file,
+                    ),
+                    "source_byte_size": _downloaded_source_byte_size(
+                        metadata,
+                        downloaded=downloaded,
+                        downloaded_file=downloaded_file,
+                    ),
+                    "copied_byte_size": _downloaded_copied_byte_size(
+                        downloaded=downloaded,
+                        downloaded_file=downloaded_file,
+                    ),
+                    "storage_name": cast(Any, audio).mp3.name,
+                    "copied_at": timezone.now(),
+                },
+            )
+            _attach_episode_audio(metadata, audio)
+
+    except BaseException:
+        for storage, name in owned_files:
+            with suppress(Exception):
+                storage.delete(name)
+        raise
 
     return AudioCopyResult(
         audio_metadata=audio_import_metadata,
@@ -831,21 +846,42 @@ def _existing_audio_matches_source(
     )
 
 
+def _audio_source_generation(metadata: EpisodeSourceMetadata) -> tuple[Any, ...]:
+    return tuple(
+        getattr(metadata, name)
+        for name in (
+            "episode_id",
+            "matching_key",
+            "rss_guid",
+            "simplecast_episode_id",
+            "simplecast_audio_file_url",
+            "simplecast_enclosure_url",
+            "original_rss_enclosure_url",
+            "audio_file_size",
+            "duration_seconds",
+            "source_updated_at",
+        )
+    )
+
+
 def _select_audio_source(metadata: EpisodeSourceMetadata) -> AudioSourceSelection:
     if metadata.simplecast_audio_file_url:
         return AudioSourceSelection(
             url=cast(str, metadata.simplecast_audio_file_url),
             kind="simplecast_audio_file_url",
+            generation=_audio_source_generation(metadata),
         )
     if metadata.simplecast_enclosure_url:
         return AudioSourceSelection(
             url=cast(str, metadata.simplecast_enclosure_url),
             kind="simplecast_enclosure_url",
+            generation=_audio_source_generation(metadata),
         )
     if metadata.original_rss_enclosure_url:
         return AudioSourceSelection(
             url=cast(str, metadata.original_rss_enclosure_url),
             kind="rss_enclosure_url",
+            generation=_audio_source_generation(metadata),
         )
     msg = f"Episode metadata has no audio source URL: {metadata.matching_key}"
     raise ValueError(msg)
@@ -859,6 +895,7 @@ def _update_audio_record(
     downloaded: DownloadedAudio | None = None,
     downloaded_file: DownloadedAudioFile | None = None,
     storage_prefix: str = SAMPLE_AUDIO_STORAGE_PREFIX,
+    owned_files: list[tuple[Any, str]] | None = None,
 ) -> None:
     audio_fields = cast(Any, audio)
     desired_user = audio_fields.user if audio_fields.user_id else _get_import_user()
@@ -898,6 +935,8 @@ def _update_audio_record(
             ContentFile(downloaded.content),
             save=False,
         )
+        if owned_files is not None:
+            owned_files.append((audio_fields.mp3.storage, audio_fields.mp3.name))
         needs_save = True
     if downloaded_file is not None:
         with downloaded_file.path.open("rb") as audio_file:
@@ -910,6 +949,8 @@ def _update_audio_record(
                 File(audio_file),
                 save=False,
             )
+        if owned_files is not None:
+            owned_files.append((audio_fields.mp3.storage, audio_fields.mp3.name))
         needs_save = True
     if needs_save:
         audio.save(duration=False, cache_file_sizes=False)
@@ -1014,7 +1055,9 @@ def _destination_audio_filename(
         or slugify(cast(str, metadata.source_title))
         or "episode"
     )
-    slug = slug[:48].strip("-") or "episode"
+    # Leave room in Audio.mp3's 100-character field for cast_audio/, the
+    # importer prefix, digest, full UUID and extension on overwrite backends.
+    slug = slug[:16].strip("-") or "episode"
     identifier = (
         cast(str, metadata.simplecast_episode_id)
         or cast(str, metadata.rss_guid)
@@ -1023,7 +1066,7 @@ def _destination_audio_filename(
     )
     digest = hashlib.sha256(identifier.encode()).hexdigest()[:12]
     extension = _audio_extension(downloaded)
-    return f"{storage_prefix}/{slug}-{digest}{extension}"
+    return f"{storage_prefix}/{slug}-{digest}-{uuid4().hex}{extension}"
 
 
 def _metadata_audio_file_size(metadata: EpisodeSourceMetadata) -> int | None:

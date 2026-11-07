@@ -871,3 +871,12 @@ match the downloader's byte count. Failed streamed downloads remove only their
 owned partial file; an existing destination is never overwritten. Catalog
 source byte counts remain provenance; a response's declared byte count takes
 precedence when the served representation differs.
+
+Audio publication compares the selected source URL/kind and its metadata
+identity, size, duration and upstream update timestamp again under the metadata
+row lock after downloading. A changed generation aborts with a rerun request;
+no network operation holds that lock. Each new audio file uses a unique storage
+key. If the audio/import-metadata/attachment transaction fails, only newly
+owned keys are removed and the original exception is preserved. Previous or
+shared files are retained. A later rollback of an enclosing caller transaction
+can still leave an unreferenced new audio key; storage is not transactional.

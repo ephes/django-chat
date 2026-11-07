@@ -15,6 +15,9 @@ acceptance criterion flips, or the next-action target changes.
   covered by synthetic transport and publication regressions. See the
   [transfer limits](local-development.md#live-import-transfer-limits).
 
+- Audio publication fences source generations after download and compensates
+  newly owned files when persistence fails, preserving existing audio.
+
 ## Slice Status
 
 PRD slice list: research doc "Suggested Implementation Slices" section.

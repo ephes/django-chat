@@ -494,9 +494,7 @@ def test_sample_import_can_copy_audio_with_fake_downloader(tmp_path: Path) -> No
     assert audio_metadata.source_content_type == "audio/mpeg"
     assert audio_metadata.source_byte_size == 74615234
     assert audio_metadata.copied_byte_size == len(_fake_audio_content(audio_metadata.source_url))
-    assert audio_metadata.storage_name.startswith(
-        "cast_audio/django-chat-sample/django-tasks-jake-howard-"
-    )
+    assert audio_metadata.storage_name.startswith("cast_audio/django-chat-sample/django-tasks-jak-")
     assert (tmp_path / audio_metadata.storage_name).exists()
 
     latest_episode = cast(Episode, latest_metadata.episode)
@@ -584,7 +582,9 @@ def test_sample_audio_copy_redownloads_missing_stored_file(tmp_path: Path) -> No
     assert result.audio_created == 0
     assert result.audio_copied == 1
     assert second_downloader.urls == [audio_metadata.source_url]
-    assert stored_file.exists()
+    audio_metadata.refresh_from_db()
+    assert (tmp_path / audio_metadata.storage_name).exists()
+    assert not stored_file.exists()
 
 
 @pytest.mark.django_db
