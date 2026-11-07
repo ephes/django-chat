@@ -3,7 +3,16 @@
 from __future__ import annotations
 
 import json
+import math
+import re
+import shutil
+import socket
+import tempfile
+import threading
+import time
+from contextlib import suppress
 from datetime import UTC, datetime
+from http.client import HTTPException
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
@@ -23,6 +32,8 @@ from django_chat.imports.url_safety import safe_urlopen
 DEFAULT_FIXTURE_DIR = Path(
     "django_chat/imports/tests/fixtures/django_chat_source",
 )
+MAX_RESPONSE_BYTES = 16 * 1024 * 1024
+READ_CHUNK_BYTES = 64 * 1024
 USER_AGENT = "django-chat-fixture-capture/1.0"
 RSS_FIXTURE_NAMESPACES = {
     "atom": "http://www.w3.org/2005/Atom",
@@ -32,6 +43,10 @@ RSS_FIXTURE_NAMESPACES = {
     "media": "http://search.yahoo.com/mrss/",
     "podcast": "https://podcastindex.org/namespace/1.0",
 }
+
+
+class FixtureRecoveryRequired(CommandError):
+    """Publication rollback failed; retain the private recovery directory."""
 
 
 class Command(BaseCommand):
@@ -56,7 +71,7 @@ class Command(BaseCommand):
             "--timeout",
             type=float,
             default=30.0,
-            help="Per-request timeout in seconds. Default: 30.",
+            help="Response transfer deadline in seconds (finite and positive). Default: 30.",
         )
         parser.add_argument(
             "--latest-limit",
@@ -78,12 +93,38 @@ class Command(BaseCommand):
         latest_limit = int(options["latest_limit"])
         oldest_limit = int(options["oldest_limit"])
 
+        if not math.isfinite(timeout) or timeout <= 0:
+            raise CommandError("--timeout must be finite and positive.")
+
         if latest_limit < 1 or oldest_limit < 1:
             msg = "--latest-limit and --oldest-limit must be positive integers."
             raise CommandError(msg)
 
-        output_dir.mkdir(parents=True, exist_ok=True)
+        output_dir.parent.mkdir(parents=True, exist_ok=True)
+        staging = Path(tempfile.mkdtemp(prefix=".django-chat-fixtures-", dir=output_dir.parent))
+        preserve = False
+        try:
+            corpus = staging / "corpus"
+            corpus.mkdir()
+            self._capture(
+                corpus, timeout=timeout, latest_limit=latest_limit, oldest_limit=oldest_limit
+            )
+            self._publish(corpus, output_dir, backup=staging / "backup", force=force)
+        except FixtureRecoveryRequired:
+            preserve = True
+            raise
+        except (OSError, ValueError, ElementTree.ParseError) as exc:
+            raise CommandError("Fixture capture failed; no new generation was published.") from exc
+        finally:
+            if not preserve:
+                shutil.rmtree(staging)
 
+        self.stdout.write(self.style.SUCCESS(f"Captured fixtures in {output_dir}"))
+
+    def _capture(
+        self, output_dir: Path, *, timeout: float, latest_limit: int, oldest_limit: int
+    ) -> None:
+        force = False  # All writes are to a new private staging directory.
         captured_files: dict[str, str] = {}
         rss_feed = self._rss_fixture(
             self._fetch_text(RSS_FEED_URL, timeout=timeout),
@@ -175,24 +216,78 @@ class Command(BaseCommand):
         }
         self._write_json(output_dir / "manifest.json", manifest, force=force)
 
-        self.stdout.write(self.style.SUCCESS(f"Captured fixtures in {output_dir}"))
-
     def _resolve_output_dir(self, output_dir: Path) -> Path:
         if output_dir.is_absolute():
             return output_dir
         return Path(settings.ROOT_DIR) / output_dir
 
+    @staticmethod
+    def _response_socket(response: Any, *, timeout: float) -> socket.socket:
+        # Keep our own socket reference: HTTPResponse can close its fd during
+        # read1 at EOF, before our finally block runs. These are public APIs.
+        wrapper = socket.socket(fileno=response.fileno())
+        try:
+            connection = wrapper.dup()
+        finally:
+            wrapper.detach()  # The response owns the original descriptor.
+        connection.settimeout(timeout)
+        return connection
+
+    @staticmethod
+    def _interrupt_socket(connection: socket.socket, expired: threading.Event) -> None:
+        expired.set()
+        # The response may already have reached EOF.
+        with suppress(OSError):
+            connection.shutdown(socket.SHUT_RDWR)
+
     def _fetch_text(self, url: str, *, timeout: float) -> str:
-        # `url` for the site/episode fetches comes from remote Simplecast
-        # responses; route through the SSRF guard like the runtime importers.
-        with safe_urlopen(url, timeout=timeout, headers={"User-Agent": USER_AGENT}) as response:
-            return response.read().decode("utf-8")
+        if not math.isfinite(timeout) or timeout <= 0:
+            raise CommandError("--timeout must be finite and positive.")
+        deadline = time.monotonic() + timeout
+        expired = threading.Event()
+        content = bytearray()
+        try:
+            with (
+                safe_urlopen(url, timeout=timeout, headers={"User-Agent": USER_AGENT}) as response,
+                self._response_socket(response, timeout=timeout) as connection,
+            ):
+                watchdog = threading.Timer(
+                    max(0, deadline - time.monotonic()),
+                    self._interrupt_socket,
+                    args=(connection, expired),
+                )
+                watchdog.daemon = True
+                watchdog.start()
+                try:
+                    while True:
+                        if expired.is_set() or time.monotonic() >= deadline:
+                            raise CommandError("Fixture response exceeded its transfer deadline.")
+                        chunk = response.read1(
+                            min(READ_CHUNK_BYTES, MAX_RESPONSE_BYTES + 1 - len(content))
+                        )
+                        if expired.is_set() or time.monotonic() >= deadline:
+                            raise CommandError("Fixture response exceeded its transfer deadline.")
+                        content.extend(chunk)
+                        if len(content) > MAX_RESPONSE_BYTES:
+                            raise CommandError("Fixture response exceeded the 16 MiB size limit.")
+                        if not chunk:
+                            return content.decode("utf-8")
+                finally:
+                    watchdog.cancel()
+                    watchdog.join()
+        except (OSError, ValueError, HTTPException) as exc:
+            if expired.is_set() or time.monotonic() >= deadline:
+                raise CommandError("Fixture response exceeded its transfer deadline.") from exc
+            raise CommandError("Fixture response could not be fetched or decoded.") from exc
 
     def _fetch_json(self, url: str, *, timeout: float) -> dict[str, Any]:
         text = self._fetch_text(url, timeout=timeout)
-        payload = json.loads(text)
+        try:
+            payload = json.loads(text)
+        except ValueError as exc:
+            raise CommandError("Fixture response is not valid JSON.") from exc
         if not isinstance(payload, dict):
-            msg = f"Expected JSON object from {url}"
+            msg = "Expected a JSON object in the fixture response."
             raise CommandError(msg)
         return payload
 
@@ -207,6 +302,69 @@ class Command(BaseCommand):
             path,
             json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
             force=force,
+        )
+
+    def _publish(self, corpus: Path, output_dir: Path, *, backup: Path, force: bool) -> None:
+        names = {path.name for path in corpus.iterdir()}
+        previous: set[str] = set()
+        manifest = output_dir / "manifest.json"
+        if manifest.exists():
+            payload = json.loads(manifest.read_text(encoding="utf-8"))
+            files = payload.get("files") if isinstance(payload, dict) else None
+            if not isinstance(files, dict) or any(not self._fixture_name(name) for name in files):
+                raise CommandError("Existing fixture manifest is invalid; publication refused.")
+            previous = set(files)
+        # Manifest is the commit marker; publish it after additions and removals.
+        ordered = sorted((names | previous) - {"manifest.json"}) + ["manifest.json"]
+        if not force and any((output_dir / name).exists() for name in ordered):
+            raise CommandError("Fixtures already exist; pass --force to overwrite fixtures.")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        backup.mkdir()
+        existed = {name for name in ordered if (output_dir / name).exists()}
+        for name in existed:
+            shutil.copy2(output_dir / name, backup / name)
+        (backup / "recovery.json").write_text(
+            json.dumps({"restore": sorted(existed), "remove": sorted(set(ordered) - existed)}),
+            encoding="utf-8",
+        )
+        restore_dir = backup.parent / "restore"
+        restore_dir.mkdir()
+        changed: list[str] = []
+        try:
+            for name in ordered:
+                changed.append(name)
+                target = output_dir / name
+                if name in names:
+                    (corpus / name).replace(target)
+                else:
+                    target.unlink(missing_ok=True)
+        except BaseException as exc:
+            failed_restores: list[str] = []
+            for name in reversed(changed):
+                try:
+                    target = output_dir / name
+                    if name in existed:
+                        shutil.copy2(backup / name, restore_dir / name)
+                        (restore_dir / name).replace(target)
+                    else:
+                        target.unlink(missing_ok=True)
+                except BaseException:
+                    failed_restores.append(name)
+            if failed_restores:
+                raise FixtureRecoveryRequired(
+                    f"Fixture rollback failed for {', '.join(failed_restores)}; "
+                    f"recover using {backup / 'recovery.json'} and its complete backup."
+                ) from exc
+            if isinstance(exc, OSError):
+                raise CommandError(
+                    "Fixture publication failed; previous generation restored."
+                ) from exc
+            raise
+
+    @staticmethod
+    def _fixture_name(name: str) -> bool:
+        return name == "rss_feed.xml" or bool(
+            re.fullmatch(r"simplecast_[A-Za-z0-9_-]+\.json", name)
         )
 
     def _rss_fixture(self, xml_text: str, *, latest_limit: int, oldest_limit: int) -> str:
@@ -269,12 +427,14 @@ class Command(BaseCommand):
         number = payload.get("number")
         slug = payload.get("slug")
         episode_id = payload.get("id")
+        filename = ""
         if isinstance(number, int) and isinstance(slug, str) and slug:
-            return f"simplecast_episode_detail_{number}_{slug}.json"
-        if isinstance(episode_id, str) and episode_id:
-            return f"simplecast_episode_detail_{episode_id}.json"
-        msg = "Episode detail response does not include a usable number/slug or ID."
-        raise CommandError(msg)
+            filename = f"simplecast_episode_detail_{number}_{slug}.json"
+        elif isinstance(episode_id, str) and episode_id:
+            filename = f"simplecast_episode_detail_{episode_id}.json"
+        if self._fixture_name(filename):
+            return filename
+        raise CommandError("Episode detail response does not include a safe fixture identifier.")
 
     def _podcast_fixture(self, payload: dict[str, Any]) -> dict[str, Any]:
         return {

@@ -64,6 +64,9 @@ Run tests:
 just test
 ```
 
+Source fixture capture uses bounded responses and stages a complete corpus before
+publication; see the [fixture refresh guarantees](docs/local-development.md#source-data-fixtures).
+
 Import the local fixture-backed podcast/episode sample:
 
 ```sh

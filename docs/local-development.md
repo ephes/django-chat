@@ -257,6 +257,29 @@ files only; it does not create database rows, Wagtail pages, django-cast
 objects, media files, S3 objects, or transcript conversions. Review refreshed
 fixtures before committing them and keep only public, non-secret source data.
 
+Each response is limited to 16 MiB before UTF-8/JSON/XML decoding. `--timeout`
+(default 30 seconds) must be finite and positive; response reads check a
+monotonic transfer deadline. After opening the response, a watchdog interrupts
+stalled body reads, including incomplete chunk framing, at the remaining
+deadline. Connection setup, TLS and response headers use the requested socket
+inactivity timeout. The public-address/DNS pinning and
+redirect checks still apply to every URL, including source-provided links.
+Malformed or oversized responses produce fixed `CommandError` diagnostics.
+
+The complete selected corpus is fetched and serialized in a private sibling
+staging directory before publication starts. Existing fixtures require
+`--force`. Publication replaces each file atomically, removes obsolete files
+listed by the previous manifest, and replaces the manifest last. Other files
+are preserved. Fetch, validation and staging-write failures leave the old corpus
+untouched; publication errors or interruptions restore its previous bytes and manifest.
+Staging is removed after success or successful rollback. If rollback itself
+fails, the command retains the complete private backup directory and a `recovery.json`
+list of files to restore/remove, and reports failed restores for manual recovery.
+Run capture with no concurrent readers or writers: this
+is an exception rollback boundary, not a crash-durable multi-file transaction.
+No fixture generation is published by CI, whose capture tests use synthetic
+HTTP responses and injected filesystem failures only.
+
 ## Sample Import
 
 The sample import adds a write-side local import for the committed source
