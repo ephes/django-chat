@@ -117,7 +117,11 @@ internals as a strict typing target.
 runs the same steps as `just check` (`uv sync --locked`, ruff lint, ruff format
 check, `ty`, pytest). Test settings use in-memory SQLite and local file storage,
 so the `check` job needs no database service and no secrets; browser tests
-stay skipped. The `migrate` job runs `manage.py migrate` against an empty
+stay skipped there. A separate `browser` job installs Chromium and its Linux
+dependencies, sets `DJANGO_CHAT_BROWSER_TESTS=1`, and runs the full browser suite
+against SQLite and local synthetic media (18 cases collected on 2026-11-07). The `docs` job runs `just docs-check`
+with locked dependencies. Neither job needs staging credentials or publishes
+artifacts. The `migrate` job runs `manage.py migrate` against an empty
 PostgreSQL 17 service database and an empty SQLite file, then
 `makemigrations --check`. SQLite lets some migration-ordering mistakes slip
 through (a data migration that saves a Wagtail page indexes it immediately, and
@@ -181,7 +185,10 @@ just docs-build
 ```
 
 The build validates internal links and heading anchors, so run `just docs-build`
-after editing docs to catch broken cross-references.
+after editing docs to catch broken cross-references. The CI gate, `just docs-check`,
+also checks that every configured navigation page exists, then copies the docs
+and configuration into temporary storage and runs `zensical build --strict`.
+Warnings fail the gate; output and build cache are removed on completion.
 
 ## Browser Checks
 
@@ -201,7 +208,9 @@ just test-browser
 
 The browser tests are opt-in. The normal `just test` suite skips them unless
 `DJANGO_CHAT_BROWSER_TESTS=1` is set, so day-to-day Python tests do not require
-a local browser install.
+a local browser install. CI always enables the separate Chromium suite; on Linux,
+install browser system dependencies with
+`uv run --locked python -m playwright install --with-deps chromium`.
 
 ## Git Hooks
 

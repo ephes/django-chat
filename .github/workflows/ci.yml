@@ -4,7 +4,7 @@ name: CI
 # from-scratch `migrate` on PostgreSQL 17 and SQLite, plus a pip-audit of the
 # locked dependencies. Test settings use in-memory SQLite and local file
 # storage; only the migrate job starts a PostgreSQL service. No secrets needed.
-# Browser tests stay skipped (they need DJANGO_CHAT_BROWSER_TESTS=1).
+# Dedicated browser and rendered-documentation jobs also run without secrets.
 
 on:
   push:
@@ -57,6 +57,51 @@ jobs:
         run: uv run --locked ty check config django_chat manage.py
       - name: Tests (just test)
         run: uv run --locked pytest
+
+  browser:
+    name: Chromium browser tests
+    env:
+      DJANGO_CHAT_BROWSER_TESTS: "1"
+      DJANGO_READ_DOT_ENV_FILE: "false"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.13.6"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Sync locked dependencies
+        run: uv sync --locked
+      - name: Install Chromium and system dependencies
+        run: uv run --locked python -m playwright install --with-deps chromium
+      - name: Run browser suite (SQLite and local synthetic media)
+        run: uv run --locked pytest django_chat/core/tests/test_browser_js.py
+
+  docs:
+    name: Render documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.13.6"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Sync locked dependencies
+        run: uv sync --locked
+      - name: Validate navigation and build rendered docs in temporary storage
+        run: uv run --locked python scripts/check_docs.py
 
   migrate:
     # The tests build their database from migrations on SQLite, which tolerates
