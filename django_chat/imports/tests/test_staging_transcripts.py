@@ -110,7 +110,9 @@ def test_import_staging_transcripts_uses_overridden_default_podcast_slug(tmp_pat
 
 
 @pytest.mark.django_db
-def test_import_staging_transcripts_replaces_existing_files(tmp_path: Any) -> None:
+def test_import_staging_transcripts_replaces_existing_files(
+    tmp_path: Any, django_capture_on_commit_callbacks: Any
+) -> None:
     fetcher = FakeStagingFetcher()
 
     with override_settings(MEDIA_ROOT=tmp_path):
@@ -120,11 +122,12 @@ def test_import_staging_transcripts_replaces_existing_files(tmp_path: Any) -> No
             slugs=["django-tasks-jake-howard"],
             text_fetcher=fetcher,
         )
-        second = import_staging_transcripts(
-            host="https://staging.example.test",
-            slugs=["django-tasks-jake-howard"],
-            text_fetcher=fetcher,
-        )
+        with django_capture_on_commit_callbacks(execute=True):
+            second = import_staging_transcripts(
+                host="https://staging.example.test",
+                slugs=["django-tasks-jake-howard"],
+                text_fetcher=fetcher,
+            )
         transcript_dir = tmp_path / "cast_transcript" / "django-chat-staging"
         transcript_files = sorted(path.name for path in transcript_dir.iterdir())
 

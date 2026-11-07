@@ -11,10 +11,13 @@ through :func:`validate_outbound_url` first.
 
 from __future__ import annotations
 
+import hashlib
 import http.client
 import ipaddress
 import socket
+from email.message import Message
 from typing import Any
+from urllib.error import HTTPError
 from urllib.parse import urlparse
 from urllib.request import (
     HTTPHandler,
@@ -29,6 +32,11 @@ ALLOWED_SCHEMES = frozenset({"http", "https"})
 
 class UnsafeURLError(ValueError):
     """Raised when an outbound fetch target is not a safe public http(s) URL."""
+
+
+def safe_url_label(url: str) -> str:
+    """Bounded correlation identifier; no URL components or credentials escape."""
+    return "url-sha256:" + hashlib.sha256(url.encode("utf-8", errors="replace")).hexdigest()[:12]
 
 
 def _is_disallowed_address(host: str) -> bool:
@@ -60,16 +68,19 @@ def validate_outbound_url(url: str) -> str:
     private, loopback, link-local, reserved, multicast, or unspecified
     addresses (notably the cloud metadata endpoint ``169.254.169.254``).
     """
-    parsed = urlparse(url)
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname
+    except ValueError:
+        raise UnsafeURLError(f"refusing malformed URL ({safe_url_label(url)})") from None
     if parsed.scheme.lower() not in ALLOWED_SCHEMES:
-        msg = f"refusing to fetch non-http(s) URL: {url!r}"
+        msg = f"refusing to fetch non-http(s) URL ({safe_url_label(url)})"
         raise UnsafeURLError(msg)
-    host = parsed.hostname
     if not host:
-        msg = f"refusing to fetch URL without a host: {url!r}"
+        msg = f"refusing to fetch URL without a host ({safe_url_label(url)})"
         raise UnsafeURLError(msg)
     if _is_disallowed_address(host):
-        msg = f"refusing to fetch URL resolving to a non-public address: {url!r}"
+        msg = f"refusing to fetch URL resolving to a non-public address ({safe_url_label(url)})"
         raise UnsafeURLError(msg)
     return url
 
@@ -86,7 +97,7 @@ def _resolve_global_ip(host: str, port: int | None) -> str:
     try:
         infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
     except OSError as exc:
-        msg = f"could not resolve host {host!r}"
+        msg = f"could not resolve host ({safe_url_label(host)})"
         raise UnsafeURLError(msg) from exc
     addresses: list[str] = []
     for info in infos:
@@ -96,11 +107,11 @@ def _resolve_global_ip(host: str, port: int | None) -> str:
         except ValueError:
             continue
         if not ip.is_global:
-            msg = f"host {host!r} resolved to a non-public address: {address}"
+            msg = f"host resolved to a non-public address ({safe_url_label(host)})"
             raise UnsafeURLError(msg)
         addresses.append(address)
     if not addresses:
-        msg = f"could not resolve host {host!r} to a usable address"
+        msg = f"could not resolve host to a usable address ({safe_url_label(host)})"
         raise UnsafeURLError(msg)
     return addresses[0]
 
@@ -185,4 +196,14 @@ def safe_urlopen(
         _ValidatingRedirectHandler(),
     )
     request = Request(url, headers=headers or {})
-    return opener.open(request, timeout=timeout)
+    try:
+        return opener.open(request, timeout=timeout)
+    except UnsafeURLError:
+        raise
+    except HTTPError as exc:
+        exc.close()
+        raise HTTPError(
+            safe_url_label(url), exc.code, "HTTP fetch failed", Message(), None
+        ) from None
+    except OSError, ValueError, http.client.HTTPException:
+        raise OSError(f"HTTP fetch failed ({safe_url_label(url)})") from None

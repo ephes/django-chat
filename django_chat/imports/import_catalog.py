@@ -48,7 +48,7 @@ from django_chat.imports.transfer_limits import (
     bounded_chunks,
     transfer_deadline,
 )
-from django_chat.imports.url_safety import safe_urlopen
+from django_chat.imports.url_safety import safe_url_label, safe_urlopen
 
 USER_AGENT = "django-chat-catalog-import/1.0"
 
@@ -276,7 +276,7 @@ def _episode_audio_byte_size(episode: EpisodeSourceData) -> int | None:
 def default_fetch_json(source_url: str, timeout: float) -> JsonObject:
     payload = json.loads(default_fetch_text(source_url, timeout))
     if not isinstance(payload, dict):
-        msg = f"Expected JSON object from {source_url}"
+        msg = f"Expected JSON object ({safe_url_label(source_url)})"
         raise ValueError(msg)
     return payload
 

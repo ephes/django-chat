@@ -5,29 +5,36 @@ import re
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
+from functools import partial
 from html.parser import HTMLParser
 from typing import Any, cast
+from urllib.error import HTTPError
 from urllib.parse import parse_qs, quote, urljoin, urlparse
 from uuid import uuid4
 
-from cast.models import Episode
+from cast.models import Audio, Episode
 from cast.transcripts.webvtt import escape_cue_text, webvtt_timestamp_to_ms
 from django.apps import apps
 from django.conf import settings
 from django.core.files.base import ContentFile
+from django.db import router, transaction
 
 from django_chat.imports.transfer_limits import (
     TEXT_MAX_BYTES,
     bounded_chunks,
     transfer_deadline,
 )
-from django_chat.imports.url_safety import safe_urlopen
+from django_chat.imports.url_safety import UnsafeURLError, safe_url_label, safe_urlopen
 
 USER_AGENT = "django-chat-staging-transcript-import/1.0"
 DEFAULT_STAGING_HOST = "https://djangochat.staging.django-cast.com"
 
 TextFetcher = Callable[[str, float], str]
 JsonObject = dict[str, Any]
+
+
+class StagingTranscriptError(ValueError):
+    """Fixed safe diagnostics produced by the staging markup/schema validators."""
 
 
 @dataclass(frozen=True)
@@ -133,14 +140,24 @@ def import_staging_transcript_for_episode(
         podlove_api_url = extract_podlove_api_url(detail_html, base_url=episode_url)
         podlove_payload = json.loads(fetch_text(podlove_api_url, timeout))
         if not isinstance(podlove_payload, dict):
-            raise ValueError("staging Podlove response must be an object")
+            raise StagingTranscriptError("staging Podlove response must be an object")
         segments = _normalized_segments(podlove_payload.get("transcripts"))
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         return StagingTranscriptImportItem(
             slug=episode_slug,
             imported=False,
             segment_count=0,
-            reason=str(exc),
+            reason=(
+                "staging fetch rejected by URL safety policy"
+                if isinstance(exc, UnsafeURLError)
+                else f"staging fetch failed (HTTP {exc.code})"
+                if isinstance(exc, HTTPError)
+                else str(exc)
+                if isinstance(exc, StagingTranscriptError)
+                else "staging fetch failed (network error)"
+                if isinstance(exc, OSError)
+                else "invalid staging response (markup, JSON, schema or transfer budget)"
+            ),
         )
 
     if not segments:
@@ -152,36 +169,49 @@ def import_staging_transcript_for_episode(
         )
 
     transcript_model = cast(Any, apps.get_model("cast", "Transcript"))
-    transcript, _created = transcript_model.objects.get_or_create(audio=episode.podcast_audio)
-    podlove = {"transcripts": segments}
+    alias = router.db_for_write(transcript_model, instance=episode.podcast_audio)
     replacements = []
-    try:
-        replacements.append(
-            _replace_text_file(
-                transcript.podlove,
-                f"django-chat-staging/{episode_slug}.podlove.json",
-                podlove,
+    with transaction.atomic(using=alias):
+        try:
+            # A stable parent lock also serializes the first transcript creation.
+            Audio.objects.using(alias).select_for_update().get(
+                pk=cast(Any, episode).podcast_audio_id
             )
-        )
-        replacements.append(
-            _replace_file(
-                transcript.vtt,
-                f"django-chat-staging/{episode_slug}.vtt",
-                ContentFile(podlove_segments_to_vtt(segments)),
+            transcript, _created = (
+                transcript_model.objects.using(alias)
+                .select_for_update()
+                .get_or_create(audio_id=cast(Any, episode).podcast_audio_id)
             )
-        )
-        replacements.append(
-            _replace_text_file(
-                transcript.dote,
-                f"django-chat-staging/{episode_slug}.dote.json",
-                podlove_segments_to_dote(segments),
+            podlove = {"transcripts": segments}
+            replacements.append(
+                _replace_text_file(
+                    transcript.podlove,
+                    f"django-chat-staging/{episode_slug}.podlove.json",
+                    podlove,
+                )
             )
-        )
-        transcript.save(update_fields=["podlove", "vtt", "dote"])
-    except BaseException:
-        _delete_replacement_files(replacements, use_new=True)
-        raise
-    _delete_replacement_files(replacements, use_new=False)
+            replacements.append(
+                _replace_file(
+                    transcript.vtt,
+                    f"django-chat-staging/{episode_slug}.vtt",
+                    ContentFile(podlove_segments_to_vtt(segments)),
+                )
+            )
+            replacements.append(
+                _replace_text_file(
+                    transcript.dote,
+                    f"django-chat-staging/{episode_slug}.dote.json",
+                    podlove_segments_to_dote(segments),
+                )
+            )
+            transcript.save(using=alias, update_fields=["podlove", "vtt", "dote"])
+            transaction.on_commit(
+                partial(_delete_replacement_files, tuple(replacements), use_new=False),
+                using=alias,
+            )
+        except BaseException:
+            _delete_replacement_files(replacements, use_new=True)
+            raise
 
     return StagingTranscriptImportItem(
         slug=episode_slug,
@@ -205,30 +235,30 @@ def extract_podlove_api_url(html: str, *, base_url: str) -> str:
     payload_text = parser.payload_text()
     if not payload_text:
         msg = "staging episode page did not contain a cast-audio-player payload"
-        raise ValueError(msg)
+        raise StagingTranscriptError(msg)
     try:
         payload = json.loads(payload_text)
-    except json.JSONDecodeError as exc:
-        msg = f"staging cast-audio-player payload is not valid JSON: {exc}"
-        raise ValueError(msg) from None
+    except json.JSONDecodeError:
+        msg = "staging cast-audio-player payload is not valid JSON"
+        raise StagingTranscriptError(msg) from None
     audio_id = payload.get("audioId") if isinstance(payload, dict) else None
     if not isinstance(audio_id, int) or isinstance(audio_id, bool):
         msg = "staging cast-audio-player payload has no numeric audioId"
-        raise ValueError(msg)
+        raise StagingTranscriptError(msg)
     transcript = payload.get("transcript")
     transcript_url = str(transcript.get("url") or "") if isinstance(transcript, dict) else ""
     if not transcript_url:
         msg = "staging episode page exposes no transcript for this episode"
-        raise ValueError(msg)
+        raise StagingTranscriptError(msg)
     post_id_values = parse_qs(urlparse(transcript_url).query).get("post_id", [])
     post_id = post_id_values[0] if post_id_values else ""
     if not post_id.isdigit():
         msg = "staging cast-audio-player transcript URL has no numeric post_id"
-        raise ValueError(msg)
+        raise StagingTranscriptError(msg)
     base = urlparse(base_url)
     if base.scheme not in {"http", "https"} or not base.netloc:
-        msg = f"unexpected staging episode page URL: {base_url!r}"
-        raise ValueError(msg)
+        msg = f"unexpected staging episode page URL ({safe_url_label(base_url)})"
+        raise StagingTranscriptError(msg)
     return f"{base.scheme}://{base.netloc}/api/audios/podlove/{audio_id}/post/{post_id}/"
 
 
@@ -277,17 +307,19 @@ def _normalized_segments(value: Any) -> list[JsonObject]:
     if value is None:
         return []
     if not isinstance(value, list) or len(value) > 100_000:
-        raise ValueError("staging transcript segments must be a list of at most 100000 items")
+        raise StagingTranscriptError(
+            "staging transcript segments must be a list of at most 100000 items"
+        )
     segments = []
     previous_start = -1
     for segment in value:
         if not isinstance(segment, dict):
-            raise ValueError("staging transcript segment must be an object")
+            raise StagingTranscriptError("staging transcript segment must be an object")
         text = segment.get("text")
         if text is None or (isinstance(text, str) and not text.strip()):
             continue  # Upstream diarization may include empty gap segments.
         if not isinstance(text, str) or len(text) > 16_384:
-            raise ValueError(
+            raise StagingTranscriptError(
                 "staging transcript text must be a nonempty string of at most 16384 characters"
             )
         times: dict[str, int] = {}
@@ -296,18 +328,20 @@ def _normalized_segments(value: Any) -> list[JsonObject]:
             if not isinstance(timestamp, str) or not re.fullmatch(
                 r"[0-9]{2,6}:[0-5][0-9]:[0-5][0-9]\.[0-9]{1,3}", timestamp
             ):
-                raise ValueError("staging transcript timestamps must use HH:MM:SS.mmm")
+                raise StagingTranscriptError("staging transcript timestamps must use HH:MM:SS.mmm")
             milliseconds = webvtt_timestamp_to_ms(timestamp)
             if milliseconds is None:
-                raise ValueError("invalid staging transcript timestamp")
+                raise StagingTranscriptError("invalid staging transcript timestamp")
             supplied = segment.get(f"{key}_ms")
             if supplied is None:
                 supplied = milliseconds
             if type(supplied) is not int or supplied != milliseconds:
-                raise ValueError("staging transcript milliseconds disagree with timestamps")
+                raise StagingTranscriptError(
+                    "staging transcript milliseconds disagree with timestamps"
+                )
             times[key] = milliseconds
         if times["start"] < previous_start or times["end"] < times["start"]:
-            raise ValueError("staging transcript timestamps must be ordered")
+            raise StagingTranscriptError("staging transcript timestamps must be ordered")
         previous_start = times["start"]
         labels = {}
         for key in ("speaker", "voice"):
@@ -315,7 +349,7 @@ def _normalized_segments(value: Any) -> list[JsonObject]:
             if label is None:
                 label = ""
             if not isinstance(label, str) or len(label) > 255:
-                raise ValueError(
+                raise StagingTranscriptError(
                     "staging transcript labels must be strings of at most 255 characters"
                 )
             labels[key] = label

@@ -883,7 +883,7 @@ def _select_audio_source(metadata: EpisodeSourceMetadata) -> AudioSourceSelectio
             kind="rss_enclosure_url",
             generation=_audio_source_generation(metadata),
         )
-    msg = f"Episode metadata has no audio source URL: {metadata.matching_key}"
+    msg = f"Episode metadata has no audio source URL (id={metadata.pk})"
     raise ValueError(msg)
 
 
