@@ -854,3 +854,20 @@ all live imported episodes, a Voxhelm-generated transcript demo at
 Wagtail-triggered transcript generation. Full host review should follow the
 current next-action guidance in
 `docs/implementation-status.md`.
+
+## Live import transfer limits
+
+Default catalog metadata and staging transcript fetches accept at most 16 MiB
+per response; cover images accept 20 MiB. Their transfer deadline is the
+request timeout (60 seconds for sample covers). Audio copying allows at most
+1 GiB per episode and 30 minutes for a complete body, with the existing
+per-operation socket timeout. Reads are bounded, stalled bodies are interrupted,
+and responses always close. Encoded bodies are rejected rather than inflated.
+The destination policy, DNS pinning and redirect validation still apply.
+
+Both audio paths verify Content-Length when supplied, otherwise the source
+metadata size, before publishing. The actual temporary file size must also
+match the downloader's byte count. Failed streamed downloads remove only their
+owned partial file; an existing destination is never overwritten. Catalog
+source byte counts remain provenance; a response's declared byte count takes
+precedence when the served representation differs.

@@ -42,6 +42,12 @@ from django_chat.imports.source_data import (
     parse_simplecast_podcast,
     parse_simplecast_site,
 )
+from django_chat.imports.transfer_limits import (
+    IMAGE_MAX_BYTES,
+    TEXT_MAX_BYTES,
+    bounded_chunks,
+    transfer_deadline,
+)
 from django_chat.imports.url_safety import safe_urlopen
 
 USER_AGENT = "django-chat-catalog-import/1.0"
@@ -248,8 +254,11 @@ def build_import_plan(source_data: ImportSourceData) -> ImportPlan:
 
 
 def default_fetch_text(source_url: str, timeout: float) -> str:
+    deadline = transfer_deadline(timeout)
     with safe_urlopen(source_url, timeout=timeout, headers={"User-Agent": USER_AGENT}) as response:
-        return response.read().decode("utf-8")
+        return b"".join(
+            bounded_chunks(response, max_bytes=TEXT_MAX_BYTES, deadline=deadline, timeout=timeout)
+        ).decode("utf-8")
 
 
 def _episode_audio_byte_size(episode: EpisodeSourceData) -> int | None:
@@ -281,10 +290,15 @@ def timed_stream_audio_downloader(timeout: float) -> StreamingAudioDownloader:
 
 def live_cover_image_downloader(timeout: float) -> ImageDownloader:
     def download(source_url: str) -> bytes:
+        deadline = transfer_deadline(timeout)
         with safe_urlopen(
             source_url, timeout=timeout, headers={"User-Agent": USER_AGENT}
         ) as response:
-            return response.read()
+            return b"".join(
+                bounded_chunks(
+                    response, max_bytes=IMAGE_MAX_BYTES, deadline=deadline, timeout=timeout
+                )
+            )
 
     return download
 

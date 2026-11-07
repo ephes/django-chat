@@ -14,6 +14,11 @@ from django.apps import apps
 from django.conf import settings
 from django.core.files.base import ContentFile
 
+from django_chat.imports.transfer_limits import (
+    TEXT_MAX_BYTES,
+    bounded_chunks,
+    transfer_deadline,
+)
 from django_chat.imports.url_safety import safe_urlopen
 
 USER_AGENT = "django-chat-staging-transcript-import/1.0"
@@ -253,12 +258,15 @@ def podlove_segments_to_dote(segments: list[JsonObject]) -> JsonObject:
 
 
 def default_fetch_text(url: str, timeout: float) -> str:
+    deadline = transfer_deadline(timeout)
     with safe_urlopen(
         url,
         timeout=timeout,
         headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/json;q=0.9,*/*;q=0.8"},
     ) as response:
-        return response.read().decode("utf-8")
+        return b"".join(
+            bounded_chunks(response, max_bytes=TEXT_MAX_BYTES, deadline=deadline, timeout=timeout)
+        ).decode("utf-8")
 
 
 def _normalized_segments(value: Any) -> list[JsonObject]:
