@@ -27,6 +27,7 @@ from django_chat.imports.live_feed_parity import (
     fetch_feed_bytes,
 )
 from django_chat.imports.source_data import RSS_FEED_URL, parse_rss_feed
+from django_chat.imports.url_safety import safe_url_label
 
 SOURCE_NS = (
     'xmlns:atom="http://www.w3.org/2005/Atom" '
@@ -595,8 +596,8 @@ def test_compare_live_feed_passes_for_matching_feeds(monkeypatch: pytest.MonkeyP
     )
 
     assert result.passed is True
-    assert result.source_feed_url == RSS_FEED_URL
-    assert result.generated_feed_path == CANDIDATE_URL
+    assert result.source_feed_url == safe_url_label(SOURCE_URL)
+    assert result.generated_feed_path == safe_url_label(CANDIDATE_URL)
 
 
 def test_compare_live_feed_reports_source_ssrf_refusal() -> None:
@@ -609,7 +610,8 @@ def test_compare_live_feed_reports_source_ssrf_refusal() -> None:
     assert result.passed is False
     text = _failure_text(result)
     assert "refus" in text
-    assert "169.254.169.254" in text
+    assert "url-sha256:" in text
+    assert "169.254.169.254" not in text
 
 
 def test_compare_live_feed_fails_on_non_200_candidate(monkeypatch: pytest.MonkeyPatch) -> None:

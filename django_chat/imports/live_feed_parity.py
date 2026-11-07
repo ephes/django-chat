@@ -14,6 +14,7 @@ report and exits non-zero.
 from __future__ import annotations
 
 import http.client
+from dataclasses import replace
 from urllib.error import HTTPError
 from xml.etree import ElementTree
 
@@ -24,7 +25,7 @@ from django_chat.imports.feed_smoke import (
     parse_generated_podcast_feed,
 )
 from django_chat.imports.source_data import RSS_FEED_URL, parse_rss_feed
-from django_chat.imports.url_safety import UnsafeURLError, safe_urlopen
+from django_chat.imports.url_safety import UnsafeURLError, safe_url_label, safe_urlopen
 
 DEFAULT_FETCH_TIMEOUT = 30.0
 FEED_FETCH_USER_AGENT = "django-chat-feed-parity/1.0 (+https://djangochat.com)"
@@ -49,21 +50,21 @@ def fetch_feed_bytes(url: str, *, timeout: float = DEFAULT_FETCH_TIMEOUT) -> byt
         with safe_urlopen(url, timeout=timeout, headers=FEED_FETCH_HEADERS) as response:
             status = getattr(response, "status", 200)
             body = response.read()
-    except UnsafeURLError as exc:
-        msg = f"refused to fetch {url!r}: {exc}"
-        raise FeedFetchError(msg) from exc
+    except UnsafeURLError:
+        msg = f"refused to fetch ({safe_url_label(url)}): URL safety policy"
+        raise FeedFetchError(msg) from None
     except HTTPError as exc:
-        msg = f"{url} returned HTTP {exc.code}."
-        raise FeedFetchError(msg) from exc
-    except (http.client.HTTPException, OSError) as exc:
+        msg = f"{safe_url_label(url)} returned HTTP {exc.code}."
+        raise FeedFetchError(msg) from None
+    except http.client.HTTPException, OSError:
         # URLError (DNS, connection refused, timeout) subclasses OSError;
         # http.client.HTTPException (e.g. IncompleteRead from a truncated body
         # during response.read()) does not, so catch it explicitly.
-        msg = f"could not fetch {url}: {exc}."
-        raise FeedFetchError(msg) from exc
+        msg = f"could not fetch {safe_url_label(url)}: transport failure."
+        raise FeedFetchError(msg) from None
 
     if status is not None and not 200 <= status < 300:
-        msg = f"{url} returned HTTP {status}."
+        msg = f"{safe_url_label(url)} returned HTTP {status}."
         raise FeedFetchError(msg)
     return body
 
@@ -91,9 +92,9 @@ def compare_django_chat_live_feed(
 
     try:
         source = parse_rss_feed(source_bytes, source_url=source_url)
-    except (ElementTree.ParseError, ValueError) as exc:
+    except ElementTree.ParseError, ValueError:
         return _fetch_failure_result(
-            source_url, candidate_url, f"Source feed could not be parsed as RSS: {exc}."
+            source_url, candidate_url, "Source feed could not be parsed as RSS."
         )
 
     try:
@@ -105,14 +106,14 @@ def compare_django_chat_live_feed(
 
     try:
         candidate = parse_generated_podcast_feed(candidate_bytes)
-    except (ElementTree.ParseError, ValueError) as exc:
+    except ElementTree.ParseError, ValueError:
         return _fetch_failure_result(
             source_url,
             candidate_url,
-            f"Candidate feed could not be parsed as the expected RSS shape: {exc}.",
+            "Candidate feed could not be parsed as the expected RSS shape.",
         )
 
-    return compare_source_to_generated_feed(
+    result = compare_source_to_generated_feed(
         source,
         candidate,
         generated_feed_path=candidate_url,
@@ -120,11 +121,17 @@ def compare_django_chat_live_feed(
         strict_live_parity=True,
     )
 
+    return replace(
+        result,
+        source_feed_url=safe_url_label(source_url),
+        generated_feed_path=safe_url_label(candidate_url),
+    )
+
 
 def _fetch_failure_result(source_url: str, candidate_url: str, text: str) -> FeedSmokeResult:
     return FeedSmokeResult(
-        source_feed_url=source_url,
-        generated_feed_path=candidate_url,
+        source_feed_url=safe_url_label(source_url),
+        generated_feed_path=safe_url_label(candidate_url),
         source_item_count=0,
         generated_item_count=0,
         messages=(FeedSmokeMessage("failure", text),),

@@ -897,3 +897,26 @@ Every saved artifact, including the first file in an empty transcript, has an
 ownership handle. If a later artifact or model save fails, rollback cleanup
 removes the new keys while retaining previous files; cleanup errors do not
 replace the original failure. Storage cleanup is best effort.
+
+Staging transcript publication takes a stable audio-row lock and a transcript
+row lock on the write database alias. Old artifacts retire through on-commit
+callbacks on that alias, so an enclosing transaction rollback preserves the
+previous database names and bytes. A successful sequence retires each previous
+generation once. Storage has no rollback hook: if an enclosing transaction
+rolls back after this function returns, new keys may be abandoned. Reconcile
+objects under `cast_transcript/django-chat-staging/` against all three transcript
+file fields on the same database, after imports/transactions are quiescent;
+remove only confirmed unreferenced keys, retaining referenced/shared files.
+
+Import URL diagnostics are safe to retain: URL-policy errors and fetch-open
+failures use bounded classifications and a stable SHA-256 identifier. Userinfo,
+query strings, fragments and raw transport exception text are omitted. Staging
+results/command output use fixed failure classifications; raw URLs remain in
+memory for destination validation and fetching. Catalogue JSON shape errors
+also use the URL identifier. These guarantees concern importer diagnostics,
+not arbitrary debug logging or tracebacks in calling applications. Live feed
+comparison also uses digests in result headers and failures. HTTP failures
+retain the public HTTPError type and status; staging preserves fixed safe
+markup/schema messages, including missing upstream transcripts. Commit-outcome
+uncertainty or post-commit callback failures retain new transcript files for
+later reconciliation rather than risk deleting files referenced by a commit.

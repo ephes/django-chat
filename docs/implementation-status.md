@@ -21,6 +21,9 @@ acceptance criterion flips, or the next-action target changes.
 - Staging transcripts validate bounded segment schemas before writing, and
   compensate first-import as well as replacement artifacts on failure.
 
+- Transcript publication serializes on the audio row and retires old artifacts
+  only on database commit; importer URL diagnostics omit credentials.
+
 ## Slice Status
 
 PRD slice list: research doc "Suggested Implementation Slices" section.
