@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from typing import Any, Literal
@@ -412,6 +412,11 @@ def merge_episode_sources(
             episode.source_kind == "detail" and previous.source_kind != "detail"
         ):
             by_id[episode.id] = episode
+    # Detail precedence chooses the payload, not the identity: a GUID known
+    # from any copy of the same ID stays attached for matching.
+    for episode_id, episode in by_id.items():
+        if not episode.guid and episode_id in guid_by_id:
+            by_id[episode_id] = replace(episode, guid=guid_by_id[episode_id])
     simplecast_by_key: dict[str, list[SimplecastEpisode]] = {}
     for episode in by_id.values():
         for key in _simplecast_match_keys(episode):

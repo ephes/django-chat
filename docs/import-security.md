@@ -125,7 +125,9 @@ import metadata still require an unambiguous new slug.
 
 Simplecast detail/list copies are deduplicated by immutable ID before merging:
 detail payloads take precedence over list summaries, and the first payload of
-the same kind wins. Copies with contradictory nonempty GUIDs are refused, as are different IDs
+the same kind wins. A GUID known from any copy of an ID stays attached to the
+chosen payload for matching, so a detail copy without a GUID still matches its
+RSS item. Copies with contradictory nonempty GUIDs are refused, as are different IDs
 claiming the same GUID. Unmatched records without GUIDs use their Simplecast
 IDs as matching keys, preserving distinct episodes with repeated numbers.
 RSS GUID matches take precedence over episode-number fallback. A number

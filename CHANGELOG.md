@@ -12,6 +12,8 @@
   records that share one matching key (for example GUID-less RSS items with a
   repeated episode number), refuse a slug held by another podcast's episode,
   and update only the metadata row the identity check resolved.
+- Keep a Simplecast GUID known from a list copy when the preferred detail copy
+  of the same ID omits it, so the episode still matches its RSS item.
 - Serialize PostgreSQL first-import tree writes on the existing parent page,
   reloading its state after locking and fetching covers before the reservation.
 - Bound regular fixture reads to 16 MiB, JSON depth to 64, and JSON structural

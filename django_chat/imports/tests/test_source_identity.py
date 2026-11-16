@@ -75,3 +75,19 @@ def test_rss_only_episodes_with_repeated_weak_key_refuse():
     second = replace(rss, guid="", title="Same number, another season")
     with pytest.raises(ValueError, match="identity"):
         merge_episode_sources((first, second), ())
+
+
+@pytest.mark.parametrize("order", ["list-first", "detail-first"])
+def test_detail_without_guid_keeps_guid_known_from_list_copy(order):
+    rss, detail = sources()
+    assert rss.guid and detail.guid == rss.guid
+    listing = replace(detail, title="List summary", source_kind="list")
+    bare_detail = replace(detail, guid=None)
+    rss_without_number = replace(rss, episode_number=None)
+    copies = (listing, bare_detail) if order == "list-first" else (bare_detail, listing)
+    merged = merge_episode_sources((rss_without_number,), copies)
+    assert len(merged) == 1
+    assert merged[0].rss == rss_without_number
+    assert merged[0].simplecast is not None
+    assert merged[0].simplecast.source_kind == "detail"
+    assert merged[0].simplecast.guid == rss.guid
