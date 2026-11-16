@@ -266,10 +266,14 @@ def import_django_chat_source_data(
         episode_metadata: list[EpisodeSourceMetadata] = []
         episodes_created = 0
         for episode_source in source_data.episodes:
-            episode, episode_created = _get_or_create_episode_page(podcast, episode_source)
+            episode, episode_created, existing_metadata = _get_or_create_episode_page(
+                podcast, episode_source
+            )
             _update_episode_page(episode, episode_source, podcast=podcast)
             episodes.append(episode)
-            episode_metadata.append(_update_episode_metadata(episode, episode_source))
+            episode_metadata.append(
+                _update_episode_metadata(episode, episode_source, existing_metadata)
+            )
             if episode_created:
                 episodes_created += 1
         _update_podcast_automatic_numbering(podcast)
@@ -691,7 +695,8 @@ def _source_link_key(source_link: SourceLink) -> str:
 def _get_or_create_episode_page(
     podcast: Podcast,
     episode_source: EpisodeSourceData,
-) -> tuple[Episode, bool]:
+) -> tuple[Episode, bool, EpisodeSourceMetadata | None]:
+    """Resolve the page and the one metadata row its identifiers agree on."""
     identities = {
         "matching_key": episode_source.matching_key,
         "rss_guid": episode_source.rss_guid,
@@ -704,19 +709,14 @@ def _get_or_create_episode_page(
                 **{field: value}
             ):
                 matches[metadata.pk] = metadata
-    # Slugs are only a fallback within this podcast, never global identities.
-    slug_matches = (
-        list(
-            EpisodeSourceMetadata.objects.select_related("episode").filter(
-                episode__path__startswith=podcast.path,
-                simplecast_slug=episode_source.slug,
-            )
-        )
-        if episode_source.slug
-        else []
-    )
-    for metadata in slug_matches:
-        matches[metadata.pk] = metadata
+    # The slug is a weak identifier, but the table stores it uniquely across
+    # podcasts. Collect a match anywhere so a row of another podcast refuses
+    # below instead of being rebound or failing later on the constraint.
+    if episode_source.slug:
+        for metadata in EpisodeSourceMetadata.objects.select_related("episode").filter(
+            simplecast_slug=episode_source.slug
+        ):
+            matches[metadata.pk] = metadata
     if len(matches) > 1:
         raise ValueError("Episode identity conflict: identifiers resolve to different pages.")
     if matches:
@@ -727,7 +727,7 @@ def _get_or_create_episode_page(
             if field != "matching_key"
         ):
             raise ValueError("Episode identity conflict: stored source identifiers disagree.")
-        return cast(Episode, metadata.episode), False
+        return cast(Episode, metadata.episode), False, metadata
 
     slug = _episode_slug(episode_source)
     existing = Episode.objects.child_of(podcast).filter(slug=slug).first()
@@ -742,7 +742,7 @@ def _get_or_create_episode_page(
     episode = Episode(title=episode_source.title, slug=slug)
     _update_episode_page_fields(episode, episode_source, podcast=podcast)
     podcast.add_child(instance=episode)
-    return episode, True
+    return episode, True, None
 
 
 def _update_episode_page(
@@ -793,19 +793,11 @@ def _update_episode_page_fields(
 def _update_episode_metadata(
     episode: Episode,
     episode_source: EpisodeSourceData,
+    existing: EpisodeSourceMetadata | None,
 ) -> EpisodeSourceMetadata:
-    existing = EpisodeSourceMetadata.objects.filter(
-        matching_key=episode_source.matching_key
-    ).first()
-    if existing is None and episode_source.rss_guid:
-        existing = EpisodeSourceMetadata.objects.filter(rss_guid=episode_source.rss_guid).first()
-    if existing is None and episode_source.simplecast_episode_id:
-        existing = EpisodeSourceMetadata.objects.filter(
-            simplecast_episode_id=episode_source.simplecast_episode_id
-        ).first()
-    if existing is None and episode_source.slug:
-        existing = EpisodeSourceMetadata.objects.filter(simplecast_slug=episode_source.slug).first()
-
+    # Update only the row _get_or_create_episode_page resolved and checked.
+    # A second lookup here could pick another podcast's row by a weak
+    # identifier and rebind it after the conflict check passed.
     metadata_fields = _episode_metadata_fields(episode, episode_source)
     if existing is None:
         return EpisodeSourceMetadata.objects.create(**metadata_fields)

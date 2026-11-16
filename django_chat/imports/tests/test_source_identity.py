@@ -67,3 +67,11 @@ def test_unmatched_episodes_without_guids_keep_distinct_identities():
     merged = merge_episode_sources((), (first, second))
     assert len(merged) == 2
     assert len({episode.matching_key for episode in merged}) == 2
+
+
+def test_rss_only_episodes_with_repeated_weak_key_refuse():
+    rss, _ = sources()
+    first = replace(rss, guid="")
+    second = replace(rss, guid="", title="Same number, another season")
+    with pytest.raises(ValueError, match="identity"):
+        merge_episode_sources((first, second), ())

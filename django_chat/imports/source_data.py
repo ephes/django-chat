@@ -457,6 +457,12 @@ def merge_episode_sources(
         )
         merged.append(_merged_episode(key, None, simplecast_episode))
 
+    # The matching key is the stored identity of one episode. Weak RSS keys
+    # (repeated episode numbers or titles without a GUID) must not collapse
+    # two source records into one row on import.
+    matching_keys = Counter(episode.matching_key for episode in merged)
+    if any(count > 1 for count in matching_keys.values()):
+        raise ValueError("Episode identity conflict: duplicate source matching key.")
     return tuple(merged)
 
 

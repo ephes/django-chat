@@ -116,9 +116,12 @@ check.
 An incoming matching key, RSS GUID, and Simplecast ID must resolve to the same
 stored episode within the selected podcast. Multiple matches or incompatible
 stored GUIDs/IDs raise `ValueError` and roll back the metadata/page import.
-A source slug is only a podcast-local fallback and cannot override a strong
-identity or adopt a page with conflicting source metadata. Pages without import
-metadata still require an unambiguous new slug.
+A source slug is only a fallback and cannot override a strong identity or
+adopt a page with conflicting source metadata. Stored slugs are unique across
+podcasts, so a slug already held by another podcast's episode is refused as an
+identity conflict instead of being rebound. The metadata update writes only the
+row this identity check resolved; it does no second lookup. Pages without
+import metadata still require an unambiguous new slug.
 
 Simplecast detail/list copies are deduplicated by immutable ID before merging:
 detail payloads take precedence over list summaries, and the first payload of
@@ -128,8 +131,10 @@ IDs as matching keys, preserving distinct episodes with repeated numbers.
 RSS GUID matches take precedence over episode-number fallback. A number
 fallback must be unique in both sources, must not contradict a GUID, and cannot
 reuse one Simplecast episode for multiple RSS items. Repeated season episode
-numbers therefore require a matching GUID. Ambiguity aborts source loading
-rather than silently attaching another episode's data.
+numbers therefore require a matching GUID. Every merged record must have its
+own matching key, so GUID-less RSS items that share an episode number (or a
+title when they have no number) are refused too. Ambiguity aborts source
+loading rather than silently attaching another episode's data.
 
 ## Concurrent first imports
 

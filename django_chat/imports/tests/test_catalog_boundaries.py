@@ -225,3 +225,48 @@ def test_cover_unwinds_explicit_rollback(tmp_path: Path, monkeypatch: Any) -> No
         import_django_chat_sample(cover_image_downloader=lambda _: artwork())
     assert not WagtailImage.objects.exists()
     assert not any(path.is_file() for path in tmp_path.rglob("*"))
+
+
+@pytest.mark.django_db
+def test_slug_of_another_podcasts_episode_refuses_without_rebinding() -> None:
+    from dataclasses import replace
+
+    from django_chat.imports.import_sample import (
+        _get_podcast_parent_page,
+        import_django_chat_source_data,
+        load_sample_source_data,
+    )
+    from django_chat.imports.models import EpisodeSourceMetadata
+
+    result = import_django_chat_sample()
+    source = load_sample_source_data()
+    template = result.episode_metadata[0]
+    other_podcast = Podcast(title="Other show", slug="other-show")
+    _get_podcast_parent_page().add_child(instance=other_podcast)
+    other_episode = Episode(title="Other episode", slug="other-episode")
+    other_podcast.add_child(instance=other_episode)
+    other_metadata = EpisodeSourceMetadata.objects.create(
+        episode=other_episode,
+        matching_key="guid:other-show",
+        rss_guid="other-show",
+        simplecast_episode_id="other-show-id",
+        simplecast_slug="shared-slug",
+        source_title="Other episode",
+    )
+    assert template.simplecast_slug != "shared-slug"
+    incoming = replace(
+        source.episodes[0],
+        matching_key="guid:brand-new",
+        rss_guid="brand-new",
+        simplecast_episode_id="brand-new-id",
+        slug="shared-slug",
+        title="Brand new episode",
+    )
+    before = list(EpisodeSourceMetadata.objects.order_by("pk").values())
+    with pytest.raises(ValueError, match="identity"):
+        import_django_chat_source_data(replace(source, episodes=(incoming,)))
+
+    assert list(EpisodeSourceMetadata.objects.order_by("pk").values()) == before
+    other_metadata.refresh_from_db()
+    assert other_metadata.episode_id == other_episode.pk
+    assert not Episode.objects.filter(title="Brand new episode").exists()
