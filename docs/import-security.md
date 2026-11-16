@@ -56,6 +56,24 @@ the `audioId` and `post_id` values as integers, and rebuilds the Podlove API
 URL on the episode page's **own origin** (`extract_podlove_api_url`), so a
 tampered payload cannot steer the follow-up fetch off-host.
 
+## Artwork admission and rollback
+
+Sample and catalog covers accept at most 20 MiB of encoded bytes, 16,000,000
+pixels, and one frame. Pillow checks the image before Wagtail/storage writes;
+invalid, oversized, or animated images abort metadata import with `ValueError`.
+Normal covers retain Wagtail's automatic width/height population.
+
+Imports with a cover downloader require an outermost durable database
+transaction entered from autocommit mode. Calling them inside another transaction is refused before storage
+writes, because Django provides no outer-rollback callback. A newly saved cover
+uses a random filename; its returned storage key is tracked until commit and
+deleted if any later metadata/page save or the commit fails. Exceptions from
+callbacks after a confirmed commit retain the referenced cover and annotate
+the exception with the committed outcome. Existing covers
+and shared keys are retained. A storage cleanup failure annotates the original
+exception and requires operator repair; database and object storage cannot form
+one crash-atomic transaction.
+
 ## Remediation of already-imported data
 
 The guards above protect *new* imports. Two data migrations re-clean rows stored
@@ -92,3 +110,63 @@ deployment-assumption-dependent, or excluded classes) are listed in
 (including the CDATA mXSS case), the link-scheme guard, the SSRF/private-address
 and `file://` rejections, the connection-pin resolver, and the staging same-host
 check.
+
+## Episode identities and source merging
+
+An incoming matching key, RSS GUID, and Simplecast ID must resolve to the same
+stored episode within the selected podcast. Multiple matches or incompatible
+stored GUIDs/IDs raise `ValueError` and roll back the metadata/page import.
+A source slug is only a fallback and cannot override a strong identity or
+adopt a page with conflicting source metadata. Stored slugs are unique across
+podcasts, so a slug already held by another podcast's episode is refused as an
+identity conflict instead of being rebound. The metadata update writes only the
+row this identity check resolved; it does no second lookup. Pages without
+import metadata still require an unambiguous new slug.
+
+Simplecast detail/list copies are deduplicated by immutable ID before merging:
+detail payloads take precedence over list summaries, and the first payload of
+the same kind wins. Copies with contradictory nonempty GUIDs are refused, as are different IDs
+claiming the same GUID. Unmatched records without GUIDs use their Simplecast
+IDs as matching keys, preserving distinct episodes with repeated numbers.
+RSS GUID matches take precedence over episode-number fallback. A number
+fallback must be unique in both sources, must not contradict a GUID, and cannot
+reuse one Simplecast episode for multiple RSS items. Repeated season episode
+numbers therefore require a matching GUID. Every merged record must have its
+own matching key, so GUID-less RSS items that share an episode number (or a
+title when they have no number) are refused too. Ambiguity aborts source
+loading rather than silently attaching another episode's data.
+
+## Concurrent first imports
+
+On PostgreSQL, the importer locks the existing Wagtail parent page before
+checking for podcast or episode absence, and reloads the parent after acquiring
+the lock. Cooperating catalog/sample importers sharing that parent serialize
+their tree and metadata writes through commit. RSS/API fetches and cover
+transfers happen before this reservation; an import rechecks cover ownership
+before persisting downloaded bytes. Audio copying remains after metadata import.
+This reservation does not govern unrelated editor writes. SQLite has no
+`SELECT FOR UPDATE` row locks; a busy concurrent writer can require retry.
+
+Run the actual multi-connection ownership regression against a **disposable**
+PostgreSQL database (the test user must be allowed to create the test database):
+
+```sh
+DATABASE_URL=postgresql://localhost:55432/django_chat_r112 DJANGO_SETTINGS_MODULE=config.settings.test_postgres uv run pytest django_chat/imports/tests/test_import_ownership.py
+```
+
+The default SQLite suite explicitly skips this PostgreSQL concurrency test.
+
+## Local fixture admission
+
+Configurable fixture directories remain supported. Each fixture must be a
+regular, non-symlink UTF-8 file with at most 16 MiB of actual bytes. Files are
+opened once with nonblocking/no-follow flags and checked by descriptor, so
+FIFOs/devices are refused without waiting for a writer. Growth during reading
+cannot bypass the byte cap.
+
+Before constructing JSON objects, the reader admits at most 64 container levels
+and 200,000 structural punctuation tokens outside strings. Duplicate members
+(including equivalent escaped names) and non-object roots raise bounded
+`ValueError` diagnostics. Admission failures occur during source loading, before
+any import database or storage changes. The shipped fixture corpus uses the
+same reader.

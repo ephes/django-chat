@@ -4,9 +4,12 @@ import hashlib
 import io
 import json
 import mimetypes
+import os
+import stat
 import tempfile
-from collections.abc import Callable
-from contextlib import suppress
+import warnings
+from collections.abc import Callable, Generator
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
@@ -20,11 +23,14 @@ from django.contrib.auth import get_user_model
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
+from django.core.files.storage import Storage
 from django.db import transaction
-from django.db.models import Max, Q
+from django.db.models import Max
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.text import slugify
+from PIL import Image as PillowImage
+from PIL import UnidentifiedImageError
 from wagtail.images.models import Image as WagtailImage
 from wagtail.models import Page, Site
 
@@ -58,6 +64,7 @@ from django_chat.imports.transfer_limits import (
     AUDIO_MAX_BYTES,
     AUDIO_TRANSFER_SECONDS,
     IMAGE_MAX_BYTES,
+    TEXT_MAX_BYTES,
     bounded_chunks,
     transfer_deadline,
 )
@@ -77,6 +84,8 @@ CATALOG_AUDIO_STORAGE_PREFIX = "django-chat-catalog"
 AudioDownloader = Callable[[str], "DownloadedAudio"]
 StreamingAudioDownloader = Callable[[str, Path], "DownloadedAudioFile"]
 ImageDownloader = Callable[[str], bytes]
+ARTWORK_MAX_PIXELS = 16_000_000
+ARTWORK_MAX_FRAMES = 1
 
 
 @dataclass(frozen=True)
@@ -205,8 +214,33 @@ def import_django_chat_source_data(
     audio_downloader: AudioDownloader | None = None,
     cover_image_downloader: ImageDownloader | None = None,
 ) -> SampleImportResult:
-    with transaction.atomic():
+    # Fetch before reserving the tree owner. Concurrent first imports may both
+    # download, but only the owner that still needs a cover persists its bytes.
+    image_url = source_data.simplecast_podcast.image_url or source_data.rss_podcast.image_url or ""
+    cover_bytes = None
+    if cover_image_downloader is not None and image_url:
+        has_cover = PodcastSourceMetadata.objects.filter(
+            simplecast_podcast_id=source_data.simplecast_podcast.id,
+            podcast__cover_image__isnull=False,
+        ).exists()
+        if not has_cover:
+            # A hand-created podcast can be adopted by slug before it has
+            # source metadata. Preserve its editor-owned cover as well.
+            has_cover = (
+                Podcast.objects.child_of(_get_podcast_parent_page())
+                .filter(slug=settings.DJANGO_CHAT_PODCAST_SLUG, cover_image__isnull=False)
+                .exists()
+            )
+        if not has_cover:
+            cover_bytes = cover_image_downloader(image_url)
+            if cover_bytes:
+                _validate_artwork(cover_bytes)
+    with _catalog_artwork_boundary(cover_image_downloader is not None) as artwork_objects:
         parent_page = _get_podcast_parent_page()
+        # Lock a stable, already existing row BEFORE any catalog absence check.
+        # Re-read after acquiring it: an earlier owner may have changed tree
+        # paths/numchild while we waited. PostgreSQL holds this to outer commit.
+        parent_page = Page.objects.select_for_update().get(pk=parent_page.pk).specific
         podcast, podcast_created = _get_or_create_podcast_page(
             parent_page,
             source_data.rss_podcast,
@@ -223,7 +257,8 @@ def import_django_chat_source_data(
             _ensure_podcast_cover_image(
                 podcast,
                 str(podcast_metadata.image_url or ""),
-                cover_image_downloader,
+                cover_bytes,
+                artwork_objects,
             )
         source_links = _update_podcast_source_links(podcast_metadata, source_data.source_links)
 
@@ -231,10 +266,14 @@ def import_django_chat_source_data(
         episode_metadata: list[EpisodeSourceMetadata] = []
         episodes_created = 0
         for episode_source in source_data.episodes:
-            episode, episode_created = _get_or_create_episode_page(podcast, episode_source)
+            episode, episode_created, existing_metadata = _get_or_create_episode_page(
+                podcast, episode_source
+            )
             _update_episode_page(episode, episode_source, podcast=podcast)
             episodes.append(episode)
-            episode_metadata.append(_update_episode_metadata(episode, episode_source))
+            episode_metadata.append(
+                _update_episode_metadata(episode, episode_source, existing_metadata)
+            )
             if episode_created:
                 episodes_created += 1
         _update_podcast_automatic_numbering(podcast)
@@ -364,10 +403,81 @@ def default_download_image(source_url: str) -> bytes:
         )
 
 
+@contextmanager
+def _catalog_artwork_boundary(with_artwork: bool) -> Generator[list[tuple[Storage, str]]]:
+    if (
+        with_artwork
+        and not transaction.get_autocommit()
+        and not transaction.get_connection().in_atomic_block
+    ):
+        raise RuntimeError(
+            "Artwork imports require an outermost durable transaction in autocommit mode."
+        )
+    owned: list[tuple[Storage, str]] = []
+    committed = False
+
+    def confirm_commit() -> None:
+        nonlocal committed
+        committed = True
+
+    try:
+        # Django has no rollback callback. Require the actual outer commit when
+        # storage is involved, so a caller cannot roll back after we return.
+        with transaction.atomic(durable=with_artwork):
+            if with_artwork:
+                # Register first: later application callbacks may themselves
+                # raise after a successful commit. Keep referenced files then.
+                transaction.on_commit(confirm_commit)
+            yield owned
+            if owned and transaction.get_rollback():
+                raise RuntimeError("Catalog artwork transaction was marked for rollback.")
+    except BaseException as exc:
+        if committed:
+            exc.add_note("Catalog committed; its artwork was retained.")
+            raise
+        for storage, name in owned:
+            try:
+                storage.delete(name)
+            except Exception:
+                exc.add_note("Artwork rollback cleanup failed; storage repair is required.")
+        raise
+
+
+def _validate_artwork(content: bytes) -> None:
+    if len(content) > IMAGE_MAX_BYTES:
+        raise ValueError("Artwork exceeded its byte budget.")
+    try:
+        with warnings.catch_warnings(), io.BytesIO(content) as source:
+            warnings.simplefilter("error", PillowImage.DecompressionBombWarning)
+            with PillowImage.open(source) as image:
+                width, height = image.size
+                if width <= 0 or height <= 0 or width * height > ARTWORK_MAX_PIXELS:
+                    raise ValueError("Artwork exceeded its pixel budget.")
+                # n_frames can scan an entire animation. Seek only as far as
+                # the first forbidden frame, bounding frame-discovery work.
+                try:
+                    image.seek(ARTWORK_MAX_FRAMES)
+                except EOFError:
+                    pass
+                else:
+                    raise ValueError("Artwork must contain a single frame.")
+                image.seek(0)
+                image.verify()
+    except (
+        UnidentifiedImageError,
+        OSError,
+        SyntaxError,
+        PillowImage.DecompressionBombError,
+        PillowImage.DecompressionBombWarning,
+    ) as exc:
+        raise ValueError("Artwork is not a supported valid image.") from exc
+
+
 def _ensure_podcast_cover_image(
     podcast: Podcast,
     image_url: str,
-    image_downloader: ImageDownloader,
+    image_bytes: bytes | None,
+    owned: list[tuple[Storage, str]],
 ) -> None:
     """Attach the show artwork as a Wagtail Image on the Podcast page.
 
@@ -379,16 +489,24 @@ def _ensure_podcast_cover_image(
         return
     if not image_url:
         return
-    image_bytes = image_downloader(image_url)
     if not image_bytes:
         return
-    filename = _source_url_filename(image_url) or "show-artwork.jpg"
+    suffix = Path(_source_url_filename(image_url) or "show-artwork.jpg").suffix
+    filename = f"{uuid4().hex}{suffix}"
     image_title = f"{podcast.title} show artwork"
     # ImageFile (vs ContentFile) lets Wagtail's pre-save hook populate
     # width/height from the bytes. ContentFile leaves those fields NULL
     # and the save fails the NOT NULL constraint on wagtailimages_image.
-    image_file = ImageFile(io.BytesIO(image_bytes), name=filename)
-    image = WagtailImage(title=image_title, file=image_file)
+    with ImageFile(io.BytesIO(image_bytes), name=filename) as image_file:
+        image = WagtailImage(title=image_title, file=image_file)
+        # Use a fresh namespace, never a source-controlled/shared object key.
+        image_instance = cast(Any, image)
+        field = image_instance._meta.get_field("file")
+        candidate = field.generate_filename(image, filename)
+        if image_instance.file.storage.exists(candidate):
+            raise ValueError("Artwork storage key already exists.")
+        image_instance.file.save(filename, image_file, save=False)
+        owned.append((image_instance.file.storage, image_instance.file.name))
     image.save()
     podcast_page.cover_image = image
     podcast.save()
@@ -577,20 +695,39 @@ def _source_link_key(source_link: SourceLink) -> str:
 def _get_or_create_episode_page(
     podcast: Podcast,
     episode_source: EpisodeSourceData,
-) -> tuple[Episode, bool]:
-    metadata_lookup = Q(matching_key=episode_source.matching_key)
-    if episode_source.rss_guid:
-        metadata_lookup |= Q(rss_guid=episode_source.rss_guid)
-    if episode_source.simplecast_episode_id:
-        metadata_lookup |= Q(simplecast_episode_id=episode_source.simplecast_episode_id)
+) -> tuple[Episode, bool, EpisodeSourceMetadata | None]:
+    """Resolve the page and the one metadata row its identifiers agree on."""
+    identities = {
+        "matching_key": episode_source.matching_key,
+        "rss_guid": episode_source.rss_guid,
+        "simplecast_episode_id": episode_source.simplecast_episode_id,
+    }
+    matches: dict[int, EpisodeSourceMetadata] = {}
+    for field, value in identities.items():
+        if value:
+            for metadata in EpisodeSourceMetadata.objects.select_related("episode").filter(
+                **{field: value}
+            ):
+                matches[metadata.pk] = metadata
+    # The slug is a weak identifier, but the table stores it uniquely across
+    # podcasts. Collect a match anywhere so a row of another podcast refuses
+    # below instead of being rebound or failing later on the constraint.
     if episode_source.slug:
-        metadata_lookup |= Q(simplecast_slug=episode_source.slug)
-
-    metadata = (
-        EpisodeSourceMetadata.objects.select_related("episode").filter(metadata_lookup).first()
-    )
-    if metadata is not None:
-        return cast(Episode, metadata.episode), False
+        for metadata in EpisodeSourceMetadata.objects.select_related("episode").filter(
+            simplecast_slug=episode_source.slug
+        ):
+            matches[metadata.pk] = metadata
+    if len(matches) > 1:
+        raise ValueError("Episode identity conflict: identifiers resolve to different pages.")
+    if matches:
+        metadata = next(iter(matches.values()))
+        if cast(Episode, metadata.episode).get_parent().pk != podcast.pk or any(
+            incoming and getattr(metadata, field) and incoming != getattr(metadata, field)
+            for field, incoming in identities.items()
+            if field != "matching_key"
+        ):
+            raise ValueError("Episode identity conflict: stored source identifiers disagree.")
+        return cast(Episode, metadata.episode), False, metadata
 
     slug = _episode_slug(episode_source)
     existing = Episode.objects.child_of(podcast).filter(slug=slug).first()
@@ -605,7 +742,7 @@ def _get_or_create_episode_page(
     episode = Episode(title=episode_source.title, slug=slug)
     _update_episode_page_fields(episode, episode_source, podcast=podcast)
     podcast.add_child(instance=episode)
-    return episode, True
+    return episode, True, None
 
 
 def _update_episode_page(
@@ -656,19 +793,11 @@ def _update_episode_page_fields(
 def _update_episode_metadata(
     episode: Episode,
     episode_source: EpisodeSourceData,
+    existing: EpisodeSourceMetadata | None,
 ) -> EpisodeSourceMetadata:
-    existing = EpisodeSourceMetadata.objects.filter(
-        matching_key=episode_source.matching_key
-    ).first()
-    if existing is None and episode_source.rss_guid:
-        existing = EpisodeSourceMetadata.objects.filter(rss_guid=episode_source.rss_guid).first()
-    if existing is None and episode_source.simplecast_episode_id:
-        existing = EpisodeSourceMetadata.objects.filter(
-            simplecast_episode_id=episode_source.simplecast_episode_id
-        ).first()
-    if existing is None and episode_source.slug:
-        existing = EpisodeSourceMetadata.objects.filter(simplecast_slug=episode_source.slug).first()
-
+    # Update only the row _get_or_create_episode_page resolved and checked.
+    # A second lookup here could pick another podcast's row by a weak
+    # identifier and rebind it after the conflict check passed.
     metadata_fields = _episode_metadata_fields(episode, episode_source)
     if existing is None:
         return EpisodeSourceMetadata.objects.create(**metadata_fields)
@@ -1296,12 +1425,59 @@ def _truncate(value: str, max_length: int) -> str:
 
 
 def _read_text(fixture_path: Path, filename: str) -> str:
-    return (fixture_path / filename).read_text(encoding="utf-8")
+    try:
+        descriptor = os.open(fixture_path / filename, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+        with os.fdopen(descriptor, "rb") as source:
+            metadata = os.fstat(source.fileno())
+            if not stat.S_ISREG(metadata.st_mode):
+                raise ValueError("Fixture must be a regular file.")
+            if metadata.st_size > TEXT_MAX_BYTES:
+                raise ValueError("Fixture exceeded its byte budget.")
+            content = source.read(TEXT_MAX_BYTES + 1)
+            if len(content) > TEXT_MAX_BYTES:
+                raise ValueError("Fixture exceeded its byte budget.")
+        return content.decode("utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise ValueError("Fixture could not be read as a regular UTF-8 file.") from exc
+
+
+def _fixture_json_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Fixture contains duplicate JSON members.")
+        result[key] = value
+    return result
 
 
 def _read_json(fixture_path: Path, filename: str) -> dict[str, Any]:
-    payload = json.loads(_read_text(fixture_path, filename))
+    content = _read_text(fixture_path, filename)
+    # Admission precedes recursive JSON construction. Quoted punctuation does
+    # not count toward the depth/work budgets; json.loads validates syntax.
+    depth = tokens = 0
+    quoted = escaped = False
+    for char in content:
+        if quoted:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                quoted = False
+        elif char == '"':
+            quoted = True
+        elif char in "[{,:]}":
+            tokens += 1
+            if char in "[{":
+                depth += 1
+            elif char in "]}":
+                depth -= 1
+            if depth > 64 or tokens > 200_000:
+                raise ValueError("Fixture exceeded its JSON structure budget.")
+    try:
+        payload = json.loads(content, object_pairs_hook=_fixture_json_pairs)
+    except (json.JSONDecodeError, RecursionError) as exc:
+        raise ValueError("Fixture contains invalid JSON.") from exc
     if not isinstance(payload, dict):
-        msg = f"Fixture does not contain a JSON object: {filename}"
-        raise ValueError(msg)
+        raise ValueError("Fixture does not contain a JSON object.")
     return payload

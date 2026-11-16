@@ -64,6 +64,8 @@ Run tests:
 just test
 ```
 
+Imports enforce bounded local fixtures, unambiguous episode identities, and
+cover admission/rollback boundaries; see [import security](docs/import-security.md).
 Source fixture capture uses bounded responses and stages a complete corpus before
 publication; see the [fixture refresh guarantees](docs/local-development.md#source-data-fixtures).
 

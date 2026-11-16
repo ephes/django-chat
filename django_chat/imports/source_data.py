@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
@@ -393,29 +394,75 @@ def merge_episode_sources(
 ) -> tuple[EpisodeSourceData, ...]:
     """Join RSS and Simplecast episodes while preserving the source-specific data."""
 
-    simplecast_by_key: dict[str, SimplecastEpisode] = {}
+    # Detail payloads win over list summaries regardless of input order; the
+    # first payload of the same kind wins. Conflicting immutable IDs refuse.
+    by_id: dict[str, SimplecastEpisode] = {}
+    guid_by_id: dict[str, str] = {}
+    id_by_guid: dict[str, str] = {}
     for episode in simplecast_episodes:
+        previous = by_id.get(episode.id)
+        if episode.guid:
+            if episode.id in guid_by_id and guid_by_id[episode.id] != episode.guid:
+                raise ValueError("Episode identity conflict in Simplecast copies.")
+            if episode.guid in id_by_guid and id_by_guid[episode.guid] != episode.id:
+                raise ValueError("Episode identity conflict: duplicate Simplecast GUID.")
+            guid_by_id[episode.id] = episode.guid
+            id_by_guid[episode.guid] = episode.id
+        if previous is None or (
+            episode.source_kind == "detail" and previous.source_kind != "detail"
+        ):
+            by_id[episode.id] = episode
+    simplecast_by_key: dict[str, list[SimplecastEpisode]] = {}
+    for episode in by_id.values():
         for key in _simplecast_match_keys(episode):
-            simplecast_by_key.setdefault(key, episode)
+            simplecast_by_key.setdefault(key, []).append(episode)
 
+    rss_numbers = Counter(episode.episode_number for episode in rss_episodes)
+    rss_guids: set[str] = set()
     merged: list[EpisodeSourceData] = []
     matched_simplecast_ids: set[str] = set()
     for rss_episode in rss_episodes:
+        if rss_episode.guid:
+            if rss_episode.guid in rss_guids:
+                raise ValueError("Episode identity conflict: duplicate RSS GUID.")
+            rss_guids.add(rss_episode.guid)
         key = _rss_match_keys(rss_episode)[0]
-        simplecast_episode = None
-        for candidate_key in _rss_match_keys(rss_episode):
-            simplecast_episode = simplecast_by_key.get(candidate_key)
-            if simplecast_episode is not None:
-                matched_simplecast_ids.add(simplecast_episode.id)
-                break
+        candidates = (
+            simplecast_by_key.get(f"guid:{rss_episode.guid}", []) if rss_episode.guid else []
+        )
+        if not candidates and rss_episode.episode_number is not None:
+            candidates = simplecast_by_key.get(f"episode-number:{rss_episode.episode_number}", [])
+            if candidates and rss_numbers[rss_episode.episode_number] != 1:
+                raise ValueError("Episode identity conflict: ambiguous RSS episode number.")
+        if len(candidates) > 1:
+            raise ValueError("Episode identity conflict: ambiguous Simplecast match.")
+        simplecast_episode = candidates[0] if candidates else None
+        if simplecast_episode is not None:
+            if (
+                rss_episode.guid
+                and simplecast_episode.guid
+                and rss_episode.guid != simplecast_episode.guid
+            ) or simplecast_episode.id in matched_simplecast_ids:
+                raise ValueError("Episode identity conflict: incompatible or reused source match.")
+            matched_simplecast_ids.add(simplecast_episode.id)
         merged.append(_merged_episode(key, rss_episode, simplecast_episode))
 
-    for simplecast_episode in simplecast_episodes:
+    for simplecast_episode in by_id.values():
         if simplecast_episode.id in matched_simplecast_ids:
             continue
-        key = _simplecast_match_keys(simplecast_episode)[0]
+        key = (
+            f"guid:{simplecast_episode.guid}"
+            if simplecast_episode.guid
+            else f"simplecast-id:{simplecast_episode.id}"
+        )
         merged.append(_merged_episode(key, None, simplecast_episode))
 
+    # The matching key is the stored identity of one episode. Weak RSS keys
+    # (repeated episode numbers or titles without a GUID) must not collapse
+    # two source records into one row on import.
+    matching_keys = Counter(episode.matching_key for episode in merged)
+    if any(count > 1 for count in matching_keys.values()):
+        raise ValueError("Episode identity conflict: duplicate source matching key.")
     return tuple(merged)
 
 
