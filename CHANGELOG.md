@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Upgrade Wagtail 8.0.1 to 8.1 (range `>=8.1,<8.2`) and relock django-cast
+  develop from `b594f805` to `e0c632ad` (release 0.2.68 plus the 0.2.69
+  version bump), the revision homepage and python-podcast run.
+  draftjs-exporter moves to 7.3.1 and soupsieve to 4.1.1 (django-cast's new
+  floor). django-cast adds migrations `cast.0091` to `cast.0094`. The comment
+  template override posts django-cast's comment revision token, which author
+  edits now require.
 - Unwind newly saved cover objects when catalog metadata or commit fails;
   require an outermost transaction for imports with artwork and retain existing
   covers. Admit covers before persistence under 20 MiB, 16 million pixels, and

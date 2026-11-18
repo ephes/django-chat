@@ -257,6 +257,61 @@ blocks to rich-text headings, remove that block, and make theme choices safe
 under Wagtail 8. Django Chat's `show_note_heading` is a separate custom block
 and is not targeted by the built-in heading conversion.
 
+### Wagtail 8.1 and django-cast e0c632ad (2026-11-18)
+
+`uv.lock` moves Wagtail from 8.0.1 to 8.1 (`pyproject.toml` allows
+`>=8.1,<8.2`), django-cast develop from `b594f805` to `e0c632ad` (release
+0.2.68 plus the 0.2.69 version bump), draftjs-exporter from 7.1.0 to 7.3.1
+(Wagtail 8.1 requires `>=7.3.0,<8.0`) and soupsieve from 3.0.2 to 4.1.1
+(django-cast's security floor). The numbered Wagtail migrations are identical
+in 8.0.1 and 8.1. django-cast adds four migrations, all additive:
+
+- `cast.0091_spamfilter_retrain_attempt`: nullable UUID column.
+- `cast.0092_transcript_upload_help`: help texts only, no SQL.
+- `cast.0093_podcast_contributor_order`: `contributor_order` column, filled
+  with `guests_first` and then without a database default.
+- `cast.0094_previous_transcript_version`: nullable file column. New files go
+  to the private `cast_voice_references` storage under
+  `cast_transcript_versions/`.
+
+Wagtail 8.1 changes checked for this site: there is no `wagtail_hooks.py`, no
+use of the removed admin API (`/admin/api/main/`, `construct_admin_api`), no
+`ajax_template`, no sitemap and no `WAGTAIL_I18N_ENABLED`. Redirects are now
+only created automatically for live pages; the default is kept. On Django 6.1
+Wagtail sends admin mail through `mailers.default`, which Django derives from
+`EMAIL_BACKEND` while `MAILERS` is unset.
+
+django-cast upgrade actions checked for this site:
+
+- Author comment edits must send the comment's revision token, or the edit is
+  refused with HTTP 409. `templates/comments/comment.html` overrides
+  django-cast's template, so it now renders `data-revision` like the upstream
+  template. No other overridden template changed upstream.
+- The configured `cast_public_transcripts` and `cast_voice_references` storages
+  now fail loudly instead of falling back.
+- The theme is registered through `CAST_CUSTOM_THEMES`, and there are no
+  `confirm_delete.html` overrides and no custom Audio/Video chooser code.
+- Cached audio sizes are now bound to the file name. Sizes cached before the
+  upgrade, including the importer's copied byte sizes, have no file name, so
+  feeds ask storage for each size until the audio is derived again. The values
+  do not change, and feed responses stay cached.
+
+Local checks: `just check` (639 tests), `just test-browser` (18), `just
+docs-check` and `makemigrations --check`. In a rehearsal on PostgreSQL 17, a
+database migrated and filled with synthetic content and the bundled sample
+import under the old lock planned and applied only `cast.0091` to `cast.0094`
+under the new one, and pages, feeds and the episode list returned the same
+responses before and after.
+
+Rollback: migrate `cast` back to `0090` with the new code still installed,
+then deploy the previous commit. A rollback without that step leaves
+`contributor_order` without a database default, and the old code cannot
+create podcasts. Unapplying the migrations drops the new columns, including
+the spam filter retrain attempt, each podcast's contributor order and the
+links to previous transcript versions. The private files stay in storage. In
+the rehearsal, the old code then served the same responses and the same
+`showmigrations` as before the upgrade.
+
 To restore that backup, reverse the sync source and destination:
 
 ```sh

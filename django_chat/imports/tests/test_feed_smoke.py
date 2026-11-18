@@ -216,6 +216,8 @@ def test_feed_smoke_fails_when_generated_length_does_not_match_copied_bytes(
         ).get(episode_metadata__episode_number=200)
         audio = audio_metadata.audio
         audio.data["size"]["mp3"] = 999999
+        # django-cast uses a cached size only while it names the current file.
+        audio.data.setdefault("size_file_names", {})["mp3"] = audio.mp3.name
         audio.save(duration=False, cache_file_sizes=False)
 
         result = compare_django_chat_sample_feed(host="testserver")
