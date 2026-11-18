@@ -1081,6 +1081,11 @@ def _update_audio_record(
         if owned_files is not None:
             owned_files.append((audio_fields.mp3.storage, audio_fields.mp3.name))
         needs_save = True
+    if downloaded is not None or downloaded_file is not None:
+        # django-cast trusts a cached size only while it names the current file.
+        size_file_names = dict(audio_fields.data.get("size_file_names") or {})
+        size_file_names["mp3"] = audio_fields.mp3.name
+        audio_fields.data = {**audio_fields.data, "size_file_names": size_file_names}
     if needs_save:
         audio.save(duration=False, cache_file_sizes=False)
 

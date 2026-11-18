@@ -26,9 +26,9 @@ or newer) reads `.python-version` and can download the matching interpreter. See
 [`docs/local-development.md`](docs/local-development.md) for the full local
 workflow, environment file expectations, tooling commands, and hook setup.
 
-The dependency lock uses Django 6.1.2 and Wagtail 8.0.1. Python 3.15 is
-already exercised by this project, but upstream support is still pending in
-these stable framework releases; see the compatibility notes in the local
+The dependency lock uses Django 6.1.2 and Wagtail 8.1. Wagtail 8.1 supports
+Python 3.15; Django lists it from 6.1.3, so the locked Django release runs
+ahead of its official support. See the compatibility notes in the local
 development guide before changing the interpreter.
 
 Frontend conventions — cascade-layer order, token naming, class naming, JS

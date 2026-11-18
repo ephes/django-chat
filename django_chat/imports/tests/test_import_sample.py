@@ -514,6 +514,9 @@ def test_sample_import_can_copy_audio_with_fake_downloader(tmp_path: Path) -> No
     assert latest_audio_fields.data["size"]["mp3"] == len(
         _fake_audio_content(audio_metadata.source_url)
     )
+    assert latest_audio_fields.data["size_file_names"]["mp3"] == latest_audio_fields.mp3.name
+    (tmp_path / audio_metadata.storage_name).unlink()
+    assert latest_audio.get_file_size("mp3") == len(_fake_audio_content(audio_metadata.source_url))
     preview_metadata = EpisodeSourceMetadata.objects.get(episode_number=0)
     preview_audio = preview_metadata.audio_import_metadata.audio
     assert cast(Any, preview_audio).subtitle == ""

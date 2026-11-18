@@ -47,6 +47,9 @@ def test_justfile_deploys_staging_through_ops_control() -> None:
     recipe = justfile.split("deploy-staging: deploy-static-check", 1)[1].split("\n\n", 1)[0]
     assert 'PROJECTS_ROOT="$(dirname "$source_dir")" just deploy-one django-chat staging' in recipe
     assert '"$(basename "$source_dir")" != "django-chat"' in recipe
+    # ops-control deploys django_chat with pyinfra; the Ansible playbook is gone.
+    assert "deploy-django-chat.yml" not in recipe
+    assert "grep -q '^  django_chat:' \"$ops_control/services-metadata.yml\"" in recipe
 
 
 def test_staging_secret_defaults_to_ops_control() -> None:

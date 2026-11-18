@@ -7,21 +7,20 @@ Use uv 0.13.6 or newer to install it. Ruff and ty target Python 3.15.
 
 ### Framework And Python Compatibility
 
-The 2026-10-25 dependency refresh uses the latest stable releases,
-[Django 6.1.2](https://www.djangoproject.com/download/) and
-[Wagtail 8.0.1](https://docs.wagtail.org/en/stable/releases/8.0.1.html).
-The latter includes security fixes. The minimum dependency versions require
-these patch releases; django-cast stays at the existing locked development
-commit.
+The lock uses [Django 6.1.2](https://www.djangoproject.com/download/) and,
+since 2026-11-18, [Wagtail 8.1](https://docs.wagtail.org/en/stable/releases/8.1.html)
+(`>=8.1,<8.2`) with django-cast develop `e0c632ad`. The 2026-10-25 refresh had
+raised the minimum versions to Django 6.1.2 and Wagtail 8.0.1, which include
+security fixes.
 
 [Python 3.15.2](https://www.python.org/downloads/release/python-3152/)
-replaced 3.15.1 (October 21, 2026) in the October 29, 2026 update. The project already runs and tests Python
-3.15, but this is ahead of official framework support:
+replaced 3.15.1 (October 21, 2026) in the October 29, 2026 update.
+[Wagtail's compatibility table](https://docs.wagtail.org/en/stable/releases/upgrading.html)
+lists Python 3.11 to 3.15 for Wagtail 8.1, the first release with formal 3.15
+support.
 [Django's compatibility table](https://docs.djangoproject.com/en/6.1/faq/install/)
-lists 3.15 support starting with Django 6.1.3, and
-[Wagtail's stable compatibility table](https://docs.wagtail.org/en/stable/releases/upgrading.html)
-lists Python through 3.14 for Wagtail 8.0. Development documentation for future
-Wagtail releases does not establish support for the installed stable release.
+lists 3.15 support starting with Django 6.1.3, so the locked Django 6.1.2 runs
+ahead of its official support.
 
 Keep `.python-version` and ops-control's `django_chat_python_version` aligned
 when upgrading the deployment interpreter. Both now pin 3.15.2, including the

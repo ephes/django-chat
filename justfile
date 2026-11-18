@@ -75,8 +75,8 @@ deploy-staging: deploy-static-check
         exit 1
     fi
     ops_control="{{absolute_path(OPS_CONTROL_DIR)}}"
-    if [[ ! -f "$ops_control/playbooks/deploy-django-chat.yml" ]]; then
-        echo "No ops-control checkout with deploy-django-chat.yml at $ops_control (set OPS_CONTROL_DIR)" >&2
+    if ! grep -q '^  django_chat:' "$ops_control/services-metadata.yml" 2>/dev/null; then
+        echo "No ops-control checkout with the django_chat service at $ops_control (set OPS_CONTROL_DIR)" >&2
         exit 1
     fi
     cd "$ops_control"

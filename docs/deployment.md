@@ -1,9 +1,11 @@
 # Deployment
 
 Django Chat deploys through the private ops-control repository, like the other
-Wagtail sites (homepage, python-podcast): its playbook
-`playbooks/deploy-django-chat.yml` runs the current ops-library roles
-`uv_install` and `wagtail_deploy` against the shared staging host. Settings,
+Wagtail sites (homepage, python-podcast): its pyinfra `django_chat` site
+(`pyinfra_support/django_sites.py`) deploys to the shared staging host. The
+Ansible playbook `playbooks/deploy-django-chat.yml` that later sections still
+name has been removed from ops-control; those sections describe the settings
+it carried. Settings,
 hostnames and the encrypted secret live in ops-control (see its
 `docs/DJANGO_CHAT.md`). This repository no longer carries Ansible; the former
 self-contained `deploy/` directory (with an ops-library pinned to 2.31.15) was
@@ -22,9 +24,8 @@ staging` in the ops-control checkout named by `OPS_CONTROL_DIR` (default:
 `../ops-control`, next to this repository) with `PROJECTS_ROOT` set to this
 checkout's parent directory, because ops-control rsyncs
 `$PROJECTS_ROOT/django-chat`. The checkout therefore has to be named
-`django-chat`. Install the ops-library collection in ops-control first
-(`just install-local-library` there). Running the ops-control recipe directly
-is equivalent:
+`django-chat`. ops-control maps `django-chat` to its pyinfra `django_chat`
+service. Running the ops-control recipe directly is equivalent:
 
 ```sh
 cd ../ops-control
@@ -34,7 +35,7 @@ PROJECTS_ROOT="$(cd .. && pwd)" just deploy-one django-chat staging
 The deploy rsyncs the working tree as it is, including uncommitted changes.
 
 There is no production deployment. Production is a placeholder in ops-control,
-and its playbook refuses every host but `staging`.
+whose `django_chat` site refuses every host but `staging`.
 
 Staging is live at `https://djangochat.staging.django-cast.com`. Re-run
 `just deploy-staging` after repo-side changes that need to reach the host.
@@ -292,9 +293,22 @@ django-cast upgrade actions checked for this site:
 - The theme is registered through `CAST_CUSTOM_THEMES`, and there are no
   `confirm_delete.html` overrides and no custom Audio/Video chooser code.
 - Cached audio sizes are now bound to the file name. Sizes cached before the
-  upgrade, including the importer's copied byte sizes, have no file name, so
-  feeds ask storage for each size until the audio is derived again. The values
-  do not change, and feed responses stay cached.
+  upgrade have no file name, so every uncached feed render asks storage for
+  each enclosure size, and a single storage error fails the feed. The importer
+  now records the file name with the copied byte size. After deploying, bind
+  the existing sizes once (sizes are read from storage; safe to re-run):
+
+  ```sh
+  .venv/bin/python manage.py cache_django_chat_audio_sizes          # dry-run
+  .venv/bin/python manage.py cache_django_chat_audio_sizes --write
+  ```
+- Collected static files: after the deploy, compare the collected copies with
+  the installed django-cast and Wagtail static files (for example
+  `fluent_comments/js/ajaxcomments.js`, which sends the comment revision
+  token). The deploy's plain `collectstatic` skips a source that is not newer
+  than the collected copy, and the venv hardlinks files from the uv cache with
+  the cache's timestamps. If a file differs, rebuild the static directory from
+  empty as described for the rollback.
 
 Local checks: `just check` (639 tests), `just test-browser` (18), `just
 docs-check` and `makemigrations --check`. In a rehearsal on PostgreSQL 17, a
@@ -303,14 +317,32 @@ import under the old lock planned and applied only `cast.0091` to `cast.0094`
 under the new one, and pages, feeds and the episode list returned the same
 responses before and after.
 
-Rollback: migrate `cast` back to `0090` with the new code still installed,
-then deploy the previous commit. A rollback without that step leaves
-`contributor_order` without a database default, and the old code cannot
-create podcasts. Unapplying the migrations drops the new columns, including
-the spam filter retrain attempt, each podcast's contributor order and the
-links to previous transcript versions. The private files stay in storage. In
-the rehearsal, the old code then served the same responses and the same
-`showmigrations` as before the upgrade.
+Rollback: hold the shared deploy lock on the host for the whole sequence
+(`python -m pyinfra_support.deploy_lock acquire staging` in ops-control,
+export `OPS_CONTROL_DEPLOY_LOCK=staging=<token>` so the nested `just
+deploy-one` accepts it, release afterwards):
+
+1. As root stop `django-chat.service` and `django-chat-db-worker.service`,
+   so no request or task reads the columns while they are dropped.
+2. As the `django-chat` user, with the new code still installed, run
+   `manage.py migrate cast 0090`. A rollback without this step leaves
+   `contributor_order` without a database default, and the old code cannot
+   create podcasts. Unapplying the migrations drops the new columns: the spam
+   filter retrain attempt, each podcast's contributor order and the links to
+   previous transcript versions. The private files stay in storage.
+3. As the `django-chat` user empty `/home/django-chat/site/staticfiles` (what
+   `collectstatic --clear` does; it only holds collected files), so the old
+   packages' static files are collected again instead of being skipped as
+   older.
+4. In ops-control run `just deploy-one django_chat staging` with
+   `PROJECTS_ROOT` set to a directory whose `django-chat` subdirectory is a
+   clean checkout of the previous commit. It installs the old lock, collects
+   the static files into the empty directory and starts both units. Check each
+   unit with its own `systemctl is-active`.
+
+The bound size entries stay in the audio data; the old django-cast ignores
+them. In the rehearsal, the old code served the same responses and the same
+`showmigrations` after step 2 as before the upgrade.
 
 To restore that backup, reverse the sync source and destination:
 

@@ -8,7 +8,10 @@
   draftjs-exporter moves to 7.3.1 and soupsieve to 4.1.1 (django-cast's new
   floor). django-cast adds migrations `cast.0091` to `cast.0094`. The comment
   template override posts django-cast's comment revision token, which author
-  edits now require.
+  edits now require. The sample and catalog importer records the copied
+  file's name with its size, and `cache_django_chat_audio_sizes` binds the
+  sizes of existing audio files. `just deploy-staging` checks for ops-control's
+  `django_chat` service instead of the removed playbook.
 - Unwind newly saved cover objects when catalog metadata or commit fails;
   require an outermost transaction for imports with artwork and retain existing
   covers. Admit covers before persistence under 20 MiB, 16 million pixels, and
