@@ -119,21 +119,24 @@ Source CSS remains readable in the repository, and no Node/npm toolchain is
 required on the deployment host.
 
 The deployed application also needs `gunicorn` available in the app virtualenv,
-because the generated systemd unit starts `{{ wagtail_venv_bin }}/gunicorn`,
-and `psycopg[binary]` so production settings can connect to the PostgreSQL
-database from the app virtualenv.
+because `django-chat.service` runs the generated
+`/home/django-chat/site/gunicorn.sh`, which loads `site/.env` and execs
+`/home/django-chat/site/.venv/bin/gunicorn` (3 workers, 120 second timeout,
+127.0.0.1:10015, `config.wsgi:application`), and `psycopg[binary]` so
+production settings can connect to the PostgreSQL database from the app
+virtualenv.
 
 ## Production Settings
 
-Deployment uses `config.settings.production`. The role renders a `.env` file
-with:
+Deployment uses `config.settings.production`. ops-control's `django_chat`
+site renders `/home/django-chat/site/.env` with:
 
 - `DJANGO_SETTINGS_MODULE=config.settings.production`
 - `DJANGO_SECRET_KEY`
 - `DJANGO_ALLOWED_HOSTS`
 - `DATABASE_URL`
 - Django Chat S3 media settings
-- cache/admin/email values needed by the app and deploy role
+- cache/admin/email values needed by the app and the deploy
 
 The production settings module keeps local/test behavior unchanged and requires
 real secret values from the deployment environment.
