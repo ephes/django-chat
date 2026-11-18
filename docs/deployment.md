@@ -2,10 +2,8 @@
 
 Django Chat deploys through the private ops-control repository, like the other
 Wagtail sites (homepage, python-podcast): its pyinfra `django_chat` site
-(`pyinfra_support/django_sites.py`) deploys to the shared staging host. The
-Ansible playbook `playbooks/deploy-django-chat.yml` that later sections still
-name has been removed from ops-control; those sections describe the settings
-it carried. Settings,
+(`pyinfra_support/django_sites.py`) deploys to the shared staging host and
+replaced the former Ansible playbook `playbooks/deploy-django-chat.yml`. Settings,
 hostnames and the encrypted secret live in ops-control (see its
 `docs/DJANGO_CHAT.md`). This repository no longer carries Ansible; the former
 self-contained `deploy/` directory (with an ops-library pinned to 2.31.15) was
@@ -50,7 +48,7 @@ transcript worker restart through the role's handlers whenever the source, the
 dependencies or the rendered environment change.
 
 Staging enables Django Chat's global comments gate (`CAST_COMMENTS_ENABLED=true`
-in the deployed environment; the playbook default is off). With the staging
+in the deployed environment; the ops-control default is off). With the staging
 global gate open, the podcast page's Wagtail `comments_enabled` toggle
 activates comments across the imported catalog. Individual episode/post
 `comments_enabled` toggles remain available as opt-outs, so reviewers can
@@ -151,7 +149,7 @@ deploy path, a Django Chat-specific S3-compatible bucket is required if staging
 should self-host copied audio and other media. Metadata-only browsing can work
 without copied audio, but that is not a complete playback proof. If you choose
 a non-AWS S3-compatible provider that needs an explicit endpoint or region
-setting, extend the ops-control playbook before relying on it.
+setting, extend ops-control's `django_chat` site before relying on it.
 
 Current staging media status: full-catalog audio copy has been verified.
 `import_django_chat_catalog --copy-cover-image --copy-audio` on the deployed
@@ -302,13 +300,17 @@ django-cast upgrade actions checked for this site:
   .venv/bin/python manage.py cache_django_chat_audio_sizes          # dry-run
   .venv/bin/python manage.py cache_django_chat_audio_sizes --write
   ```
-- Collected static files: after the deploy, compare the collected copies with
-  the installed django-cast and Wagtail static files (for example
+- Collected static files: after the deploy, compare each static file that
+  Django's staticfiles finders select from django-cast and the installed
+  Wagtail apps with its collected copy (for example
   `fluent_comments/js/ajaxcomments.js`, which sends the comment revision
-  token). The deploy's plain `collectstatic` skips a source that is not newer
-  than the collected copy, and the venv hardlinks files from the uv cache with
-  the cache's timestamps. If a file differs, rebuild the static directory from
-  empty as described for the rollback.
+  token). Files of Wagtail apps this site does not install are not collected.
+  The deploy's plain `collectstatic` skips a source that is not newer than the
+  collected copy, and the venv hardlinks files from the uv cache with the
+  cache's timestamps. If a file differs, rebuild the static directory with the
+  upgraded commit: under the shared deploy lock stop both units, empty
+  `/home/django-chat/site/staticfiles` as the `django-chat` user and run the
+  same `just deploy-one` again. No database step is involved.
 
 Local checks: `just check` (639 tests), `just test-browser` (18), `just
 docs-check` and `makemigrations --check`. In a rehearsal on PostgreSQL 17, a
@@ -370,27 +372,22 @@ and rollback decisions are settled.
 
 ## Application Python
 
-ops-control pins the uv-managed interpreter in both the pyinfra SiteSpec and
-Ansible rollback playbook for the application venv to
-3.15.2 (`django_chat_python_version` in `playbooks/deploy-django-chat.yml`;
-3.14.4 before October 2026). The `wagtail_deploy` role installs that exact
-version with `/usr/local/bin/uv` and, when the existing `site/.venv` reports a
-different version, deletes and rebuilds the venv before `uv sync --frozen`.
-Expect a short outage while the venv is rebuilt. The rsynced `.python-version`
-must name the same version: `uv sync --frozen` honours it and would otherwise
-replace the venv with that interpreter. The playbook refuses a source whose
-`.python-version` differs, and a test here keeps `.python-version` at 3.15.2.
+ops-control pins the uv-managed interpreter for the application venv to
+3.15.2 in its pyinfra `django_chat` site (`app.python` with
+`assert_python_version` in `pyinfra_support/django_sites.py`; 3.14.4 before
+October 2026). The rsynced `.python-version` must name the same version:
+`uv sync --frozen` honours it and would otherwise replace the venv with that
+interpreter. A test here keeps `.python-version` at 3.15.2.
 Use uv 0.13.6 or newer for the 3.15.2 interpreter download. This configuration
 update does not itself deploy the runtime to staging. To roll back, align the
 source requirement, source pin, and deployment configuration before redeploying.
 
 ## Runtime Sizing
 
-The playbook overrides the generic `wagtail_deploy` role defaults for a small
-VPS: 3 gunicorn workers with a 120 second timeout on 127.0.0.1:10015, and the
-Django admin under `django-admin/`. uv comes from the `uv_install` role's
-pinned, checksum-verified release, the same binary every ops-control deploy to
-that host uses.
+ops-control's `django_chat` site is sized for a small VPS: 3 gunicorn workers
+with a 120 second timeout on 127.0.0.1:10015, and the Django admin under
+`django-admin/`. uv is ops-control's pinned release, the same binary every
+ops-control deploy to that host uses.
 
 The `cast_transcripts` database worker is enabled so Wagtail's Generate
 transcript action can queue Voxhelm completion work outside the web request.
@@ -398,9 +395,8 @@ Web sizing remains intentionally small.
 
 ## Transcript Worker
 
-The ops-control playbook enables the django-tasks database worker
-(`wagtail_db_worker_enabled: true`, `wagtail_db_worker_backend:
-cast_transcripts`).
+ops-control enables the django-tasks database worker for the
+`cast_transcripts` backend.
 
 The deployed unit is `django-chat-db-worker.service` and runs
 `manage.py db_worker --backend cast_transcripts --interval 5`.
@@ -410,7 +406,7 @@ settings. For staging, keep the Voxhelm API base URL, producer token, model,
 and language in the staging secret (ops-control
 `secrets/staging/django-chat.yml`) as
 `cast_voxhelm_api_base`, `cast_voxhelm_api_key`, `cast_voxhelm_model`, and
-`cast_voxhelm_language`; the ops-control playbook renders them into the
+`cast_voxhelm_language`; ops-control renders them into the
 deployed `.env`. The matching producer token must also be present in the
 Voxhelm deployment secrets and rendered into `VOXHELM_BEARER_TOKENS`.
 Voxhelm transcription also requires the host running Django/Wagtail and

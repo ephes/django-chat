@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from io import StringIO
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest import mock
 
 import pytest
@@ -109,3 +109,38 @@ def test_write_skips_a_file_replaced_after_its_size_was_read(tmp_path: Path) -> 
 def test_dry_run_and_write_are_exclusive() -> None:
     with pytest.raises(CommandError, match="mutually exclusive"):
         _run("--dry-run", "--write")
+
+
+@pytest.mark.django_db
+def test_null_cache_maps_count_as_unbound(tmp_path: Path) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        audio = _legacy_audio()
+        Audio.objects.filter(pk=audio.pk).update(
+            data={"size": {"mp3": len(CONTENT)}, "size_file_names": None}
+        )
+        assert "unbound=1" in _run()
+        output = _run("--write")
+
+    assert "updated=1" in output
+    stored = Audio.objects.get(pk=audio.pk)
+    assert cast(Any, stored.data)["size_file_names"] == {"mp3": stored.mp3.name}
+
+
+@pytest.mark.django_db
+def test_write_skips_an_audio_deleted_while_its_size_is_read(tmp_path: Path) -> None:
+    with override_settings(MEDIA_ROOT=tmp_path):
+        first = _legacy_audio("First")
+        second = _legacy_audio("Second")
+        real_size = FieldFile.size
+
+        def size_then_delete(field_file: FieldFile) -> int:
+            value = real_size.fget(field_file)  # type: ignore[attr-defined]
+            if field_file.instance.pk == first.pk:
+                Audio.objects.filter(pk=first.pk).delete()
+            return value
+
+        with mock.patch.object(FieldFile, "size", property(size_then_delete)):
+            output = _run("--write")
+
+    assert "updated=1, changed_meanwhile=1" in output
+    assert "size_file_names" in cast(Any, Audio.objects.get(pk=second.pk).data)

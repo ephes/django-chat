@@ -36,16 +36,18 @@ class Command(BaseCommand):
         failures: list[str] = []
         for audio_pk in Audio.objects.order_by("pk").values_list("pk", flat=True):
             audios += 1
-            audio = Audio.objects.get(pk=audio_pk)
+            audio = Audio.objects.filter(pk=audio_pk).first()
+            if audio is None:
+                changed_meanwhile += 1
+                continue
             for audio_format in audio.audio_formats:
                 file_field = getattr(audio, audio_format)
                 if not file_field:
                     continue
                 data = audio.data or {}
-                if (
-                    data.get("size", {}).get(audio_format) is not None
-                    and data.get("size_file_names", {}).get(audio_format) == file_field.name
-                ):
+                if (data.get("size") or {}).get(audio_format) is not None and (
+                    data.get("size_file_names") or {}
+                ).get(audio_format) == file_field.name:
                     bound += 1
                     continue
                 unbound += 1
@@ -79,8 +81,8 @@ class Command(BaseCommand):
 def _store_size(audio_pk: int, audio_format: str, file_name: str, size: int) -> bool:
     """Store one size under a row lock unless the file changed since it was read."""
     with transaction.atomic():
-        audio = Audio.objects.select_for_update().get(pk=audio_pk)
-        if getattr(audio, audio_format).name != file_name:
+        audio = Audio.objects.select_for_update().filter(pk=audio_pk).first()
+        if audio is None or getattr(audio, audio_format).name != file_name:
             return False
         data = dict(audio.data or {})
         sizes = dict(data.get("size") or {})

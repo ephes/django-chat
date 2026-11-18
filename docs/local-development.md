@@ -22,9 +22,9 @@ support.
 lists 3.15 support starting with Django 6.1.3, so the locked Django 6.1.2 runs
 ahead of its official support.
 
-Keep `.python-version` and ops-control's `django_chat_python_version` aligned
-when upgrading the deployment interpreter. Both now pin 3.15.2, including the
-pyinfra SiteSpec and Ansible rollback playbook. Install with `just install`
+Keep `.python-version` and the Python version of ops-control's pyinfra
+`django_chat` site (`app.python`) aligned when upgrading the deployment
+interpreter. Both now pin 3.15.2. Install with `just install`
 and run `just check`; Python 3.14, 3.15.0 and 3.15.1 no longer satisfy the project
 requirement. uv 0.13.5 and older do not have a download entry for 3.15.2.
 
@@ -832,9 +832,9 @@ just deploy-staging
 `just deploy-static-check` verifies the package-bundled static manifests needed
 by deployment without contacting a host. `just deploy-staging` runs it and then
 `just deploy-one django-chat staging` in the ops-control checkout
-(`OPS_CONTROL_DIR`, default `../ops-control`). It needs ops-control's Ansible
-tooling with the ops-library collection installed, an age key for the
-ops-control secrets and root SSH access to the staging host. There is no
+(`OPS_CONTROL_DIR`, default `../ops-control`), which deploys with pyinfra. It
+needs ops-control's tooling, an age key for the ops-control secrets and root
+SSH access to the staging host. There is no
 production deployment.
 
 ## Boundaries
