@@ -63,8 +63,8 @@ deploy-static-check *ARGS:
     uv run python manage.py check_django_chat_static_assets {{ARGS}}
 
 # ops-control rsyncs $PROJECTS_ROOT/django-chat, so this checkout must be named
-# django-chat; its parent becomes PROJECTS_ROOT. Run `just install-local-library`
-# in ops-control first. Production is not set up.
+# django-chat; its parent becomes PROJECTS_ROOT. ops-control deploys it with
+# pyinfra. Production is not set up.
 # Deploy staging through ops-control (just deploy-one django-chat staging).
 deploy-staging: deploy-static-check
     #!/usr/bin/env bash

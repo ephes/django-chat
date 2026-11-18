@@ -96,7 +96,7 @@ Before sending or refreshing the staging URL for hosts, confirm:
   Host reviewers do not need decrypt access just to use the repo or Wagtail
   admin.
 - The staging media bucket and public media host are Django Chat-specific.
-- `just install-local-library` has been run in ops-control.
+- ops-control's tooling is installed (see its `docs/PYINFRA.md`).
 - `just deploy-staging` (ops-control `just deploy-one django-chat staging`) has
   completed successfully after any repo-side deployment change.
 - Migrations have run on staging.

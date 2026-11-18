@@ -38,14 +38,15 @@ whose `django_chat` site refuses every host but `staging`.
 Staging is live at `https://djangochat.staging.django-cast.com`. Re-run
 `just deploy-staging` after repo-side changes that need to reach the host.
 
-The play holds Git to HTTP/1.1 through task-scoped environment variables. This
-avoids the staging host's unreliable Git/libcurl HTTP/2 transport when
-`uv sync --frozen` fetches django-cast's public development branch, without
-changing host-wide Git configuration. After the roles it makes the cache
-directory owned by the app user and runs `manage.py ensure_default_site`, so
-Wagtail's default Site carries the deployed hostname. The app and the
-transcript worker restart through the role's handlers whenever the source, the
-dependencies or the rendered environment change.
+The deploy holds Git to HTTP/1.1 through environment variables for
+`uv sync` only (`uv_env` of the `django_chat` site). This avoids the staging
+host's unreliable Git/libcurl HTTP/2 transport when `uv sync --frozen` fetches
+django-cast's public development branch, without changing host-wide Git
+configuration. It also runs `manage.py ensure_default_site`, so Wagtail's
+default Site carries the deployed hostname. The app and the transcript worker
+restart whenever the source, the dependencies or the rendered environment
+change; `just pyinfra-check django_chat staging` in ops-control lists what a
+deploy would change.
 
 Staging enables Django Chat's global comments gate (`CAST_COMMENTS_ENABLED=true`
 in the deployed environment; the ops-control default is off). With the staging
@@ -69,8 +70,8 @@ unaffected by this middleware. The three flags are set in ops-control's
 
 ## Proxy
 
-The staging host's Traefik belongs to ops-control. `wagtail_deploy` writes only
-Django Chat's dynamic route (`/etc/traefik/dynamic/django-chat.traefik.yml`,
+The staging host's Traefik belongs to ops-control. The `django_chat` deploy
+writes only Django Chat's dynamic route (`/etc/traefik/dynamic/django-chat.traefik.yml`,
 `Host(\`djangochat.staging.django-cast.com\`)`, certificate resolver
 `letsencrypt`); it never installs or reconfigures Traefik itself. The former
 standalone/clean-VPS mode of the repo-local deploy is gone with it.
@@ -98,7 +99,7 @@ uv run python manage.py check_django_chat_static_assets
 That command verifies that the installed `django-cast` package Vite manifest
 exists before a deploy starts.
 
-During deployment, `wagtail_deploy` runs `collectstatic` and then fails if these
+During deployment, ops-control runs `collectstatic` and then fails if these
 collected files are missing:
 
 - `staticfiles/staticfiles.json`

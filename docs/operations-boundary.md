@@ -2,7 +2,7 @@
 
 Django Chat is deployed by the private ops-control repository, which holds the
 inventory, the staging hostname and settings, the encrypted secret and the
-playbook (`playbooks/deploy-django-chat.yml`, current ops-library roles). This
+pyinfra `django_chat` site (`pyinfra_support/django_sites.py`). This
 repository holds the application and a `just deploy-staging` shortcut that
 calls ops-control. There is no second, repo-local deploy path: the former
 `deploy/` directory was retired in October 2026.
@@ -16,8 +16,8 @@ calls ops-control. There is no second, repo-local deploy path: the former
 
 ## What Lives In ops-control
 
-- `playbooks/deploy-django-chat.yml` and the `just deploy-one django-chat`
-  dispatch
+- the pyinfra `django_chat` site (`pyinfra_support/django_sites.py`) and the
+  `just deploy-one django-chat` dispatch
 - the staging host values in `inventories/prod/host_vars/staging.yml`
 - the SOPS/age-encrypted staging secret `secrets/staging/django-chat.yml`
 - `docs/DJANGO_CHAT.md`
@@ -54,9 +54,8 @@ Required local tools:
 - `uv`
 - `just`
 - `sops` and `yq` (for `just dev` / `just manage-staging-media`)
-- an ops-control checkout next to this one (or `OPS_CONTROL_DIR`), with its
-  Ansible tooling and the ops-library collection installed
-  (`just install-local-library` in ops-control)
+- an ops-control checkout next to this one (or `OPS_CONTROL_DIR`) with its
+  tooling installed (see ops-control's `docs/PYINFRA.md`)
 - the age private key that decrypts ops-control's secrets
   (`SOPS_AGE_KEY_FILE`, default `~/.config/sops/age/keys.txt`)
 - root SSH access to the staging host

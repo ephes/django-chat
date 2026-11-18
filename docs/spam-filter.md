@@ -31,7 +31,7 @@ is hidden. The previous model is backed up on the staging host at
 `/root/spamfilter-backup-20260729.json`.
 
 This applies to staging only — there is no production environment yet (it is
-still a placeholder in ops-control), and the ops-control playbook keeps
+still a placeholder in ops-control), and ops-control keeps
 `CAST_COMMENTS_ENABLED` false unless an environment turns it on. Local development has no `cast_spamfilter` row
 at all, so the moderator publishes every comment there.
 
