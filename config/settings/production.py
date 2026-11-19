@@ -1,5 +1,7 @@
 """Production deployment settings for Django Chat."""
 
+import os
+
 from .base import *  # noqa: F403
 from .base import ROOT_DIR, env
 
@@ -38,12 +40,25 @@ SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default="server@example.invalid")
 DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", default=SERVER_EMAIL)
 EMAIL_SUBJECT_PREFIX = "[Django Chat] "
 
+_CACHE_LOCATION = env("DJANGO_CACHE_LOCATION", default=str(ROOT_DIR / "cache"))
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": env("DJANGO_CACHE_LOCATION", default=str(ROOT_DIR / "cache")),
+        "LOCATION": _CACHE_LOCATION,
+    },
+    # Failed admin login counters (docs/admin-login-throttle.md). A separate
+    # directory, so clearing the default cache on a view restriction change
+    # does not reset lockouts. The backend drops expired counters before it
+    # culls, so only live entries count towards MAX_ENTRIES.
+    "admin_login_throttle": {
+        "BACKEND": "django_chat.core.cache_backends.ExpiringFileBasedCache",
+        "LOCATION": os.path.join(_CACHE_LOCATION, "admin-login-throttle"),
+        "OPTIONS": {"MAX_ENTRIES": 100000},
     },
 }
+# One lock shared by all Gunicorn workers on this host. FileBasedCache.clear()
+# deletes only *.djcache files, so clearing a cache never replaces the lock.
+ADMIN_LOGIN_THROTTLE_LOCK_PATH = os.path.join(_CACHE_LOCATION, "admin-login-throttle.lock")
 
 # Transcript speaker labels are editorial content.  The django-cast player
 # endpoint is cacheable by default, which is useful for stable public sites but

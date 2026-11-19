@@ -26,6 +26,7 @@ nav = [
   ] },
   { "Security" = [
     { "Import security" = "import-security.md" },
+    { "Admin login throttling" = "admin-login-throttle.md" },
     { "Known security issues" = "security-known-issues.md" },
   ] },
   { "Quality" = [

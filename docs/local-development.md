@@ -457,8 +457,10 @@ that proxy's `X-Forwarded-For`, so every visitor would arrive as the proxy's
 address and share one budget. Then configure Traefik's
 `forwardedHeaders.trustedIPs` for the upstream proxy (which must send a clean
 client address) and set `NUM_PROXIES` to the number of proxies in the chain.
-Setting `NUM_PROXIES` alone does not help. The counter lives in the default cache, which is shared by all
-Gunicorn workers (file-based cache in production settings). Locally the
+Setting `NUM_PROXIES` alone does not help. The admin login throttle
+([Admin login throttling](admin-login-throttle.md)) counts the same client
+address, so the same rule applies to it. The comment post counter lives in the
+default cache, which is shared by all Gunicorn workers (file-based cache in production settings). Locally the
 `LocMemCache` is per process, which is enough for the dev server.
 
 ### Author self-edit and delete
