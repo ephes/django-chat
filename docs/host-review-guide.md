@@ -171,10 +171,9 @@ the account when host review access is settled.
 Do not commit, document, or print admin passwords in this repository. Do not add
 human Wagtail passwords to the SOPS secret in ops-control.
 
-After 10 failed logins for one username within an hour, or 20 from one
-address, the login answers `429 Too Many Requests` for up to an hour, even with
-the right password. New passwords need at least 12 characters and must not be
-common or entirely numeric. See [Admin login throttling](admin-login-throttle.md).
+New passwords need at least 12 characters and must not be common or entirely
+numeric. Use a long, randomly generated password: failed logins are not rate
+limited.
 
 ## First Review Pass
 

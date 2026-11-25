@@ -2,16 +2,18 @@
 
 ## Unreleased
 
-- Throttle failed Django admin, Wagtail admin and Wagtail front-end
-  (`/_util/login/`) logins per client address (`20/hour`) and per username
-  (`10/hour`), with counters in a dedicated file-based cache that drops
-  expired counters before culling, and one shared lock across Gunicorn
-  workers. Refused
-  attempts get `429` with `Retry-After`. Restrict django-cast's API to session
-  authentication, so HTTP Basic credentials no longer check passwords outside
-  the login forms, and require Django's standard password validators
-  (12 characters minimum) for new passwords. Adds `filelock`. See
-  `docs/admin-login-throttle.md`.
+- Remove the failed-login throttle on the Django admin, Wagtail admin and
+  Wagtail front-end (`/_util/login/`) logins again, together with its
+  `admin_login_throttle` cache, the `ExpiringFileBasedCache` backend, the
+  `DJANGO_ADMIN_LOGIN_*_RATE` settings and the `filelock` dependency. Admin
+  accounts rely on long, randomly generated passwords instead; failed logins
+  no longer get `429`. The `admin-login-throttle/` directory and
+  `admin-login-throttle.lock` under `DJANGO_CACHE_LOCATION` on staging are no
+  longer used and can be deleted.
+- Restrict django-cast's API to session authentication, so HTTP Basic
+  credentials no longer check passwords outside the login forms, and require
+  Django's standard password validators (12 characters minimum) for new
+  passwords.
 - Upgrade Wagtail 8.0.1 to 8.1 (range `>=8.1,<8.2`) and relock django-cast
   develop from `b594f805` to `e0c632ad` (release 0.2.68 plus the 0.2.69
   version bump), the revision homepage and python-podcast run.

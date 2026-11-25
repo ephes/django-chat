@@ -1,4 +1,4 @@
-"""Authentication boundaries outside the login forms (see docs/admin-login-throttle.md)."""
+"""Authentication boundaries outside the login forms: session-only API, password validators."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def basic_auth(username: str, password: str) -> str:
 @pytest.mark.django_db
 def test_api_does_not_accept_http_basic_credentials() -> None:
     # DRF's default BasicAuthentication would check a password on every API
-    # request, outside the throttled login forms and without CSRF.
+    # request, outside the login forms and without CSRF.
     get_user_model().objects.create_superuser(
         username="synthetic-admin", email="admin@example.invalid", password="password"
     )
@@ -67,7 +67,7 @@ def test_a_long_generated_password_is_accepted() -> None:
     validate_password("correct-horse-battery-staple-7319", user)
 
 
-def test_production_settings_configure_the_login_throttle(tmp_path: Path) -> None:
+def test_production_settings_keep_the_api_session_only(tmp_path: Path) -> None:
     env = {
         "PATH": os.environ["PATH"],
         "DJANGO_READ_DOT_ENV_FILE": "False",
@@ -81,11 +81,9 @@ def test_production_settings_configure_the_login_throttle(tmp_path: Path) -> Non
     script = (
         "import json; from django.conf import settings; "
         "print(json.dumps({"
-        "'throttle_cache': settings.CACHES['admin_login_throttle'], "
+        "'caches': sorted(settings.CACHES), "
         "'default_cache': settings.CACHES['default']['LOCATION'], "
-        "'lock': settings.ADMIN_LOGIN_THROTTLE_LOCK_PATH, "
         "'auth': list(settings.REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']), "
-        "'rates': settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'], "
         "'num_proxies': settings.REST_FRAMEWORK.get('NUM_PROXIES')}))"
     )
 
@@ -99,19 +97,8 @@ def test_production_settings_configure_the_login_throttle(tmp_path: Path) -> Non
     )
     values = json.loads(result.stdout)
 
-    cache_dir = str(tmp_path / "cache")
-    assert values["default_cache"] == cache_dir
-    # A separate directory: clearing the default cache must not reset lockouts.
-    assert values["throttle_cache"]["BACKEND"] == (
-        "django_chat.core.cache_backends.ExpiringFileBasedCache"
-    )
-    assert values["throttle_cache"]["LOCATION"] == os.path.join(cache_dir, "admin-login-throttle")
-    assert values["throttle_cache"]["OPTIONS"]["MAX_ENTRIES"] >= 100000
-    assert values["lock"] == os.path.join(cache_dir, "admin-login-throttle.lock")
+    assert values["caches"] == ["default"]
+    assert values["default_cache"] == str(tmp_path / "cache")
     assert values["auth"] == ["rest_framework.authentication.SessionAuthentication"]
-    assert values["rates"] == {
-        "admin_login_client": "20/hour",
-        "admin_login_username": "10/hour",
-    }
     # Traefik replaces X-Forwarded-For; see docs/local-development.md.
     assert values["num_proxies"] is None

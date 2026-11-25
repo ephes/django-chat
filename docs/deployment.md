@@ -479,13 +479,10 @@ stored only in a mode-600 bootstrap handoff file on the staging host. Retrieve
 and share that credential through the agreed secure channel, then rotate it in
 Wagtail admin or replace the account when host review access is settled.
 
-The Django admin, Wagtail admin and Wagtail front-end logins throttle failed
-attempts (`20/hour` per client address,
-`10/hour` per username) and new passwords must pass Django's standard
-validators (at least 12 characters). The counters live in
-`<DJANGO_CACHE_LOCATION>/admin-login-throttle/`; see
-[Admin login throttling](admin-login-throttle.md), including how to clear a
-lockout.
+New passwords must pass Django's standard validators (at least 12 characters,
+not common, not entirely numeric). Failed logins are not rate limited; admin
+accounts rely on long, randomly generated passwords. django-cast's API accepts
+the logged-in session only, not HTTP Basic credentials.
 
 ## Out Of Scope
 

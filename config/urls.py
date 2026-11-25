@@ -7,18 +7,14 @@ from cast.views import defaults as cast_default_views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
 from django.views.generic import RedirectView
-from django_chat.core import login_throttle
 from django_chat.core.feeds import DjangoChatLatestEntriesFeed, restriction_aware_cache_page
 from django_chat.core.views import episode_embed, podcast_episode_index
 from django_chat.sponsor.views import sponsor_page
 from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
-from wagtail.admin.views import account as wagtailadmin_account
 from wagtail.documents import urls as wagtaildocs_urls
-from wagtail.urls import WAGTAIL_FRONTEND_LOGIN_TEMPLATE
 
 # Refuse view-restricted podcasts before the shared response cache, like
 # django-cast's own feed routes.
@@ -35,22 +31,8 @@ urlpatterns = [
         RedirectView.as_view(url=f"/{settings.DJANGO_CHAT_PODCAST_SLUG}/", permanent=False),
         name="home",
     ),
-    # Failed logins are throttled per client and per username; mounted before
-    # the admin includes so these resolve first (docs/admin-login-throttle.md).
-    path(f"{settings.ADMIN_URL}login/", login_throttle.throttle_failed_logins(admin.site.login)),
     path(settings.ADMIN_URL, admin.site.urls),
-    path(
-        f"{settings.DJANGO_CHAT_WAGTAIL_ADMIN_PATH}login/",
-        login_throttle.throttle_failed_logins(wagtailadmin_account.LoginView.as_view()),
-    ),
     path(settings.DJANGO_CHAT_WAGTAIL_ADMIN_PATH, include(wagtailadmin_urls)),
-    # Wagtail's front-end login for login-restricted pages, from wagtail.urls.
-    path(
-        "_util/login/",
-        login_throttle.throttle_failed_logins(
-            auth_views.LoginView.as_view(template_name=WAGTAIL_FRONTEND_LOGIN_TEMPLATE)
-        ),
-    ),
     path("documents/", include(wagtaildocs_urls)),
     # Mounted before the cast/wagtail catch-all includes below so the comment
     # endpoints reverse (and resolve) instead of being swallowed by Wagtail's

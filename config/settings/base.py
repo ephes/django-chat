@@ -99,17 +99,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # django-cast's API views inherit these. Session authentication only: DRF's
 # default BasicAuthentication would check a password on every API request,
-# outside the throttled login forms (docs/admin-login-throttle.md). NUM_PROXIES
-# stays unset: Traefik replaces any client-sent X-Forwarded-For with the real
-# client address (docs/local-development.md, "Post rate limit").
+# outside the login forms and without CSRF. NUM_PROXIES stays unset: Traefik
+# replaces any client-sent X-Forwarded-For with the real client address
+# (docs/local-development.md, "Post rate limit").
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
-    "DEFAULT_THROTTLE_RATES": {
-        # Failed Django admin and Wagtail admin logins, per client address and
-        # per submitted username (django_chat/core/login_throttle.py).
-        "admin_login_client": env("DJANGO_ADMIN_LOGIN_CLIENT_RATE", default="20/hour"),
-        "admin_login_username": env("DJANGO_ADMIN_LOGIN_USERNAME_RATE", default="10/hour"),
-    },
 }
 
 ROOT_URLCONF = "config.urls"
