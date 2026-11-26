@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
 from urllib.parse import urlencode
@@ -51,6 +52,8 @@ from django_chat.imports.transfer_limits import (
 from django_chat.imports.url_safety import safe_url_label, safe_urlopen
 
 USER_AGENT = "django-chat-catalog-import/1.0"
+# Concurrent Simplecast episode-detail requests per catalog run.
+SIMPLECAST_DETAIL_FETCH_WORKERS = 6
 
 JsonFetcher = Callable[[str, float], JsonObject]
 TextFetcher = Callable[[str, float], str]
@@ -395,18 +398,18 @@ def _load_simplecast_episode_details(
     *,
     timeout: float,
 ) -> tuple[SimplecastEpisode, ...]:
-    details: list[SimplecastEpisode] = []
-    seen_urls: set[str] = set()
-    for episode in episodes:
-        if not episode.api_url or episode.api_url in seen_urls:
-            continue
-        seen_urls.add(episode.api_url)
+    # One detail request per episode dominates a catalog run (about 0.4 s each,
+    # 200+ episodes). Fetch a few at a time; results keep the list order and a
+    # failed detail is skipped as before, so the merge falls back to the list copy.
+    detail_urls = list(dict.fromkeys(episode.api_url for episode in episodes if episode.api_url))
+    if not detail_urls:
+        return ()
+
+    def fetch_detail(detail_url: str) -> SimplecastEpisode | None:
         try:
-            details.append(
-                parse_simplecast_episode_detail(
-                    json_fetcher(episode.api_url, timeout),
-                    source_url=episode.api_url,
-                )
+            return parse_simplecast_episode_detail(
+                json_fetcher(detail_url, timeout),
+                source_url=detail_url,
             )
         except (
             OSError,
@@ -415,8 +418,12 @@ def _load_simplecast_episode_details(
             TypeError,
             json.JSONDecodeError,
         ):
-            continue
-    return tuple(details)
+            return None
+
+    workers = min(SIMPLECAST_DETAIL_FETCH_WORKERS, len(detail_urls))
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        details = tuple(executor.map(fetch_detail, detail_urls))
+    return tuple(detail for detail in details if detail is not None)
 
 
 def _empty_simplecast_site(podcast: SimplecastPodcast) -> SimplecastSite:

@@ -990,57 +990,6 @@ def _list_item_has_non_link_text(item_tag: Tag) -> bool:
     return bool(re.search(r"[\w']+", text))
 
 
-def _link_item_description(item_tag: Tag) -> str:
-    soup = BeautifulSoup(str(item_tag), "html.parser")
-    copied_item = soup.find("li")
-    if copied_item is None:
-        return ""
-    for anchor in copied_item.find_all("a"):
-        if _link_from_anchor(anchor) is None:
-            anchor.unwrap()
-        else:
-            anchor.decompose()
-
-    description = _linked_paragraph_title(copied_item)
-    if not description:
-        return ""
-
-    meaningful_tokens = [
-        token
-        for token in re.findall(r"[\w']+", description.casefold())
-        if token not in {"and", "or"}
-    ]
-    if not meaningful_tokens:
-        return ""
-    return description
-
-
-def _linkless_list_item_intro(item_tag: Tag) -> str:
-    text = _linked_paragraph_title(item_tag)
-    if not text:
-        return ""
-    return f"<p>{escape(text)}</p>"
-
-
-def _link_items_from_nodes(nodes: Iterable[PageElement]) -> list[dict[str, Any]]:
-    items: list[dict[str, Any]] = []
-    for node in nodes:
-        if isinstance(node, Tag):
-            links = _links_from_anchors(node.find_all("a"))
-            if len(links) == 1:
-                links[0]["title"] = _linked_paragraph_title(node) or links[0]["title"]
-            items.extend(
-                {
-                    "title": link["title"],
-                    "url": link["url"],
-                    "description": "",
-                    "extra_links": [],
-                }
-                for link in links
-            )
-    return items
-
-
 def _links_from_nodes(nodes: Iterable[PageElement]) -> list[dict[str, str]]:
     links: list[dict[str, str]] = []
     for node in nodes:

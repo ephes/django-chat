@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Fetch the Simplecast episode details of a catalog import six at a time
+  instead of one after another; the result is unchanged and a full catalog
+  fetch drops from about 146 to about 30 seconds.
+- Remove five unused helpers (three show-note parsing helpers and the
+  spam-filter `unreadable_transcript_ids`/`collect_transcript_lines`).
 - Remove the failed-login throttle on the Django admin, Wagtail admin and
   Wagtail front-end (`/_util/login/`) logins again, together with its
   `admin_login_throttle` cache, the `ExpiringFileBasedCache` backend, the

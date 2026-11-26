@@ -541,7 +541,10 @@ Safe rerun behavior:
 - Existing copied audio is skipped when the stored file still exists and the
   recorded source URL still matches.
 - Re-running the command re-fetches RSS and Simplecast metadata; it does not
-  assume previous endpoint responses are still current.
+  assume previous endpoint responses are still current. The per-episode
+  Simplecast detail requests run six at a time (results keep the list order;
+  a failed detail falls back to the list copy), so fetching the full catalog
+  takes about 30 seconds instead of about two and a half minutes.
 - `--copy-cover-image` skips the download once `Podcast.cover_image` is set.
 
 Operator controls:

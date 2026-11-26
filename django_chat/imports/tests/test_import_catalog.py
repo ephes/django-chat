@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from dataclasses import replace
 from io import StringIO
 from pathlib import Path
@@ -58,6 +59,29 @@ def test_live_catalog_loader_follows_simplecast_pagination_and_details() -> None
         url.startswith(SIMPLECAST_EPISODES_URL) and "limit=2" in url for url in json_fetcher.urls
     )
     assert "https://api.simplecast.com/page-2" in json_fetcher.urls
+
+
+def test_live_catalog_loader_fetches_episode_details_concurrently_in_order() -> None:
+    json_fetcher = ConcurrentDetailJsonFetcher(failing_numbers={2})
+
+    catalog = load_live_catalog_source_data(
+        max_episodes=3,
+        simplecast_page_size=2,
+        text_fetcher=lambda _url, _timeout: _rss_xml(3),
+        json_fetcher=json_fetcher,
+    )
+
+    # All three detail requests were in flight at once (the barrier would
+    # break and raise if they ran one after another).
+    assert json_fetcher.barrier.broken is False
+    assert catalog.fetch_summary.simplecast_detail_episode_count == 2
+    kinds = {
+        episode.episode_number: episode.simplecast.source_kind
+        for episode in catalog.source_data.episodes
+        if episode.simplecast is not None
+    }
+    # A failed detail falls back to the list copy, as before.
+    assert kinds == {3: "detail", 2: "list", 1: "detail"}
 
 
 def test_live_catalog_loader_falls_back_to_rss_when_simplecast_is_unavailable() -> None:
@@ -298,6 +322,20 @@ class FakeCatalogJsonFetcher:
             return _episode_payload(number, source_kind="detail")
         msg = f"Unexpected URL {source_url}"
         raise AssertionError(msg)
+
+
+class ConcurrentDetailJsonFetcher(FakeCatalogJsonFetcher):
+    def __init__(self, *, failing_numbers: set[int]) -> None:
+        super().__init__()
+        self.failing_numbers = failing_numbers
+        self.barrier = threading.Barrier(3, timeout=5)
+
+    def __call__(self, source_url: str, _timeout: float) -> dict[str, Any]:
+        if source_url.startswith("https://api.simplecast.com/episodes/episode-"):
+            self.barrier.wait()
+            if int(source_url.rsplit("-", 1)[1]) in self.failing_numbers:
+                raise OSError(source_url)
+        return super().__call__(source_url, _timeout)
 
 
 class FailingJsonFetcher:
