@@ -8,9 +8,9 @@
   pages, feed page, embed player, sponsor page and the header's menu and
   social links all use it, so a page with the same slug elsewhere in the tree
   can no longer supply the header links.
-- Cut the episode list from 36 to about 11 database queries per page: episode
-  numbers and durations are joined in, the podcast metadata is loaded once per
-  request, and menu, social and distribution links come from one prefetch
+- Cut the episode list from 36 to 12 database queries per page on staging:
+  episode numbers and durations are joined in, the podcast metadata is loaded
+  once per request, and menu, social and distribution links come from one prefetch
   (episode pages also save one link query).
 
 - Fetch the Simplecast episode details of a catalog import six at a time
