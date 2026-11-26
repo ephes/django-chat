@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Resolve the Django Chat podcast in one place (`django_chat/core/podcast.py`)
+  as the public page with the configured slug under the current site's root
+  page, instead of looking it up by slug alone. The episode list, episode
+  pages, feed page, embed player, sponsor page and the header's menu and
+  social links all use it, so a page with the same slug elsewhere in the tree
+  can no longer supply the header links.
+- Cut the episode list from 36 to about 11 database queries per page: episode
+  numbers and durations are joined in, the podcast metadata is loaded once per
+  request, and menu, social and distribution links come from one prefetch
+  (episode pages also save one link query).
+
 - Fetch the Simplecast episode details of a catalog import six at a time
   instead of one after another; the result is unchanged and a full catalog
   fetch drops from about 146 to about 30 seconds.

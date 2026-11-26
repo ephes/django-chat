@@ -17,17 +17,16 @@ from __future__ import annotations
 from typing import Any
 from typing import cast as type_cast
 
-from cast.models import Podcast
-from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 
+from django_chat.core.podcast import get_django_chat_podcast
 from django_chat.sponsor.models import SponsorPage
 
 
 def sponsor_page(request: HttpRequest) -> HttpResponse:
     page = get_object_or_404(SponsorPage.objects.live().public().specific())
-    podcast = Podcast.objects.live().filter(slug=settings.DJANGO_CHAT_PODCAST_SLUG).first()
+    podcast = get_django_chat_podcast(request)
     if podcast is not None:
         template_base_dir = podcast.get_template_base_dir(type_cast(Any, request))
         type_cast(Any, request).cast_site_template_base_dir = template_base_dir

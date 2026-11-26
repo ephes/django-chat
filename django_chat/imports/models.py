@@ -36,26 +36,29 @@ class PodcastSourceMetadata(models.Model):
         return f"{self.source_title} ({self.simplecast_podcast_id})"
 
     @property
-    def visible_menu_links(self) -> models.QuerySet:
+    def visible_menu_links(self) -> list[PodcastSourceLink]:
         return self.visible_links_for("menu")
 
     @property
-    def visible_social_links(self) -> models.QuerySet:
+    def visible_social_links(self) -> list[PodcastSourceLink]:
         return self.visible_links_for("social")
 
     @property
-    def visible_distribution_links(self) -> models.QuerySet:
+    def visible_distribution_links(self) -> list[PodcastSourceLink]:
         return self.visible_links_for("distribution")
 
-    def visible_links_for(self, location: str) -> models.QuerySet:
-        return (
-            cast(Any, self)
-            .source_links.filter(location=location, is_visible=True)
-            .order_by(
-                "display_order",
-                "name",
-            )
-        )
+    def visible_links_for(self, location: str) -> list[PodcastSourceLink]:
+        # Filter in Python so a `prefetch_related("source_links")` serves every
+        # location; a queryset filter here would bypass the prefetch and cost
+        # one query per call (the base template asks for menu and social links,
+        # the episode index also for distribution links). The link model's
+        # Meta ordering (location, display_order, name) already orders the
+        # prefetch in the database, so its collation still decides ties.
+        return [
+            link
+            for link in cast(Any, self).source_links.all()
+            if link.location == location and link.is_visible
+        ]
 
 
 class PodcastSourceLink(models.Model):

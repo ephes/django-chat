@@ -760,6 +760,13 @@ page and its route prefix. It is hardcoded to `episodes` in
 import or with a planned page reslug, because imported pages, feed URLs, and
 host review documentation assume the same slug.
 
+The site's views and its header resolve the podcast in one place,
+`django_chat/core/podcast.py`: the live, public page with that slug directly
+under the root page of the Wagtail site serving the request (the page that
+answers `/episodes/`). Pages with the same slug elsewhere in the page tree are
+never used. The episode list, episode pages, the feed page, the embed player
+and the sponsor page all share this lookup, and it runs once per request.
+
 ## Media Storage
 
 Local and test settings use filesystem media storage by default at the Django

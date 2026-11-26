@@ -4,14 +4,13 @@ from typing import Any
 from typing import cast as type_cast
 
 from cast.filters import PostFilterset
-from cast.models import Episode, Podcast
-from django.conf import settings
+from cast.models import Episode
 from django.core.paginator import Paginator
-from django.http import HttpRequest, HttpResponse, QueryDict
+from django.http import Http404, HttpRequest, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.clickjacking import xframe_options_exempt
 
-from django_chat.imports.models import PodcastSourceMetadata
+from django_chat.core.podcast import get_django_chat_podcast, get_django_chat_source_metadata
 
 EPISODES_PER_PAGE = 20
 
@@ -35,9 +34,9 @@ def active_filter_parameters(request: HttpRequest) -> QueryDict:
 @xframe_options_exempt
 def episode_embed(request: HttpRequest, episode_slug: str) -> HttpResponse:
     """Minimal player-only view suitable for `<iframe>` embedding on third-party sites."""
-    podcast = get_object_or_404(
-        Podcast.objects.live().public(), slug=settings.DJANGO_CHAT_PODCAST_SLUG
-    )
+    podcast = get_django_chat_podcast(request)
+    if podcast is None:
+        raise Http404
     episode = get_object_or_404(
         Episode.objects.live().public().child_of(podcast), slug=episode_slug
     )
@@ -56,11 +55,19 @@ def episode_embed(request: HttpRequest, episode_slug: str) -> HttpResponse:
 
 
 def podcast_episode_index(request: HttpRequest) -> HttpResponse:
-    podcast = get_object_or_404(
-        Podcast.objects.live().public(), slug=settings.DJANGO_CHAT_PODCAST_SLUG
-    )
+    podcast = get_django_chat_podcast(request)
+    if podcast is None:
+        raise Http404
 
-    base_qs = Episode.objects.live().public().child_of(podcast).order_by("-visible_date")
+    # The list template reads each row's episode number and duration from the
+    # imported source metadata; join it in instead of one query per row.
+    base_qs = (
+        Episode.objects.live()
+        .public()
+        .child_of(podcast)
+        .select_related("django_chat_source_metadata")
+        .order_by("-visible_date")
+    )
     filterset = PostFilterset(data=request.GET, queryset=base_qs)
     filtered_qs = filterset.qs
 
@@ -86,11 +93,7 @@ def podcast_episode_index(request: HttpRequest) -> HttpResponse:
     template_base_dir = podcast.get_template_base_dir(type_cast(Any, request))
     type_cast(Any, request).cast_site_template_base_dir = template_base_dir
     canonical_url = request.build_absolute_uri(podcast.get_url(request=request) or request.path)
-    source_metadata = (
-        PodcastSourceMetadata.objects.filter(podcast=podcast)
-        .prefetch_related("source_links")
-        .first()
-    )
+    source_metadata = get_django_chat_source_metadata(request)
 
     previous_page_number = page_obj.previous_page_number() if page_obj.has_previous() else None
     next_page_number = page_obj.next_page_number() if page_obj.has_next() else None

@@ -6,6 +6,8 @@ from django.conf import settings
 from django.db import DatabaseError
 from django.http import HttpRequest
 
+from django_chat.core.podcast import get_django_chat_source_metadata
+
 FEED_DETAIL_META_TITLE = "Listen & Subscribe"
 FEED_DETAIL_META_DESCRIPTION = "Subscribe to Django Chat through the self-hosted podcast RSS feed."
 
@@ -15,13 +17,7 @@ def django_chat_source_metadata(_request: HttpRequest) -> dict[str, Any]:
         return {"source_metadata": None}
 
     try:
-        from django_chat.imports.models import PodcastSourceMetadata
-
-        source_metadata = (
-            PodcastSourceMetadata.objects.filter(podcast__slug=settings.DJANGO_CHAT_PODCAST_SLUG)
-            .prefetch_related("source_links")
-            .first()
-        )
+        source_metadata = get_django_chat_source_metadata(_request)
     except DatabaseError:
         source_metadata = None
 
